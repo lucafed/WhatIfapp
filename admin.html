@@ -62,7 +62,7 @@
       opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;
     }
     .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
-    /* Cronologia */
+    /* Cronologia & log */
     .story-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
     .story{
       border-radius:12px;border:1px solid var(--line);padding:8px 10px;
@@ -75,6 +75,10 @@
     details summary::after{content:"▶";margin-left:6px;font-size:10px;opacity:.7}
     details[open] summary::after{content:"▼"}
     @media (max-width:580px){.grid-2{grid-template-columns:1fr}}
+    /* Select dentro chip */
+    .chip select{
+      background:transparent;border:none;color:inherit;font:inherit;outline:none;padding:0 0 0 4px;
+    }
   </style>
 </head>
 <body>
@@ -83,7 +87,8 @@
   <p class="sub">
     Gestione wallet Firestore per l’utente loggato. Fourth/fifth leggono solo da
     <span class="mono">wallets/{uid}</span> tramite <span class="mono">bootCredits</span> / <span class="mono">getBalance</span>.
-    Qui puoi anche forzare FREE/PRO lato client e vedere la cronologia locale delle domande.
+    Qui puoi anche forzare FREE/PRO lato client, vedere la cronologia locale delle domande
+    e, se hai un token admin valido, leggere i log server delle richieste.
   </p>
 
   <!-- UTENTE / ADMIN -->
@@ -175,6 +180,49 @@
         <button class="btn danger" id="btnClearNext">Svuota salvate</button>
         <span class="small">Usa la stessa lista “Domande salvate” che vedi in fourth.</span>
       </div>
+    </details>
+  </div>
+
+  <!-- LOG DOMANDE (SERVER) -->
+  <div class="card">
+    <details open>
+      <summary class="label">Log domande (server)</summary>
+      <div class="row" style="margin-bottom:6px">
+        <button class="btn" id="btnReloadLogs">🔄 Ricarica log</button>
+        <span class="small" id="logsInfo">
+          Legge da <span class="mono">/api/admin-logs</span> (max 200, IP mascherato). Usa il token in <span class="mono">localStorage.admin_token</span>.
+        </span>
+      </div>
+      <div class="row" style="margin-bottom:6px">
+        <span class="chip">
+          Stile:
+          <select id="logsFilterStyle" class="mono">
+            <option value="">tutti</option>
+            <option value="whatif">whatif</option>
+            <option value="wtf">wtf</option>
+          </select>
+        </span>
+        <span class="chip">
+          Tempo:
+          <select id="logsFilterPeriodo" class="mono">
+            <option value="">tutti</option>
+            <option value="future">future</option>
+            <option value="past">past</option>
+          </select>
+        </span>
+        <span class="chip">
+          Lingua:
+          <select id="logsFilterLang" class="mono">
+            <option value="">tutte</option>
+            <option value="it">it</option>
+            <option value="en">en</option>
+            <option value="es">es</option>
+            <option value="fr">fr</option>
+            <option value="de">de</option>
+          </select>
+        </span>
+      </div>
+      <div class="story-list" id="logsList"></div>
     </details>
   </div>
 
@@ -476,6 +524,112 @@
 
   renderHistory();
   renderNext();
+
+  /* ========= LOG DOMANDE (SERVER) ========= */
+  let lastLogsItems = [];
+
+  function renderLogsWithCurrentFilters(){
+    const box = $('logsList');
+    if(!box) return;
+    box.innerHTML = '';
+
+    const items = lastLogsItems || [];
+    const styleFilter = ($('logsFilterStyle') && $('logsFilterStyle').value) || '';
+    const periodoFilter = ($('logsFilterPeriodo') && $('logsFilterPeriodo').value) || '';
+    const langFilter = ($('logsFilterLang') && $('logsFilterLang').value) || '';
+
+    const filtered = items.filter(it=>{
+      if(styleFilter && (it.style || '') !== styleFilter) return false;
+      if(periodoFilter && (it.periodo || '') !== periodoFilter) return false;
+      if(langFilter && (String(it.lang || '').slice(0,2)) !== langFilter) return false;
+      return true;
+    });
+
+    if(!filtered.length){
+      const div=document.createElement('div');
+      div.className='small';
+      div.textContent='— Nessun log che rispetta questi filtri.';
+      box.appendChild(div);
+      return;
+    }
+
+    filtered.forEach(it=>{
+      const d = document.createElement('div');
+      d.className = 'story';
+      const domanda = (it.domanda || '—').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const ts = fmt(it.ts || Date.now());
+      const stile = it.style || 'whatif';
+      const periodo = it.periodo || 'future';
+      const lang = (it.lang || 'it').slice(0,2);
+      const userType = it.user_type || 'free';
+      const chars = Number.isFinite(+it.answer_chars) ? +it.answer_chars : 0;
+      const ip = (it.ip || '').toString();
+
+      d.innerHTML = `
+        <div class="story-q">${domanda}</div>
+        <div class="story-meta">
+          ${ts}
+          · stile: ${stile}
+          · periodo: ${periodo}
+          · lang: ${lang}
+          · utente: ${userType}
+          ${chars ? ` · risposta ~${chars} char` : ''}
+          ${ip ? ` · IP: ${ip}` : ''}
+        </div>
+      `;
+      box.appendChild(d);
+    });
+  }
+
+  async function fetchLogsFromApi(){
+    const box = $('logsList');
+    const info = $('logsInfo');
+    if(!box) return;
+    box.innerHTML = '<div class="small">Caricamento log dal server…</div>';
+
+    try{
+      const adminTok = LS.getItem('admin_token') || '';
+      const headers = {};
+      if(adminTok) headers['x-admin-token'] = adminTok;
+
+      const res = await fetch('/api/admin-logs?limit=200&order=desc&mask=1',{ headers });
+
+      if(res.status === 401){
+        box.innerHTML = '<div class="small">Non autorizzato: serve un token admin valido in localStorage.admin_token (creato via dashboard token).</div>';
+        if(info) info.textContent = 'Token admin mancante o non valido per /api/admin-logs.';
+        return;
+      }
+
+      if(!res.ok){
+        box.innerHTML = '<div class="small">Errore nel leggere /api/admin-logs (HTTP '+res.status+').</div>';
+        if(info) info.textContent = 'Errore HTTP nel recuperare i log.';
+        return;
+      }
+
+      const data = await res.json().catch(()=>null);
+      const items = (data && Array.isArray(data.items)) ? data.items : [];
+      lastLogsItems = items;
+      renderLogsWithCurrentFilters();
+
+      if(info){
+        info.textContent = `Log lato server: ${items.length} voci lette (max 200). Filtri applicati solo lato client.`;
+      }
+    }catch(e){
+      console.error('admin-logs error:', e);
+      box.innerHTML = '<div class="small">Errore imprevisto nel leggere /api/admin-logs (vedi console).</div>';
+      if(info) info.textContent = 'Errore imprevisto nel recuperare i log.';
+    }
+  }
+
+  if($('btnReloadLogs')){
+    $('btnReloadLogs').onclick = fetchLogsFromApi;
+  }
+  if($('logsFilterStyle')) $('logsFilterStyle').onchange = renderLogsWithCurrentFilters;
+  if($('logsFilterPeriodo')) $('logsFilterPeriodo').onchange = renderLogsWithCurrentFilters;
+  if($('logsFilterLang')) $('logsFilterLang').onchange = renderLogsWithCurrentFilters;
+
+  // carica subito i log (se hai un token valido)
+  fetchLogsFromApi();
 </script>
 </body>
 </html>
