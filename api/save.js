@@ -25,13 +25,26 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = req.body || {};
+    let body = req.body || {};
+    // se arriva come stringa, prova a fare JSON.parse
+    if (typeof body === "string") {
+      try {
+        body = JSON.parse(body);
+      } catch {
+        body = {};
+      }
+    }
+
     const domanda = String(body.domanda || "").slice(0, 500);
     const answer = String(body.answer || "").slice(0, 8000);
     const stile = String(body.stile || "whatif");
     const periodo = String(body.periodo || "future");
     const lang = String(body.lang || "it").slice(0, 2);
     const surprise = !!body.surprise;
+
+    if (!domanda && !answer) {
+      return res.status(400).json({ ok: false, error: "missing_data" });
+    }
 
     const ip = getIp(req);
     const ts = Date.now();
@@ -44,12 +57,12 @@ export default async function handler(req, res) {
       periodo,
       surprise,
       domanda,
-      // per compatibilità con /api/admin-logs.js
       answer,
       answer_chars: answer.length,
       user_type: "free",
     };
 
+    // scrivi in coda e taglia la lista
     await redis.lpush("logs:ask", JSON.stringify(item));
     await redis.ltrim("logs:ask", 0, MAX_LOGS - 1);
 
