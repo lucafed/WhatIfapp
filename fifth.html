@@ -780,7 +780,7 @@ function wtfMotivationDemenziale(langCode){
   } else if(langCode==='es'){
     return `Pseudociencia de barra: los micro-pasos diarios ganan a los planes épicos. El comité debatió en la barra: ${shots} chupitos desaparecidos, ${spill} copas derramadas, ${bruise} pequeños moratones; veredicto entre hipos: hazlo y deja de sobrepensarlo.`;
   } else if(langCode==='fr'){
-    return `Pseudoscience de comptoir : les micro-pas quotidiens battent les grands plans. Le comité a débattu au bar : ${shots} shots évaporés, ${spill} verres renversés, ${bruise} bleus légers ; verdict entre deux hoquets : fais-le, et arrête de trop réfléchir.`;
+    return `Pseudoscience de comptoir : les micro-pas quotidiens battent les grands plans. Le comité a débattu au bar : ${shots} shots évaporés, ${spill} verres renversés, ${bruise} bleus légers ; verdict zwischen deux hoquets : fais-le, et arrête de trop réfléchir.`;
   } else if(langCode==='de'){
     return `Kneipen-Pseudowissenschaft: kleine tägliche Schritte schlagen große Pläne. Das Gremium tagte an der Theke: ${shots} Shots verschwunden, ${spill} Gläser verschüttet, ${bruise} leichte Blessuren; Urteil zwischen Schluckauf: mach’s, und hör auf, alles zu zerdenken.`;
   }
@@ -830,7 +830,7 @@ function buildWhatIfMotivationsPretty(domanda, pct, rawFromAI){
         : "Take a few clear steps that fit who you are now, not who you think you should be.";
     } else if (L === "es") {
       body = isPast
-        ? "Elegiste con la energía y la información de entonces; ahora puedes usar lo aprendido para los próximos pasos."
+        ? "Elegiste con la energía y la información de entonces; ahora puedes usar lo aprendido untuk próximos pasos."
         : "Da pocos pasos claros que encajen con cómo te sientes hoy, no con lo que “deberías” ser.";
     } else if (L === "fr") {
       body = isPast
@@ -1092,6 +1092,24 @@ async function startFlow(){
       chipsAst: (motivationMode === 'surprise') ? chipsAstNum : undefined
     };
     saveResultToCache(resultForCache);
+
+    /* 🔹 LOG DOMANDA+RISPOSTA SU /api/save (non usa crediti OpenAI) */
+    try {
+      await fetch("/api/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          domanda,
+          answer: answerText,
+          stile: style,
+          periodo,
+          lang
+        })
+      });
+    } catch (logErr) {
+      console.error("log /api/save failed:", logErr);
+      // non blocca l'utente, è solo logging
+    }
 
   }catch(e){
     console.error(e);
