@@ -4,7 +4,6 @@
 const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
 const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
 
-// piccola helper per chiamare Upstash Redis (pipeline LPUSH + LTRIM)
 async function pushLogToRedis(item) {
   if (!REDIS_URL || !REDIS_TOKEN) {
     console.error("Redis env vars mancanti (UPSTASH_REDIS_REST_URL / _TOKEN).");
@@ -32,7 +31,6 @@ async function pushLogToRedis(item) {
   }
 }
 
-// compat body (se Next ha già fatto JSON.parse, non riparsiamo)
 function getBody(req) {
   if (req.body && typeof req.body === "object") return req.body;
   try {
@@ -52,22 +50,24 @@ export default async function handler(req, res) {
     const body = getBody(req);
 
     const domanda = (body.domanda || "").toString().trim();
-    const answer = (body.answer || "").toString().trim();
-    const style = (body.stile || body.style || "whatif").toString();
+    const answer  = (body.answer  || "").toString().trim();
+    const style   = (body.stile   || body.style || "whatif").toString();
     const periodo = (body.periodo || "future").toString();
-    const lang = ((body.lang || "it").toString().toLowerCase().slice(0, 2));
+    const lang    = ((body.lang   || "it").toString().toLowerCase().slice(0, 2));
 
-    // tipo utente (coerente con quello che usi altrove)
     const hasAdminToken = !!req.headers["x-admin-token"];
     const isPro = req.headers["x-pro"] === "1";
     const user_type = hasAdminToken ? "admin" : (isPro ? "pro" : "free");
 
-    // IP (mascherato poi da /api/admin-logs se vuoi)
     const fwd = (req.headers["x-forwarded-for"] || "").toString();
-    const ip = fwd.split(",")[0].trim() || (req.socket && req.socket.remoteAddress) || "";
+    const ip  = fwd.split(",")[0].trim() || (req.socket && req.socket.remoteAddress) || "";
 
     const ts = Date.now();
     const answer_chars = answer.length || 0;
+
+    if (!domanda && !answer) {
+      return res.status(200).json({ ok: true, skipped: true });
+    }
 
     const logItem = {
       ts,
@@ -80,11 +80,6 @@ export default async function handler(req, res) {
       user_type,
       answer_chars
     };
-
-    // se manca la domanda non ha senso loggare, ma non è errore grave
-    if (!domanda && !answer) {
-      return res.status(200).json({ ok: true, skipped: true });
-    }
 
     await pushLogToRedis(logItem);
 
