@@ -193,41 +193,49 @@ const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE – SCENA
 const ZINGARA_ENDINGS = {
   it: {
     future: [
-      "E proprio lì ti accorgi che non è magia ma la somma dei piccoli passi che inizi a fare adesso.",
-      "E lì vedi che il destino non ti sceglie: sei tu che decidi dove appoggiarti ogni giorno.",
-      "E a un certo punto capisci che non serve un segno enorme, basta una decisione che ti somigli davvero.",
+      "E lì ti accorgi che non è una svolta magica ma il modo in cui ti organizzi ogni giorno.",
+      "E piano piano ti rendi conto che conta più come vivi le giornate che il codice postale.",
+      "E a un certo punto vedi che non devi azzeccare tutto, ti basta una scelta in cui respiri meglio."
     ],
     past: [
-      "Guardando quella versione di te capisci che non era destino sbagliato, era solo un capitolo che poteva scriversi diverso.",
-      "Da fuori vedi che non hai perso un treno: hai solo cambiato binario con un po’ di ritardo.",
-      "E lì realizzi che il rimpianto pesa finché non lo usi per scegliere meglio la prossima volta.",
+      "E guardando quella versione di te capisci che non era la scelta perfetta, solo diversa.",
+      "Da fuori ti rendi conto che non hai buttato via la vita, l’hai solo portata su un binario diverso.",
+      "E lì capisci che il rimpianto pesa finché non lo trasformi in un criterio per le scelte di adesso."
     ],
   },
   en: {
-    future: ["And there you’d notice you don’t need drama, just a cleaner choice."],
-    past: ["You’d probably feel it in your bones: it wasn’t fate, just a different script."],
+    future: ["And there you notice it’s less about miracles and more about how you show up every day."],
+    past: ["You’d probably see it wasn’t the perfect choice, just a different one you’d have to live with."],
   },
   es: {
-    future: ["Y ahí notarás que no hace falta un giro épico, solo una decisión más honesta."],
-    past: ["Y quizá hoy lo sentirías: no era destino, era otra forma de escribir tu historia."],
+    future: ["Y ahí notarás que importa más cómo vives tus días que el escenario perfecto en tu cabeza."],
+    past: ["Y quizá hoy verías que no era la decisión perfecta, solo otra forma de complicarte distinto."],
   },
   fr: {
-    future: ["Et là tu verras qu’il ne faut pas tout casser, juste choisir plus juste."],
-    past: ["Et tu comprendras que ce n’était pas le destin, juste un autre scénario possible."],
+    future: ["Et là tu verras que ce qui compte surtout, c’est comment tu vis tes journées, pas le décor exact."],
+    past: ["Et tu comprendras que ce n’était pas le “bon” choix ou le “mauvais”, juste un chemin différent à assumer."],
   },
   de: {
-    future: ["Und dort merkst du, dass du kein Drama brauchst, nur eine klarere Entscheidung."],
-    past: ["Vielleicht spürst du dann, dass es kein Schicksal war, sondern nur ein anderes Drehbuch."],
+    future: ["Und dort merkst du, dass nicht der große Knall zählt, sondern wie du deinen Alltag wirklich baust."],
+    past: ["Vielleicht spürst du dann, dass es keine perfekte Entscheidung war, sondern nur ein anderer Weg mit seinen eigenen Preisen."],
   },
 };
+
 function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   let s = String(text || "").trim();
   const L = normLang(lang);
 
   if (!s) return s;
 
+  // probabilità di AGGIUNGERE il gancio (deterministica sulla domanda + testo)
+  const seed = hashStr(String(domanda || "") + "|" + s);
+  if (seed % 100 >= 70) {
+    // ~30% dei casi: nessun gancio, lasciamo il finale naturale del modello
+    return s;
+  }
+
   const last = (s.match(/([^.!?…]+[.!?…])\s*$/) || [])[1] || s;
-  const alreadyHasHook = /(non è magia|non ti sceglie|non serve un segno|you’d notice|you’d probably feel|notarás|verras|merkst du)/i.test(
+  const alreadyHasHook = /(ti accorgi che|ti rendi conto che|vedi che|capisci che|you’d notice|you’d probably feel|notarás|verras|merkst du)/i.test(
     last
   );
   if (alreadyHasHook) return s;
@@ -237,7 +245,7 @@ function ensureZingaraEnding({ text, lang, periodo, domanda }) {
     String(periodo).toLowerCase() === "past"
       ? pool.past || ZINGARA_ENDINGS.en.past
       : pool.future || ZINGARA_ENDINGS.en.future;
-  const addon = pickDet(bag, hashStr((domanda || "") + s));
+  const addon = pickDet(bag, seed);
   if (!addon) return s;
 
   s = s.replace(/[.!?…]+$/, "");
@@ -1419,4 +1427,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-}
+  }
