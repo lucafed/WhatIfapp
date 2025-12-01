@@ -112,7 +112,7 @@
         100%{box-shadow:0 0 0 rgba(255,255,255,.0)}
       }
 
-      /* Box evidenziato per la domanda di chiarimento AI */
+      /* Box per la domanda di chiarimento AI */
       .clar-box{
         background:rgba(255,255,255,.04);
         border:1px solid var(--accent2);
@@ -188,8 +188,7 @@
           <div class="small" style="margin-bottom:6px;">
             La voce che hai scelto ti fa una domanda al volo per poterti rispondere meglio:
           </div>
-          <div class="clar-box" id="clarifyQuestion">
-          </div>
+          <div class="clar-box" id="clarifyQuestion"></div>
           <textarea
             id="clarifyInput"
             rows="3"
@@ -854,7 +853,7 @@
             "Et si j’étais resté dans cette relation ?",
             "Et si je n’avais pas abandonné ce projet créatif ?",
             "Et si j’avais commencé une thérapie plus tôt ?",
-            "Et si j’avais dit no à ce job toxique ?",
+            "Et si j’avais dit non à ce job toxique ?",
             "Et si j’avais été honnête avec moi-même en 2020 ?",
             "Et si je n’avais pas suivi ce conseil ?",
             "Et si j’avais économisé au lieu de tout dépenser ?",
@@ -994,7 +993,7 @@
         );
       });
 
-      // ===== Saved + History =====
+      // ===== Saved + History (lettura) =====
       const fmtDate = ts =>
         new Date(ts).toLocaleString(
           document.documentElement.lang || "it-IT",
@@ -1119,7 +1118,7 @@
         return true;
       }
 
-      // ===== Flusso WHAT IF: domanda -> chiarimento -> risposta (risposta calcolata in quinta pagina) =====
+      // ===== Flusso WHAT IF: domanda -> chiarimento -> risposta (in fifth) =====
       async function startClarifyFlow() {
         if (prefs.stile === "wtf") {
           return directAnswerFlow();
@@ -1207,7 +1206,7 @@
         }
       }
 
-      // ✅ NUOVA VERSIONE: niente chiamata all'AI qui, solo salvataggio + redirect
+      // ✅ QUI: niente cronologia, solo crediti + richiesta per fifth
       async function submitClarification() {
         const clarification = ($("clarifyInput").value || "").trim();
         if (!clarification) {
@@ -1243,17 +1242,7 @@
         try {
           const answer = ""; // verrà calcolata in quinta pagina
 
-          // Aggiorna cronologia con placeholder
-          const hist = readJSON("cronologia", []);
-          hist.push({
-            domanda: currentQuestion,
-            stile: prefs.stile,
-            ts: Date.now(),
-            risposta: answer
-          });
-          writeJSON("cronologia", hist.slice(-100));
-
-          // Replay story base
+          // Replay story base (solo per rivedere dopo)
           writeJSON("replay_story", {
             domanda: currentQuestion,
             answer,
@@ -1286,17 +1275,15 @@
           };
           writeJSON("whatif_request", fullReq);
 
-          // 🔁 Vai subito alla pagina di risposta
+          // Vai subito alla pagina di risposta
           location.href = "fifth.html";
         } finally {
-          // In pratica la redirect interrompe qui, ma è safe averlo
           btn.disabled = false;
           btn.textContent = original;
         }
       }
 
-      // ===== Flusso diretto WHAT THE F =====
-      // ✅ NUOVA VERSIONE: nessuna chiamata all'AI qui, solo setup + redirect
+      // ===== Flusso diretto WHAT THE F (risposta generata in fifth) =====
       async function directAnswerFlow() {
         resetClarifyUI();
 
@@ -1339,17 +1326,7 @@
         try {
           const answer = ""; // la quinta pagina genererà la risposta
 
-          // Cronologia placeholder
-          const hist = readJSON("cronologia", []);
-          hist.push({
-            domanda,
-            stile: prefs.stile,
-            ts: Date.now(),
-            risposta: answer
-          });
-          writeJSON("cronologia", hist.slice(-100));
-
-          // Replay base
+          // Solo replay base (per rivedere risposta salvata)
           writeJSON("replay_story", {
             domanda,
             answer,
@@ -1382,7 +1359,7 @@
           };
           writeJSON("whatif_request", fullReq);
 
-          // 🔁 Redirect immediato alla pagina di risposta
+          // Redirect immediato alla pagina di risposta
           location.href = "fifth.html";
         } finally {
           btn.disabled = false;
@@ -1575,14 +1552,8 @@
           };
           writeJSON("whatif_request", req);
           LS.setItem("domanda", final);
-          const hist = readJSON("cronologia", []);
-          hist.push({
-            domanda: final,
-            stile: prefs.stile,
-            ts: Date.now(),
-            risposta: ""
-          });
-          writeJSON("cronologia", hist.slice(-100));
+
+          // 🔁 NESSUN push in cronologia qui, ci pensa fifth.html
           location.href = "fifth.html?src=surprise";
         }, 1200 + Math.random() * 600);
       }
