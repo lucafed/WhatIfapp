@@ -1,25 +1,45 @@
 // FILE: /api/save.js
-// Scopo: salvare ogni domanda+risposta nei log Redis "logs:ask"
-// Così l'Admin (admin.html) può leggerli tramite /api/admin-logs
+// Salva in Redis la domanda/risposta per l’admin panel
 
-import { Redis } from "@upstash/redis";
+const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
+const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
-
-// helper per IP (stesso stile di /api/admin-logs.js)
-function getIp(req) {
-  const xff = String(req.headers["x-forwarded-for"] || "").trim();
-  if (xff) {
-    const ip = xff
-      .split(",")
-      .map((s) => s.trim())
-      .find(Boolean);
-    if (ip) return ip;
+// piccola helper per chiamare Upstash Redis (pipeline LPUSH + LTRIM)
+async function pushLogToRedis(item) {
+  if (!REDIS_URL || !REDIS_TOKEN) {
+    console.error("Redis env vars mancanti (UPSTASH_REDIS_REST_URL / _TOKEN).");
+    throw new Error("redis_env_missing");
   }
-  return (req.socket?.remoteAddress || "unknown").toString();
+
+  const commands = [
+    ["LPUSH", "logs:ask", JSON.stringify(item)],
+    ["LTRIM", "logs:ask", "0", "199"] // tieni solo gli ultimi 200
+  ];
+
+  const res = await fetch(`${REDIS_URL}/pipeline`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${REDIS_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(commands)
+  });
+
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    console.error("Redis pipeline error:", res.status, txt);
+    throw new Error("redis_write_failed");
+  }
+}
+
+// compat body (se Next ha già fatto JSON.parse, non riparsiamo)
+function getBody(req) {
+  if (req.body && typeof req.body === "object") return req.body;
+  try {
+    return JSON.parse(req.body || "{}");
+  } catch {
+    return {};
+  }
 }
 
 export default async function handler(req, res) {
@@ -28,58 +48,49 @@ export default async function handler(req, res) {
     return res.status(405).json({ ok: false, error: "method_not_allowed" });
   }
 
-  // body inviato da fifth.html
-  let body;
   try {
-    body = req.body && typeof req.body === "object" ? req.body : JSON.parse(req.body || "{}");
-  } catch {
-    body = {};
-  }
+    const body = getBody(req);
 
-  const domanda = String(body.domanda || body.question || "").trim();
-  const answer = String(body.answer || body.risposta || "").trim();
-  const stile = String(body.stile || body.style || "whatif").trim().toLowerCase();
-  const periodo = String(body.periodo || body.period || "future").trim().toLowerCase();
-  const lang = String(body.lang || body.language || "it").trim().toLowerCase();
+    const domanda = (body.domanda || "").toString().trim();
+    const answer = (body.answer || "").toString().trim();
+    const style = (body.stile || body.style || "whatif").toString();
+    const periodo = (body.periodo || "future").toString();
+    const lang = ((body.lang || "it").toString().toLowerCase().slice(0, 2));
 
-  // facoltativo: info "tipo utente"
-  const isPro = req.headers["x-pro"] === "1" || body.pro === true;
-  const adminTok = String(req.headers["x-admin-token"] || "").trim();
-  const userType = adminTok ? "admin" : isPro ? "pro" : "free";
+    // tipo utente (coerente con quello che usi altrove)
+    const hasAdminToken = !!req.headers["x-admin-token"];
+    const isPro = req.headers["x-pro"] === "1";
+    const user_type = hasAdminToken ? "admin" : (isPro ? "pro" : "free");
 
-  // Se manca domanda o risposta, non loggo
-  if (!domanda || !answer) {
-    return res.status(200).json({ ok: true, skipped: true });
-  }
+    // IP (mascherato poi da /api/admin-logs se vuoi)
+    const fwd = (req.headers["x-forwarded-for"] || "").toString();
+    const ip = fwd.split(",")[0].trim() || (req.socket && req.socket.remoteAddress) || "";
 
-  const ip = getIp(req);
-  const now = Date.now();
+    const ts = Date.now();
+    const answer_chars = answer.length || 0;
 
-  // Oggetto log compatibile con /api/admin-logs.js
-  const logItem = {
-    ts: now,
-    ip,
-    style: stile,
-    lang,
-    periodo,
-    user_type: userType,
-    domanda,
-    answer,
-    answer_chars: answer.length,
-  };
+    const logItem = {
+      ts,
+      domanda,
+      answer,
+      style,
+      periodo,
+      lang,
+      ip,
+      user_type,
+      answer_chars
+    };
 
-  try {
-    // Salvo in Redis nella lista logs:ask
-    // LPUSH = nuovi in testa; LTRIM per tenere max 1000 voci
-    await redis.lpush("logs:ask", JSON.stringify(logItem));
-    await redis.ltrim("logs:ask", 0, 999);
+    // se manca la domanda non ha senso loggare, ma non è errore grave
+    if (!domanda && !answer) {
+      return res.status(200).json({ ok: true, skipped: true });
+    }
 
-    // puoi ancora fare altre cose (Firestore, ecc.) se ti servono:
-    // ... (lascia vuoto se non ti serve)
+    await pushLogToRedis(logItem);
 
     return res.status(200).json({ ok: true });
-  } catch (e) {
-    console.error("save log error:", e);
-    return res.status(500).json({ ok: false, error: "server_error" });
+  } catch (err) {
+    console.error("save handler error:", err);
+    return res.status(500).json({ ok: false, error: err.message || "server_error" });
   }
 }
