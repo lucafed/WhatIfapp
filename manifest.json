@@ -3,10 +3,9 @@
   "name": "What?f",
   "short_name": "What?f",
   "description": "Scopri il tuo What?f — immagina la scelta che non hai fatto e quella che potresti fare.",
-  "start_url": "/index.html?source=pwa",
+  "start_url": "/?source=pwa",
   "scope": "/",
-  "display": "standalone",
-  "display_override": ["standalone", "fullscreen"],
+  "display": "fullscreen",
   "background_color": "#0B0B0C",
   "theme_color": "#0B0B0C",
   "orientation": "portrait-primary",
@@ -15,36 +14,36 @@
   "prefer_related_applications": false,
 
   "icons": [
-    { "src": "/public/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/public/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/public/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/public/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
 
   "screenshots": [
     {
-      "src": "/public/screenshot-phone-1080x1920-1.png",
+      "src": "/screenshot-phone-1080x1920-1.png",
       "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "La scelta è l’inizio di ogni universo."
     },
     {
-      "src": "/public/screenshot-phone-1080x1920-2.png",
+      "src": "/screenshot-phone-1080x1920-2.png",
       "sizes": "1080x1920",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Esplora What if e What the F."
     },
     {
-      "src": "/public/screenshot-wide-1920x1080-1.png",
+      "src": "/screenshot-wide-1920x1080-1.png",
       "sizes": "1920x1080",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Scenari immersivi in orizzontale."
     },
     {
-      "src": "/public/screenshot-wide-1920x1080-2.png",
+      "src": "/screenshot-wide-1920x1080-2.png",
       "sizes": "1920x1080",
       "type": "image/png",
       "form_factor": "wide",
@@ -58,18 +57,17 @@
       "short_name": "What if",
       "description": "Scopri il tuo futuro What?f",
       "url": "/second.html?stile=whatif&periodo=future",
-      "icons": [{ "src": "/public/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "What the F — Futuro",
       "short_name": "WTF",
       "description": "Scopri la versione What the F del tuo futuro",
       "url": "/second.html?stile=wtf&periodo=future",
-      "icons": [{ "src": "/public/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ],
 
-  "categories": ["lifestyle", "entertainment"],
-  "launch_handler": { "client_mode": "navigate-existing" },
-  "iarc_rating_id": null
+  "categories": ["lifestyle", "lifestyle", "entertainment"],
+  "launch_handler": { "client_mode": "navigate-existing" }
 }
