@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>What?f — Admin crediti</title>
+  <title>What?f — Admin</title>
   <meta name="theme-color" content="#0A0F14"/>
   <style>
     :root{
@@ -83,15 +83,16 @@
 </head>
 <body>
 <main>
-  <h1>What?f — Admin crediti</h1>
+  <h1>What?f — Admin</h1>
   <p class="sub">
-    Gestione wallet Firestore per l’utente loggato. Fourth/fifth leggono solo da
-    <span class="mono">wallets/{uid}</span> tramite <span class="mono">bootCredits</span> / <span class="mono">getBalance</span>.
-    Qui puoi anche forzare FREE/PRO lato client, vedere la cronologia locale delle domande
-    e, se hai un token admin valido, leggere i log server delle richieste.
+    Gestione wallet Firestore per l’utente loggato e strumenti di debug.
+    Fourth/fifth leggono solo da <span class="mono">wallets/{uid}</span> tramite
+    <span class="mono">bootCredits</span> / <span class="mono">getBalance</span>.
+    Qui puoi forzare FREE/PRO lato client, vedere la cronologia locale,
+    configurare il <span class="mono">TOKEN ADMIN</span> per le API e leggere i log server.
   </p>
 
-  <!-- UTENTE / ADMIN -->
+  <!-- UTENTE / ADMIN LOCALE -->
   <div class="card">
     <div class="grid-2">
       <div>
@@ -106,8 +107,8 @@
           <button class="btn" id="btnTornaAdmin">Torna admin (∞)</button>
         </div>
         <div class="small">
-          Admin locale = usa <span class="mono">admin_token</span> in localStorage e mostra ∞ crediti
-          su fourth/fifth. “Simula utente” rimuove il token e fa usare il wallet reale.
+          Admin locale = presenza di <span class="mono">admin_token</span> in localStorage.
+          Mostra ∞ crediti su fourth/fifth e invia il token a <span class="mono">/api/ask</span>.
         </div>
       </div>
     </div>
@@ -123,7 +124,9 @@
           <span class="chip">Usati oggi: <span id="walUsed" class="value">—</span></span>
           <span class="chip">Cap giornaliero: <span id="walCap" class="value">—</span></span>
         </div>
-        <div class="small">Valori letti da Firestore se sei loggato. Se c’è un problema di regole, vedrai solo “—”.</div>
+        <div class="small">
+          Valori letti da Firestore se sei loggato. Se c’è un problema di regole, vedrai solo “—”.
+        </div>
       </div>
       <div>
         <div class="row">
@@ -131,8 +134,8 @@
           <button class="btn" id="btnTestCredit">+5 crediti (solo test)</button>
         </div>
         <div class="small">
-          Questi bottoni provano a usare le funzioni di <span class="mono">store/credits.js</span>.
-          Se Firestore non è configurato, il fallimento viene solo loggato in console (niente alert).
+          Questi bottoni usano <span class="mono">store/credits.js</span>.
+          Se Firestore non è configurato, gli errori vanno solo in console.
         </div>
       </div>
     </div>
@@ -152,8 +155,8 @@
     <div class="small">
       I preset:
       <br>• aggiornano <span class="mono">whatif_prefs</span> in localStorage (<span class="mono">pro: true/false</span>),
-      <br>• aggiornano il wallet Firestore dell’utente corrente tramite <span class="mono">adminSetDailyLimit</span> / <span class="mono">adminResetToday</span>,
-      <br>• impostano anche un piccolo “cap locale” (<span class="mono">wallet_daily_cap</span>) usato solo per UI.
+      <br>• aggiornano il wallet Firestore tramite <span class="mono">adminSetDailyLimit</span> / <span class="mono">adminResetToday</span>,
+      <br>• impostano anche un “cap locale” (<span class="mono">wallet_daily_cap</span>) solo per UI.
     </div>
   </div>
 
@@ -165,7 +168,9 @@
       <div class="hr"></div>
       <div class="row">
         <button class="btn danger" id="btnClearHist">Svuota cronologia</button>
-        <span class="small">Legge da <span class="mono">cronologia</span> in localStorage (massimo 50 voci).</span>
+        <span class="small">
+          Legge da <span class="mono">cronologia</span> in localStorage (massimo 50 voci).
+        </span>
       </div>
     </details>
   </div>
@@ -183,6 +188,27 @@
     </details>
   </div>
 
+  <!-- TOKEN ADMIN (SERVER) -->
+  <div class="card">
+    <div class="label">Token admin (server)</div>
+    <div class="row" style="margin-bottom:6px">
+      <input
+        id="adminTokenInput"
+        type="text"
+        placeholder="Incolla qui il token admin generato dalla dashboard /api/admin-token"
+        style="flex:1;min-width:220px"
+      />
+      <button class="btn primary" id="btnSaveAdminToken">Salva token</button>
+      <button class="btn danger" id="btnClearAdminToken">Rimuovi</button>
+    </div>
+    <div class="small">
+      Token attuale: <span id="adminTokenStatus">— nessun token salvato</span><br/>
+      Il token è salvato in <span class="mono">localStorage.admin_token</span> e usato per:
+      <br>• chiamare <span class="mono">/api/admin-logs</span> (header <span class="mono">x-admin-token</span>),
+      <br>• attivare la modalità admin ∞ su fourth/fifth.
+    </div>
+  </div>
+
   <!-- LOG DOMANDE (SERVER) -->
   <div class="card">
     <details open>
@@ -190,7 +216,8 @@
       <div class="row" style="margin-bottom:6px">
         <button class="btn" id="btnReloadLogs">🔄 Ricarica log</button>
         <span class="small" id="logsInfo">
-          Legge da <span class="mono">/api/admin-logs</span> (max 200, IP mascherato). Usa il token in <span class="mono">localStorage.admin_token</span>.
+          Legge da <span class="mono">/api/admin-logs</span> (max 200, IP mascherato).
+          Richiede un token admin valido salvato qui sopra.
         </span>
       </div>
       <div class="row" style="margin-bottom:6px">
@@ -257,10 +284,34 @@
     setTimeout(()=>t.classList.remove('show'),1500);
   }
 
+  /* ========= ADMIN TOKEN (server + locale) ========= */
+  function getAdminToken(){
+    return LS.getItem('admin_token') || '';
+  }
+
+  function maskToken(tok){
+    if(!tok) return '— nessun token salvato';
+    const s = String(tok);
+    if(s.length <= 6) return '•••';
+    return s.slice(0,4) + '…' + s.slice(-3);
+  }
+
+  function renderAdminTokenUI(){
+    const tok = getAdminToken();
+    const status = $('adminTokenStatus');
+    const input = $('adminTokenInput');
+    if(status) status.textContent = maskToken(tok);
+    if(input && document.activeElement !== input){
+      input.value = tok;
+    }
+  }
+
   /* ========= ADMIN LOCALE (∞) ========= */
-  function isAdminLocal(){ return !!LS.getItem('admin_token'); }
+  function isAdminLocal(){ return !!getAdminToken(); }
+
   function renderAdminBadge(){
     const badge = $('adminBadge');
+    if(!badge) return;
     if(isAdminLocal()){
       badge.textContent = "Admin locale: ON (∞ crediti lato client)";
       badge.classList.add('admin');
@@ -271,19 +322,54 @@
       badge.classList.add('off');
     }
   }
+
+  renderAdminTokenUI();
   renderAdminBadge();
 
   $('btnSimula').onclick = () => {
+    // modalità "utente": rimuove completamente il token admin
     LS.removeItem('admin_token');
+    renderAdminTokenUI();
     renderAdminBadge();
     renderWalletUI();
-    toast('Simulazione utente attiva (niente ∞).');
+    toast('Simulazione utente attiva (niente ∞, niente log server).');
   };
+
   $('btnTornaAdmin').onclick = () => {
-    LS.setItem('admin_token','1');
+    // se non c'è già un token, metto un token dummy "1" (solo locale)
+    if(!getAdminToken()){
+      LS.setItem('admin_token','1');
+      renderAdminTokenUI();
+    }
     renderAdminBadge();
     renderWalletUI();
     toast('Admin locale attivo (∞ crediti lato client).');
+  };
+
+  // Salvataggio token admin da input
+  $('btnSaveAdminToken').onclick = () => {
+    const input = $('adminTokenInput');
+    if(!input) return;
+    const v = input.value.trim();
+    if(!v){
+      toast('Inserisci un token prima di salvare.');
+      return;
+    }
+    LS.setItem('admin_token', v);
+    renderAdminTokenUI();
+    renderAdminBadge();
+    toast('Token admin salvato.');
+    // provo subito a ricaricare i log
+    fetchLogsFromApi();
+  };
+
+  $('btnClearAdminToken').onclick = () => {
+    LS.removeItem('admin_token');
+    renderAdminTokenUI();
+    renderAdminBadge();
+    toast('Token admin rimosso.');
+    lastLogsItems = [];
+    renderLogsWithCurrentFilters();
   };
 
   /* ========= UTENTE LOGGATO + WALLET FIRESTORE ========= */
@@ -294,6 +380,7 @@
 
   function renderUser(){
     const box = $('userInfo');
+    if(!box) return;
     if(!currentUser){
       box.textContent = "Nessun utente loggato. I preset FREE/PRO funzionano comunque lato client; il wallet Firestore resta inattivo.";
     }else{
@@ -588,14 +675,14 @@
     box.innerHTML = '<div class="small">Caricamento log dal server…</div>';
 
     try{
-      const adminTok = LS.getItem('admin_token') || '';
+      const adminTok = getAdminToken();
       const headers = {};
       if(adminTok) headers['x-admin-token'] = adminTok;
 
       const res = await fetch('/api/admin-logs?limit=200&order=desc&mask=1',{ headers });
 
       if(res.status === 401){
-        box.innerHTML = '<div class="small">Non autorizzato: serve un token admin valido in localStorage.admin_token (creato via dashboard token).</div>';
+        box.innerHTML = '<div class="small">Non autorizzato: serve un token admin valido (incollalo nella sezione "Token admin (server)").</div>';
         if(info) info.textContent = 'Token admin mancante o non valido per /api/admin-logs.';
         return;
       }
@@ -628,8 +715,10 @@
   if($('logsFilterPeriodo')) $('logsFilterPeriodo').onchange = renderLogsWithCurrentFilters;
   if($('logsFilterLang')) $('logsFilterLang').onchange = renderLogsWithCurrentFilters;
 
-  // carica subito i log (se hai un token valido)
-  fetchLogsFromApi();
+  // prova caricamento log all’avvio (se c’è già un token salvato)
+  if(getAdminToken()){
+    fetchLogsFromApi();
+  }
 </script>
 </body>
 </html>
