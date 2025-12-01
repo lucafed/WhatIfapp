@@ -170,6 +170,13 @@
           <div class="small" id="qHelp" style="margin-top:8px">
             Scrivi obiettivo + contesto in 1 riga. Aggiungi vincoli o orizzonte (es. 30 giorni).
           </div>
+
+          <!-- 🎤 VOICE INPUT -->
+          <div class="row" style="margin-top:10px;justify-content:flex-start">
+            <button class="btn" id="voiceQuestionBtn" type="button">🎤 Dettatura vocale</button>
+            <span class="small" id="voiceStatus"></span>
+          </div>
+
           <div class="row" style="margin-top:12px;justify-content:space-between">
             <div class="row">
               <button class="btn primary" id="goBtn" type="button" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
@@ -372,7 +379,7 @@
           past: "Pasado",
           hintsTitle: "▶ Ideas rápidas «¿Y si…?»",
           hintsNote:
-            "Ideas realistas (sobre pasado o futuro). «Sorpréndeme» muestra ideas absurdas.",
+            "Ideas realistas (sobre pasado o futuro). «Sorprendeme» muestra ideas absurdas.",
           credits: "Créditos",
           emptyNext: "— No hay preguntas guardadas.",
           emptyHist: "— Sin historial.",
@@ -1409,6 +1416,96 @@
         LS.setItem("surprise_mode", "0");
         resetClarifyUI();
       });
+
+      // 🎤 ===== VOICE INPUT PER LA DOMANDA =====
+      (function setupVoiceInput() {
+        const qInput = $("qInput");
+        const voiceBtn = $("voiceQuestionBtn");
+        const statusEl = $("voiceStatus");
+
+        if (!qInput || !voiceBtn || !statusEl) return;
+
+        const SpeechRecognition =
+          window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+          voiceBtn.disabled = true;
+          statusEl.textContent =
+            lang === "en"
+              ? "Your browser does not support voice input."
+              : "Il tuo browser non supporta la dettatura vocale.";
+          return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = lang === "en" ? "en-US" : "it-IT";
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        let isListening = false;
+
+        function startListening() {
+          try {
+            recognition.start();
+            isListening = true;
+            statusEl.textContent =
+              lang === "en"
+                ? "Listening… speak close to the microphone."
+                : "Sto ascoltando… parla vicino al microfono.";
+            voiceBtn.textContent = "🛑 Stop";
+          } catch (e) {
+            console.error("speech start error", e);
+          }
+        }
+
+        function stopListening() {
+          try {
+            recognition.stop();
+          } catch {}
+          isListening = false;
+          statusEl.textContent = "";
+          voiceBtn.textContent =
+            lang === "en" ? "🎤 Voice input" : "🎤 Dettatura vocale";
+        }
+
+        voiceBtn.addEventListener("click", () => {
+          if (!isListening) {
+            startListening();
+          } else {
+            stopListening();
+          }
+        });
+
+        recognition.addEventListener("result", event => {
+          const transcript = event.results[0][0].transcript;
+          if (transcript && qInput) {
+            qInput.value = transcript;
+            // reset flag surprise/absurd e chiarimento
+            LS.setItem("absurd_prompt", "0");
+            LS.setItem("surprise_mode", "0");
+            resetClarifyUI();
+          }
+        });
+
+        recognition.addEventListener("end", () => {
+          if (isListening) {
+            stopListening();
+          }
+        });
+
+        recognition.addEventListener("error", event => {
+          console.error("speech error", event);
+          statusEl.textContent =
+            lang === "en"
+              ? "Voice recognition error. Please try again."
+              : "Errore nel riconoscimento vocale. Riprova.";
+          stopListening();
+        });
+
+        // Adatta label iniziale al language
+        voiceBtn.textContent =
+          lang === "en" ? "🎤 Voice input" : "🎤 Dettatura vocale";
+      })();
 
       // ===== Surprise (assurda) =====
       const ABS_BANK = {
