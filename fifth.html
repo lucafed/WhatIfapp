@@ -244,6 +244,12 @@ transition:opacity .35s ease, transform .35s ease;
       <div id="oracleLine" class="oracle-line">—</div>
     </div>
     <div id="answer" class="story">⏳ …</div>
+    <!-- 🔊 TTS: Bottone per ascoltare la risposta -->
+<div class="row" style="margin-top:12px; gap:8px;">
+  <button class="btn ghost" id="readAnswerBtn">🔊 Ascolta la risposta</button>
+  <span id="ttsStatus" class="small" style="opacity:0.9;"></span>
+</div>
+
 
     <div class="hr"></div>
     <div class="label" id="lblP">Esito & motivazioni</div>
@@ -1507,6 +1513,66 @@ if(openInstaBtn){
     );
   };
 }
+/* ============================
+   🔊 TEXT-TO-SPEECH RISPOSTA
+   ============================ */
+(function(){
+  const btn = document.getElementById("readAnswerBtn");
+  const answerEl = document.getElementById("answer");
+  const statusEl = document.getElementById("ttsStatus");
+
+  if(!btn || !answerEl || !statusEl) return;
+
+  if(!("speechSynthesis" in window)){
+    btn.disabled = true;
+    statusEl.textContent = "Il tuo dispositivo non supporta l'audio.";
+    return;
+  }
+
+  let speaking = false;
+  let utterance = null;
+
+  btn.addEventListener("click",()=>{
+    const text = answerEl.innerText || answerEl.textContent || "";
+
+    if(!text.trim()){
+      statusEl.textContent = "Nessuna risposta da leggere.";
+      return;
+    }
+
+    if(speaking){
+      window.speechSynthesis.cancel();
+      speaking = false;
+      btn.textContent = "🔊 Ascolta la risposta";
+      statusEl.textContent = "";
+      return;
+    }
+
+    utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = document.documentElement.lang || "it-IT";
+    utterance.rate = 1;
+
+    utterance.onstart = ()=>{
+      speaking = true;
+      btn.textContent = "⏹ Stop";
+      statusEl.textContent = "Riproduzione in corso…";
+    };
+
+    utterance.onend = ()=>{
+      speaking = false;
+      btn.textContent = "🔊 Ascolta la risposta";
+      statusEl.textContent = "";
+    };
+
+    utterance.onerror = ()=>{
+      speaking = false;
+      btn.textContent = "🔊 Ascolta la risposta";
+      statusEl.textContent = "Errore sintesi vocale.";
+    };
+
+    window.speechSynthesis.speak(utterance);
+  });
+})();
 
 /* ==== Avvio ==== */
 startFlow();
