@@ -19,21 +19,40 @@ function getIp(req) {
   return (req.socket?.remoteAddress || "unknown").toString();
 }
 
+async function getBody(req) {
+  // Next API (Node): req.body è già pronto
+  if (req.body && typeof req.body === "object") {
+    return req.body;
+  }
+
+  if (typeof req.body === "string") {
+    try {
+      return JSON.parse(req.body);
+    } catch {
+      return {};
+    }
+  }
+
+  // fallback per eventuale runtime tipo Request (edge)
+  if (typeof req.text === "function") {
+    try {
+      const txt = await req.text();
+      return txt ? JSON.parse(txt) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  return {};
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ ok: false, error: "method_not_allowed" });
   }
 
   try {
-    let body = req.body || {};
-    // se arriva come stringa, prova a fare JSON.parse
-    if (typeof body === "string") {
-      try {
-        body = JSON.parse(body);
-      } catch {
-        body = {};
-      }
-    }
+    const body = await getBody(req);
 
     const domanda = String(body.domanda || "").slice(0, 500);
     const answer = String(body.answer || "").slice(0, 8000);
