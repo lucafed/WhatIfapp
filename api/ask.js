@@ -149,22 +149,12 @@ function stripFirstPerson(text = "", lang = "it", stile = "whatif") {
   const L = normLang(lang);
 
   if (L === "it") {
-    // niente più casino con "ci" e possessivi sbagliati
+    // tieni il tono in seconda persona ma senza incasinare pronomi e "ci"
     out = out.replace(/\b(io|me|mi)\b/gi, "tu");
-    out = out.replace(/\bnoi\b/gi, "tu");
-    // lasciamo "ci" perché spesso è riflessivo/locativo (ci sono, ci sta, ci si)
-    out = out
-      .replace(/\bmio\b/gi, "tuo")
-      .replace(/\bmia\b/gi, "tua")
-      .replace(/\bmiei\b/gi, "tuoi")
-      .replace(/\bmie\b/gi, "tue")
-      .replace(/\bnostro\b/gi, "tuo")
-      .replace(/\bnostra\b/gi, "tua")
-      .replace(/\bnostri\b/gi, "tuoi")
-      .replace(/\bnostre\b/gi, "tue");
+    // lasciamo "noi", "ci" e i possessivi: li gestisce il modello in modo naturale
   } else {
     out = out.replace(
-      /\b(I|I'm|I’d|I've|me|my|we|we're|we’ve|we’d|us|our|ours)\b/gi,
+      /\b(I|I'm|I’d|I've|me|my)\b/gi,
       "you"
     );
   }
@@ -185,7 +175,7 @@ const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO):
 - Mantieni la risposta aderente al tema della domanda (città, relazione, lavoro, ecc.), senza esempi generici fuori contesto.
 - Linguaggio: italiano naturale, frasi grammaticalmente corrette, vocabolario vario (evita ripetizioni evidenti di verbi o immagini).
 - 5–7 frasi, un solo paragrafo, niente elenchi, niente emoji.
-- Niente prima persona narrativa (“io, noi, mi, ci”).`;
+- Niente prima persona narrativa (“io, noi, mi”).`;
 
 const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE – SCENARIO ALTERNATIVO + LEZIONE):
 - Tono: amico sincero che ti fa vedere la versione alternativa senza schiacciarti di sensi di colpa.
@@ -197,7 +187,7 @@ const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE – SCENA
 - Poi porta tutto nel presente: cosa impari, cosa puoi ancora scegliere, come ti conviene muoverti.
 - Linguaggio: diretto, concreto, niente melodramma, niente giudizi morali.
 - 5–7 frasi, un paragrafo, frasi brevi, niente elenchi, niente emoji.
-- Niente prima persona narrativa (“io, noi, mi, ci”).`;
+- Niente prima persona narrativa (“io, noi, mi”).`;
 
 /* ========= Finali “gancio” WHAT IF (anche IT) ========= */
 const ZINGARA_ENDINGS = {
@@ -453,7 +443,7 @@ MODALITÀ SORPRENDIMI:
 - Evita frasi da self-help tipo “cosa vuoi davvero”.
 - Concentrati su UNA leva (tempo, soldi, energia, identità, relazioni, rischio).
 - Una sola frase, tono calmo, massimo 22 parole, niente emoji, niente elenco.
-- Niente prima persona narrativa (“io, noi, mi, ci”).`;
+- Evita la prima persona narrativa (“io, noi, mi”).`;
         if (isPast) {
           sys += `
 MODALITÀ PASSATO:
@@ -530,7 +520,7 @@ COMPITO:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ${LANG_LABEL}.
 - Punta su 1–2 dettagli che spostano davvero l’analisi.
 - Tono calmo, preciso, senza fronzoli. Una sola frase, massimo 22 parole, niente emoji, niente elenco.
-- Evita la prima persona narrativa (“io, noi, mi, ci”).`;
+- Evita la prima persona narrativa (“io, noi, mi”).`;
         if (isPast) {
           sys += `
 MODALITÀ PASSATO:
@@ -664,7 +654,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
 - Un solo paragrafo, niente elenchi, niente emoji.
 - NON ripetere la domanda.
 - Usa la seconda persona (tu / ti / te / tuo).
-- Niente prima persona narrativa (“io, noi, mi, ci”).
+- Evita la prima persona narrativa (“io, noi, mi”).
 - Frasi brevi (~20 parole), grammatica pulita, poche ripetizioni.`;
 
   const msgs = [{ role: "system", content: baseRules }];
@@ -1100,6 +1090,7 @@ Prendi il testo seguente e:
 - NON ammorbidire il lessico: lascia le parti grezze e un po’ volgari;
 - correggi solo errori grammaticali evidenti, concordanze, doppioni di parole, ripetizioni troppo ravvicinate;
 - NON aggiungere nuove metafore;
+- non cambiare pronomi o persona verbale, a meno che la frase non sia davvero scorretta;
 - mantieni lunghezza simile e un unico paragrafo;
 - NON trasformare “bestemmia” in bestemmie reali o riferimenti religiosi;
 - non racchiudere tutto il testo tra virgolette.`
@@ -1107,17 +1098,19 @@ Prendi il testo seguente e:
 Prendi il testo seguente e:
 - mantieni intatto senso e tono;
 - correggi errori grammaticali e ripetizioni inutili;
+- non cambiare pronomi o persona verbale, a meno che la frase non sia proprio scorretta;
 - mantieni un unico paragrafo e lunghezza simile.`;
   } else if (L === "en") {
     sys =
       stile === "wtf"
         ? `You are a copy editor for a foul-mouthed monologue.
-Keep the same tone and swearing, only fix clear grammar issues and obvious word repetition. Keep it one paragraph, similar length.`
+Keep the same tone and swearing, only fix clear grammar issues and obvious word repetition. Do not change pronouns or person unless the sentence is clearly wrong. Keep it one paragraph, similar length.`
         : `You are a copy editor.
-Keep the same meaning and tone, fix grammar and useless repetitions. Keep it one paragraph, similar length.`;
+Keep the same meaning and tone, fix grammar and useless repetitions. Avoid changing pronouns or person unless absolutely necessary. Keep it one paragraph, similar length.`;
   } else {
     sys = `You are a copy editor.
 Keep the same tone and meaning, fix obvious grammar errors and unnecessary repetitions.
+Avoid changing pronouns or verb person unless the sentence is clearly wrong.
 Keep it one paragraph and roughly the same length.`;
   }
 
@@ -1409,4 +1402,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-    }
+}
