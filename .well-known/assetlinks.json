@@ -1,14 +1,14 @@
 [
-   {
-      "relation": [
-         "delegate_permission/common.handle_all_urls"
-      ],
-      "target": {
-         "namespace": "android_app",
-         "package_name": "com.whatif.app",
-         "sha256_cert_fingerprints": [
-            "FE:A9:EA:98:32:22:C1:40:0F:BA:09:4C:24:37:FF:15:1B:73:A4:32:1D:FE:A4:37:B8:C7:C8:D3:1C:CB:D1:64"
-         ]
-      }
-   }
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.what_ifapp.twa",
+      "sha256_cert_fingerprints": [
+        "A5:CD:13:D0:FF:85:32:5F:1D:27:BD:B4:81:7B:56:2A:43:ED:BA:4D:1D:14:01:99:3E:BB:2B:BA:B4:C9:DB:04"
+      ]
+    }
+  }
 ]
