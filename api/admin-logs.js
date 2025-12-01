@@ -1,189 +1,104 @@
-// /api/admin-logs.js
-// GET: elenco log (opz. maschera IP) | DELETE: svuota log
-// Compatibile con Admin Dashboard v2 (What?f)
+// FILE: /api/admin-logs.js
+// Restituisce la lista di log salvati da /api/save, leggendo da Redis
 
-import { Redis } from "@upstash/redis";
+const REDIS_URL   = process.env.UPSTASH_REDIS_REST_URL;
+const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || process.env.ADMIN_API_TOKEN; // usa quello che hai in Vercel
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-});
-
-const ALLOWED_ORIGINS = [
-  "https://what-ifapp.vercel.app",
-  "https://what-ifapp.vercel.app/",
-  "http://localhost:3000",
-  "http://127.0.0.1:5500",
-];
-
-function reflectCors(req, res) {
-  const origin = String(req.headers.origin || "");
-  if (ALLOWED_ORIGINS.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Credentials", "true");
+async function readLogsFromRedis(limit = 200) {
+  if (!REDIS_URL || !REDIS_TOKEN) {
+    console.error("Redis env vars mancanti in admin-logs.");
+    throw new Error("redis_env_missing");
   }
-  res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Methods", "GET,DELETE,OPTIONS");
-  // consenti sia minuscolo che maiuscolo (header names case-insensitive, ma qui serve per la preflight)
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, X-Admin-Token, x-admin-token, Authorization"
-  );
-  // niente cache su API admin
-  res.setHeader("Cache-Control", "no-store");
-}
 
-function parseCookies(req) {
-  const c = String(req.headers.cookie || "");
-  const o = {};
-  c.split(";").forEach((p) => {
-    const i = p.indexOf("=");
-    if (i > -1) o[p.slice(0, i).trim()] = decodeURIComponent(p.slice(i + 1));
+  const max = Math.min(Math.max(parseInt(limit, 10) || 50, 1), 200);
+
+  const commands = [
+    ["LRANGE", "logs:ask", "0", String(max - 1)]
+  ];
+
+  const res = await fetch(`${REDIS_URL}/pipeline`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${REDIS_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(commands)
   });
-  return o;
-}
 
-function getToken(req) {
-  const h = String(
-    req.headers["x-admin-token"] || req.headers["X-Admin-Token"] || ""
-  ).trim();
-  if (h) return h;
-  const a = String(req.headers.authorization || "");
-  if (a.toLowerCase().startsWith("bearer ")) return a.slice(7).trim();
-  const q = req.query?.token ? String(req.query.token).trim() : "";
-  if (q) return q;
-  const ck = parseCookies(req);
-  return ck["adm_tok"] || "";
-}
-
-function getIp(req) {
-  const xff = String(req.headers["x-forwarded-for"] || "").trim();
-  if (xff) {
-    const ip = xff
-      .split(",")
-      .map((s) => s.trim())
-      .find(Boolean);
-    if (ip) return ip;
-  }
-  return (req.socket?.remoteAddress || "unknown").toString();
-}
-
-// 🔑 check admin
-async function isValidAdmin(req) {
-  const tok = getToken(req);
-  if (!tok) return false;
-
-  // 🔓 DEV-ONLY: token "1" = admin locale (quello che usi in admin.html)
-  // così puoi vedere i log senza dover creare il token su Redis
-  if (tok === "1") {
-    return true;
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    console.error("Redis LRANGE error:", res.status, txt);
+    throw new Error("redis_read_failed");
   }
 
-  try {
-    const data = await redis.hgetall(`admin:token:${tok}`);
-    if (!data) return false;
+  const json = await res.json().catch(() => null);
+  const first = Array.isArray(json) ? json[0] : null;
+  const arr = (first && Array.isArray(first.result)) ? first.result : [];
 
-    const LOCK_IP =
-      String(process.env.ADMIN_LOCK_IP || "false").toLowerCase() === "true";
-    if (LOCK_IP) {
-      const ip = getIp(req);
-      if (!data.ip || data.ip !== ip) return false;
+  const items = [];
+  for (const raw of arr) {
+    try {
+      const obj = JSON.parse(raw);
+      if (obj && typeof obj === "object") {
+        items.push(obj);
+      }
+    } catch {
+      // ignora stringhe non parse-abili
     }
-
-    return true;
-  } catch {
-    return false;
   }
+  return items;
 }
 
 function maskIp(ip) {
   if (!ip) return "";
-  const parts = String(ip).split(".");
-  if (parts.length === 4) return `${parts[0]}.${parts[1]}.***.${parts[3]}`;
-  // IPv6 o altro
-  if (ip.includes(":")) {
-    const chunks = ip.split(":");
-    return chunks
-      .map((c, i) => (i >= 2 && i < chunks.length - 1 ? "***" : c))
-      .join(":");
+  // molto semplice: taglia dopo il secondo punto
+  const parts = ip.split(".");
+  if (parts.length >= 2) {
+    return parts[0] + "." + parts[1] + ".*.*";
   }
   return ip;
 }
 
 export default async function handler(req, res) {
-  reflectCors(req, res);
-  if (req.method === "OPTIONS") return res.status(200).end();
-
-  const admin = await isValidAdmin(req);
-  if (!admin)
-    return res.status(401).json({ ok: false, error: "auth_required" });
+  if (req.method !== "GET") {
+    res.setHeader("Allow", "GET");
+    return res.status(405).json({ ok: false, error: "method_not_allowed" });
+  }
 
   try {
-    if (req.method === "DELETE") {
-      await redis.del("logs:ask");
-      return res.status(200).json({ ok: true, cleared: true });
+    const token = req.headers["x-admin-token"];
+
+    if (!ADMIN_TOKEN) {
+      console.error("ADMIN_TOKEN non configurato.");
+      return res.status(500).json({ ok: false, error: "admin_token_missing" });
     }
 
-    if (req.method !== "GET") {
-      return res
-        .status(405)
-        .json({ ok: false, error: "method_not_allowed" });
+    if (!token || token !== ADMIN_TOKEN) {
+      return res.status(401).json({ ok: false, error: "unauthorized" });
     }
 
-    const limit = Math.max(
-      1,
-      Math.min(
-        1000,
-        parseInt(String(req.query.limit || "200"), 10) || 200
-      )
-    );
-    const order = String(req.query.order || "desc").toLowerCase(); // "desc" = più recenti prima
-    const mask = String(req.query.mask || "1") === "1";
+    const { limit = "200", order = "desc", mask = "1" } = req.query || {};
 
-    // Nota: assumiamo che i log siano inseriti con LPUSH (nuovi in testa) o RPUSH (nuovi in coda).
-    // Per robustezza ordineremo per ts lato API.
-    const raw = await redis.lrange("logs:ask", 0, limit - 1); // se usi RPUSH potrebbe leggere i più vecchi: ordiniamo dopo
+    let items = await readLogsFromRedis(limit);
 
-    const items = [];
-    for (const r of raw || []) {
-      try {
-        const o = JSON.parse(r);
-        items.push({
-          ts: o.ts || o.time || o.timestamp || Date.now(),
-          ip: o.ip || o.ip_masked || "",
-          style: o.style || o.stile || "whatif",
-          lang: o.lang || o.language || "it",
-          periodo: o.periodo || o.periodo || o.timeframe || o.tempo || "",
-          user_type:
-            o.user_type || o.userType || (o.admin ? "admin" : "free"),
-          domanda:
-            typeof o.domanda === "string"
-              ? o.domanda
-              : o.question || o.q || "",
-          answer_chars:
-            typeof o.answer_chars === "number"
-              ? o.answer_chars
-              : typeof o.answer === "string"
-              ? o.answer.length
-              : typeof o.risposta === "string"
-              ? o.risposta.length
-              : 0,
-        });
-      } catch {
-        // ignora entry malformate
-      }
+    // ordina per timestamp
+    items.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+    if (String(order).toLowerCase() === "desc") {
+      items = items.reverse();
     }
 
-    // Ordina per timestamp (default: desc = più recenti prima)
-    items.sort((a, b) => (order === "asc" ? a.ts - b.ts : b.ts - a.ts));
-
-    if (mask) for (const it of items) it.ip = maskIp(it.ip);
+    // maschera IP se richiesto
+    if (String(mask) === "1") {
+      items = items.map(it => ({
+        ...it,
+        ip: maskIp(it.ip || "")
+      }));
+    }
 
     return res.status(200).json({ ok: true, items });
-  } catch (e) {
-    console.error("admin-logs error:", e);
-    return res
-      .status(500)
-      .json({ ok: false, error: "server_error" });
+  } catch (err) {
+    console.error("admin-logs handler error:", err);
+    return res.status(500).json({ ok: false, error: err.message || "server_error" });
   }
 }
