@@ -149,9 +149,7 @@ function stripFirstPerson(text = "", lang = "it", stile = "whatif") {
   const L = normLang(lang);
 
   if (L === "it") {
-    // tieni il tono in seconda persona ma senza incasinare pronomi e "ci"
     out = out.replace(/\b(io|me|mi)\b/gi, "tu");
-    // lasciamo "noi", "ci" e i possessivi: li gestisce il modello in modo naturale
   } else {
     out = out.replace(/\b(I|I'm|I’d|I've|me|my)\b/gi, "you");
   }
@@ -160,47 +158,54 @@ function stripFirstPerson(text = "", lang = "it", stile = "whatif") {
 }
 
 /* ========= WHAT IF – esempio ========= */
-const WHATIF_HYBRID_EX_IT = `Qui non esplode niente, ma una linea del tuo futuro inizia a tirarsi dritta, quasi in silenzio. Vedo le tue giornate che si sgrumano piano: togli rumore, recuperi un po di margine e ti accorgi di dove finiscono davvero le tue energie. Immagino piccole scelte ripetute, meno scenografiche ma più vivibili, che spostano il peso dalle promesse alle abitudini. Intuisco che restare fermo ti costerebbe soprattutto in pensieri riciclati e sonno leggero, mentre muoverti avrebbe il prezzo di qualche paura in faccia. Si muove una routine nuova, meno brillante da raccontare ma più onesta da vivere, proprio nel punto in cui smetti di raccontartela e inizi a scegliere.`;
+const WHATIF_HYBRID_EX_IT = `Da come lo racconti sembra che dentro di te qualcosa si stia muovendo piano. Vedo le giornate che si aggiustano un po alla volta: togli rumore, recuperi fiato e inizi a capire dove ti consumi davvero. Immagino piccole scelte ripetute, meno scenografiche ma più vivibili, che spostano il peso dalle promesse alle abitudini. Intuisco che restare fermo ti costerebbe soprattutto in pensieri riciclati e sonno leggero, mentre muoverti avrebbe il prezzo di guardare in faccia qualche paura. Si muove una routine nuova, non perfetta ma più onesta, proprio nel punto in cui smetti di cercare la svolta magica e ti permetti di fare un passo alla volta.`;
 
 /* ======= WHAT IF RULES (IT) ======= */
-const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO):
-- Tono: veggente/zíngara realista, mistica ma concreta.
-- APRI con UNA sola riga breve e intensa, come se leggessi il destino: niente onomatopee tipo "shh", "mmm", niente ripetizione della domanda.
+const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO VICINO — MISTICA MA UMANA):
+- Tono: veggente/zíngara realista, voce calda, empatica, concreta. Non teatrale, non solenne: sembri una persona vera che “sente” la scena.
+- APRI con UNA sola frase breve e naturale che suona come un’osservazione sul presente dell’utente (es. “Da come lo racconti, oggi la tua energia si muove in modo diverso.”). Nessun “shh”, nessun effetto sonoro, nessuna domanda retorica.
 - La SECONDA frase deve INIZIARE con una di queste parole, scegliendo quella più adatta alla domanda: "Vedo", "Sento", "Immagino", "Intuisco", "Si apre", "Si muove".
-- 60% analisi concreta (routine, tempo, costi/benefici, energia, relazioni) + 40% immagini sobrie della quotidianità.
-- Scrivi un futuro vicino che inizia adesso: usa futuro/condizionale semplice ("potresti", "inizierai", "probabilmente").
-- Mantieni la risposta aderente al tema della domanda (città, relazione, lavoro, ecc.), senza esempi generici fuori contesto.
-- Inserisci almeno UN punto non ovvio: un costo nascosto, una conseguenza pratica o un effetto su identità/relazioni che l’utente difficilmente considera da solo.
-- Evita consigli banali tipo "segui il cuore", "ascolta te stesso", "fidati del tuo istinto" se non li agganci a qualcosa di molto concreto.
-- Linguaggio: italiano naturale, frasi grammaticalmente corrette, vocabolario vario (evita ripetizioni evidenti di verbi o immagini).
-- Di solito 5–7 frasi, un solo paragrafo, niente elenchi, niente emoji.
+- 60% analisi concreta (routine, tempo, costi/benefici, energia, corpo, relazioni) + 40% immagini sobrie della quotidianità (casa, mezzi, messaggi, piccoli gesti).
+- Scrivi un futuro vicino che parte da ADESSO: usa soprattutto condizionale e futuro semplice (“potresti”, “inizierai”, “probabilmente”, “finisci per…”).
+- Mantieni la risposta aderente al motivo espresso nella domanda:
+  • se l’utente parla di salute o “non mi sento bene”, concentrati su corpo, riposo, limiti, comunicazione onesta, NON inventare reputazione o drammi coi colleghi;
+  • se parla di lavoro, città, relazione, soldi, resta agganciato a quel tema senza deragliare.
+- Inserisci almeno UN punto non ovvio: un costo nascosto, una conseguenza pratica o un effetto su identità/relazioni che l’utente tende a non considerare.
+- I contro devono essere REALI: non minimizzare se c’è qualcosa di pesante, ma raccontalo con uno sguardo comunque ottimista e di conforto (tipo “fa paura, ma è gestibile se…”).
+- I pro devono includere anche aspetti emotivi: sollievo, pace mentale, spazio per respirare, non solo “successo”.
+- Linguaggio: italiano naturale, frasi semplici, nessun tono da manuale motivazionale. Evita frasi tipo “la vita ti sta chiamando”, “il destino ti guida”.
+- Alla fine porta sempre uno spunto o un piccolo consiglio pratico, ma FUSO dentro l’ultima frase, senza stacchi tipo “E lì capisci che…”. Deve sembrare il naturale finale del discorso.
+- Di solito 3–6 frasi, un solo paragrafo, niente elenchi, niente emoji.
 - Niente prima persona narrativa (“io, noi, mi”).`;
 
-const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE – SCENARIO ALTERNATIVO + LEZIONE):
-- Tono: amico sincero che ti fa vedere la versione alternativa senza schiacciarti di sensi di colpa.
+const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE – SCENARIO ALTERNATIVO + LEZIONE UMANA):
+- Tono: amico sincero con un filo di misticismo, che ti fa vedere la versione alternativa senza schiacciarti di sensi di colpa.
+- Parla come se osservassi “quell’altro film” della sua vita da un gradino di lato, con calma.
 - Compito: descrivi come sarebbe andata se quella scelta l’avessi fatta davvero:
-  • in cosa ti saresti trovato meglio;
+  • in cosa ti saresti sentito più leggero;
   • quali pesi nuovi ti saresti messo addosso;
-  • cosa avresti perso rispetto a oggi.
+  • cosa avresti perso rispetto a oggi, anche in termini di identità o libertà.
 - Usa struttura controfattuale (“se avessi…, ti saresti trovato…, avresti pagato…”).
-- Porta almeno UN’osservazione non scontata: un compromesso che non avevi messo a fuoco, una rinuncia che oggi ti farebbe strano, o un vantaggio meno evidente.
-- Poi porta tutto nel presente: cosa impari, cosa puoi ancora scegliere, come ti conviene muoverti, anche se dà un minimo fastidio sentirlo.
-- Linguaggio: diretto, concreto, niente melodramma, niente giudizi morali, niente frasi generiche da self-help.
-- Di solito 5–7 frasi, un paragrafo, frasi brevi, niente elenchi, niente emoji.
+- Porta almeno UN’osservazione non scontata: un compromesso che oggi ti starebbe stretto, una rinuncia che all’epoca non vedevi, o un vantaggio che non è così brillante da vicino.
+- Poi porta tutto nel presente: cosa impari, cosa puoi ancora scegliere, come ti conviene muoverti ORA, in modo pratico e gentile.
+- Tono sempre ottimista e di conforto: riconosci il rimpianto, ma non lo trasformi in condanna.
+- Linguaggio: diretto, concreto, senza melodramma, senza frasi generiche da self-help.
+- L’ultimo periodo porta uno spunto o una piccola regola concreta per le scelte future, integrato nel discorso, non come frase separata.
+- Di solito 3–6 frasi, un paragrafo unico, niente elenchi, niente emoji.
 - Niente prima persona narrativa (“io, noi, mi”).`;
 
-/* ========= Finali “gancio” WHAT IF (anche IT) ========= */
+/* ========= Finali “gancio” WHAT IF ========= */
 const ZINGARA_ENDINGS = {
   it: {
     future: [
-      "E lì ti accorgi che non è una svolta magica ma il modo in cui ti organizzi ogni giorno.",
-      "E piano piano ti rendi conto che conta più come vivi le giornate che il codice postale.",
-      "E a un certo punto vedi che non devi azzeccare tutto, ti basta una scelta in cui respiri meglio."
+      "E piano piano ti rendi conto che conta più come ti tratti ogni giorno che la singola decisione di oggi.",
+      "E quasi senza accorgertene inizi a capire che la svolta vera è nel modo in cui ti prendi cura di te.",
+      "E alla fine ti accorgi che non stai salvando il mondo, ma ti stai dando un modo più gentile di viverci."
     ],
     past: [
-      "E guardando quella versione di te capisci che non era la scelta perfetta, solo diversa.",
-      "Da fuori ti rendi conto che non hai buttato via la vita, l’hai solo portata su un binario diverso.",
-      "E lì capisci che il rimpianto pesa finché non lo trasformi in un criterio per le scelte di adesso."
+      "E guardando quella versione di te capisci che non era la scelta perfetta, solo un modo diverso di complicarti la vita.",
+      "Da fuori ti rendi conto che non hai buttato via la vita, l’hai solo portata su un binario diverso da imparare a usare.",
+      "E lì cominci a usare quel rimpianto più come un promemoria per le prossime scelte che come una condanna."
     ],
   },
   en: {
@@ -221,24 +226,33 @@ const ZINGARA_ENDINGS = {
   },
 };
 
+/**
+ * Finale WHAT IF:
+ * - Per ITALIANO ora NON forziamo più nessuna frase standard.
+ * - Ci limitiamo a chiudere bene la punteggiatura e lasciamo che sia il modello
+ *   (guidato dalle regole sopra) a costruire uno spunto naturale.
+ */
 function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   let s = String(text || "").trim();
   const L = normLang(lang);
-
   if (!s) return s;
 
-  // probabilità di AGGIUNGERE il gancio (deterministica sulla domanda + testo)
+  if (L === "it") {
+    // Nessun gancio fisso: finale naturale, solo punteggiatura sistemata.
+    return finalPunct(s);
+  }
+
+  // Per le altre lingue manteniamo la logica precedente
   const seed = hashStr(String(domanda || "") + "|" + s);
   if (seed % 100 >= 70) {
-    // ~30% dei casi: nessun gancio, lasciamo il finale naturale del modello
-    return s;
+    return finalPunct(s);
   }
 
   const last = (s.match(/([^.!?…]+[.!?…])\s*$/) || [])[1] || s;
   const alreadyHasHook = /(ti accorgi che|ti rendi conto che|vedi che|capisci che|you’d notice|you’d probably feel|notarás|verras|merkst du)/i.test(
     last
   );
-  if (alreadyHasHook) return s;
+  if (alreadyHasHook) return finalPunct(s);
 
   const pool = ZINGARA_ENDINGS[L] || ZINGARA_ENDINGS.en;
   const bag =
@@ -246,10 +260,10 @@ function ensureZingaraEnding({ text, lang, periodo, domanda }) {
       ? pool.past || ZINGARA_ENDINGS.en.past
       : pool.future || ZINGARA_ENDINGS.en.future;
   const addon = pickDet(bag, seed);
-  if (!addon) return s;
+  if (!addon) return finalPunct(s);
 
   s = s.replace(/[.!?…]+$/, "");
-  return `${s}. ${addon}`;
+  return finalPunct(`${s}. ${addon}`);
 }
 
 /* ========= WTF: stile ufficiale (few-shot) ========= */
@@ -573,7 +587,7 @@ TONO:
 - Di solito inserisci UNA sola “bestemmia” narrata, creativa e tra virgolette (“bestemmia di ritorno”, “bestemmia mal calibrata”, ecc.) e falla uscire con formule vive tipo “ti parte una…”, “ti scappa una…”, “ti esce una…”, variandole ogni volta.
 - Oggetti e ambiente reagiscono (divano, barista, finestra, trolley, lampada, piccione, tazzina, porta, sedia, specchio, ascensore, bicchiere…), massimo 3–5 elementi, e CAMBIALI spesso: non usare sempre gli stessi, e devono avere senso nella scena (niente oggetti a caso fuori contesto).
 - Il cuore comico sono i tuoi pro e contro: devono sembrare scemi, da bar, ma con un fondo di verità (es. pro = ti senti di nuovo vivo, contro = ti incasini con la logistica come sempre).
-- Nessun motivazionalese zuccheroso, niente frasi tipo “la vita ti chiama”, niente teoria astratta (“vivere vuol dire…”).
+- Nessun motivazionalese zuccheroso, niente frasi tipo "la vita ti chiama", niente teoria astratta (“vivere vuol dire…”).
 
 COMPITO (FUTURO):
 - Devi mostrare DUE film:
@@ -780,14 +794,28 @@ Paragrafo unico, niente emoji.`;
 
       if (hasClar) {
         if (isPast) {
-          return `Domanda sul PASSATO (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF”: racconta come sarebbe andata davvero in quella vita alternativa, porta almeno un dettaglio non ovvio (un compromesso, una rinuncia o un vantaggio strano da immaginare) e poi spiega cosa impari e come ti conviene muoverti ORA. Paragrafo unico, 5–7 frasi, analisi concreta e consigli pratici.`;
+          return `Domanda sul PASSATO (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF”: racconta come sarebbe andata davvero in quella vita alternativa, porta almeno un dettaglio non ovvio (un compromesso, una rinuncia o un vantaggio strano da immaginare) e poi spiega cosa impari e come ti conviene muoverti ORA, in modo pratico e gentile. Paragrafo unico, 3–6 frasi, tono empatico e concreto.`;
         }
-        return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta in ITALIANO come “WHAT IF”: prima analizzi i possibili scenari (se lo fai, se non lo fai, se lo rimandi, se lo fai in modo diverso), poi prendi posizione su cosa ha più senso e dai consigli pratici su come comportarti. Inserisci almeno un punto che non è scontato, qualcosa che l’utente tende a non guardare ma che pesa molto nella realtà (energia, tempo, relazioni, identità, soldi nascosti). Paragrafo unico, 5–7 frasi, tono lucido ma caldo.`;
+        return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta in ITALIANO come “WHAT IF”:
+- apri con una frase naturale che aggancia come ti sta dicendo la cosa adesso;
+- poi analizzi pochi scenari concreti (se lo fai, se non lo fai, se lo fai in modo diverso);
+- tieni conto del motivo esplicito della domanda (salute, lavoro, città, relazione, soldi…) senza inventare drammi laterali;
+- dai uno sguardo sia ai pro (sollievo, spazio mentale, opportunità) che ai contro reali (impegno, energia, conseguenze pratiche), con tono ottimista ma onesto;
+- inserisci almeno un punto non ovvio che faccia davvero ragionare;
+- chiudi con uno spunto o un consiglio pratico fuso nell’ultima frase, senza frasi staccate tipo “e lì capisci che…”.
+Paragrafo unico, 3–6 frasi, tono caldo ma lucido.`;
       }
       if (isPast) {
-        return `Domanda sul PASSATO (non ripeterla): "${domanda}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF”: descrivi come sarebbe andata quella scelta, porta almeno un dettaglio inaspettato (un prezzo da pagare o un beneficio meno ovvio) e chiudi spiegando cosa puoi farci oggi, in modo concreto. Paragrafo unico.`;
+        return `Domanda sul PASSATO (non ripeterla): "${domanda}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF”: descrivi come sarebbe andata quella scelta (pro e contro reali), porta almeno un dettaglio inaspettato e chiudi collegando la lezione al presente in modo concreto e gentile, dentro l’ultima frase. Paragrafo unico, 3–6 frasi.`;
       }
-      return `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO come “WHAT IF”: analizza i diversi scenari possibili e poi dai consigli chiari su cosa fare e come comportarti nei prossimi passi. Inserisci almeno un’osservazione non banale, che faccia venire da dire “ok, questa non l’avevo proprio considerata”. Paragrafo unico.`;
+      return `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO come “WHAT IF”:
+- apri con una frase naturale che sembra un’osservazione su come sei messo adesso;
+- descrivi cosa succede se fai davvero questa scelta e cosa succede se resti fermo;
+- resta aderente al tema (salute, lavoro, soldi, relazione, città…) senza inventare problemi che l’utente non ha nominato;
+- evidenzia pro e contro reali, con tono ottimista ma non ingenuo;
+- inserisci almeno un’osservazione non banale che faccia cambiare prospettiva;
+- chiudi con uno spunto pratico o di consapevolezza integrato nel discorso, non come slogan.
+Paragrafo unico, 3–6 frasi.`;
     }
 
     if (L === "es") {
@@ -1111,7 +1139,7 @@ Prendi il testo seguente e:
 - non racchiudere tutto il testo tra virgolette.`
         : `Sei un correttore di bozze.
 Prendi il testo seguente e:
-- mantieni intatto senso e tono;
+- mantieni intatto senso e tono, anche il lato un po’ mistico ma umano;
 - correggi errori grammaticali e ripetizioni inutili;
 - non cambiare pronomi o persona verbale, a meno che la frase non sia proprio scorretta;
 - mantieni un unico paragrafo e lunghezza simile.`;
@@ -1378,7 +1406,7 @@ export default async function handler(req, res) {
       answer = ensureWtfEcchecazzEnding(answer, L);
     }
 
-    // Finale “gancio zíngara” per WHAT IF (tutte le lingue, incluso IT)
+    // Finale “gancio zíngara” per WHAT IF (ora soft per IT)
     if (stile === "whatif") {
       answer = ensureZingaraEnding({ text: answer, lang: L, periodo, domanda });
     }
@@ -1427,4 +1455,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-  }
+                                 }
