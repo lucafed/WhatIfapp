@@ -1,5 +1,5 @@
 // FILE: /api/save.js
-// Salva in Redis la domanda/risposta per l’admin panel
+// Salva in Redis SOLO metadati anonimi per l’admin panel (niente testo utente)
 
 const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
 const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -11,8 +11,8 @@ async function pushLogToRedis(item) {
   }
 
   const commands = [
-    ["LPUSH", "logs:ask", JSON.stringify(item)],
-    ["LTRIM", "logs:ask", "0", "199"] // tieni solo gli ultimi 200
+    ["LPUSH", "logs:ask_meta", JSON.stringify(item)],
+    ["LTRIM", "logs:ask_meta", "0", "199"] // tieni solo gli ultimi 200
   ];
 
   const res = await fetch(`${REDIS_URL}/pipeline`, {
@@ -49,36 +49,61 @@ export default async function handler(req, res) {
   try {
     const body = getBody(req);
 
-    const domanda = (body.domanda || "").toString().trim();
-    const answer  = (body.answer  || "").toString().trim();
-    const style   = (body.stile   || body.style || "whatif").toString();
-    const periodo = (body.periodo || "future").toString();
-    const lang    = ((body.lang   || "it").toString().toLowerCase().slice(0, 2));
+    // 🔒 NIENTE testo utente, niente IP, niente email
+    // Prendiamo solo i metadati che ti servono
 
-    const hasAdminToken = !!req.headers["x-admin-token"];
-    const isPro = req.headers["x-pro"] === "1";
-    const user_type = hasAdminToken ? "admin" : (isPro ? "pro" : "free");
+    const styleRaw   = (body.stile   || body.style || "whatif").toString();
+    const periodoRaw = (body.periodo || "future").toString();
+    const langRaw    = (body.lang    || "it").toString().toLowerCase().slice(0, 2);
 
-    const fwd = (req.headers["x-forwarded-for"] || "").toString();
-    const ip  = fwd.split(",")[0].trim() || (req.socket && req.socket.remoteAddress) || "";
+    // Normalizzazioni semplici
+    const style =
+      styleRaw === "wtf"
+        ? "wtf"
+        : "whatif";
+
+    const periodo =
+      periodoRaw === "past"
+        ? "past"
+        : "future";
+
+    const lang = ["it", "en", "es", "fr", "de"].includes(langRaw)
+      ? langRaw
+      : "it";
+
+    // Flag se è stata usata la modalità sorpresa
+    const surprise =
+      Boolean(body.surprise) ||
+      Boolean(body?.micro?.surprise);
+
+    // Source: da dove viene la domanda
+    // - "manual"   = scritta a mano dall'utente
+    // - "surprise" = tasto "Sorprendimi"
+    // - "hint"     = spunto rapido
+    const sourceRaw =
+      (body.source ||
+       body?.micro?.source ||
+       "manual").toString().toLowerCase();
+
+    let source = "manual";
+    if (sourceRaw === "surprise") source = "surprise";
+    else if (sourceRaw === "hint") source = "hint";
 
     const ts = Date.now();
-    const answer_chars = answer.length || 0;
 
-    if (!domanda && !answer) {
+    // Se non abbiamo nemmeno stile/periodo/lang, non ha senso loggare
+    if (!style && !periodo && !lang) {
       return res.status(200).json({ ok: true, skipped: true });
     }
 
     const logItem = {
       ts,
-      domanda,
-      answer,
       style,
       periodo,
       lang,
-      ip,
-      user_type,
-      answer_chars
+      surprise,
+      source
+      // 🔐 NOTA: nessuna domanda, nessuna risposta, nessun IP
     };
 
     await pushLogToRedis(logItem);
@@ -86,6 +111,8 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true });
   } catch (err) {
     console.error("save handler error:", err);
-    return res.status(500).json({ ok: false, error: err.message || "server_error" });
+    return res
+      .status(500)
+      .json({ ok: false, error: err.message || "server_error" });
   }
 }
