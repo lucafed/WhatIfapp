@@ -1,5 +1,5 @@
 // FILE: /api/admin-logs.js
-// Restituisce SOLO metadati anonimi salvati da /api/save, leggendo da Redis
+// Restituisce la lista di log salvati da /api/save, leggendo da Redis
 
 const REDIS_URL   = process.env.UPSTASH_REDIS_REST_URL;
 const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -13,9 +13,8 @@ async function readLogsFromRedis(limit = 200) {
 
   const max = Math.min(Math.max(parseInt(limit, 10) || 50, 1), 200);
 
-  // 🔹 ATTENZIONE: key allineata con /api/save.js → "logs:ask_meta"
   const commands = [
-    ["LRANGE", "logs:ask_meta", "0", String(max - 1)]
+    ["LRANGE", "logs:ask", "0", String(max - 1)]
   ];
 
   const res = await fetch(`${REDIS_URL}/pipeline`, {
@@ -51,6 +50,16 @@ async function readLogsFromRedis(limit = 200) {
   return items;
 }
 
+function maskIp(ip) {
+  if (!ip) return "";
+  // molto semplice: taglia dopo il secondo punto
+  const parts = ip.split(".");
+  if (parts.length >= 2) {
+    return parts[0] + "." + parts[1] + ".*.*";
+  }
+  return ip;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
@@ -69,7 +78,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ ok: false, error: "unauthorized" });
     }
 
-    const { limit = "200", order = "desc" } = req.query || {};
+    const { limit = "200", order = "desc", mask = "1" } = req.query || {};
 
     let items = await readLogsFromRedis(limit);
 
@@ -79,45 +88,15 @@ export default async function handler(req, res) {
       items = items.reverse();
     }
 
-    // 🔒 PRUNING: restituiamo solo i campi meta che ti servono
-    const safeItems = items.map(it => {
-      const styleRaw   = (it.style   || it.stile   || "whatif").toString();
-      const periodoRaw = (it.periodo || "future").toString();
-      const langRaw    = (it.lang    || "it").toString().toLowerCase().slice(0, 2);
-      const sourceRaw  = (it.source  || it?.micro?.source || "manual").toString().toLowerCase();
+    // maschera IP se richiesto
+    if (String(mask) === "1") {
+      items = items.map(it => ({
+        ...it,
+        ip: maskIp(it.ip || "")
+      }));
+    }
 
-      const style =
-        styleRaw === "wtf"
-          ? "wtf"
-          : "whatif";
-
-      const periodo =
-        periodoRaw === "past"
-          ? "past"
-          : "future";
-
-      const lang = ["it", "en", "es", "fr", "de"].includes(langRaw)
-        ? langRaw
-        : "it";
-
-      let source = "manual";
-      if (sourceRaw === "surprise") source = "surprise";
-      else if (sourceRaw === "hint") source = "hint";
-
-      const surprise = Boolean(it.surprise) || Boolean(it?.micro?.surprise);
-
-      return {
-        ts: it.ts || Date.now(),
-        style,
-        periodo,
-        lang,
-        surprise,
-        source
-        // 🔐 NON ritorniamo mai: domanda, answer, ip, email, ecc.
-      };
-    });
-
-    return res.status(200).json({ ok: true, items: safeItems });
+    return res.status(200).json({ ok: true, items });
   } catch (err) {
     console.error("admin-logs handler error:", err);
     return res.status(500).json({ ok: false, error: err.message || "server_error" });
