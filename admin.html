@@ -32,7 +32,7 @@
     .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     .grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
     .chip{padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--chip);font-size:12px;color:#d7e8ec}
-    .chip.warn{border-color:var(--bad);color:#ffd4d4}
+    .chip.warn{border-color:var(--accent2);color:#fff;font-weight:800;box-shadow:0 0 18px rgba(255,236,1,.2)}
     .btn{
       appearance:none;border-radius:12px;border:1px solid var(--line);
       padding:8px 12px;font-weight:700;background:var(--chip);color:var(--fg);cursor:pointer;
@@ -216,13 +216,12 @@
       <summary class="label">Log domande (server, solo metadati anonimi)</summary>
       <div class="row" style="margin-bottom:6px">
         <button class="btn" id="btnReloadLogs">🔄 Ricarica log</button>
-        <button class="btn danger" id="btnClearLogs">🧹 Svuota lista (solo UI)</button>
+        <button class="btn danger" id="btnClearLogsView">🧹 Svuota vista</button>
         <span class="small" id="logsInfo">
           Legge da <span class="mono">/api/admin-logs</span> (max 200).
           Nessun testo di domanda/risposta, nessun IP, solo stile/tempo/Sorprendimi/Spunti rapidi.
         </span>
       </div>
-      <div class="small" id="logsStats" style="margin:4px 0 6px;"></div>
       <div class="row" style="margin-bottom:6px">
         <span class="chip">
           Stile:
@@ -250,6 +249,12 @@
           </select>
         </span>
       </div>
+      <!-- CONTATORI DOMANDE -->
+      <div class="row" style="margin-bottom:6px">
+        <span class="chip warn" id="logsCountChipTotal">Log mostrati: 0</span>
+        <span class="chip" id="logsCountChipToday">Di oggi: 0</span>
+      </div>
+
       <div class="story-list" id="logsList"></div>
     </details>
   </div>
@@ -389,8 +394,8 @@
     renderAdminBadge();
     toast('Token admin rimosso.');
     lastLogsItems = [];
+    logsLastSeenTs = 0;
     renderLogsWithCurrentFilters();
-    updateLogsStats();
   };
 
   /* ========= UTENTE LOGGATO + WALLET FIRESTORE ========= */
@@ -635,108 +640,26 @@
 
   /* ========= LOG DOMANDE (SERVER, SOLO METADATI) ========= */
   let lastLogsItems = [];
+  let logsLastSeenTs = 0; // ultimo timestamp visto (per ricarica incrementale)
 
-  // Normalizza stile/periodo/sorgente da vari formati possibili
-  function normalizeLogMeta(it){
-    const style   = it.style   || it.stile || 'whatif';
-    const periodo = it.periodo || 'future';
+  function updateLogsCounters(){
+    const total = (lastLogsItems || []).length;
+    const todayStr = new Date().toISOString().slice(0,10);
+    let todayCount = 0;
 
-    const rawSource =
-      it.source ||
-      (it.micro && it.micro.source) ||
-      (it.absurd ? 'surprise' : '') ||
-      '';
-
-    const surprise =
-      it.surprise === true ||
-      it.absurd === true ||
-      (it.micro && it.micro.surprise === true);
-
-    const usedHint =
-      it.usedHint === true ||
-      rawSource === 'hint' ||
-      (it.micro && it.micro.source === 'hint');
-
-    let sourceNorm = 'manual';
-    if (surprise) {
-      sourceNorm = 'surprise';
-    } else if (usedHint) {
-      sourceNorm = 'hint';
-    } else if (rawSource === 'surprise' || rawSource === 'hint' || rawSource === 'manual') {
-      sourceNorm = rawSource;
-    }
-
-    let ts = it.ts || it.timestamp || null;
-    if (typeof ts === 'string' && /^\d+$/.test(ts)) ts = Number(ts);
-    let dateStr = 'sconosciuta';
-    try {
-      if (ts) {
-        const d = new Date(ts);
-        if (!isNaN(d.getTime())) {
-          dateStr = d.toISOString().slice(0, 10); // YYYY-MM-DD
-        }
+    for(const it of lastLogsItems){
+      const ts = it.ts || 0;
+      const d = new Date(ts);
+      if(!isNaN(d.getTime())){
+        const ds = d.toISOString().slice(0,10);
+        if(ds === todayStr) todayCount++;
       }
-    } catch {}
-
-    return { style, periodo, source: sourceNorm, surprise, usedHint, dateStr, ts: ts || Date.now() };
-  }
-
-  // Statistiche giornaliere: totale + breakdown per sorgente
-  function updateLogsStats(){
-    const box = $('logsStats');
-    if (!box) return;
-
-    const items = lastLogsItems || [];
-    if (!items.length){
-      box.textContent = 'Nessun log disponibile dal server.';
-      return;
     }
 
-    const todayStr = new Date().toISOString().slice(0, 10);
-    const byDate = {};
-
-    for (const raw of items){
-      const meta = normalizeLogMeta(raw);
-      const d = meta.dateStr || 'sconosciuta';
-      if (!byDate[d]) {
-        byDate[d] = {
-          total: 0,
-          manual: 0,
-          hint: 0,
-          surprise: 0
-        };
-      }
-      byDate[d].total++;
-      if (meta.source === 'hint') byDate[d].hint++;
-      else if (meta.source === 'surprise') byDate[d].surprise++;
-      else byDate[d].manual++;
-    }
-
-    const dates = Object.keys(byDate).sort().reverse(); // ultime per prime
-    const lines = [];
-
-    const today = byDate[todayStr];
-    if (today){
-      lines.push(
-        `Oggi (${todayStr}): ${today.total} domande · manuale ${today.manual} · spunti ${today.hint} · sorprendimi ${today.surprise}`
-      );
-    }
-
-    // altre date (fino a 6 giorni)
-    dates
-      .filter(d => d !== todayStr)
-      .slice(0, 6)
-      .forEach(d => {
-        const v = byDate[d];
-        lines.push(
-          `${d}: ${v.total} domande · manuale ${v.manual} · spunti ${v.hint} · sorprendimi ${v.surprise}`
-        );
-      });
-
-    const tot = items.length;
-    lines.unshift(`Totale domande loggate (tutte le date): ${tot}`);
-
-    box.innerHTML = lines.map(l => `<div>${l}</div>`).join("");
+    const chipTot = $('logsCountChipTotal');
+    const chipToday = $('logsCountChipToday');
+    if(chipTot) chipTot.textContent = `Log mostrati: ${total}`;
+    if(chipToday) chipToday.textContent = `Di oggi: ${todayCount}`;
   }
 
   function renderLogsWithCurrentFilters(){
@@ -749,12 +672,14 @@
     const periodoFilter = ($('logsFilterPeriodo') && $('logsFilterPeriodo').value) || '';
     const sourceFilter  = ($('logsFilterSource')  && $('logsFilterSource').value)  || '';
 
-    const filtered = items.filter(raw=>{
-      const meta = normalizeLogMeta(raw);
+    const filtered = items.filter(it=>{
+      const style   = it.style   || it.stile || 'whatif';
+      const periodo = it.periodo || 'future';
+      const source  = it.source  || 'manual';
 
-      if(styleFilter   && meta.style   !== styleFilter)   return false;
-      if(periodoFilter && meta.periodo !== periodoFilter) return false;
-      if(sourceFilter  && meta.source  !== sourceFilter)  return false;
+      if(styleFilter   && style   !== styleFilter)   return false;
+      if(periodoFilter && periodo !== periodoFilter) return false;
+      if(sourceFilter  && source  !== sourceFilter)  return false;
       return true;
     });
 
@@ -763,46 +688,57 @@
       div.className='small';
       div.textContent='— Nessun log che rispetta questi filtri.';
       box.appendChild(div);
+      updateLogsCounters();
       return;
     }
 
-    filtered.forEach(raw=>{
-      const meta = normalizeLogMeta(raw);
+    filtered.forEach(it=>{
       const d = document.createElement('div');
       d.className = 'story';
 
-      const tsView = fmt(meta.ts || Date.now());
+      const ts       = fmt(it.ts || Date.now());
+      const style    = it.style   || it.stile || 'whatif';
+      const periodo  = it.periodo || 'future';
+      const source   = it.source  || 'manual';       // 'manual' | 'hint' | 'surprise'
+      const surprise = !!it.surprise;                // true se è stato usato Sorprendimi
+      const usedHint = source === 'hint' || it.usedHint === true;
+
       const labelSource =
-        meta.source === 'hint'     ? 'spunti rapidi'
-      : meta.source === 'surprise' ? 'sorprendimi'
-      :                              'manuale';
+        source === 'hint'      ? 'spunti rapidi'
+      : source === 'surprise'  ? 'sorprendimi'
+      :                          'manuale';
 
       d.innerHTML = `
         <div class="story-q">
-          ${tsView} · stile: ${meta.style} · periodo: ${meta.periodo}
+          ${ts} · stile: ${style} · periodo: ${periodo}
         </div>
         <div class="story-meta">
           sorgente: ${labelSource}
-          · Sorprendimi: ${meta.surprise ? 'sì' : 'no'}
-          · Spunti rapidi: ${meta.source === 'hint' ? 'sì' : 'no'}
+          · Sorprendimi: ${surprise ? 'sì' : 'no'}
+          · Spunti rapidi: ${usedHint ? 'sì' : 'no'}
         </div>
       `;
       box.appendChild(d);
     });
+
+    updateLogsCounters();
   }
 
   async function fetchLogsFromApi(){
     const box = $('logsList');
     const info = $('logsInfo');
     if(!box) return;
-    box.innerHTML = '<div class="small">Caricamento log dal server…</div>';
+
+    // non distruggo il contenuto se ho già log: solo messaggio piccolo in cima
+    if(!lastLogsItems.length){
+      box.innerHTML = '<div class="small">Caricamento log dal server…</div>';
+    }
 
     try{
       const adminTok = getAdminToken();
       const headers = {};
       if(adminTok) headers['x-admin-token'] = adminTok;
 
-      // l'API restituisce solo metadati anonimi (nessun testo domanda/risposta, nessun IP)
       const res = await fetch('/api/admin-logs?limit=200&order=desc',{ headers });
 
       if(res.status === 401){
@@ -811,7 +747,9 @@
         box.innerHTML = '<div class="small">Non autorizzato: token admin non valido o scaduto. Controlla il valore inserito.</div>';
         if(info) info.textContent = 'Token admin mancante o non valido per /api/admin-logs.';
         toast('Token admin non valido per /api/admin-logs.');
-        updateLogsStats();
+        lastLogsItems = [];
+        logsLastSeenTs = 0;
+        updateLogsCounters();
         return;
       }
 
@@ -820,40 +758,96 @@
         renderAdminTokenUI();
         box.innerHTML = '<div class="small">Errore nel leggere /api/admin-logs (HTTP '+res.status+').</div>';
         if(info) info.textContent = 'Errore HTTP nel recuperare i log.';
-        updateLogsStats();
+        lastLogsItems = [];
+        logsLastSeenTs = 0;
+        updateLogsCounters();
         return;
       }
 
       const data = await res.json().catch(()=>null);
       const items = (data && Array.isArray(data.items)) ? data.items : [];
-      lastLogsItems = items;
 
       adminTokenState = 'ok';
       renderAdminTokenUI();
 
       if(!items.length){
-        box.innerHTML = '<div class="small">Token OK, ma nessun log trovato (lista vuota).</div>';
-        if(info) info.textContent = 'Token valido. Nessun log presente in /api/admin-logs.';
-        updateLogsStats();
+        if(!lastLogsItems.length){
+          box.innerHTML = '<div class="small">Token OK, ma nessun log trovato (lista vuota).</div>';
+          if(info) info.textContent = 'Token valido. Nessun log presente in /api/admin-logs.';
+        }
+        updateLogsCounters();
         return;
       }
 
-      renderLogsWithCurrentFilters();
-      updateLogsStats();
-
-      if(info){
-        info.textContent = `Log lato server (solo metadati anonimi): ${items.length} voci lette (max 200). Filtri applicati solo lato client.`;
+      // calcolo max ts ricevuto
+      let maxTsInBatch = logsLastSeenTs;
+      for(const it of items){
+        const ts = Number(it.ts || 0);
+        if(ts > maxTsInBatch) maxTsInBatch = ts;
       }
+
+      if(logsLastSeenTs === 0){
+        // primo caricamento: prendo tutto
+        lastLogsItems = items.slice().sort((a,b)=>(b.ts||0)-(a.ts||0));
+        logsLastSeenTs = maxTsInBatch;
+        renderLogsWithCurrentFilters();
+        if(info){
+          info.textContent = `Log lato server (solo metadati anonimi): ${items.length} voci lette (max 200). Filtri applicati solo lato client.`;
+        }
+        toast(`Caricati ${items.length} log totali dal server.`);
+        return;
+      }
+
+      // caricamento successivo: solo log con ts maggiore dell'ultimo visto
+      const newItems = items.filter(it => {
+        const ts = Number(it.ts || 0);
+        return ts > logsLastSeenTs;
+      });
+
+      if(!newItems.length){
+        // niente di nuovo, mantengo la vista com'è
+        if(!lastLogsItems.length){
+          box.innerHTML = '<div class="small">Nessun log nuovo. (Vista vuota, ma i log più vecchi restano sul server.)</div>';
+        }
+        if(info){
+          info.textContent = `Nessun nuovo log dal server. Log totali mostrati: ${lastLogsItems.length}.`;
+        }
+        toast('Nessun nuovo log dal server.');
+        updateLogsCounters();
+        return;
+      }
+
+      // aggiungo solo i nuovi, mantengo ordinamento per ts desc
+      lastLogsItems = lastLogsItems.concat(newItems);
+      lastLogsItems.sort((a,b)=>(b.ts||0)-(a.ts||0));
+      logsLastSeenTs = maxTsInBatch;
+
+      renderLogsWithCurrentFilters();
+      if(info){
+        info.textContent = `Log lato server (solo metadati anonimi): ${lastLogsItems.length} voci totali in vista. (+${newItems.length} nuove)`;
+      }
+      toast(`Aggiunti ${newItems.length} nuovi log.`);
+
     }catch(e){
       console.error('admin-logs error:', e);
       adminTokenState = 'unknown';
       renderAdminTokenUI();
       box.innerHTML = '<div class="small">Errore imprevisto nel leggere /api/admin-logs (vedi console).</div>';
-      const info = $('logsInfo');
       if(info) info.textContent = 'Errore imprevisto nel recuperare i log.';
-      updateLogsStats();
+      updateLogsCounters();
     }
   }
+
+  // svuota SOLO la vista locale dei log (non tocca il server, non resetta logsLastSeenTs)
+  $('btnClearLogsView').onclick = () => {
+    lastLogsItems = [];
+    const box = $('logsList');
+    if(box){
+      box.innerHTML = '<div class="small">Vista log svuotata. I log più vecchi restano sul server; con “Ricarica log” vedrai solo le chiamate nuove.</div>';
+    }
+    updateLogsCounters();
+    toast('Vista log svuotata (server intatto).');
+  };
 
   if($('btnReloadLogs')){
     $('btnReloadLogs').onclick = fetchLogsFromApi;
@@ -862,20 +856,11 @@
   if($('logsFilterPeriodo')) $('logsFilterPeriodo').onchange = renderLogsWithCurrentFilters;
   if($('logsFilterSource'))  $('logsFilterSource').onchange  = renderLogsWithCurrentFilters;
 
-  // Svuota lista log (solo UI, non tocca Redis/server)
-  const btnClearLogs = $('btnClearLogs');
-  if (btnClearLogs){
-    btnClearLogs.onclick = () => {
-      lastLogsItems = [];
-      renderLogsWithCurrentFilters();
-      updateLogsStats();
-      toast('Lista log lato server svuotata (solo UI, Redis non viene toccato).');
-    };
-  }
-
   // prova caricamento log all’avvio (se c’è già un token salvato)
   if(getAdminToken()){
     fetchLogsFromApi();
+  } else {
+    updateLogsCounters();
   }
 </script>
 </body>
