@@ -245,11 +245,10 @@ transition:opacity .35s ease, transform .35s ease;
     </div>
     <div id="answer" class="story">⏳ …</div>
     <!-- 🔊 TTS: Bottone per ascoltare la risposta -->
-<div class="row" style="margin-top:12px; gap:8px;">
-  <button class="btn ghost" id="readAnswerBtn">🔊 Ascolta la risposta</button>
-  <span id="ttsStatus" class="small" style="opacity:0.9;"></span>
-</div>
-
+    <div class="row" style="margin-top:12px; gap:8px;">
+      <button class="btn ghost" id="readAnswerBtn">🔊 Ascolta la risposta</button>
+      <span id="ttsStatus" class="small" style="opacity:0.9;"></span>
+    </div>
 
     <div class="hr"></div>
     <div class="label" id="lblP">Esito & motivazioni</div>
@@ -386,7 +385,16 @@ const I18N = {
        videoError:"Impossibile generare il video. Riprova.",
        videoNoData:"Non c’è ancora una risposta da trasformare in video.",
        videoShareNotSupported:"Il tuo browser non supporta la condivisione diretta del file.",
-       videoShareCancelled:"Condivisione annullata."
+       videoShareCancelled:"Condivisione annullata.",
+       videoOpenTikTok:"📱 Apri TikTok",
+       videoOpenInsta:"📸 Apri Instagram",
+       /* TTS */
+       ttsBtn:"🔊 Ascolta la risposta",
+       ttsBtnStop:"⏹ Stop",
+       ttsUnsupported:"Il tuo dispositivo non supporta la lettura vocale.",
+       ttsNoAnswer:"Nessuna risposta da leggere.",
+       ttsPlaying:"Riproduzione in corso…",
+       ttsError:"Errore nella sintesi vocale."
   },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
@@ -419,7 +427,16 @@ const I18N = {
        videoError:"Could not generate the video. Please try again.",
        videoNoData:"There is no answer yet to turn into a video.",
        videoShareNotSupported:"Your browser cannot share this file directly.",
-       videoShareCancelled:"Share cancelled."
+       videoShareCancelled:"Share cancelled.",
+       videoOpenTikTok:"📱 Open TikTok",
+       videoOpenInsta:"📸 Open Instagram",
+       /* TTS */
+       ttsBtn:"🔊 Listen to the answer",
+       ttsBtnStop:"⏹ Stop",
+       ttsUnsupported:"Your device does not support voice reading.",
+       ttsNoAnswer:"No answer to read.",
+       ttsPlaying:"Playing audio…",
+       ttsError:"Speech synthesis error."
   },
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
@@ -452,7 +469,16 @@ const I18N = {
        videoError:"No se ha podido generar el vídeo. Inténtalo de nuevo.",
        videoNoData:"Todavía no hay una respuesta para convertir en vídeo.",
        videoShareNotSupported:"Tu navegador no puede compartir este archivo directamente.",
-       videoShareCancelled:"Compartición cancelada."
+       videoShareCancelled:"Compartición cancelada.",
+       videoOpenTikTok:"📱 Abrir TikTok",
+       videoOpenInsta:"📸 Abrir Instagram",
+       /* TTS */
+       ttsBtn:"🔊 Escuchar la respuesta",
+       ttsBtnStop:"⏹ Stop",
+       ttsUnsupported:"Tu dispositivo no soporta la lectura en voz alta.",
+       ttsNoAnswer:"No hay respuesta para leer.",
+       ttsPlaying:"Reproduciendo audio…",
+       ttsError:"Error en la síntesis de voz."
   },
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
        sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
@@ -485,7 +511,16 @@ const I18N = {
        videoError:"Impossible de générer le vidéo. Réessaie.",
        videoNoData:"Il n’y a pas encore de réponse à transformer en vidéo.",
        videoShareNotSupported:"Ton navigateur ne peut pas partager directement ce fichier.",
-       videoShareCancelled:"Partage annulé."
+       videoShareCancelled:"Partage annulé.",
+       videoOpenTikTok:"📱 Ouvrir TikTok",
+       videoOpenInsta:"📸 Ouvrir Instagram",
+       /* TTS */
+       ttsBtn:"🔊 Écouter la réponse",
+       ttsBtnStop:"⏹ Stop",
+       ttsUnsupported:"Ton appareil ne supporte pas la lecture vocale.",
+       ttsNoAnswer:"Aucune réponse à lire.",
+       ttsPlaying:"Lecture en cours…",
+       ttsError:"Erreur de synthèse vocale."
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
@@ -518,7 +553,16 @@ const I18N = {
        videoError:"Video konnte nicht erzeugt werden. Bitte versuche es erneut.",
        videoNoData:"Es gibt noch keine Antwort, die in ein Video umgewandelt werden kann.",
        videoShareNotSupported:"Dein Browser kann diese Datei nicht direkt teilen.",
-       videoShareCancelled:"Teilen abgebrochen."
+       videoShareCancelled:"Teilen abgebrochen.",
+       videoOpenTikTok:"📱 TikTok öffnen",
+       videoOpenInsta:"📸 Instagram öffnen",
+       /* TTS */
+       ttsBtn:"🔊 Antwort anhören",
+       ttsBtnStop:"⏹ Stop",
+       ttsUnsupported:"Dein Gerät unterstützt keine Sprachausgabe.",
+       ttsNoAnswer:"Keine Antwort zum Vorlesen.",
+       ttsPlaying:"Audio wird abgespielt…",
+       ttsError:"Fehler bei der Sprachausgabe."
   }
 };
 const SUP_LANG=['it','en','es','fr','de'];
@@ -718,7 +762,16 @@ function applyUI(q){
   setText('#lblVideo', T.videoTitle || 'Video');
   const vh = qs('#videoHelp'); if(vh) vh.textContent = T.videoHelp || '';
   if(videoBtn) videoBtn.textContent = T.videoBtn || '🎬 Crea video';
+
+  if(openTikTokBtn) openTikTokBtn.textContent = T.videoOpenTikTok || "📱 TikTok";
+  if(openInstaBtn) openInstaBtn.textContent = T.videoOpenInsta || "📸 Instagram";
+
   if(videoNoteEl) videoNoteEl.textContent = '';
+
+  const ttsBtn = document.getElementById("readAnswerBtn");
+  const ttsStatus = document.getElementById("ttsStatus");
+  if(ttsBtn) ttsBtn.textContent = T.ttsBtn || "🔊";
+  if(ttsStatus) ttsStatus.textContent = "";
 }
 
 /* ==== Probability ==== */
@@ -1513,6 +1566,7 @@ if(openInstaBtn){
     );
   };
 }
+
 /* ============================
    🔊 TEXT-TO-SPEECH RISPOSTA
    ============================ */
@@ -1525,49 +1579,65 @@ if(openInstaBtn){
 
   if(!("speechSynthesis" in window)){
     btn.disabled = true;
-    statusEl.textContent = "Il tuo dispositivo non supporta l'audio.";
+    statusEl.textContent = t().ttsUnsupported || "";
     return;
   }
 
   let speaking = false;
   let utterance = null;
 
+  function currentLocale(){
+    const langCode = (document.documentElement.lang || "it").slice(0,2).toLowerCase();
+    const map = {
+      it:"it-IT",
+      en:"en-US",
+      es:"es-ES",
+      fr:"fr-FR",
+      de:"de-DE"
+    };
+    return map[langCode] || "it-IT";
+  }
+
+  function resetUI(){
+    speaking = false;
+    btn.textContent = (t().ttsBtn || "🔊");
+    statusEl.textContent = "";
+  }
+
+  btn.textContent = t().ttsBtn || "🔊";
+
   btn.addEventListener("click",()=>{
     const text = answerEl.innerText || answerEl.textContent || "";
 
     if(!text.trim()){
-      statusEl.textContent = "Nessuna risposta da leggere.";
+      statusEl.textContent = t().ttsNoAnswer || "";
       return;
     }
 
     if(speaking){
       window.speechSynthesis.cancel();
-      speaking = false;
-      btn.textContent = "🔊 Ascolta la risposta";
-      statusEl.textContent = "";
+      resetUI();
       return;
     }
 
     utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = document.documentElement.lang || "it-IT";
+    utterance.lang = currentLocale();
     utterance.rate = 1;
 
     utterance.onstart = ()=>{
       speaking = true;
-      btn.textContent = "⏹ Stop";
-      statusEl.textContent = "Riproduzione in corso…";
+      btn.textContent = t().ttsBtnStop || "⏹ Stop";
+      statusEl.textContent = t().ttsPlaying || "";
     };
 
     utterance.onend = ()=>{
-      speaking = false;
-      btn.textContent = "🔊 Ascolta la risposta";
-      statusEl.textContent = "";
+      resetUI();
     };
 
     utterance.onerror = ()=>{
       speaking = false;
-      btn.textContent = "🔊 Ascolta la risposta";
-      statusEl.textContent = "Errore sintesi vocale.";
+      btn.textContent = t().ttsBtn || "🔊";
+      statusEl.textContent = t().ttsError || "";
     };
 
     window.speechSynthesis.speak(utterance);
