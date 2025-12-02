@@ -1,5 +1,6 @@
 // FILE: /api/save.js
-// Salva in Redis SOLO metadati anonimi per l’admin panel (niente testo utente)
+// Salva in Redis SOLO metadati anonimi per l’admin panel
+// NIENTE testo della domanda, NIENTE risposta, NIENTE IP.
 
 const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
 const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -11,8 +12,8 @@ async function pushLogToRedis(item) {
   }
 
   const commands = [
-    ["LPUSH", "logs:ask_meta", JSON.stringify(item)],
-    ["LTRIM", "logs:ask_meta", "0", "199"] // tieni solo gli ultimi 200
+    ["LPUSH", "logs:ask", JSON.stringify(item)],
+    ["LTRIM", "logs:ask", "0", "199"] // tieni solo gli ultimi 200
   ];
 
   const res = await fetch(`${REDIS_URL}/pipeline`, {
@@ -49,49 +50,34 @@ export default async function handler(req, res) {
   try {
     const body = getBody(req);
 
-    // 🔒 NIENTE testo utente, niente IP, niente email
-    // Prendiamo solo i metadati che ti servono
+    // Metadati base
+    const style   = (body.stile   || body.style   || "whatif").toString();
+    const periodo = (body.periodo || "future").toString();
+    const lang    = ((body.lang   || "it").toString().toLowerCase().slice(0, 2));
 
-    const styleRaw   = (body.stile   || body.style || "whatif").toString();
-    const periodoRaw = (body.periodo || "future").toString();
-    const langRaw    = (body.lang    || "it").toString().toLowerCase().slice(0, 2);
+    // Origine domanda:
+    //  - "manual"   = scritta a mano
+    //  - "hint"     = spunti rapidi
+    //  - "surprise" = sorprendimi
+    let source = (body.source || "").toString();
+    if (!source) {
+      if (body.surprise === true || body.surprise === "true") {
+        source = "surprise";
+      } else {
+        source = "manual";
+      }
+    }
 
-    // Normalizzazioni semplici
-    const style =
-      styleRaw === "wtf"
-        ? "wtf"
-        : "whatif";
+    const surprise = !!(body.surprise || (body.micro && body.micro.surprise));
+    const usedHint = source === "hint" || body.usedHint === true;
 
-    const periodo =
-      periodoRaw === "past"
-        ? "past"
-        : "future";
-
-    const lang = ["it", "en", "es", "fr", "de"].includes(langRaw)
-      ? langRaw
-      : "it";
-
-    // Flag se è stata usata la modalità sorpresa
-    const surprise =
-      Boolean(body.surprise) ||
-      Boolean(body?.micro?.surprise);
-
-    // Source: da dove viene la domanda
-    // - "manual"   = scritta a mano dall'utente
-    // - "surprise" = tasto "Sorprendimi"
-    // - "hint"     = spunto rapido
-    const sourceRaw =
-      (body.source ||
-       body?.micro?.source ||
-       "manual").toString().toLowerCase();
-
-    let source = "manual";
-    if (sourceRaw === "surprise") source = "surprise";
-    else if (sourceRaw === "hint") source = "hint";
+    const hasAdminToken = !!req.headers["x-admin-token"];
+    const isPro = req.headers["x-pro"] === "1";
+    const user_type = hasAdminToken ? "admin" : (isPro ? "pro" : "free");
 
     const ts = Date.now();
 
-    // Se non abbiamo nemmeno stile/periodo/lang, non ha senso loggare
+    // Se non abbiamo almeno stile/periodo/lang, non ha senso salvare
     if (!style && !periodo && !lang) {
       return res.status(200).json({ ok: true, skipped: true });
     }
@@ -101,9 +87,11 @@ export default async function handler(req, res) {
       style,
       periodo,
       lang,
-      surprise,
-      source
-      // 🔐 NOTA: nessuna domanda, nessuna risposta, nessun IP
+      user_type,
+      source,    // "manual" | "hint" | "surprise"
+      surprise,  // boolean
+      usedHint   // boolean
+      // NOTA: nessun testo di domanda/risposta, nessun IP.
     };
 
     await pushLogToRedis(logItem);
@@ -111,8 +99,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true });
   } catch (err) {
     console.error("save handler error:", err);
-    return res
-      .status(500)
-      .json({ ok: false, error: err.message || "server_error" });
+    return res.status(500).json({ ok: false, error: err.message || "server_error" });
   }
 }
