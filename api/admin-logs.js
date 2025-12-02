@@ -1,5 +1,6 @@
 // FILE: /api/admin-logs.js
 // Restituisce la lista di log salvati da /api/save, leggendo da Redis
+// Versione "safe": niente testo domanda/risposta, solo metadati.
 
 const REDIS_URL   = process.env.UPSTASH_REDIS_REST_URL;
 const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -52,7 +53,6 @@ async function readLogsFromRedis(limit = 200) {
 
 function maskIp(ip) {
   if (!ip) return "";
-  // molto semplice: taglia dopo il secondo punto
   const parts = ip.split(".");
   if (parts.length >= 2) {
     return parts[0] + "." + parts[1] + ".*.*";
@@ -88,15 +88,52 @@ export default async function handler(req, res) {
       items = items.reverse();
     }
 
-    // maschera IP se richiesto
-    if (String(mask) === "1") {
-      items = items.map(it => ({
-        ...it,
-        ip: maskIp(it.ip || "")
-      }));
-    }
+    const doMask = String(mask) === "1";
 
-    return res.status(200).json({ ok: true, items });
+    // 🔒 Sanitizzazione: niente domanda/answer, solo metadati safe
+    const safeItems = items.map((raw) => {
+      const it = raw || {};
+
+      const safe = {
+        ts: it.ts || null,
+        style: it.style || "whatif",
+        periodo: it.periodo || "future",
+        lang: (it.lang || "it").toString().slice(0, 2),
+        user_type: it.user_type || "free",
+        ip: doMask ? maskIp(it.ip || "") : (it.ip || ""),
+        answer_chars: Number.isFinite(+it.answer_chars) ? +it.answer_chars : 0
+      };
+
+      // Origine: manual / surprise / hints / ecc.
+      if (typeof it.source === "string") {
+        safe.source = it.source;
+      }
+      if (typeof it.surprise === "boolean") {
+        safe.surprise = it.surprise;
+      }
+
+      // Se in futuro /api/save scrive micro.{source,surprise,hints}
+      if (it.micro && typeof it.micro === "object") {
+        if (typeof it.micro.source === "string" && !safe.source) {
+          safe.source = it.micro.source;
+        }
+        if (typeof it.micro.surprise === "boolean" && safe.surprise == null) {
+          safe.surprise = it.micro.surprise;
+        }
+        if (typeof it.micro.hints === "boolean") {
+          safe.hints = it.micro.hints;
+        }
+      }
+
+      // fallback diretto se mai comparisse un campo hints "piatto"
+      if (typeof it.hints === "boolean" && safe.hints == null) {
+        safe.hints = it.hints;
+      }
+
+      return safe;
+    });
+
+    return res.status(200).json({ ok: true, items: safeItems });
   } catch (err) {
     console.error("admin-logs handler error:", err);
     return res.status(500).json({ ok: false, error: err.message || "server_error" });
