@@ -98,7 +98,6 @@
         cursor:pointer;font-size:18px;
       }
       .meta{font-size:12px;color:var(--muted)}
-
       .collapsed>.body{display:none}
       .toggle{cursor:pointer;user-select:none}
 
@@ -170,6 +169,13 @@
           <div class="small" id="qHelp" style="margin-top:8px">
             Scrivi obiettivo + contesto in 1 riga. Aggiungi vincoli o orizzonte (es. 30 giorni).
           </div>
+
+          <!-- 🎤 VOICE INPUT DOMANDA -->
+          <div class="row" style="margin-top:10px;justify-content:flex-start">
+            <button class="btn" id="voiceQuestionBtn" type="button">🎤 Dettatura vocale</button>
+            <span class="small" id="voiceStatus"></span>
+          </div>
+
           <div class="row" style="margin-top:12px;justify-content:space-between">
             <div class="row">
               <button class="btn primary" id="goBtn" type="button" title="Ctrl/⌘+Invio">✨ Genera risposta</button>
@@ -185,7 +191,7 @@
         <!-- SEZIONE CHIARIMENTO (solo What if) -->
         <div class="card center" id="clarifySection" style="display:none;">
           <h3 class="label" id="clarifyLabel">Un'ultima cosa prima di risponderti</h3>
-          <div class="small" style="margin-bottom:6px;">
+          <div class="small" id="clarifyIntro" style="margin-bottom:6px;">
             La voce che hai scelto ti fa una domanda al volo per poterti rispondere meglio:
           </div>
           <div class="clar-box" id="clarifyQuestion"></div>
@@ -202,6 +208,13 @@
           <div class="small" id="clarifyHelp" style="margin-top:8px">
             Rispondi in modo breve e concreto. Questo aiuta la AI a darti una risposta molto più precisa.
           </div>
+
+          <!-- 🎤 VOICE INPUT PER LA RISPOSTA DI CHIARIMENTO -->
+          <div class="row" style="margin-top:10px;justify-content:flex-start">
+            <button class="btn" id="voiceClarifyBtn" type="button">🎤 Dettatura vocale</button>
+            <span class="small" id="voiceClarifyStatus"></span>
+          </div>
+
           <div class="row" style="margin-top:12px;justify-content:flex-end">
             <button class="btn primary" id="clarifySubmitBtn" type="button">👉 Vai alla risposta</button>
           </div>
@@ -275,11 +288,6 @@
       if (!SUP_LANG.includes(lang)) lang = "it";
       document.documentElement.lang = lang;
       $("langSelect").value = lang;
-      $("langSelect").onchange = () => {
-        const v = $("langSelect").value;
-        LS.setItem("lang", v);
-        location.reload();
-      };
 
       const I18N = {};
       Object.assign(I18N, {
@@ -300,7 +308,7 @@
           past: "Passato",
           hintsTitle: "▶ Spunti rapidi “E se…”",
           hintsNote:
-            "Spunti = idee realistiche (sia sul passato che sul futuro). “Sorprendimi” propone solo idee assurde (stile & tempo casuali).",
+            "Spunti = idee realistiche ma emotive, sia sul passato che sul futuro. “Sorprendimi” propone solo idee assurde (stile & tempo casuali).",
           credits: "Crediti",
           emptyNext: "— Nessuna domanda salvata.",
           emptyHist: "— Nessuna storia.",
@@ -310,6 +318,8 @@
           clearHist: "🗑️ Svuota",
           noCredits: "Hai finito i crediti. Accedi o ricarica per continuare.",
           clarifyLabel: "Un'ultima cosa prima di risponderti",
+          clarifyIntro:
+            "La voce che hai scelto ti fa una domanda al volo per poterti rispondere meglio:",
           clarifyHelp:
             "Rispondi in modo breve e concreto. Questo aiuta la AI a darti una risposta molto più precisa.",
           clarifyPlaceholder: "Scrivi qui la tua risposta...",
@@ -317,7 +327,13 @@
           clarifyError:
             "Errore nel generare la domanda di chiarimento. Riprova.",
           answerError:
-            "Errore nel generare la risposta. Riprova tra qualche secondo."
+            "Errore nel generare la risposta. Riprova tra qualche secondo.",
+          notLogged: "Per usare i crediti devi essere loggato.",
+          errConsume: "Errore nell'utilizzo dei crediti. Riprova.",
+          creditsAdded: pack => `Ti ho aggiunto ${pack} crediti al tuo wallet ✨`,
+          speechUnsupported: "Il tuo browser non supporta la dettatura vocale.",
+          speechListening: "Sto ascoltando… parla vicino al microfono.",
+          speechError: "Errore nel riconoscimento vocale. Riprova."
         },
         en: {
           title: "Set your question",
@@ -336,7 +352,7 @@
           past: "Past",
           hintsTitle: "▶ Quick “What if…”",
           hintsNote:
-            "Hints = realistic ideas (about past or future). “Surprise me” shows absurd ideas only.",
+            "Hints = realistic, emotional ideas (past or future). “Surprise me” shows absurd ideas only.",
           credits: "Credits",
           emptyNext: "— No saved questions.",
           emptyHist: "— No history.",
@@ -346,6 +362,8 @@
           clearHist: "🗑️ Clear",
           noCredits: "You’ve run out of credits. Please log in or top up.",
           clarifyLabel: "One last thing before I answer",
+          clarifyIntro:
+            "The voice you chose asks you a quick question to answer you better:",
           clarifyHelp:
             "Answer briefly and concretely. This helps the AI give you a much sharper answer.",
           clarifyPlaceholder: "Write your answer here...",
@@ -353,7 +371,13 @@
           clarifyError:
             "Error while generating the follow-up question. Please try again.",
           answerError:
-            "Error while generating the answer. Please try again in a moment."
+            "Error while generating the answer. Please try again in a moment.",
+          notLogged: "You must be logged in to use credits.",
+          errConsume: "Error while using credits. Please try again.",
+          creditsAdded: pack => `I've added ${pack} credits to your wallet ✨`,
+          speechUnsupported: "Your browser does not support voice input.",
+          speechListening: "Listening… speak close to the microphone.",
+          speechError: "Voice recognition error. Please try again."
         },
         es: {
           title: "Configura tu pregunta",
@@ -372,7 +396,7 @@
           past: "Pasado",
           hintsTitle: "▶ Ideas rápidas «¿Y si…?»",
           hintsNote:
-            "Ideas realistas (sobre pasado o futuro). «Sorpréndeme» muestra ideas absurdas.",
+            "Ideas realistas y emocionales (pasado o futuro). «Sorpréndeme» muestra ideas absurdas.",
           credits: "Créditos",
           emptyNext: "— No hay preguntas guardadas.",
           emptyHist: "— Sin historial.",
@@ -383,6 +407,8 @@
           noCredits:
             "Te has quedado sin créditos. Inicia sesión o recarga.",
           clarifyLabel: "Una cosa más antes de responder",
+          clarifyIntro:
+            "La voz que has elegido te hace una pregunta rápida para poder responderte mejor:",
           clarifyHelp:
             "Responde de forma breve y concreta. Esto ayuda a la IA a darte una respuesta mucho más precisa.",
           clarifyPlaceholder: "Escribe aquí tu respuesta...",
@@ -390,7 +416,13 @@
           clarifyError:
             "Error al generar la pregunta de aclaración. Vuelve a intentarlo.",
           answerError:
-            "Error al generar la respuesta. Vuelve a intentarlo en unos segundos."
+            "Error al generar la respuesta. Vuelve a intentarlo en unos segundos.",
+          notLogged: "Debes iniciar sesión para usar créditos.",
+          errConsume: "Error al usar los créditos. Inténtalo de nuevo.",
+          creditsAdded: pack => `Te he añadido ${pack} créditos a tu monedero ✨`,
+          speechUnsupported: "Tu navegador no admite dictado por voz.",
+          speechListening: "Te escucho… habla cerca del micrófono.",
+          speechError: "Error en el reconocimiento de voz. Vuelve a intentarlo."
         },
         fr: {
           title: "Définis ta question",
@@ -409,7 +441,7 @@
           past: "Passé",
           hintsTitle: "▶ Idées rapides « Et si… »",
           hintsNote:
-            "Idées réalistes (passé/futur). « Surprends-moi » = idées absurdes.",
+            "Idées réalistes et émotionnelles (passé/futur). « Surprends-moi » = idées absurdes.",
           credits: "Crédits",
           emptyNext: "— Aucune question enregistrée.",
           emptyHist: "— Aucun historique.",
@@ -420,6 +452,8 @@
           noCredits:
             "Tu n’as plus de crédits. Connecte-toi ou recharge.",
           clarifyLabel: "Une dernière chose avant de répondre",
+          clarifyIntro:
+            "La voix que tu as choisie te pose une question rapide pour mieux te répondre :",
           clarifyHelp:
             "Réponds de manière brève et concrète. Cela aide l’IA à te donner une réponse plus précise.",
           clarifyPlaceholder: "Écris ta réponse ici...",
@@ -427,7 +461,13 @@
           clarifyError:
             "Erreur lors de la génération de la question de clarification. Réessaie.",
           answerError:
-            "Erreur lors de la génération de la réponse. Réessaie dans un instant."
+            "Erreur lors de la génération de la réponse. Réessaie dans un instant.",
+          notLogged: "Tu dois être connecté pour utiliser les crédits.",
+          errConsume: "Erreur lors de l'utilisation des crédits. Réessaie.",
+          creditsAdded: pack => `Je t'ai ajouté ${pack} crédits ✨`,
+          speechUnsupported: "Ton navigateur ne supporte pas la dictée vocale.",
+          speechListening: "J'écoute… parle près du micro.",
+          speechError: "Erreur de reconnaissance vocale. Réessaie."
         },
         de: {
           title: "Stelle deine Frage ein",
@@ -446,7 +486,7 @@
           past: "Vergangenheit",
           hintsTitle: "▶ Schnelle „Was wäre, wenn…“-Ideen",
           hintsNote:
-            "Realistische Ideen (Vergangenheit/Zukunft). „Überrasche mich“ = absurde Ideen.",
+            "Realistische, emotionale Ideen (Vergangenheit/Zukunft). „Überrasche mich“ = absurde Ideen.",
           credits: "Credits",
           emptyNext: "— Keine gespeicherten Fragen.",
           emptyHist: "— Kein Verlauf.",
@@ -457,6 +497,8 @@
           noCredits:
             "Du hast keine Credits mehr. Bitte einloggen oder aufladen.",
           clarifyLabel: "Noch eine Sache, bevor ich antworte",
+          clarifyIntro:
+            "Die gewählte Stimme stellt dir eine schnelle Frage, damit sie dir besser antworten kann:",
           clarifyHelp:
             "Antworte kurz und konkret. So kann die KI dir eine viel präzisere Antwort geben.",
           clarifyPlaceholder: "Schreib deine Antwort hier...",
@@ -464,37 +506,71 @@
           clarifyError:
             "Fehler beim Erzeugen der Rückfrage. Bitte versuch es noch einmal.",
           answerError:
-            "Fehler beim Erzeugen der Antwort. Bitte versuch es gleich noch einmal."
+            "Fehler beim Erzeugen der Antwort. Bitte versuch es gleich noch einmal.",
+          notLogged: "Du musst eingeloggt sein, um Credits zu nutzen.",
+          errConsume: "Fehler bei der Verwendung der Credits. Versuch es erneut.",
+          creditsAdded: pack => `Ich habe dir ${pack} Credits hinzugefügt ✨`,
+          speechUnsupported: "Dein Browser unterstützt keine Spracheingabe.",
+          speechListening: "Ich höre zu… sprich in Mikrofonnähe.",
+          speechError: "Fehler bei der Spracherkennung. Versuch es erneut."
         }
       });
 
-      const T = I18N[lang] || I18N.it;
+      let T = I18N[lang] || I18N.it;
 
-      // Applica testi base
-      $("titleH1").textContent = T.title;
-      $("qLabel").textContent = T.yourq;
-      $("qInput").placeholder = T.ph;
-      $("qHelp").textContent = T.help;
-      $("goBtn").textContent = T.gen;
-      $("clearBtn").textContent = T.clear;
-      $("surpriseBtn").textContent = "🎲 " + T.surprise;
-      $("nextLabel").textContent = T.saved;
-      $("storiesLabel").textContent = T.stories;
-      $("hintsTitle").textContent = T.hintsTitle;
-      $("hintsNote").textContent = T.hintsNote;
-      $("chipWhatIf").textContent = T.styleWF;
-      $("chipWTF").textContent = T.styleWTF;
-      $("chipFuture").textContent = T.fut;
-      $("chipPast").textContent = T.past;
-      $("saveBtn").textContent = "⭐ " + T.save;
-      $("clearSavedBtn").textContent = T.clearSaved;
-      $("clearHistoryBtn").textContent = T.clearHist;
+      function applyLanguageTexts() {
+        $("titleH1").textContent = T.title;
+        $("qLabel").textContent = T.yourq;
+        $("qInput").placeholder = T.ph;
+        $("qHelp").textContent = T.help;
+        $("goBtn").textContent = T.gen;
+        $("clearBtn").textContent = T.clear;
+        $("surpriseBtn").textContent = "🎲 " + T.surprise;
+        $("nextLabel").textContent = T.saved;
+        $("storiesLabel").textContent = T.stories;
+        $("hintsTitle").textContent = T.hintsTitle;
+        $("hintsNote").textContent = T.hintsNote;
+        $("chipWhatIf").textContent = T.styleWF;
+        $("chipWTF").textContent = T.styleWTF;
+        $("chipFuture").textContent = T.fut;
+        $("chipPast").textContent = T.past;
+        $("saveBtn").textContent = "⭐ " + T.save;
+        $("clearSavedBtn").textContent = T.clearSaved;
+        $("clearHistoryBtn").textContent = T.clearHist;
 
-      // Testi sezione chiarimento
-      $("clarifyLabel").textContent = T.clarifyLabel;
-      $("clarifyHelp").textContent = T.clarifyHelp;
-      $("clarifyInput").placeholder = T.clarifyPlaceholder;
-      $("clarifySubmitBtn").textContent = T.clarifyBtn;
+        $("clarifyLabel").textContent = T.clarifyLabel;
+        $("clarifyIntro").textContent = T.clarifyIntro;
+        $("clarifyHelp").textContent = T.clarifyHelp;
+        $("clarifyInput").placeholder = T.clarifyPlaceholder;
+        $("clarifySubmitBtn").textContent = T.clarifyBtn;
+
+        // voice buttons label
+        const qBtn = $("voiceQuestionBtn");
+        const cBtn = $("voiceClarifyBtn");
+        if (qBtn) {
+          qBtn.textContent =
+            lang === "en" ? "🎤 Voice input" : "🎤 Dettatura vocale";
+        }
+        if (cBtn) {
+          cBtn.textContent =
+            lang === "en" ? "🎤 Voice input" : "🎤 Dettatura vocale";
+        }
+      }
+
+      $("langSelect").onchange = () => {
+        const v = $("langSelect").value.toLowerCase();
+        if (!SUP_LANG.includes(v)) return;
+        lang = v;
+        LS.setItem("lang", lang);
+        document.documentElement.lang = lang;
+        T = I18N[lang] || I18N.it;
+        applyLanguageTexts();
+        renderBadges();
+        renderHints();
+        renderNext();
+        renderStories();
+        renderCredits();
+      };
 
       // ===== prefs stile/periodo =====
       let prefs = readJSON("whatif_prefs", {
@@ -532,387 +608,133 @@
             c.classList.toggle("sel", c.dataset.periodo === prefs.periodo)
           );
       }
-      renderBadges();
 
-      $("styleChips").addEventListener("click", e => {
-        const b = e.target.closest(".chip");
-        if (!b) return;
-        prefs.stile = b.dataset.style;
-        writeJSON("whatif_prefs", prefs);
-        document.documentElement.setAttribute(
-          "data-theme",
-          prefs.stile === "wtf" ? "wtf" : "whatif"
-        );
-        if (prefs.stile === "wtf") {
-          resetClarifyUI();
-        }
-        renderBadges();
-      });
-
-      $("periodoChips").addEventListener("click", e => {
-        const b = e.target.closest(".chip");
-        if (!b) return;
-        prefs.periodo = b.dataset.periodo;
-        writeJSON("whatif_prefs", prefs);
-        renderBadges();
-        renderHints();
-      });
-
-      // ===== NAV =====
-      $("homeBtn").onclick = () => (location.href = "index.html");
-      $("backBtn").onclick = () => {
-        if (history.length > 1) history.back();
-        else location.href = "index.html";
-      };
-
-      $("resetBtn").onclick = () => {
-        const PRESERVE = ["whatif_wallet", "whatif_wallet_sync", "admin_token", "lang"];
-        const keep = Object.fromEntries(
-          PRESERVE.map(k => [k, LS.getItem(k)])
-        );
-        [
-          "whatif_prefs",
-          "next_prompts",
-          "cronologia",
-          "replay_story",
-          "surprise_recent",
-          "absurd_prompt",
-          "surprise_mode",
-          "domanda"
-        ].forEach(k => LS.removeItem(k));
-        Object.entries(keep).forEach(([k, v]) => {
-          if (v !== null) LS.setItem(k, v);
-        });
-        location.href = "index.html";
-      };
-
-      // ===== Credits Firestore =====
-      let currentUser = null;
-      let currentBalance = 0;
-
-      function renderCredits() {
-        const goBtn = $("goBtn");
-        const surpriseBtn = $("surpriseBtn");
-
-        if (IS_ADMIN) {
-          $("freeBadge").textContent = `${T.credits}: ∞ (admin)`;
-          if (goBtn) goBtn.disabled = false;
-          if (surpriseBtn) surpriseBtn.disabled = false;
-          return;
-        }
-
-        $("freeBadge").textContent = `${T.credits}: ${currentBalance}`;
-
-        // Bottoni sempre cliccabili: se non hai crediti, la guardia ti manda allo store
-        if (goBtn) goBtn.disabled = false;
-        if (surpriseBtn) surpriseBtn.disabled = false;
-      }
-
-      async function syncCreditsFromServer() {
-        if (IS_ADMIN) {
-          renderCredits();
-          return;
-        }
-        if (!auth.currentUser) {
-          currentBalance = 0;
-          renderCredits();
-          return;
-        }
-        try {
-          await bootCredits();
-          currentBalance = await getBalance();
-        } catch (e) {
-          console.error("syncCredits error:", e);
-          currentBalance = 0;
-        }
-        renderCredits();
-      }
-
-      // ===== Gestione ritorno da Stripe (ricarica crediti) =====
-      async function checkStripeReturn() {
-        const params = new URLSearchParams(window.location.search);
-        const payment = params.get("payment");
-        const pack = Number(params.get("pack") || "0");
-
-        if (payment !== "ok" || !pack || pack <= 0) {
-          return;
-        }
-
-        try {
-          await adminAddCredits(pack);
-          await syncCreditsFromServer();
-          alert(`Ti ho aggiunto ${pack} crediti al tuo wallet ✨`);
-
-          const url = new URL(window.location.href);
-          url.searchParams.delete("payment");
-          url.searchParams.delete("pack");
-          url.searchParams.delete("session_id");
-          window.history.replaceState({}, "", url.toString());
-        } catch (err) {
-          console.error("Errore durante l'aggiunta dei crediti:", err);
-        }
-      }
-
-      onAuthStateChanged(auth, async user => {
-        currentUser = user;
-        await syncCreditsFromServer();
-        if (currentUser) {
-          await checkStripeReturn();
-        }
-      });
-
-      window.addEventListener("focus", syncCreditsFromServer);
-      window.addEventListener("pageshow", syncCreditsFromServer);
-
-      // ===== Hints realistici =====
+      // ===== Hints emozionali, variabili ogni giorno =====
       const HINTS = {
         it: {
           future: [
-            "E se cambiassi lavoro entro 6 mesi?",
-            "E se cambiassi città tra un anno?",
-            "E se tornassi a studiare part-time?",
-            "E se vivessi 30 giorni senza social?",
-            "E se chiedessi un aumento questo trimestre?",
-            "E se organizzassi un viaggio da solo nei prossimi 3 mesi?",
-            "E se mi prendessi un mese sabbatico il prossimo anno?",
-            "E se provassi a lavorare da remoto per 3 mesi?",
-            "E se aprissi una piccola attività parallela nel weekend?",
-            "E se facessi ordine radicale in casa questo mese?",
-            "E se dicessi di no a tutto per una settimana?",
-            "E se iniziassi terapia da questo mese?",
-            "E se fissassi un obiettivo fisico per i prossimi 90 giorni?",
-            "E se dedicassi un’ora al giorno a scrivere per 30 giorni?",
-            "E se cambiassi totalmente routine mattutina da lunedì?",
-            "E se spegnessi il telefono tutte le sere alle 21 per un mese?",
-            "E se programmassi un trasferimento tra 12 mesi?",
-            "E se chiedessi feedback onesto a 3 persone su di me?",
-            "E se facessi un progetto creativo con un amico entro quest’anno?",
-            "E se mi iscrivessi a un corso che mi spaventa?",
-            "E se dedicassi i weekend a un unico progetto personale?",
-            "E se riducessi il lavoro a 4 giorni a settimana?",
-            "E se cambiassi radicalmente la gestione dei soldi da oggi?",
-            "E se provassi un esperimento di minimalismo per 30 giorni?"
+            "E se accettassi quel lavoro anche se non mi sento del tutto pronto?",
+            "E se mi trasferissi in un’altra città entro 6 mesi?",
+            "E se tornassi nella mia città e ricominciassi da lì?",
+            "E se mettessi finalmente un limite a quella persona che mi prosciuga energie?",
+            "E se chiudessi una relazione che non mi fa più stare bene?",
+            "E se per 30 giorni mi comportassi come se avessi già deciso cosa voglio davvero?",
+            "E se smettessi di chiedere pareri a tutti e decidessi secondo due criteri tuoi?",
+            "E se organizzassi la mia vita per lavorare meno ore e dormire davvero?",
+            "E se mi dessi 12 mesi per preparare un trasferimento all’estero?",
+            "E se investissi soldi ed energie in una sola cosa importante invece che in mille progetti mezzi morti?",
+            "E se dicessi un no netto a quell’impegno che prendi solo per senso di colpa?",
+            "E se usassi i prossimi 90 giorni solo per rimettere in sesto corpo e testa?",
+            "E se rendessi ufficiale una scelta che stai già facendo di nascosto?",
+            "E se cambiassi lavoro senza aspettare il momento perfetto?",
+            "E se tenessi separato il tempo per te dal tempo per gli altri, sul serio?",
+            "E se smettessi di rincorrere chi non ti cerca mai?",
+            "E se provassi a vivere un anno con meno cose e più libertà?",
+            "E se chiedessi apertamente cosa vuoi in quella relazione invece di indovinare?",
+            "E se iniziassi terapia proprio da questo mese?",
+            "E se mettessi per iscritto un piano di uscita dal lavoro attuale entro 18 mesi?",
+            "E se dedicassi tutti i weekend per tre mesi a un unico progetto tuo?",
+            "E se cambiassi ruolo nello stesso settore invece di cambiare vita da zero?",
+            "E se ti concedessi di fallire in grande su una cosa che desideri davvero?",
+            "E se facessi un esperimento di 30 giorni in cui non ti giustifichi mai?"
           ],
           past: [
-            "E se avessi cambiato lavoro un anno fa?",
-            "E se non avessi lasciato quella città?",
-            "E se avessi continuato l’università?",
-            "E se non avessi mai aperto i social?",
-            "E se avessi chiesto un aumento prima?",
-            "E se avessi accettato quell’offerta all’estero?",
-            "E se fossi rimasto in quella relazione?",
-            "E se non avessi mollato quel progetto creativo?",
-            "E se avessi iniziato terapia prima?",
-            "E se avessi detto di no a quel lavoro tossico?",
-            "E se fossi stato più onesto con me stesso nel 2020?",
-            "E se non avessi ascoltato quel consiglio?",
-            "E se avessi risparmiato invece di spendere tutto?",
-            "E se avessi seguito l’istinto invece della paura?",
-            "E se avessi protetto di più il mio tempo?",
-            "E se avessi parlato apertamente di quello che provavo?",
-            "E se avessi dato un’altra possibilità a quella persona?",
-            "E se non avessi interrotto quell’amicizia?",
-            "E se mi fossi fermato un anno prima di bruciarmi?",
-            "E se avessi avuto il coraggio di cambiare prima?"
+            "E se avessi accettato quel lavoro che ti spaventava?",
+            "E se anni fa fossi andato a vivere in un’altra città?",
+            "E se fossi rimasto nella tua città invece di scappare?",
+            "E se avessi messo un limite prima a quella persona che ti prosciugava energie?",
+            "E se avessi chiuso quella relazione qualche anno prima?",
+            "E se avessi smesso prima di chiedere pareri a tutti?",
+            "E se avessi protetto meglio il tuo tempo invece di dire sempre sì?",
+            "E se avessi investito su un solo progetto invece di spargere energie ovunque?",
+            "E se avessi iniziato terapia quando hai pensato “forse mi farebbe bene”?",
+            "E se avessi avuto il coraggio di cambiare lavoro quando sentivi già che eri alla fine?",
+            "E se non avessi accettato quel lavoro solo per paura di restare senza?",
+            "E se avessi detto chiaramente cosa volevi in quella relazione?",
+            "E se fossi partito per l’estero quando non avevi ancora radici?",
+            "E se avessi ascoltato il corpo prima che iniziasse a urlare?",
+            "E se ti fossi fermato un anno prima di bruciarti?",
+            "E se avessi spezzato prima una routine che ti svuotava?",
+            "E se non avessi tagliato quel rapporto solo per orgoglio?",
+            "E se avessi continuato quel progetto invece di mollarlo al primo ostacolo?",
+            "E se ti fossi concesso di sbagliare di più invece di cercare sempre la scelta giusta?",
+            "E se avessi avuto il coraggio di scegliere te al posto degli altri?"
           ]
         },
         en: {
           future: [
-            "What if I changed jobs in the next 6 months?",
-            "What if I moved to another city within a year?",
-            "What if I went back to study part-time?",
-            "What if I lived 30 days without social media?",
-            "What if I asked for a raise this quarter?",
-            "What if I took a solo trip in the next 3 months?",
-            "What if I took a one-month sabbatical next year?",
-            "What if I tried working fully remote for 3 months?",
-            "What if I started a tiny side business on weekends?",
-            "What if I radically decluttered my home this month?",
-            "What if I said no to everything for a week?",
-            "What if I started therapy this month?",
-            "What if I committed to a 90-day fitness goal?",
-            "What if I wrote for one hour a day for 30 days?",
-            "What if I fully changed my morning routine from Monday?",
-            "What if I turned my phone off every night at 9 pm for a month?",
-            "What if I planned a relocation within 12 months?",
-            "What if I asked 3 people for brutally honest feedback?",
-            "What if I started a creative project with a friend this year?",
-            "What if I enrolled in a course that scares me?",
-            "What if I dedicated weekends to a single personal project?",
-            "What if I moved to a four-day workweek?",
-            "What if I reset how I manage money starting today?",
-            "What if I tried minimalism for 30 days?"
+            "What if I took a job I don’t feel fully ready for?",
+            "What if I moved to another city within 6 months?",
+            "What if I stopped asking everyone and chose with my own two criteria?",
+            "What if I protected my evenings as if they were a second job just for me?",
+            "What if I gave myself 12 months to prepare a move abroad?",
+            "What if I invested all my spare energy in one project that actually matters?",
+            "What if I finally asked clearly for what I want in that relationship?",
+            "What if I treated my body as my main project for the next 90 days?",
+            "What if I allowed myself to fail loudly at something I really want?",
+            "What if I tried to live one year with more freedom and less stuff?"
           ],
           past: [
-            "What if I had changed jobs a year ago?",
-            "What if I had never left that city?",
-            "What if I had finished my degree?",
-            "What if I had never downloaded social media?",
-            "What if I had asked for a raise earlier?",
-            "What if I had accepted that offer abroad?",
-            "What if I had stayed in that relationship?",
-            "What if I hadn’t dropped that creative project?",
-            "What if I had started therapy sooner?",
-            "What if I had said no to that toxic job?",
-            "What if I had been honest with myself in 2020?",
-            "What if I hadn’t listened to that advice?",
-            "What if I had saved instead of spending it all?",
-            "What if I had followed my gut instead of fear?",
-            "What if I had protected my time better?",
-            "What if I had spoken openly about how I felt?",
-            "What if I had given that person another chance?",
-            "What if I hadn’t ended that friendship?",
-            "What if I had stopped a year earlier before burning out?",
+            "What if I had taken that job that scared me?",
+            "What if I had moved away years ago instead of staying?",
+            "What if I had set boundaries much earlier with that person?",
+            "What if I had protected my time instead of saying yes to everything?",
+            "What if I had started therapy when I first thought about it?",
+            "What if I had left that draining relationship sooner?",
+            "What if I had followed my gut instead of my fear?",
+            "What if I had kept that project alive instead of quitting?",
+            "What if I had chosen myself instead of trying to please everyone?",
             "What if I had dared to change sooner?"
           ]
         },
         es: {
           future: [
-            "¿Y si cambiara de trabajo en los próximos 6 meses?",
-            "¿Y si me mudara de ciudad antes de un año?",
-            "¿Y si volviera a estudiar a tiempo parcial?",
-            "¿Y si viviera 30 días sin redes sociales?",
-            "¿Y si pidiera un aumento este trimestre?",
-            "¿Y si viajara solo en los próximos 3 meses?",
-            "¿Y si tomara un mes sabático el próximo año?",
-            "¿Y si probara a trabajar en remoto durante 3 meses?",
-            "¿Y si montara un pequeño side business los fines de semana?",
-            "¿Y si hiciera una limpieza radical en casa este mes?",
-            "¿Y si dijera que no a todo durante una semana?",
-            "¿Y si empezara terapia este mes?",
-            "¿Y si fijara un objetivo físico de 90 días?",
-            "¿Y si escribiera una hora al día durante 30 días?",
-            "¿Y si cambiara por completo mi rutina de mañana desde el lunes?",
-            "¿Y si apagara el móvil todas las noches a las 21 durante un mes?",
-            "¿Y si planeara mudarme en 12 meses?",
-            "¿Y si pidiera feedback honesto a 3 personas?",
-            "¿Y si lanzara un proyecto creativo con un amigo este año?",
-            "¿Y si me apuntara a un curso que me da miedo?",
-            "¿Y si dedicara los fines de semana a un solo proyecto?",
-            "¿Y si intentara trabajar solo 4 días a la semana?",
-            "¿Y si reorganizara desde cero mis finanzas?",
-            "¿Y si probara el minimalismo durante 30 días?"
+            "¿Y si aceptara un trabajo aunque no me sienta del todo preparado?",
+            "¿Y si me mudara de ciudad en los próximos 6 meses?",
+            "¿Y si pusiera un límite claro a quien me roba energía?",
+            "¿Y si dedicara los próximos 90 días solo a cuidar cuerpo y cabeza?",
+            "¿Y si tomara en serio la idea de irme al extranjero en un año?",
+            "¿Y si invirtiera mi energía en un solo proyecto importante?",
+            "¿Y si pidiera abiertamente lo que quiero en esa relación?"
           ],
           past: [
-            "¿Y si hubiera cambiado de trabajo hace un año?",
-            "¿Y si no me hubiera ido de aquella ciudad?",
-            "¿Y si hubiera terminado la carrera?",
-            "¿Y si nunca hubiera abierto redes sociales?",
-            "¿Y si hubiera pedido un aumento antes?",
-            "¿Y si hubiera aceptado aquella oferta en el extranjero?",
-            "¿Y si me hubiera quedado en aquella relación?",
-            "¿Y si no hubiera abandonado ese proyecto creativo?",
-            "¿Y si hubiera empezado terapia antes?",
-            "¿Y si hubiera dicho que no a ese trabajo tóxico?",
-            "¿Y si hubiera sido más honesto conmigo en 2020?",
-            "¿Y si no hubiera seguido aquel consejo?",
-            "¿Y si hubiera ahorrado en vez de gastarlo todo?",
-            "¿Y si hubiera seguido mi intuición y no el miedo?",
-            "¿Y si hubiera protegido más mi tiempo?",
-            "¿Y si hubiera hablado de cómo me sentía?",
-            "¿Y si le hubiera dado otra oportunidad a esa persona?",
-            "¿Y si no hubiera roto aquella amistad?",
-            "¿Y si me hubiera frenado un año antes de quemarme?",
-            "¿Y si hubiera tenido el valor de cambiar antes?"
+            "¿Y si hubiera aceptado aquel trabajo que me daba miedo?",
+            "¿Y si me hubiera ido a otra ciudad hace años?",
+            "¿Y si hubiera puesto límites mucho antes?",
+            "¿Y si hubiera protegido mejor mi tiempo?",
+            "¿Y si hubiera empezado terapia cuando lo pensé por primera vez?"
           ]
         },
         fr: {
           future: [
-            "Et si je changeais de travail dans les 6 prochains mois ?",
-            "Et si je déménageais d’ici un an ?",
-            "Et si je reprenais mes études à temps partiel ?",
-            "Et si je vivais 30 jours sans réseaux sociaux ?",
-            "Et si je demandais une augmentation ce trimestre ?",
-            "Et si je partais en voyage en solo dans les 3 mois ?",
-            "Et si je prenais un mois sabbatique l’année prochaine ?",
-            "Et si j’essayais de travailler 100 % à distance pendant 3 mois ?",
-            "Et si je lançais un petit side project le week-end ?",
-            "Et si je faisais un grand tri chez moi ce mois-ci ?",
-            "Et si je disais non à tout pendant une semaine ?",
-            "Et si je commençais une thérapie ce mois-ci ?",
-            "Et si je me fixais un objectif sportif sur 90 jours ?",
-            "Et si j’écrivais une heure par jour pendant 30 jours ?",
-            "Et si je changeais totalement ma routine du matin dès lundi ?",
-            "Et si j’éteignais mon téléphone tous les soirs à 21 h pendant un mois ?",
-            "Et si je préparais un déménagement d’ici 12 mois ?",
-            "Et si je demandais un feedback honnête à 3 proches ?",
-            "Et si je lançais un projet créatif avec un ami cette année ?",
-            "Et si je m’inscrivais à une formation qui me fait peur ?",
-            "Et si je réservais mes week-ends à un seul projet perso ?",
-            "Et si je passais à une semaine de 4 jours ?",
-            "Et si je repartais de zéro sur ma gestion d’argent dès aujourd’hui ?",
-            "Et si je testais le minimalisme pendant 30 jours ?"
+            "Et si j’acceptais ce poste même si je ne me sens pas prêt à 100 % ?",
+            "Et si je déménageais dans une autre ville d’ici 6 mois ?",
+            "Et si je posais enfin une limite claire à quelqu’un qui me vide ?",
+            "Et si je consacrais les 90 prochains jours à remettre corps et tête en place ?",
+            "Et si je préparais sérieusement un départ à l’étranger sur 12 mois ?",
+            "Et si je mettais toute mon énergie dans un seul projet vraiment important ?"
           ],
           past: [
-            "Et si j’avais changé de travail il y a un an ?",
-            "Et si je n’avais jamais quitté cette ville ?",
-            "Et si j’avais terminé mes études ?",
-            "Et si je n’avais jamais ouvert de compte sur les réseaux sociaux ?",
-            "Et si j’avais demandé une augmentation plus tôt ?",
-            "Et si j’avais accepté cette offre à l’étranger ?",
-            "Et si j’étais resté dans cette relation ?",
-            "Et si je n’avais pas abandonné ce projet créatif ?",
-            "Et si j’avais commencé une thérapie plus tôt ?",
-            "Et si j’avais dit non à ce job toxique ?",
-            "Et si j’avais été honnête avec moi-même en 2020 ?",
-            "Et si je n’avais pas suivi ce conseil ?",
-            "Et si j’avais économisé au lieu de tout dépenser ?",
-            "Et si j’avais suivi mon intuition au lieu de la peur ?",
-            "Et si j’avais mieux protégé mon temps ?",
-            "Et si j’avais parlé franchement de ce que je ressentais ?",
-            "Et si j’avais donné une deuxième chance à cette personne ?",
-            "Et si je n’avais pas coupé ce lien d’amitié ?",
-            "Et si je m’étais arrêté un an plus tôt avant le burn-out ?",
+            "Et si j’avais accepté ce travail qui me faisait peur ?",
+            "Et si j’avais déménagé il y a quelques années au lieu de rester ?",
+            "Et si j’avais posé mes limites bien plus tôt ?",
+            "Et si j’avais protégé mon temps au lieu de dire oui à tout ?",
             "Et si j’avais osé changer plus tôt ?"
           ]
         },
         de: {
           future: [
-            "Was wäre, wenn ich in den nächsten 6 Monaten den Job wechselte?",
-            "Was wäre, wenn ich innerhalb eines Jahres in eine andere Stadt ziehe?",
-            "Was wäre, wenn ich wieder nebenbei studiere?",
-            "Was wäre, wenn ich 30 Tage ohne Social Media lebe?",
-            "Was wäre, wenn ich dieses Quartal eine Gehaltserhöhung fordere?",
-            "Was wäre, wenn ich in den nächsten 3 Monaten alleine verreise?",
-            "Was wäre, wenn ich nächstes Jahr einen Monat Sabbat nehme?",
-            "Was wäre, wenn ich 3 Monate komplett remote arbeite?",
-            "Was wäre, wenn ich am Wochenende ein kleines Nebenprojekt starte?",
-            "Was wäre, wenn ich meine Wohnung diesen Monat radikal entrümple?",
-            "Was wäre, wenn ich eine Woche lang zu allem Nein sage?",
-            "Was wäre, wenn ich diesen Monat mit Therapie beginne?",
-            "Was wäre, wenn ich mir ein 90-Tage-Fitnessziel setze?",
-            "Was wäre, wenn ich 30 Tage lang jeden Tag eine Stunde schreibe?",
-            "Was wäre, wenn ich ab Montag meine Morgenroutine komplett ändere?",
-            "Was wäre, wenn ich das Handy einen Monat lang jeden Abend um 21 Uhr ausschalte?",
-            "Was wäre, wenn ich einen Umzug in den nächsten 12 Monaten plane?",
-            "Was wäre, wenn ich 3 Leute um brutales Feedback bitte?",
-            "Was wäre, wenn ich dieses Jahr ein kreatives Projekt mit einem Freund starte?",
-            "Was wäre, wenn ich einen Kurs buche, der mir Angst macht?",
-            "Was wäre, wenn ich meine Wochenenden nur einem Projekt widme?",
-            "Was wäre, wenn ich nur noch vier Tage pro Woche arbeite?",
-            "Was wäre, wenn ich meine Finanzen ab heute komplett neu aufsetze?",
-            "Was wäre, wenn ich Minimalismus 30 Tage teste?"
+            "Was wäre, wenn ich einen Job annehme, für den ich mich nicht völlig bereit fühle?",
+            "Was wäre, wenn ich in den nächsten 6 Monaten in eine andere Stadt ziehe?",
+            "Was wäre, wenn ich klare Grenzen zu Menschen setze, die mich auslaugen?",
+            "Was wäre, wenn ich die nächsten 90 Tage nur dafür nutze, Körper und Kopf zu stabilisieren?",
+            "Was wäre, wenn ich ernsthaft einen Umzug ins Ausland in 12 Monaten plane?"
           ],
           past: [
-            "Was wäre, wenn ich vor einem Jahr den Job gewechselt hätte?",
-            "Was wäre, wenn ich nie aus dieser Stadt weggezogen wäre?",
-            "Was wäre, wenn ich mein Studium beendet hätte?",
-            "Was wäre, wenn ich nie Social Media installiert hätte?",
-            "Was wäre, wenn ich früher nach einer Gehaltserhöhung gefragt hätte?",
-            "Was wäre, wenn ich das Angebot im Ausland angenommen hätte?",
-            "Was wäre, wenn ich in dieser Beziehung geblieben wäre?",
-            "Was wäre, wenn ich dieses kreative Projekt nicht aufgegeben hätte?",
-            "Was wäre, wenn ich früher mit Therapie begonnen hätte?",
-            "Was wäre, wenn ich diesen toxischen Job abgelehnt hätte?",
-            "Was wäre, wenn ich 2020 ehrlicher zu mir gewesen wäre?",
-            "Was wäre, wenn ich diesen Rat nicht befolgt hätte?",
-            "Was wäre, wenn ich gespart statt alles ausgegeben hätte?",
-            "Was wäre, wenn ich meiner Intuition statt der Angst gefolgt wäre?",
+            "Was wäre, wenn ich diesen Job angenommen hätte, vor dem ich Angst hatte?",
+            "Was wäre, wenn ich vor Jahren umgezogen wäre statt geblieben?",
+            "Was wäre, wenn ich früher Grenzen gesetzt hätte?",
             "Was wäre, wenn ich meine Zeit besser geschützt hätte?",
-            "Was wäre, wenn ich offener über meine Gefühle gesprochen hätte?",
-            "Was wäre, wenn ich dieser Person noch eine Chance gegeben hätte?",
-            "Was wäre, wenn ich diese Freundschaft nicht beendet hätte?",
-            "Was wäre, wenn ich ein Jahr früher gestoppt hätte, bevor ich ausbrannte?",
             "Was wäre, wenn ich mich früher getraut hätte zu verändern?"
           ]
         }
@@ -979,8 +801,9 @@
           };
           wrap.appendChild(b);
         });
+        $("hintsTitle").textContent = T.hintsTitle;
+        $("hintsNote").textContent = T.hintsNote;
       }
-      renderHints();
 
       // Collassabili
       ["hints", "saved", "hist"].forEach(k => {
@@ -993,7 +816,6 @@
         );
       });
 
-      // ===== Saved + History (lettura) =====
       const fmtDate = ts =>
         new Date(ts).toLocaleString(
           document.documentElement.lang || "it-IT",
@@ -1081,6 +903,9 @@
           });
       }
 
+      renderBadges();
+      applyLanguageTexts();
+      renderHints();
       renderNext();
       renderStories();
 
@@ -1101,10 +926,114 @@
         renderNext();
       };
 
+      // ===== NAV =====
+      $("homeBtn").onclick = () => (location.href = "index.html");
+      $("backBtn").onclick = () => {
+        if (history.length > 1) history.back();
+        else location.href = "index.html";
+      };
+
+      $("resetBtn").onclick = () => {
+        const PRESERVE = ["whatif_wallet", "whatif_wallet_sync", "admin_token", "lang"];
+        const keep = Object.fromEntries(
+          PRESERVE.map(k => [k, LS.getItem(k)])
+        );
+        [
+          "whatif_prefs",
+          "next_prompts",
+          "cronologia",
+          "replay_story",
+          "surprise_recent",
+          "absurd_prompt",
+          "surprise_mode",
+          "domanda"
+        ].forEach(k => LS.removeItem(k));
+        Object.entries(keep).forEach(([k, v]) => {
+          if (v !== null) LS.setItem(k, v);
+        });
+        location.href = "index.html";
+      };
+
+      // ===== Credits Firestore =====
+      let currentUser = null;
+      let currentBalance = 0;
+
+      function renderCredits() {
+        const goBtn = $("goBtn");
+        const surpriseBtn = $("surpriseBtn");
+
+        if (IS_ADMIN) {
+          $("freeBadge").textContent = `${T.credits}: ∞ (admin)`;
+          if (goBtn) goBtn.disabled = false;
+          if (surpriseBtn) surpriseBtn.disabled = false;
+          return;
+        }
+
+        $("freeBadge").textContent = `${T.credits}: ${currentBalance}`;
+
+        if (goBtn) goBtn.disabled = false;
+        if (surpriseBtn) surpriseBtn.disabled = false;
+      }
+
+      async function syncCreditsFromServer() {
+        if (IS_ADMIN) {
+          renderCredits();
+          return;
+        }
+        if (!auth.currentUser) {
+          currentBalance = 0;
+          renderCredits();
+          return;
+        }
+        try {
+          await bootCredits();
+          currentBalance = await getBalance();
+        } catch (e) {
+          console.error("syncCredits error:", e);
+          currentBalance = 0;
+        }
+        renderCredits();
+      }
+
+      async function checkStripeReturn() {
+        const params = new URLSearchParams(window.location.search);
+        const payment = params.get("payment");
+        const pack = Number(params.get("pack") || "0");
+
+        if (payment !== "ok" || !pack || pack <= 0) {
+          return;
+        }
+
+        try {
+          await adminAddCredits(pack);
+          await syncCreditsFromServer();
+          alert(T.creditsAdded(pack));
+
+          const url = new URL(window.location.href);
+          url.searchParams.delete("payment");
+          url.searchParams.delete("pack");
+          url.searchParams.delete("session_id");
+          window.history.replaceState({}, "", url.toString());
+        } catch (err) {
+          console.error("Errore durante l'aggiunta dei crediti:", err);
+        }
+      }
+
+      onAuthStateChanged(auth, async user => {
+        currentUser = user;
+        await syncCreditsFromServer();
+        if (currentUser) {
+          await checkStripeReturn();
+        }
+      });
+
+      window.addEventListener("focus", syncCreditsFromServer);
+      window.addEventListener("pageshow", syncCreditsFromServer);
+
       // ===== Guard credits =====
       async function guardCredits() {
         if (!auth.currentUser) {
-          alert("Per usare i crediti devi essere loggato.");
+          alert(T.notLogged);
           return false;
         }
         if (IS_ADMIN) return true;
@@ -1206,7 +1135,6 @@
         }
       }
 
-      // ✅ QUI: niente cronologia, solo crediti + richiesta per fifth
       async function submitClarification() {
         const clarification = ($("clarifyInput").value || "").trim();
         if (!clarification) {
@@ -1229,7 +1157,7 @@
             renderCredits();
           } catch (err) {
             console.error("consumeCredit error:", err);
-            alert("Errore nell'utilizzo dei crediti. Riprova.");
+            alert(T.errConsume);
             return;
           }
         }
@@ -1240,9 +1168,8 @@
         btn.textContent = "⏳...";
 
         try {
-          const answer = ""; // verrà calcolata in quinta pagina
+          const answer = "";
 
-          // Replay story base (solo per rivedere dopo)
           writeJSON("replay_story", {
             domanda: currentQuestion,
             answer,
@@ -1253,7 +1180,6 @@
             clarification
           });
 
-          // Richiesta completa che la quinta pagina userà per chiamare /api/ask
           const fullReq = {
             stage: "answer",
             domanda: currentQuestion,
@@ -1275,7 +1201,6 @@
           };
           writeJSON("whatif_request", fullReq);
 
-          // Vai subito alla pagina di risposta
           location.href = "fifth.html";
         } finally {
           btn.disabled = false;
@@ -1313,7 +1238,7 @@
             renderCredits();
           } catch (err) {
             console.error("consumeCredit error:", err);
-            alert("Errore nell'utilizzo dei crediti. Riprova.");
+            alert(T.errConsume);
             return;
           }
         }
@@ -1324,9 +1249,8 @@
         btn.textContent = "⏳...";
 
         try {
-          const answer = ""; // la quinta pagina genererà la risposta
+          const answer = "";
 
-          // Solo replay base (per rivedere risposta salvata)
           writeJSON("replay_story", {
             domanda,
             answer,
@@ -1337,7 +1261,6 @@
             clarification: ""
           });
 
-          // Richiesta completa per la quinta pagina
           const fullReq = {
             stage: "answer",
             domanda,
@@ -1359,7 +1282,6 @@
           };
           writeJSON("whatif_request", fullReq);
 
-          // Redirect immediato alla pagina di risposta
           location.href = "fifth.html";
         } finally {
           btn.disabled = false;
@@ -1410,11 +1332,149 @@
         resetClarifyUI();
       });
 
+      // 🎤 ===== VOICE INPUT PER DOMANDA + CHIARIMENTO =====
+      (function setupVoiceInput() {
+        const qInput = $("qInput");
+        const qBtn = $("voiceQuestionBtn");
+        const qStatus = $("voiceStatus");
+
+        const clarifyInput = $("clarifyInput");
+        const cBtn = $("voiceClarifyBtn");
+        const cStatus = $("voiceClarifyStatus");
+
+        if (!qInput || !qBtn || !qStatus) return;
+
+        const SpeechRecognition =
+          window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+          const msg = T.speechUnsupported;
+          qBtn.disabled = true;
+          qStatus.textContent = msg;
+          if (cBtn && cStatus) {
+            cBtn.disabled = true;
+            cStatus.textContent = msg;
+          }
+          return;
+        }
+
+        const recognition = new SpeechRecognition();
+        const langMap = {
+          it: "it-IT",
+          en: "en-US",
+          es: "es-ES",
+          fr: "fr-FR",
+          de: "de-DE"
+        };
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        let isListening = false;
+        let currentTarget = null; // "q" | "clarify"
+
+        function setStatus(target, text) {
+          if (target === "q") {
+            qStatus.textContent = text || "";
+          } else if (target === "clarify" && cStatus) {
+            cStatus.textContent = text || "";
+          }
+        }
+
+        function setButtonLabel(target, listening) {
+          const isEn = lang === "en";
+          const baseLabel = isEn ? "🎤 Voice input" : "🎤 Dettatura vocale";
+
+          if (target === "q") {
+            qBtn.textContent = listening ? "🛑 Stop" : baseLabel;
+          } else if (target === "clarify" && cBtn) {
+            cBtn.textContent = listening ? "🛑 Stop" : baseLabel;
+          }
+        }
+
+        function startListening(target) {
+          try {
+            currentTarget = target;
+            recognition.lang = langMap[lang] || "it-IT";
+            recognition.start();
+            isListening = true;
+            const txt = T.speechListening;
+            setStatus(target, txt);
+            setButtonLabel(target, true);
+          } catch (e) {
+            console.error("speech start error", e);
+          }
+        }
+
+        function stopListening() {
+          try {
+            recognition.stop();
+          } catch {}
+          isListening = false;
+          if (currentTarget) {
+            setStatus(currentTarget, "");
+            setButtonLabel(currentTarget, false);
+          }
+          currentTarget = null;
+        }
+
+        qBtn.addEventListener("click", () => {
+          if (!isListening) {
+            startListening("q");
+          } else if (currentTarget === "q") {
+            stopListening();
+          }
+        });
+
+        if (cBtn) {
+          cBtn.addEventListener("click", () => {
+            if (!isListening) {
+              startListening("clarify");
+            } else if (currentTarget === "clarify") {
+              stopListening();
+            }
+          });
+        }
+
+        recognition.addEventListener("result", event => {
+          const transcript = event.results[0][0].transcript;
+          if (!transcript) return;
+
+          if (currentTarget === "q" && qInput) {
+            qInput.value = transcript;
+            LS.setItem("absurd_prompt", "0");
+            LS.setItem("surprise_mode", "0");
+            resetClarifyUI();
+          } else if (currentTarget === "clarify" && clarifyInput) {
+            clarifyInput.value = transcript;
+          }
+        });
+
+        recognition.addEventListener("end", () => {
+          if (isListening) {
+            stopListening();
+          }
+        });
+
+        recognition.addEventListener("error", event => {
+          console.error("speech error", event);
+          const txt = T.speechError;
+          setStatus(currentTarget || "q", txt);
+          stopListening();
+        });
+
+        qBtn.textContent =
+          lang === "en" ? "🎤 Voice input" : "🎤 Dettatura vocale";
+        if (cBtn) {
+          cBtn.textContent =
+            lang === "en" ? "🎤 Voice input" : "🎤 Dettatura vocale";
+        }
+      })();
+
       // ===== Surprise (assurda) =====
       const ABS_BANK = {
         it: [
           "E se per 24 ore dicessi sì a tutto quello che ti viene proposto (tranne cose illegali o pericolose)?",
-          "E se scrivessi una lettera al tuo io tra 10 anni e poi vivissi un giorno come se l’avessi già letta?",
+          "E se scrivessi una lettera al tuo io tra 10 anni e poi vivessi un giorno come se l’avessi già letta?",
           "E se cambiassi posto a tutti gli oggetti di casa e guardassi quali abitudini saltano fuori?",
           "E se per una settimana decidessi tutto in base alla prima canzone che esce in shuffle?",
           "E se raccontassi la tua giornata come se fossi il protagonista di un documentario trash?",
@@ -1493,7 +1553,7 @@
             renderCredits();
           } catch (err) {
             console.error("consumeCredit error:", err);
-            alert("Errore nell'utilizzo dei crediti. Riprova.");
+            alert(T.errConsume);
             return;
           }
         }
@@ -1553,7 +1613,6 @@
           writeJSON("whatif_request", req);
           LS.setItem("domanda", final);
 
-          // 🔁 NESSUN push in cronologia qui, ci pensa fifth.html
           location.href = "fifth.html?src=surprise";
         }, 1200 + Math.random() * 600);
       }
@@ -1562,7 +1621,6 @@
         slotSurprise();
       };
 
-      // Primo render
       renderCredits();
     </script>
   </body>
