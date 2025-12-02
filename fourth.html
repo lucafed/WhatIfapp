@@ -517,6 +517,44 @@
 
       let T = I18N[lang] || I18N.it;
 
+      // ===== prefs stile/periodo =====
+      let prefs = readJSON("whatif_prefs", {
+        stile: "whatif",
+        periodo: "future",
+        pro: false
+      });
+
+      document.documentElement.setAttribute(
+        "data-theme",
+        prefs.stile === "wtf" ? "wtf" : "whatif"
+      );
+
+      let currentQuestion = "";
+      let currentClarifyQuestion = "";
+
+      function resetClarifyUI() {
+        currentQuestion = "";
+        currentClarifyQuestion = "";
+        $("clarifySection").style.display = "none";
+        $("clarifyInput").value = "";
+        $("clarifyQuestion").textContent = "";
+      }
+
+      function renderBadges() {
+        $("styleBadge").textContent =
+          "🎭 " + (prefs.stile === "wtf" ? T.styleWTF : T.styleWF);
+        $("periodoBadge").textContent =
+          "🕰️ " + (prefs.periodo === "past" ? T.past : T.fut);
+        document
+          .querySelectorAll("#styleChips .chip")
+          .forEach(c => c.classList.toggle("sel", c.dataset.style === prefs.stile));
+        document
+          .querySelectorAll("#periodoChips .chip")
+          .forEach(c =>
+            c.classList.toggle("sel", c.dataset.periodo === prefs.periodo)
+          );
+      }
+
       function applyLanguageTexts() {
         $("titleH1").textContent = T.title;
         $("qLabel").textContent = T.yourq;
@@ -564,43 +602,6 @@
         renderStories();
         renderCredits();
       };
-
-      // ===== prefs stile/periodo =====
-      let prefs = readJSON("whatif_prefs", {
-        stile: "whatif",
-        periodo: "future",
-        pro: false
-      });
-      document.documentElement.setAttribute(
-        "data-theme",
-        prefs.stile === "wtf" ? "wtf" : "whatif"
-      );
-
-      let currentQuestion = "";
-      let currentClarifyQuestion = "";
-
-      function resetClarifyUI() {
-        currentQuestion = "";
-        currentClarifyQuestion = "";
-        $("clarifySection").style.display = "none";
-        $("clarifyInput").value = "";
-        $("clarifyQuestion").textContent = "";
-      }
-
-      function renderBadges() {
-        $("styleBadge").textContent =
-          "🎭 " + (prefs.stile === "wtf" ? T.styleWTF : T.styleWF);
-        $("periodoBadge").textContent =
-          "🕰️ " + (prefs.periodo === "past" ? T.past : T.fut);
-        document
-          .querySelectorAll("#styleChips .chip")
-          .forEach(c => c.classList.toggle("sel", c.dataset.style === prefs.stile));
-        document
-          .querySelectorAll("#periodoChips .chip")
-          .forEach(c =>
-            c.classList.toggle("sel", c.dataset.periodo === prefs.periodo)
-          );
-      }
 
       // ===== Hints emozionali, variabili ogni giorno =====
       const HINTS = {
@@ -900,11 +901,48 @@
           });
       }
 
+      // === attacco subito i listener ai chip stile/periodo ===
+      function attachStylePeriodListeners() {
+        // stile: What if / What the F
+        document
+          .querySelectorAll("#styleChips .chip")
+          .forEach(btn => {
+            btn.addEventListener("click", () => {
+              const newStyle = btn.dataset.style === "wtf" ? "wtf" : "whatif";
+              if (prefs.stile === newStyle) return;
+              prefs.stile = newStyle;
+              writeJSON("whatif_prefs", prefs);
+              document.documentElement.setAttribute(
+                "data-theme",
+                newStyle === "wtf" ? "wtf" : "whatif"
+              );
+              resetClarifyUI(); // cambio voce -> reset eventuale chiarimento
+              renderBadges();
+            });
+          });
+
+        // periodo: Futuro / Passato
+        document
+          .querySelectorAll("#periodoChips .chip")
+          .forEach(btn => {
+            btn.addEventListener("click", () => {
+              const newPeriodo = btn.dataset.periodo === "past" ? "past" : "future";
+              if (prefs.periodo === newPeriodo) return;
+              prefs.periodo = newPeriodo;
+              writeJSON("whatif_prefs", prefs);
+              resetClarifyUI();
+              renderBadges();
+              renderHints(); // spunti rapidi coerenti con passato/futuro
+            });
+          });
+      }
+
       renderBadges();
       applyLanguageTexts();
       renderHints();
       renderNext();
       renderStories();
+      attachStylePeriodListeners();
 
       $("clearSavedBtn").onclick = () => {
         LS.removeItem("next_prompts");
@@ -1563,7 +1601,7 @@
             currentBalance = await getBalance().catch(() => currentBalance);
             renderCredits();
           } catch (err) {
-            console.error("consumeCredit error:", err);
+            console.error("Errore nell'utilizzo dei crediti:", err);
             alert("Errore nell'utilizzo dei crediti. Riprova.");
             return;
           }
@@ -1635,4 +1673,4 @@
       renderCredits();
     </script>
   </body>
-</html>
+  </html>
