@@ -282,6 +282,17 @@
       const todayISO = () => new Date().toISOString().slice(0, 10);
 
       const IS_ADMIN = !!LS.getItem("admin_token");
+      const ORIGIN_KEY = "whatif_origin";
+
+      function setOrigin(origin) {
+        if (!origin) origin = "manual";
+        LS.setItem(ORIGIN_KEY, origin);
+      }
+      function getOrigin() {
+        const o = (LS.getItem(ORIGIN_KEY) || "").toString();
+        if (o === "surprise" || o === "quick" || o === "manual") return o;
+        return "manual";
+      }
 
       // ===== i18n =====
       const SUP_LANG = ["it", "en", "es", "fr", "de"];
@@ -329,10 +340,12 @@
             "Errore nel generare la domanda di chiarimento. Riprova.",
           answerError:
             "Errore nel generare la risposta. Riprova tra qualche secondo.",
-          // voce
-          voiceButton: "🎤 Dettatura vocale",
+          loginRequired: "Per usare i crediti devi essere loggato.",
+          creditUseError: "Errore nell'utilizzo dei crediti. Riprova.",
+          addedCredits: "Ti ho aggiunto {n} crediti al tuo wallet ✨",
+          voiceBtnLabel: "🎤 Dettatura vocale",
+          voiceNotSupported: "Il tuo browser non supporta la dettatura vocale.",
           voiceListening: "Sto ascoltando… parla vicino al microfono.",
-          voiceUnsupported: "Il tuo browser non supporta la dettatura vocale.",
           voiceError: "Errore nel riconoscimento vocale. Riprova."
         },
         en: {
@@ -372,9 +385,12 @@
             "Error while generating the follow-up question. Please try again.",
           answerError:
             "Error while generating the answer. Please try again in a moment.",
-          voiceButton: "🎤 Voice input",
+          loginRequired: "You must be logged in to use credits.",
+          creditUseError: "Error while using credits. Please try again.",
+          addedCredits: "I’ve added {n} credits to your wallet ✨",
+          voiceBtnLabel: "🎤 Voice input",
+          voiceNotSupported: "Your browser does not support voice input.",
           voiceListening: "Listening… speak close to the microphone.",
-          voiceUnsupported: "Your browser does not support voice input.",
           voiceError: "Voice recognition error. Please try again."
         },
         es: {
@@ -415,9 +431,12 @@
             "Error al generar la pregunta de aclaración. Vuelve a intentarlo.",
           answerError:
             "Error al generar la respuesta. Vuelve a intentarlo en unos segundos.",
-          voiceButton: "🎤 Dictado por voz",
-          voiceListening: "Te estoy escuchando… habla cerca del micrófono.",
-          voiceUnsupported: "Tu navegador no soporta el dictado por voz.",
+          loginRequired: "Debes iniciar sesión para usar los créditos.",
+          creditUseError: "Error al usar los créditos. Vuelve a intentarlo.",
+          addedCredits: "Te he añadido {n} créditos a tu monedero ✨",
+          voiceBtnLabel: "🎤 Dictado por voz",
+          voiceNotSupported: "Tu navegador no admite dictado por voz.",
+          voiceListening: "Escuchando… habla cerca del micrófono.",
           voiceError: "Error en el reconocimiento de voz. Vuelve a intentarlo."
         },
         fr: {
@@ -458,9 +477,12 @@
             "Erreur lors de la génération de la question de clarification. Réessaie.",
           answerError:
             "Erreur lors de la génération de la réponse. Réessaie dans un instant.",
-          voiceButton: "🎤 Dictée vocale",
+          loginRequired: "Tu dois être connecté pour utiliser les crédits.",
+          creditUseError: "Erreur lors de l’utilisation des crédits. Réessaie.",
+          addedCredits: "Je t’ai ajouté {n} crédits sur ton wallet ✨",
+          voiceBtnLabel: "🎤 Dictée vocale",
+          voiceNotSupported: "Ton navigateur ne prend pas en charge la dictée vocale.",
           voiceListening: "J’écoute… parle près du micro.",
-          voiceUnsupported: "Ton navigateur ne supporte pas la dictée vocale.",
           voiceError: "Erreur de reconnaissance vocale. Réessaie."
         },
         de: {
@@ -501,12 +523,13 @@
             "Fehler beim Erzeugen der Rückfrage. Bitte versuch es noch einmal.",
           answerError:
             "Fehler beim Erzeugen der Antwort. Bitte versuch es gleich noch einmal.",
-          voiceButton: "🎤 Spracheingabe",
-          voiceListening: "Ich höre zu… sprich nah ins Mikrofon.",
-          voiceUnsupported:
-            "Dein Browser unterstützt keine Spracheingabe.",
-          voiceError:
-            "Fehler bei der Spracherkennung. Bitte versuch es erneut."
+          loginRequired: "Du musst eingeloggt sein, um Credits zu verwenden.",
+          creditUseError: "Fehler bei der Verwendung der Credits. Bitte versuch es erneut.",
+          addedCredits: "Ich habe deinem Wallet {n} Credits hinzugefügt ✨",
+          voiceBtnLabel: "🎤 Spracheingabe",
+          voiceNotSupported: "Dein Browser unterstützt keine Spracheingabe.",
+          voiceListening: "Ich höre zu… sprich in der Nähe des Mikrofons.",
+          voiceError: "Fehler bei der Spracherkennung. Bitte versuch es erneut."
         }
       });
 
@@ -538,11 +561,12 @@
         $("clarifyInput").placeholder = T.clarifyPlaceholder;
         $("clarifySubmitBtn").textContent = T.clarifyBtn;
 
-        // label bottoni voce
         const qBtn = $("voiceQuestionBtn");
         const cBtn = $("voiceClarifyBtn");
-        if (qBtn) qBtn.textContent = T.voiceButton;
-        if (cBtn) cBtn.textContent = T.voiceButton;
+        if (qBtn) qBtn.textContent = T.voiceBtnLabel || "🎤 Dettatura vocale";
+        if (cBtn) cBtn.textContent = T.voiceBtnLabel || "🎤 Dettatura vocale";
+
+        $("resetBtn").title = "Reset";
       }
 
       $("langSelect").onchange = () => {
@@ -570,6 +594,11 @@
         "data-theme",
         prefs.stile === "wtf" ? "wtf" : "whatif"
       );
+
+      // inizializza origine se non presente
+      if (!LS.getItem(ORIGIN_KEY)) {
+        setOrigin("manual");
+      }
 
       let currentQuestion = "";
       let currentClarifyQuestion = "";
@@ -785,6 +814,7 @@
             $("qInput").value = h;
             LS.setItem("absurd_prompt", "0");
             LS.setItem("surprise_mode", "0");
+            setOrigin("quick"); // 🔹 spunti rapidi
             window.scrollTo({ top: 0, behavior: "smooth" });
           };
           wrap.appendChild(b);
@@ -841,6 +871,7 @@
             $("qInput").value = item.q || "";
             LS.setItem("absurd_prompt", "0");
             LS.setItem("surprise_mode", "0");
+            setOrigin("manual");
             window.scrollTo({ top: 0, behavior: "smooth" });
           };
           right.appendChild(useBtn);
@@ -934,7 +965,8 @@
           "surprise_recent",
           "absurd_prompt",
           "surprise_mode",
-          "domanda"
+          "domanda",
+          ORIGIN_KEY
         ].forEach(k => LS.removeItem(k));
         Object.entries(keep).forEach(([k, v]) => {
           if (v !== null) LS.setItem(k, v);
@@ -995,7 +1027,9 @@
         try {
           await adminAddCredits(pack);
           await syncCreditsFromServer();
-          alert(`Ti ho aggiunto ${pack} crediti al tuo wallet ✨`);
+          const tpl =
+            T.addedCredits || "Ti ho aggiunto {n} crediti al tuo wallet ✨";
+          alert(tpl.replace("{n}", pack));
 
           const url = new URL(window.location.href);
           url.searchParams.delete("payment");
@@ -1021,7 +1055,7 @@
       // ===== Guard credits =====
       async function guardCredits() {
         if (!auth.currentUser) {
-          alert("Per usare i crediti devi essere loggato.");
+          alert(T.loginRequired || "Per usare i crediti devi essere loggato.");
           return false;
         }
         if (IS_ADMIN) return true;
@@ -1053,6 +1087,7 @@
         LS.setItem("domanda", domanda);
         LS.setItem("absurd_prompt", "0");
         LS.setItem("surprise_mode", "0");
+        const origin = getOrigin(); // manual | quick (qui non surprise)
 
         const reqMeta = {
           stage: "clarify",
@@ -1070,8 +1105,8 @@
           fantasy_mode: false,
           absurd: false,
           surprise: false,
-          source: "manual",
-          micro: { surprise: false, source: "manual" }
+          source: origin,
+          micro: { surprise: origin === "surprise", source: origin }
         };
         writeJSON("whatif_request", reqMeta);
 
@@ -1110,6 +1145,8 @@
           const metaAfter = readJSON("whatif_request", reqMeta);
           metaAfter.stage = "clarify";
           metaAfter.clarifyingQuestion = currentClarifyQuestion;
+          metaAfter.source = origin;
+          metaAfter.micro = { surprise: origin === "surprise", source: origin };
           writeJSON("whatif_request", metaAfter);
         } catch (err) {
           console.error("clarify error:", err);
@@ -1145,7 +1182,7 @@
             renderCredits();
           } catch (err) {
             console.error("consumeCredit error:", err);
-            alert("Errore nell'utilizzo dei crediti. Riprova.");
+            alert(T.creditUseError || "Errore nell'utilizzo dei crediti. Riprova.");
             return;
           }
         }
@@ -1157,6 +1194,7 @@
 
         try {
           const answer = "";
+          const origin = getOrigin();
 
           writeJSON("replay_story", {
             domanda: currentQuestion,
@@ -1184,8 +1222,8 @@
             fantasy_mode: false,
             absurd: false,
             surprise: false,
-            source: "manual",
-            micro: { surprise: false, source: "manual" }
+            source: origin,
+            micro: { surprise: origin === "surprise", source: origin }
           };
           writeJSON("whatif_request", fullReq);
 
@@ -1210,6 +1248,7 @@
         LS.setItem("domanda", domanda);
         LS.setItem("absurd_prompt", "0");
         LS.setItem("surprise_mode", "0");
+        const origin = getOrigin();
 
         const ok = await guardCredits();
         if (!ok) return;
@@ -1226,7 +1265,7 @@
             renderCredits();
           } catch (err) {
             console.error("consumeCredit error:", err);
-            alert("Errore nell'utilizzo dei crediti. Riprova.");
+            alert(T.creditUseError || "Errore nell'utilizzo dei crediti. Riprova.");
             return;
           }
         }
@@ -1265,8 +1304,8 @@
             fantasy_mode: false,
             absurd: false,
             surprise: false,
-            source: "manual",
-            micro: { surprise: false, source: "manual" }
+            source: origin,
+            micro: { surprise: origin === "surprise", source: origin }
           };
           writeJSON("whatif_request", fullReq);
 
@@ -1310,6 +1349,7 @@
         $("qInput").value = "";
         LS.setItem("absurd_prompt", "0");
         LS.setItem("surprise_mode", "0");
+        setOrigin("manual");
         resetClarifyUI();
         $("qInput").focus();
       };
@@ -1317,6 +1357,7 @@
       $("qInput").addEventListener("input", () => {
         LS.setItem("absurd_prompt", "0");
         LS.setItem("surprise_mode", "0");
+        setOrigin("manual");
         resetClarifyUI();
       });
 
@@ -1336,7 +1377,7 @@
           window.SpeechRecognition || window.webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
-          const msg = T.voiceUnsupported;
+          const msg = T.voiceNotSupported || "Il tuo browser non supporta la dettatura vocale.";
           qBtn.disabled = true;
           qStatus.textContent = msg;
           if (cBtn && cStatus) {
@@ -1369,7 +1410,8 @@
         }
 
         function setButtonLabel(target, listening) {
-          const baseLabel = T.voiceButton;
+          const baseLabel = T.voiceBtnLabel || "🎤 Dettatura vocale";
+
           if (target === "q") {
             qBtn.textContent = listening ? "🛑 Stop" : baseLabel;
           } else if (target === "clarify" && cBtn) {
@@ -1383,7 +1425,12 @@
             recognition.lang = langMap[lang] || "it-IT";
             recognition.start();
             isListening = true;
-            setStatus(target, T.voiceListening);
+            const txt =
+              T.voiceListening ||
+              (lang === "en"
+                ? "Listening… speak close to the microphone."
+                : "Sto ascoltando… parla vicino al microfono.");
+            setStatus(target, txt);
             setButtonLabel(target, true);
           } catch (e) {
             console.error("speech start error", e);
@@ -1428,6 +1475,7 @@
             qInput.value = transcript;
             LS.setItem("absurd_prompt", "0");
             LS.setItem("surprise_mode", "0");
+            setOrigin("manual");
             resetClarifyUI();
           } else if (currentTarget === "clarify" && clarifyInput) {
             clarifyInput.value = transcript;
@@ -1442,14 +1490,18 @@
 
         recognition.addEventListener("error", event => {
           console.error("speech error", event);
-          const txt = T.voiceError;
+          const txt =
+            T.voiceError ||
+            (lang === "en"
+              ? "Voice recognition error. Please try again."
+              : "Errore nel riconoscimento vocale. Riprova.");
           setStatus(currentTarget || "q", txt);
           stopListening();
         });
 
-        qBtn.textContent = T.voiceButton;
+        qBtn.textContent = T.voiceBtnLabel || "🎤 Dettatura vocale";
         if (cBtn) {
-          cBtn.textContent = T.voiceButton;
+          cBtn.textContent = T.voiceBtnLabel || "🎤 Dettatura vocale";
         }
       })();
 
@@ -1536,7 +1588,7 @@
             renderCredits();
           } catch (err) {
             console.error("consumeCredit error:", err);
-            alert("Errore nell'utilizzo dei crediti. Riprova.");
+            alert(T.creditUseError || "Errore nell'utilizzo dei crediti. Riprova.");
             return;
           }
         }
@@ -1580,6 +1632,8 @@
 
           LS.setItem("absurd_prompt", "1");
           LS.setItem("surprise_mode", "1");
+          setOrigin("surprise"); // 🔹 sorprendimi
+
           const req = {
             stage: "answer",
             domanda: final,
