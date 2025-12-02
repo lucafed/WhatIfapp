@@ -98,6 +98,7 @@
         cursor:pointer;font-size:18px;
       }
       .meta{font-size:12px;color:var(--muted)}
+
       .collapsed>.body{display:none}
       .toggle{cursor:pointer;user-select:none}
 
@@ -328,12 +329,11 @@
             "Errore nel generare la domanda di chiarimento. Riprova.",
           answerError:
             "Errore nel generare la risposta. Riprova tra qualche secondo.",
-          notLogged: "Per usare i crediti devi essere loggato.",
-          errConsume: "Errore nell'utilizzo dei crediti. Riprova.",
-          creditsAdded: pack => `Ti ho aggiunto ${pack} crediti al tuo wallet ✨`,
-          speechUnsupported: "Il tuo browser non supporta la dettatura vocale.",
-          speechListening: "Sto ascoltando… parla vicino al microfono.",
-          speechError: "Errore nel riconoscimento vocale. Riprova."
+          // voce
+          voiceButton: "🎤 Dettatura vocale",
+          voiceListening: "Sto ascoltando… parla vicino al microfono.",
+          voiceUnsupported: "Il tuo browser non supporta la dettatura vocale.",
+          voiceError: "Errore nel riconoscimento vocale. Riprova."
         },
         en: {
           title: "Set your question",
@@ -372,12 +372,10 @@
             "Error while generating the follow-up question. Please try again.",
           answerError:
             "Error while generating the answer. Please try again in a moment.",
-          notLogged: "You must be logged in to use credits.",
-          errConsume: "Error while using credits. Please try again.",
-          creditsAdded: pack => `I've added ${pack} credits to your wallet ✨`,
-          speechUnsupported: "Your browser does not support voice input.",
-          speechListening: "Listening… speak close to the microphone.",
-          speechError: "Voice recognition error. Please try again."
+          voiceButton: "🎤 Voice input",
+          voiceListening: "Listening… speak close to the microphone.",
+          voiceUnsupported: "Your browser does not support voice input.",
+          voiceError: "Voice recognition error. Please try again."
         },
         es: {
           title: "Configura tu pregunta",
@@ -417,12 +415,10 @@
             "Error al generar la pregunta de aclaración. Vuelve a intentarlo.",
           answerError:
             "Error al generar la respuesta. Vuelve a intentarlo en unos segundos.",
-          notLogged: "Debes iniciar sesión para usar créditos.",
-          errConsume: "Error al usar los créditos. Inténtalo de nuevo.",
-          creditsAdded: pack => `Te he añadido ${pack} créditos a tu monedero ✨`,
-          speechUnsupported: "Tu navegador no admite dictado por voz.",
-          speechListening: "Te escucho… habla cerca del micrófono.",
-          speechError: "Error en el reconocimiento de voz. Vuelve a intentarlo."
+          voiceButton: "🎤 Dictado por voz",
+          voiceListening: "Te estoy escuchando… habla cerca del micrófono.",
+          voiceUnsupported: "Tu navegador no soporta el dictado por voz.",
+          voiceError: "Error en el reconocimiento de voz. Vuelve a intentarlo."
         },
         fr: {
           title: "Définis ta question",
@@ -462,12 +458,10 @@
             "Erreur lors de la génération de la question de clarification. Réessaie.",
           answerError:
             "Erreur lors de la génération de la réponse. Réessaie dans un instant.",
-          notLogged: "Tu dois être connecté pour utiliser les crédits.",
-          errConsume: "Erreur lors de l'utilisation des crédits. Réessaie.",
-          creditsAdded: pack => `Je t'ai ajouté ${pack} crédits ✨`,
-          speechUnsupported: "Ton navigateur ne supporte pas la dictée vocale.",
-          speechListening: "J'écoute… parle près du micro.",
-          speechError: "Erreur de reconnaissance vocale. Réessaie."
+          voiceButton: "🎤 Dictée vocale",
+          voiceListening: "J’écoute… parle près du micro.",
+          voiceUnsupported: "Ton navigateur ne supporte pas la dictée vocale.",
+          voiceError: "Erreur de reconnaissance vocale. Réessaie."
         },
         de: {
           title: "Stelle deine Frage ein",
@@ -507,12 +501,12 @@
             "Fehler beim Erzeugen der Rückfrage. Bitte versuch es noch einmal.",
           answerError:
             "Fehler beim Erzeugen der Antwort. Bitte versuch es gleich noch einmal.",
-          notLogged: "Du musst eingeloggt sein, um Credits zu nutzen.",
-          errConsume: "Fehler bei der Verwendung der Credits. Versuch es erneut.",
-          creditsAdded: pack => `Ich habe dir ${pack} Credits hinzugefügt ✨`,
-          speechUnsupported: "Dein Browser unterstützt keine Spracheingabe.",
-          speechListening: "Ich höre zu… sprich in Mikrofonnähe.",
-          speechError: "Fehler bei der Spracherkennung. Versuch es erneut."
+          voiceButton: "🎤 Spracheingabe",
+          voiceListening: "Ich höre zu… sprich nah ins Mikrofon.",
+          voiceUnsupported:
+            "Dein Browser unterstützt keine Spracheingabe.",
+          voiceError:
+            "Fehler bei der Spracherkennung. Bitte versuch es erneut."
         }
       });
 
@@ -544,17 +538,11 @@
         $("clarifyInput").placeholder = T.clarifyPlaceholder;
         $("clarifySubmitBtn").textContent = T.clarifyBtn;
 
-        // voice buttons label
+        // label bottoni voce
         const qBtn = $("voiceQuestionBtn");
         const cBtn = $("voiceClarifyBtn");
-        if (qBtn) {
-          qBtn.textContent =
-            lang === "en" ? "🎤 Voice input" : "🎤 Dettatura vocale";
-        }
-        if (cBtn) {
-          cBtn.textContent =
-            lang === "en" ? "🎤 Voice input" : "🎤 Dettatura vocale";
-        }
+        if (qBtn) qBtn.textContent = T.voiceButton;
+        if (cBtn) cBtn.textContent = T.voiceButton;
       }
 
       $("langSelect").onchange = () => {
@@ -1007,7 +995,7 @@
         try {
           await adminAddCredits(pack);
           await syncCreditsFromServer();
-          alert(T.creditsAdded(pack));
+          alert(`Ti ho aggiunto ${pack} crediti al tuo wallet ✨`);
 
           const url = new URL(window.location.href);
           url.searchParams.delete("payment");
@@ -1033,7 +1021,7 @@
       // ===== Guard credits =====
       async function guardCredits() {
         if (!auth.currentUser) {
-          alert(T.notLogged);
+          alert("Per usare i crediti devi essere loggato.");
           return false;
         }
         if (IS_ADMIN) return true;
@@ -1157,7 +1145,7 @@
             renderCredits();
           } catch (err) {
             console.error("consumeCredit error:", err);
-            alert(T.errConsume);
+            alert("Errore nell'utilizzo dei crediti. Riprova.");
             return;
           }
         }
@@ -1238,7 +1226,7 @@
             renderCredits();
           } catch (err) {
             console.error("consumeCredit error:", err);
-            alert(T.errConsume);
+            alert("Errore nell'utilizzo dei crediti. Riprova.");
             return;
           }
         }
@@ -1348,7 +1336,7 @@
           window.SpeechRecognition || window.webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
-          const msg = T.speechUnsupported;
+          const msg = T.voiceUnsupported;
           qBtn.disabled = true;
           qStatus.textContent = msg;
           if (cBtn && cStatus) {
@@ -1381,9 +1369,7 @@
         }
 
         function setButtonLabel(target, listening) {
-          const isEn = lang === "en";
-          const baseLabel = isEn ? "🎤 Voice input" : "🎤 Dettatura vocale";
-
+          const baseLabel = T.voiceButton;
           if (target === "q") {
             qBtn.textContent = listening ? "🛑 Stop" : baseLabel;
           } else if (target === "clarify" && cBtn) {
@@ -1397,8 +1383,7 @@
             recognition.lang = langMap[lang] || "it-IT";
             recognition.start();
             isListening = true;
-            const txt = T.speechListening;
-            setStatus(target, txt);
+            setStatus(target, T.voiceListening);
             setButtonLabel(target, true);
           } catch (e) {
             console.error("speech start error", e);
@@ -1457,16 +1442,14 @@
 
         recognition.addEventListener("error", event => {
           console.error("speech error", event);
-          const txt = T.speechError;
+          const txt = T.voiceError;
           setStatus(currentTarget || "q", txt);
           stopListening();
         });
 
-        qBtn.textContent =
-          lang === "en" ? "🎤 Voice input" : "🎤 Dettatura vocale";
+        qBtn.textContent = T.voiceButton;
         if (cBtn) {
-          cBtn.textContent =
-            lang === "en" ? "🎤 Voice input" : "🎤 Dettatura vocale";
+          cBtn.textContent = T.voiceButton;
         }
       })();
 
@@ -1553,7 +1536,7 @@
             renderCredits();
           } catch (err) {
             console.error("consumeCredit error:", err);
-            alert(T.errConsume);
+            alert("Errore nell'utilizzo dei crediti. Riprova.");
             return;
           }
         }
