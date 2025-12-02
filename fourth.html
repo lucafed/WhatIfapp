@@ -328,7 +328,12 @@
           clarifyError:
             "Errore nel generare la domanda di chiarimento. Riprova.",
           answerError:
-            "Errore nel generare la risposta. Riprova tra qualche secondo."
+            "Errore nel generare la risposta. Riprova tra qualche secondo.",
+          // voce
+          voiceButton: "🎤 Dettatura vocale",
+          voiceListening: "Sto ascoltando… parla vicino al microfono.",
+          voiceUnsupported: "Il tuo browser non supporta la dettatura vocale.",
+          voiceError: "Errore nel riconoscimento vocale. Riprova."
         },
         en: {
           title: "Set your question",
@@ -366,7 +371,11 @@
           clarifyError:
             "Error while generating the follow-up question. Please try again.",
           answerError:
-            "Error while generating the answer. Please try again in a moment."
+            "Error while generating the answer. Please try again in a moment.",
+          voiceButton: "🎤 Voice input",
+          voiceListening: "Listening… speak close to the microphone.",
+          voiceUnsupported: "Your browser does not support voice input.",
+          voiceError: "Voice recognition error. Please try again."
         },
         es: {
           title: "Configura tu pregunta",
@@ -405,7 +414,11 @@
           clarifyError:
             "Error al generar la pregunta de aclaración. Vuelve a intentarlo.",
           answerError:
-            "Error al generar la respuesta. Vuelve a intentarlo en unos segundos."
+            "Error al generar la respuesta. Vuelve a intentarlo en unos segundos.",
+          voiceButton: "🎤 Dictado por voz",
+          voiceListening: "Te estoy escuchando… habla cerca del micrófono.",
+          voiceUnsupported: "Tu navegador no soporta el dictado por voz.",
+          voiceError: "Error en el reconocimiento de voz. Vuelve a intentarlo."
         },
         fr: {
           title: "Définis ta question",
@@ -444,7 +457,11 @@
           clarifyError:
             "Erreur lors de la génération de la question de clarification. Réessaie.",
           answerError:
-            "Erreur lors de la génération de la réponse. Réessaie dans un instant."
+            "Erreur lors de la génération de la réponse. Réessaie dans un instant.",
+          voiceButton: "🎤 Dictée vocale",
+          voiceListening: "J’écoute… parle près du micro.",
+          voiceUnsupported: "Ton navigateur ne supporte pas la dictée vocale.",
+          voiceError: "Erreur de reconnaissance vocale. Réessaie."
         },
         de: {
           title: "Stelle deine Frage ein",
@@ -483,7 +500,13 @@
           clarifyError:
             "Fehler beim Erzeugen der Rückfrage. Bitte versuch es noch einmal.",
           answerError:
-            "Fehler beim Erzeugen der Antwort. Bitte versuch es gleich noch einmal."
+            "Fehler beim Erzeugen der Antwort. Bitte versuch es gleich noch einmal.",
+          voiceButton: "🎤 Spracheingabe",
+          voiceListening: "Ich höre zu… sprich nah ins Mikrofon.",
+          voiceUnsupported:
+            "Dein Browser unterstützt keine Spracheingabe.",
+          voiceError:
+            "Fehler bei der Spracherkennung. Bitte versuch es erneut."
         }
       });
 
@@ -515,17 +538,11 @@
         $("clarifyInput").placeholder = T.clarifyPlaceholder;
         $("clarifySubmitBtn").textContent = T.clarifyBtn;
 
-        // voice buttons label
+        // label bottoni voce
         const qBtn = $("voiceQuestionBtn");
         const cBtn = $("voiceClarifyBtn");
-        if (qBtn) {
-          qBtn.textContent =
-            lang === "en" ? "🎤 Voice input" : "🎤 Dettatura vocale";
-        }
-        if (cBtn) {
-          cBtn.textContent =
-            lang === "en" ? "🎤 Voice input" : "🎤 Dettatura vocale";
-        }
+        if (qBtn) qBtn.textContent = T.voiceButton;
+        if (cBtn) cBtn.textContent = T.voiceButton;
       }
 
       $("langSelect").onchange = () => {
@@ -1319,10 +1336,7 @@
           window.SpeechRecognition || window.webkitSpeechRecognition;
 
         if (!SpeechRecognition) {
-          const msg =
-            lang === "en"
-              ? "Your browser does not support voice input."
-              : "Il tuo browser non supporta la dettatura vocale.";
+          const msg = T.voiceUnsupported;
           qBtn.disabled = true;
           qStatus.textContent = msg;
           if (cBtn && cStatus) {
@@ -1355,9 +1369,7 @@
         }
 
         function setButtonLabel(target, listening) {
-          const isEn = lang === "en";
-          const baseLabel = isEn ? "🎤 Voice input" : "🎤 Dettatura vocale";
-
+          const baseLabel = T.voiceButton;
           if (target === "q") {
             qBtn.textContent = listening ? "🛑 Stop" : baseLabel;
           } else if (target === "clarify" && cBtn) {
@@ -1371,11 +1383,7 @@
             recognition.lang = langMap[lang] || "it-IT";
             recognition.start();
             isListening = true;
-            const txt =
-              lang === "en"
-                ? "Listening… speak close to the microphone."
-                : "Sto ascoltando… parla vicino al microfono.";
-            setStatus(target, txt);
+            setStatus(target, T.voiceListening);
             setButtonLabel(target, true);
           } catch (e) {
             console.error("speech start error", e);
@@ -1434,19 +1442,14 @@
 
         recognition.addEventListener("error", event => {
           console.error("speech error", event);
-          const txt =
-            lang === "en"
-              ? "Voice recognition error. Please try again."
-              : "Errore nel riconoscimento vocale. Riprova.";
+          const txt = T.voiceError;
           setStatus(currentTarget || "q", txt);
           stopListening();
         });
 
-        qBtn.textContent =
-          lang === "en" ? "🎤 Voice input" : "🎤 Dettatura vocale";
+        qBtn.textContent = T.voiceButton;
         if (cBtn) {
-          cBtn.textContent =
-            lang === "en" ? "🎤 Voice input" : "🎤 Dettatura vocale";
+          cBtn.textContent = T.voiceButton;
         }
       })();
 
