@@ -283,6 +283,11 @@
 
       const IS_ADMIN = !!LS.getItem("admin_token");
 
+      // Inizializza flag sorgente hint se mancante
+      if (LS.getItem("from_hint") === null) {
+        LS.setItem("from_hint", "0");
+      }
+
       // ===== i18n =====
       const SUP_LANG = ["it", "en", "es", "fr", "de"];
       let lang = (LS.getItem("lang") || "it").toLowerCase();
@@ -629,7 +634,7 @@
           past: [
             "E se avessi accettato quel lavoro che ti spaventava?",
             "E se anni fa fossi andato a vivere in un’altra città?",
-            "E se fossi rimasto nella tua città invece di scappare?",
+            "E se fossi rimasto nella mia città invece di scappare?",
             "E se avessi messo un limite prima a quella persona che ti prosciugava energie?",
             "E se avessi chiuso quella relazione qualche anno prima?",
             "E se avessi smesso prima di chiedere pareri a tutti?",
@@ -783,8 +788,10 @@
           b.onclick = () => {
             resetClarifyUI();
             $("qInput").value = h;
+            // questa domanda arriva da "Spunti rapidi"
             LS.setItem("absurd_prompt", "0");
             LS.setItem("surprise_mode", "0");
+            LS.setItem("from_hint", "1");
             window.scrollTo({ top: 0, behavior: "smooth" });
           };
           wrap.appendChild(b);
@@ -841,6 +848,8 @@
             $("qInput").value = item.q || "";
             LS.setItem("absurd_prompt", "0");
             LS.setItem("surprise_mode", "0");
+            // da "domande salvate" lo trattiamo come manuale
+            LS.setItem("from_hint", "0");
             window.scrollTo({ top: 0, behavior: "smooth" });
           };
           right.appendChild(useBtn);
@@ -934,7 +943,8 @@
           "surprise_recent",
           "absurd_prompt",
           "surprise_mode",
-          "domanda"
+          "domanda",
+          "from_hint"
         ].forEach(k => LS.removeItem(k));
         Object.entries(keep).forEach(([k, v]) => {
           if (v !== null) LS.setItem(k, v);
@@ -1035,6 +1045,13 @@
         return true;
       }
 
+      // ===== helper sorgente =====
+      function getSourceTag() {
+        // surprise viene gestito a parte nello slotSurprise
+        const fromHint = LS.getItem("from_hint") === "1";
+        return fromHint ? "hint" : "manual";
+      }
+
       // ===== Flusso WHAT IF: domanda -> chiarimento -> risposta (in fifth) =====
       async function startClarifyFlow() {
         if (prefs.stile === "wtf") {
@@ -1053,6 +1070,7 @@
         LS.setItem("domanda", domanda);
         LS.setItem("absurd_prompt", "0");
         LS.setItem("surprise_mode", "0");
+        const sourceTag = getSourceTag();
 
         const reqMeta = {
           stage: "clarify",
@@ -1070,8 +1088,8 @@
           fantasy_mode: false,
           absurd: false,
           surprise: false,
-          source: "manual",
-          micro: { surprise: false, source: "manual" }
+          source: sourceTag,
+          micro: { surprise: false, source: sourceTag }
         };
         writeJSON("whatif_request", reqMeta);
 
@@ -1089,7 +1107,9 @@
               domanda,
               stile: prefs.stile,
               lang,
-              periodo: prefs.periodo
+              periodo: prefs.periodo,
+              source: sourceTag,
+              micro: { surprise: false, source: sourceTag }
             })
           });
           if (!res.ok) throw new Error("HTTP " + res.status);
@@ -1157,6 +1177,7 @@
 
         try {
           const answer = "";
+          const sourceTag = getSourceTag();
 
           writeJSON("replay_story", {
             domanda: currentQuestion,
@@ -1184,8 +1205,8 @@
             fantasy_mode: false,
             absurd: false,
             surprise: false,
-            source: "manual",
-            micro: { surprise: false, source: "manual" }
+            source: sourceTag,
+            micro: { surprise: false, source: sourceTag }
           };
           writeJSON("whatif_request", fullReq);
 
@@ -1210,6 +1231,7 @@
         LS.setItem("domanda", domanda);
         LS.setItem("absurd_prompt", "0");
         LS.setItem("surprise_mode", "0");
+        const sourceTag = getSourceTag();
 
         const ok = await guardCredits();
         if (!ok) return;
@@ -1265,8 +1287,8 @@
             fantasy_mode: false,
             absurd: false,
             surprise: false,
-            source: "manual",
-            micro: { surprise: false, source: "manual" }
+            source: sourceTag,
+            micro: { surprise: false, source: sourceTag }
           };
           writeJSON("whatif_request", fullReq);
 
@@ -1310,6 +1332,7 @@
         $("qInput").value = "";
         LS.setItem("absurd_prompt", "0");
         LS.setItem("surprise_mode", "0");
+        LS.setItem("from_hint", "0");
         resetClarifyUI();
         $("qInput").focus();
       };
@@ -1317,6 +1340,8 @@
       $("qInput").addEventListener("input", () => {
         LS.setItem("absurd_prompt", "0");
         LS.setItem("surprise_mode", "0");
+        // se l'utente modifica il testo, la domanda diventa "manuale"
+        LS.setItem("from_hint", "0");
         resetClarifyUI();
       });
 
@@ -1428,6 +1453,7 @@
             qInput.value = transcript;
             LS.setItem("absurd_prompt", "0");
             LS.setItem("surprise_mode", "0");
+            LS.setItem("from_hint", "0"); // voce = manuale
             resetClarifyUI();
           } else if (currentTarget === "clarify" && clarifyInput) {
             clarifyInput.value = transcript;
@@ -1523,6 +1549,8 @@
         if (!ok) return;
 
         resetClarifyUI();
+        // sorpresa: non è un hint
+        LS.setItem("from_hint", "0");
 
         if (!IS_ADMIN) {
           try {
