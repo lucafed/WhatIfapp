@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>What?f — Admin crediti</title>
+  <title>What?f — Admin</title>
   <meta name="theme-color" content="#0A0F14"/>
   <style>
     :root{
@@ -83,11 +83,11 @@
 </head>
 <body>
 <main>
-  <h1>What?f — Admin crediti</h1>
+  <h1>What?f — Admin</h1>
   <p class="sub">
-    Gestione wallet Firestore + preferenze locali. Fourth/fifth leggono solo da
-    <span class="mono">wallets/{uid}</span> tramite <span class="mono">bootCredits</span> / <span class="mono">getBalance</span>.
-    Qui puoi forzare FREE/PRO lato client, vedere la cronologia locale e, con un token admin valido, leggere i log server.
+    Gestione wallet Firestore + preferenze locali. In questa pagina:
+    <br>• vedi <strong>solo le tue domande</strong> salvate in locale (cronologia / next prompts),
+    <br>• i log lato server sono <strong>100% anonimi</strong>: solo stile, tempo (passato/futuro) e se hanno usato <em>Sorprendimi</em> o <em>Spunti rapidi</em>.
   </p>
 
   <!-- UTENTE / ADMIN LOCALE -->
@@ -106,8 +106,8 @@
         </div>
         <div class="small">
           Admin locale = presenza di <span class="mono">admin_token</span> in <span class="mono">localStorage</span>:
-          fourth/fifth mostrano ∞ crediti. Lo stesso token viene mandato a <span class="mono">/api/admin-logs</span>
-          come <span class="mono">x-admin-token</span>.
+          fourth/fifth mostrano ∞ crediti, ma
+          <strong>non</strong> viene mai salvato il testo delle domande degli utenti lato server.
         </div>
       </div>
     </div>
@@ -124,7 +124,7 @@
         <div class="small">
           Il token viene salvato in <span class="mono">localStorage.admin_token</span> e usato per:
           <br>• mostrare ∞ crediti lato client (admin locale),
-          <br>• autenticarti su <span class="mono">/api/admin-logs</span> per leggere i log.
+          <br>• autenticarti su <span class="mono">/api/admin-logs</span> per leggere i log <strong>solo metadati</strong>.
         </div>
       </div>
       <div>
@@ -192,7 +192,7 @@
       <div class="hr"></div>
       <div class="row">
         <button class="btn danger" id="btnClearHist">Svuota cronologia</button>
-        <span class="small">Legge da <span class="mono">cronologia</span> in localStorage (massimo 50 voci).</span>
+        <span class="small">Legge da <span class="mono">cronologia</span> in localStorage (massimo 50 voci). Questi dati restano solo sul tuo dispositivo.</span>
       </div>
     </details>
   </div>
@@ -200,12 +200,12 @@
   <!-- PROSSIME DOMANDE SALVATE -->
   <div class="card">
     <details>
-      <summary class="label">Domande salvate / Next prompts</summary>
+      <summary class="label">Domande salvate / Next prompts (locale)</summary>
       <div class="story-list" id="nextList"></div>
       <div class="hr"></div>
       <div class="row">
         <button class="btn danger" id="btnClearNext">Svuota salvate</button>
-        <span class="small">Usa la stessa lista “Domande salvate” che vedi in fourth.</span>
+        <span class="small">Usa la stessa lista “Domande salvate” che vedi in fourth, sempre solo in locale.</span>
       </div>
     </details>
   </div>
@@ -213,12 +213,12 @@
   <!-- LOG DOMANDE (SERVER) -->
   <div class="card">
     <details open>
-      <summary class="label">Log domande (server)</summary>
+      <summary class="label">Log domande (server, solo metadati anonimi)</summary>
       <div class="row" style="margin-bottom:6px">
         <button class="btn" id="btnReloadLogs">🔄 Ricarica log</button>
         <span class="small" id="logsInfo">
-          Legge da <span class="mono">/api/admin-logs</span> (max 200, IP mascherato).
-          Usa il token in <span class="mono">localStorage.admin_token</span>.
+          Legge da <span class="mono">/api/admin-logs</span> (max 200).
+          Nessun testo di domanda/risposta, nessun IP, solo stile/tempo/Sorprendimi/Spunti rapidi.
         </span>
       </div>
       <div class="row" style="margin-bottom:6px">
@@ -239,14 +239,12 @@
           </select>
         </span>
         <span class="chip">
-          Lingua:
-          <select id="logsFilterLang" class="mono">
+          Sorgente:
+          <select id="logsFilterSource" class="mono">
             <option value="">tutte</option>
-            <option value="it">it</option>
-            <option value="en">en</option>
-            <option value="es">es</option>
-            <option value="fr">fr</option>
-            <option value="de">de</option>
+            <option value="manual">manuale</option>
+            <option value="hint">spunti rapidi</option>
+            <option value="surprise">sorprendimi</option>
           </select>
         </span>
       </div>
@@ -430,7 +428,6 @@
     try{
       await bootCredits();              // crea/aggiorna doc se serve
 
-      // leggo il doc grezzo per usedToday + dailyLimit
       const raw = await getWalletRaw();
       const today = new Date().toISOString().slice(0,10);
       if(raw){
@@ -443,7 +440,6 @@
         walUsedToday = 0;
       }
 
-      // saldo calcolato (dailyLimit - usedToday)
       const bal = await getBalance();
       currentBalance = Number.isFinite(+bal) ? +bal : 0;
 
@@ -634,7 +630,7 @@
   renderHistory();
   renderNext();
 
-  /* ========= LOG DOMANDE (SERVER) ========= */
+  /* ========= LOG DOMANDE (SERVER, SOLO METADATI) ========= */
   let lastLogsItems = [];
 
   function renderLogsWithCurrentFilters(){
@@ -643,14 +639,18 @@
     box.innerHTML = '';
 
     const items = lastLogsItems || [];
-    const styleFilter = ($('logsFilterStyle') && $('logsFilterStyle').value) || '';
+    const styleFilter   = ($('logsFilterStyle')   && $('logsFilterStyle').value)   || '';
     const periodoFilter = ($('logsFilterPeriodo') && $('logsFilterPeriodo').value) || '';
-    const langFilter = ($('logsFilterLang') && $('logsFilterLang').value) || '';
+    const sourceFilter  = ($('logsFilterSource')  && $('logsFilterSource').value)  || '';
 
     const filtered = items.filter(it=>{
-      if(styleFilter && (it.style || '') !== styleFilter) return false;
-      if(periodoFilter && (it.periodo || '') !== periodoFilter) return false;
-      if(langFilter && (String(it.lang || '').slice(0,2)) !== langFilter) return false;
+      const style   = it.style   || it.stile || 'whatif';
+      const periodo = it.periodo || 'future';
+      const source  = it.source  || 'manual';
+
+      if(styleFilter   && style   !== styleFilter)   return false;
+      if(periodoFilter && periodo !== periodoFilter) return false;
+      if(sourceFilter  && source  !== sourceFilter)  return false;
       return true;
     });
 
@@ -665,25 +665,27 @@
     filtered.forEach(it=>{
       const d = document.createElement('div');
       d.className = 'story';
-      const domanda = (it.domanda || '—').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const ts = fmt(it.ts || Date.now());
-      const stile = it.style || 'whatif';
-      const periodo = it.periodo || 'future';
-      const lang = (it.lang || 'it').slice(0,2);
-      const userType = it.user_type || 'free';
-      const chars = Number.isFinite(+it.answer_chars) ? +it.answer_chars : 0;
-      const ip = (it.ip || '').toString();
+
+      const ts       = fmt(it.ts || Date.now());
+      const style    = it.style   || it.stile || 'whatif';
+      const periodo  = it.periodo || 'future';
+      const source   = it.source  || 'manual';       // 'manual' | 'hint' | 'surprise'
+      const surprise = !!it.surprise;                // true se è stato usato Sorprendimi
+      const usedHint = source === 'hint' || it.usedHint === true;
+
+      const labelSource =
+        source === 'hint'      ? 'spunti rapidi'
+      : source === 'surprise'  ? 'sorprendimi'
+      :                          'manuale';
 
       d.innerHTML = `
-        <div class="story-q">${domanda}</div>
+        <div class="story-q">
+          ${ts} · stile: ${style} · periodo: ${periodo}
+        </div>
         <div class="story-meta">
-          ${ts}
-          · stile: ${stile}
-          · periodo: ${periodo}
-          · lang: ${lang}
-          · utente: ${userType}
-          ${chars ? ` · risposta ~${chars} char` : ''}
-          ${ip ? ` · IP: ${ip}` : ''}
+          sorgente: ${labelSource}
+          · Sorprendimi: ${surprise ? 'sì' : 'no'}
+          · Spunti rapidi: ${usedHint ? 'sì' : 'no'}
         </div>
       `;
       box.appendChild(d);
@@ -701,7 +703,8 @@
       const headers = {};
       if(adminTok) headers['x-admin-token'] = adminTok;
 
-      const res = await fetch('/api/admin-logs?limit=200&order=desc&mask=1',{ headers });
+      // l'API ora restituisce solo metadati anonimi (nessun testo domanda/risposta, nessun IP)
+      const res = await fetch('/api/admin-logs?limit=200&order=desc',{ headers });
 
       if(res.status === 401){
         adminTokenState = 'invalid';
@@ -736,7 +739,7 @@
       renderLogsWithCurrentFilters();
 
       if(info){
-        info.textContent = `Log lato server: ${items.length} voci lette (max 200). Filtri applicati solo lato client.`;
+        info.textContent = `Log lato server (solo metadati anonimi): ${items.length} voci lette (max 200). Filtri applicati solo lato client.`;
       }
     }catch(e){
       console.error('admin-logs error:', e);
@@ -750,9 +753,9 @@
   if($('btnReloadLogs')){
     $('btnReloadLogs').onclick = fetchLogsFromApi;
   }
-  if($('logsFilterStyle')) $('logsFilterStyle').onchange = renderLogsWithCurrentFilters;
+  if($('logsFilterStyle'))   $('logsFilterStyle').onchange   = renderLogsWithCurrentFilters;
   if($('logsFilterPeriodo')) $('logsFilterPeriodo').onchange = renderLogsWithCurrentFilters;
-  if($('logsFilterLang')) $('logsFilterLang').onchange = renderLogsWithCurrentFilters;
+  if($('logsFilterSource'))  $('logsFilterSource').onchange  = renderLogsWithCurrentFilters;
 
   // prova caricamento log all’avvio (se c’è già un token salvato)
   if(getAdminToken()){
