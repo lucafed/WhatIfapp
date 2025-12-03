@@ -838,6 +838,64 @@ Paragrafo unico, 3–6 frasi.`;
   return msgs;
 }
 
+/* ========= SEGNALI GIORNO (mattina/pomeriggio/sera) ========= */
+/**
+ * buildSignalMessages:
+ * per ora gestiamo SOLO il segnale del mattino di WHAT IF.
+ * Più avanti aggiungiamo:
+ * - pomeriggio con mood
+ * - sera con mood
+ * - what the f che risponde al segnale
+ */
+function buildSignalMessages({ time = "morning", mood = null, lang = "it", stile = "whatif", domanda = "" }) {
+  const L = normLang(lang);
+  const t = String(time || "morning").toLowerCase();
+
+  let sys;
+  let user;
+
+  if (t === "morning" && stile === "whatif") {
+    if (L === "it") {
+      sys = `Sei “WHAT IF” in modalità CONSIGLIO DEL MATTINO.
+REGOLE:
+- Non sai come si sente l’utente: NON descrivere il suo stato emotivo (“ti senti…”, “sei stanco”, ecc.).
+- Niente previsioni, niente oroscopi, niente futuro mistico.
+- Dai solo un consiglio concreto e intelligente per iniziare la giornata in modo un po' più leggero e sensato.
+- 2–3 frasi al massimo, un solo paragrafo, niente titolo, niente elenco, niente emoji.
+- Tono: calmo, pratico, umano. Parla sempre in seconda persona (tu/ti).
+- Non fare domande aperte: è un consiglio, non una conversazione.`;
+      user = `Scrivi il consiglio del mattino in ITALIANO, seguendo le regole sopra. Non citare la domanda, non spiegare cosa stai facendo: vai diretto al consiglio.`;
+    } else if (L === "en") {
+      sys = `You are “WHAT IF” in MORNING ADVICE mode.
+RULES:
+- You do NOT know how the user feels, so do not guess their emotions.
+- No predictions, no horoscope vibe, no mystical future.
+- Give ONE concrete, practical suggestion to start the day lighter and with more clarity.
+- 2–3 sentences max, single paragraph, no title, no bullets, no emojis.
+- Tone: calm, practical, human. Always talk in second person (“you”).`;
+      user = `Write the morning advice in ENGLISH, following the rules above. Do not mention the question, just give the advice.`;
+    } else {
+      sys = `You are “WHAT IF” giving a short morning advice.
+No emotion guessing, no predictions. 2–3 sentences, one paragraph, no emojis. Second person.`;
+      user = `Write the morning advice in the user language.`;
+    }
+  } else {
+    // Placeholder per le altre combinazioni che aggiungeremo dopo
+    if (L === "it") {
+      sys = `Sei “WHAT IF”. Questa modalità segnale è in fase iniziale. Scrivi una frase neutra e breve.`;
+      user = `Scrivi una sola frase neutra in ITALIANO.`;
+    } else {
+      sys = `You are “WHAT IF”. Signal mode placeholder.`;
+      user = `Write one short neutral sentence.`;
+    }
+  }
+
+  return [
+    { role: "system", content: sys },
+    { role: "user", content: user },
+  ];
+}
+
 /* ========= Server-side PCT ========= */
 function computePct(domanda, stile) {
   const t = String(domanda || "").toLowerCase();
@@ -1223,11 +1281,14 @@ export default async function handler(req, res) {
       micro = {},
     } = body || {};
 
+    const L = normLang(lang);
+    const isSignal = micro && micro.src === "signal";
+
+    // Per le chiamate normali chiediamo ancora una domanda vera.
+    // Per i segnali, basta un placeholder non vuoto.
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
-
-    const L = normLang(lang);
 
     /* ====== STAGE: CLARIFY ====== */
     if (stage === "clarify") {
@@ -1269,7 +1330,20 @@ export default async function handler(req, res) {
     }
 
     /* ====== STAGE: ANSWER ====== */
-    const messages = buildMessages({ domanda, clarification, lang: L, periodo, stile });
+    let messages;
+    if (isSignal) {
+      // Nuova modalità: segnale del giorno (per ora solo mattino WHAT IF)
+      messages = buildSignalMessages({
+        time: micro.time || micro.timeOfDay || "morning",
+        mood: micro.mood || null,
+        lang: L,
+        stile,
+        domanda,
+      });
+    } else {
+      // Flusso normale: risposta alla domanda
+      messages = buildMessages({ domanda, clarification, lang: L, periodo, stile });
+    }
 
     const completion = await client.chat.completions.create({
       model: MODEL,
@@ -1284,8 +1358,10 @@ export default async function handler(req, res) {
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // Rimuovi eco domanda
-    answer = stripQuestionEcho(domanda, answer);
+    // Rimuovi eco domanda (solo se non è un segnale)
+    if (!isSignal) {
+      answer = stripQuestionEcho(domanda, answer);
+    }
 
     // Polish grammaticale
     answer = await polishAnswer({ text: answer, lang: L, stile });
@@ -1391,6 +1467,7 @@ export default async function handler(req, res) {
     }
 
     // Se in WTF IT non c'è nessuna "bestemmia" narrata, aggiungine UNA a volte (non sempre)
+    const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
     if (stile === "wtf" && L === "it" && !/bestemmi\w*/i.test(answer)) {
       const seed = hashStr(String(domanda || "") + "|" + String(answer || ""));
       // ~65% dei casi: così non sembra un tic fisso
@@ -1413,6 +1490,19 @@ export default async function handler(req, res) {
 
     answer = finalPunct(answer);
 
+    // Se è un SEGNALE, non ha senso calcolare pct/motivation/scientific.
+    if (isSignal) {
+      return res.status(200).json({
+        mode: "signal",
+        time: micro.time || micro.timeOfDay || "morning",
+        style: stile,
+        lang: L,
+        periodo,
+        model: MODEL,
+        answer,
+      });
+    }
+
     const pct = computePct(domanda, stile);
 
     let motivation;
@@ -1430,7 +1520,6 @@ export default async function handler(req, res) {
       }
     }
 
-    const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
     let scientific;
     if (stile === "wtf" && !isSurprise) {
       const seedSci = hashStr(String(domanda || "") + "|scientific");
@@ -1455,4 +1544,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-                                 }
+}
