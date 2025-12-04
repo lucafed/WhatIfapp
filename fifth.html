@@ -340,7 +340,8 @@ import {
 
 import {
   bootCredits,
-  getBalance
+  getBalance,
+  consumeCredit
 } from "./store/credits.js";
 
 /* ==== Base & prefs ==== */
@@ -350,6 +351,73 @@ let style = prefs.stile || 'whatif';   // ← diventa let
 const periodo = prefs.periodo || 'future';
 const IS_ADMIN = !!LS.getItem('admin_token');
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
+
+/* 🔔 Bootstrap segnali da URL (notifiche → URL tipo ?signal=morning&phase=1&mood=su) */
+(function bootstrapSignalFromUrl() {
+  try {
+    const params = new URLSearchParams(location.search);
+    const slot = (params.get("signal") || "").toLowerCase(); // morning | afternoon | evening
+    if (!slot) return; // niente segnale → flusso normale
+
+    const phase = Number(params.get("phase") || "1"); // 1 = WHAT IF, 2 = WTF
+    const mood  = params.get("mood") || null;        // opzionale (solo pomeriggio)
+
+    function buildSignalQuestion(slot, phase, mood) {
+      if (slot === "morning") {
+        if (phase === 1) {
+          return "Frase del giorno del mattino: un consiglio concreto per impostare la giornata, senza sapere come mi sento.";
+        } else {
+          return "Commento cazzaro del mattino sulla frase del giorno appena ricevuta.";
+        }
+      }
+      if (slot === "afternoon") {
+        let moodText = "umore non specificato";
+        if (mood) {
+          const m = mood.toLowerCase();
+          if (m.includes("su") || m.includes("up")) moodText = "mi sento carico o comunque bene";
+          else if (m.includes("giu") || m.includes("down")) moodText = "mi sento stanco, scarico o un po’ giù";
+          else moodText = "mi sento così così, a metà";
+        }
+        if (phase === 1) {
+          return `Check-in del pomeriggio con umore: ${moodText}.`;
+        } else {
+          return `Commento cazzaro del pomeriggio su questo umore: ${moodText}.`;
+        }
+      }
+      if (slot === "evening") {
+        if (phase === 1) {
+          return "Domanda di chiusura della giornata, per rivedere cosa è successo oggi e come ti ha toccato.";
+        } else {
+          return "Commento cazzaro di fine giornata sulla domanda di chiusura appena fatta.";
+        }
+      }
+      return "Segnale giornaliero senza dettagli.";
+    }
+
+    const domanda = buildSignalQuestion(slot, phase, mood);
+
+    const micro = {
+      src: "signal",
+      slot,
+      time: slot,
+      timeOfDay: slot,
+      phase,
+    };
+    if (mood) micro.mood = mood;
+
+    const req = {
+      source: "signal",
+      domanda,
+      clarification: "",
+      micro
+    };
+
+    LS.setItem("whatif_request", JSON.stringify(req));
+    LS.setItem("domanda", domanda);
+  } catch (e) {
+    console.warn("bootstrapSignalFromUrl error:", e);
+  }
+})();
 
 /* ==== I18N ==== */
 const I18N = {
@@ -580,6 +648,8 @@ if (reqEarly && reqEarly.source === "signal" && reqEarly.micro && reqEarly.micro
   );
 }
 
+const IS_SIGNAL = !!(reqEarly && reqEarly.source === "signal" && reqEarly.micro);
+
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
 function detectLang(text=''){
@@ -593,7 +663,7 @@ function detectLang(text=''){
     de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
   };
   const score={}; for(const L of SUP_LANG){ score[L]=0; (bank[L]||[]).forEach(w=>{ if(t.includes(w)) score[L]++; }); }
-  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
+  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; } }
   if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
   return best;
 }
@@ -637,6 +707,45 @@ onAuthStateChanged(auth, async (user)=>{
   }
   updateCreditInfo();
 });
+
+/* 🔻 Scala 1 credito SOLO per segnali fase 1 (morning/afternoon/evening WHAT IF) */
+async function ensureSignalCredit(micro = {}) {
+  if (IS_ADMIN) return true;
+
+  const phase = Number(micro.phase || 1);
+  if (phase === 2) {
+    // WTF gratis
+    return true;
+  }
+
+  if (!currentUser) {
+    toast("Per usare la frase del giorno devi essere loggato.");
+    return false;
+  }
+
+  try {
+    const ok = await consumeCredit();
+    if (!ok) {
+      toast(t().noCredits || "Hai terminato i crediti.");
+      try {
+        location.href = "/store/credit-store.html?lang=" + (lang || "it");
+      } catch {}
+      return false;
+    }
+
+    try {
+      const bal = await getBalance();
+      currentBalance = Number.isFinite(+bal) ? +bal : 0;
+      updateCreditInfo();
+    } catch {}
+
+    return true;
+  } catch (e) {
+    console.error("ensureSignalCredit error:", e);
+    toast("Errore nei crediti, riprova.");
+    return false;
+  }
+}
 
 /* ==== System prompts (solo UI, placeholder) ==== */
 const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
@@ -1042,6 +1151,10 @@ async function startFlow(){
   const {req, domanda, clarification, surprise} = applyQuestion();
   updateCreditInfo();
 
+  const isSignal = !!(req && req.source === "signal");
+  const micro = (req && req.micro) ? req.micro : {};
+  const phase = Number(micro.phase || 1);
+
   const cached = loadResultFromCache(domanda, clarification);
   if (cached) {
     showIntroOnce();
@@ -1052,21 +1165,34 @@ async function startFlow(){
   showIntroOnce();
   startOracleLoading();
 
+  // Se è un segnale WHAT IF (fase 1) e NON è in cache → scala 1 credito
+  if (isSignal && phase === 1) {
+    const okCredit = await ensureSignalCredit(micro);
+    if (!okCredit) {
+      stopOracleLoading();
+      answerEl.textContent = t().noCredits || "Hai terminato i crediti.";
+      return;
+    }
+  }
+
   try{
     const headers={"Content-Type":"application/json"};
     if(prefs.pro===true) headers["x-pro"]="1";
     const adminToken=LS.getItem("admin_token"); if(adminToken) headers["x-admin-token"]=adminToken;
 
+    const microPayload = req.micro || {};
+    if (isSignal) microPayload.src = "signal";
+
     const r=await fetch("/api/ask",{
       method:"POST",headers,
       body:JSON.stringify({
-        stage:"answer",
+        stage: isSignal ? "signal" : "answer",
         domanda,
         clarification: clarification || "",
         lang,
         stile: style,
         periodo,
-        micro:req.micro||{}
+        micro: microPayload
       })
     });
     const data=await r.json().catch(()=>null);
