@@ -1669,6 +1669,97 @@
       $("surpriseBtn").onclick = () => {
         slotSurprise();
       };
+      // ====== SEGNALE MATTINA / POMERIGGIO / SERA -> quinta pagina ======
+      /**
+       * startSignalFlow:
+       * - slot: "morning" | "afternoon" | "evening"
+       * - phase: 1 = WHAT IF, 2 = WHAT THE F
+       * - mood: opzionale (es. "ok", "meh", "bad") per pomeriggio/sera
+       *
+       * Non passa dalla UI di questa pagina:
+       * prepara whatif_request e manda direttamente a fifth.html.
+       */
+      function startSignalFlow({ slot = "morning", phase = 1, mood = null } = {}) {
+        const sigLang = lang || "it";
+        const stileSignal = phase === 2 ? "wtf" : "whatif";
+        const periodoSignal = "future"; // tutti i segnali lavorano sul "come prosegue da qui"
+        const domanda = `__signal_${slot}_${phase}__`; // placeholder solo per avere una stringa non vuota
+
+        const req = {
+          stage: "answer",
+          domanda,
+          stile: stileSignal,
+          lang: sigLang,
+          periodo: periodoSignal,
+          clarification: "",
+          clarifyingQuestion: "",
+          answer: "",
+          pct: null,
+          motivation: null,
+          scientific: null,
+          extra: "",
+          fantasy_mode: false,
+          absurd: false,
+          surprise: false,
+          source: "signal",
+          micro: {
+            src: "signal",
+            slot,          // "morning" | "afternoon" | "evening"
+            time: slot,    // compat con /api/ask buildSignalMessages
+            timeOfDay: slot,
+            phase,         // 1 = WHAT IF, 2 = WTF
+            mood: mood || null
+          }
+        };
+
+        writeJSON("whatif_request", req);
+        // opzionale: puoi usare ?src=signal per distinguere in fifth
+        location.href = "fifth.html?src=signal";
+      }
+
+      /**
+       * Espongo le funzioni sul window per poterle richiamare
+       * da service worker / app shell / bottoni di test.
+       */
+      window.WhatIfSignals = {
+        startSignalFlow,
+        morningWhatIf: () => startSignalFlow({ slot: "morning", phase: 1 }),
+        morningWTF: () => startSignalFlow({ slot: "morning", phase: 2 }),
+        afternoonWhatIf: (mood) =>
+          startSignalFlow({ slot: "afternoon", phase: 1, mood }),
+        afternoonWTF: (mood) =>
+          startSignalFlow({ slot: "afternoon", phase: 2, mood }),
+        eveningWhatIf: (mood) =>
+          startSignalFlow({ slot: "evening", phase: 1, mood }),
+        eveningWTF: (mood) =>
+          startSignalFlow({ slot: "evening", phase: 2, mood })
+      };
+
+      /**
+       * Auto-trigger: se arrivi su fourth.html con query tipo:
+       *   ?signal=morning&phase=1
+       *   ?signal=afternoon&phase=1&mood=ok
+       * non mostriamo nulla: prepariamo il segnale e andiamo a fifth.
+       */
+      (function autoSignalFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        const sig = params.get("signal"); // "morning" | "afternoon" | "evening"
+        if (!sig) return;
+
+        const slot = sig;
+        const phase = Number(params.get("phase") || "1");
+        const mood = params.get("mood") || null;
+
+        // pulisco la query per evitare loop strani
+        params.delete("signal");
+        params.delete("phase");
+        params.delete("mood");
+        const url = new URL(window.location.href);
+        url.search = params.toString();
+        window.history.replaceState({}, "", url.toString());
+
+        startSignalFlow({ slot, phase, mood });
+      })();
 
       renderCredits();
     </script>
