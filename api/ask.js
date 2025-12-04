@@ -11,6 +11,13 @@ import { Ratelimit } from "@upstash/ratelimit";
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
+/* ========= Admin Token (per segnali giornalieri) ========= */
+const ADMIN_TOKEN =
+  process.env.ADMIN_TOKEN ||
+  process.env.WHATIF_ADMIN_TOKEN ||
+  process.env.WHATF_ADMIN_TOKEN ||
+  "";
+
 /* ========= Redis & Rate ========= */
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL || "",
@@ -534,7 +541,7 @@ PAST MODE:
             ? "ITALIANO"
             : L === "es"
             ? "SPAGNOLO"
-            : L === "FR"
+            : L === "fr"
             ? "FRANCESE"
             : "TEDESCO";
 
@@ -1493,6 +1500,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
+    /* ====== ADMIN CHECK per SEGNALI ====== */
+    if (isSignal) {
+      const reqToken = String(req.headers["x-admin-token"] || "");
+      if (!ADMIN_TOKEN || !reqToken || reqToken !== ADMIN_TOKEN) {
+        return res.status(401).json({ error: "admin_unauthorized" });
+      }
+    }
+
     /* ====== STAGE: CLARIFY ====== */
     if (stage === "clarify") {
       const messages = buildClarifyMessages({ domanda, stile, lang: L, periodo, micro });
@@ -1716,6 +1731,9 @@ export default async function handler(req, res) {
         periodo,
         model: MODEL,
         answer,
+        // questi dati li puoi usare come "log" nella tua dashboard admin
+        domanda,
+        micro,
       });
     }
 
@@ -1760,4 +1778,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-                }
+      }
