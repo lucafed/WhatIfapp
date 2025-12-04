@@ -632,7 +632,7 @@
         setTimeout(()=>f.remove(),800);
       }
 
-      // 🔐 NUOVA VERSIONE: verifica il PIN con /api/admin-token
+      // 🔐 Verifica il PIN con /api/admin-token
       async function success(){
         reset();
         const pin = prompt("PIN amministratore:");
@@ -690,12 +690,20 @@
       });    
     }
 
-    // 🔔 Pannello test segnali (visibile solo con admin_token o ?debug=1)
+    // 🔔 Pannello test segnali (visibile se admin_token O cookie adm_tok O ?debug=1)
     (function(){
       try{
-        const hasAdmin = !!localStorage.getItem('admin_token');
+        const hasLocalToken = !!localStorage.getItem('admin_token');
         const debugOn = new URLSearchParams(location.search).get('debug') === '1';
-        if(!hasAdmin && !debugOn) return;
+
+        const cookieToken = document.cookie
+          .split(";")
+          .map(s => s.trim())
+          .find(s => s.startsWith("adm_tok="));
+
+        const hasCookieToken = !!cookieToken;
+
+        if(!hasLocalToken && !hasCookieToken && !debugOn) return;
 
         const toggle = document.getElementById('signalTestToggle');
         const panel  = document.getElementById('signalTestPanel');
