@@ -354,7 +354,20 @@ document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'w
 /* ==== I18N ==== */
 const I18N = {
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
-       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
+       sub:(q)=>`Domanda: “${q}”`,
+       subSignal:(slot, phase, mood)=>{
+         const slotMap = {
+           morning: "Segnale del mattino",
+           afternoon: "Segnale del pomeriggio",
+           evening: "Segnale della sera"
+         };
+         const base = slotMap[slot] || "Segnale";
+         const voice = phase === 2 ? "What the F" : "What if";
+         return `${base} · ${voice} — come prosegue da qui`;
+       },
+       q:"La tua domanda",
+       qSignal:"Il tuo segnale",
+       a:"Risposta",
        p:"Esito & motivazioni", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
        save:"⭐ Salva", savedOk:"✅ Salvata",
        copied:"Copiato!", error:"[errore server]",
@@ -397,7 +410,20 @@ const I18N = {
        ttsError:"Errore nella sintesi vocale."
   },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
-       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
+       sub:(q)=>`Question: “${q}”`,
+       subSignal:(slot, phase, mood)=>{
+         const slotMap = {
+           morning: "Morning signal",
+           afternoon: "Afternoon signal",
+           evening: "Evening signal"
+         };
+         const base = slotMap[slot] || "Signal";
+         const voice = phase === 2 ? "What the F" : "What if";
+         return `${base} · ${voice} — what happens next from here`;
+       },
+       q:"Your question",
+       qSignal:"Your signal",
+       a:"Answer",
        p:"Outcome & motivations", share:"📤 Share / Copy", again:"🔁 Ask another",
        save:"⭐ Save", savedOk:"✅ Saved",
        copied:"Copied!", error:"[server error]",
@@ -439,7 +465,20 @@ const I18N = {
        ttsError:"Speech synthesis error."
   },
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
-       sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
+       sub:(q)=>`Pregunta: “${q}”`,
+       subSignal:(slot, phase, mood)=>{
+         const slotMap = {
+           morning: "Señal de la mañana",
+           afternoon: "Señal de la tarde",
+           evening: "Señal de la noche"
+         };
+         const base = slotMap[slot] || "Señal";
+         const voice = phase === 2 ? "What the F" : "What if";
+         return `${base} · ${voice} — cómo sigue desde aquí`;
+       },
+       q:"Tu pregunta",
+       qSignal:"Tu señal",
+       a:"Respuesta",
        p:"Resultado y motivaciones", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra",
        save:"⭐ Guardar", savedOk:"✅ Guardada",
        copied:"¡Copiado!", error:"[error del servidor]",
@@ -481,7 +520,20 @@ const I18N = {
        ttsError:"Error en la síntesis de voz."
   },
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
-       sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
+       sub:(q)=>`Question : « ${q} »`,
+       subSignal:(slot, phase, mood)=>{
+         const slotMap = {
+           morning: "Signal du matin",
+           afternoon: "Signal de l’après-midi",
+           evening: "Signal du soir"
+         };
+         const base = slotMap[slot] || "Signal";
+         const voice = phase === 2 ? "What the F" : "What if";
+         return `${base} · ${voice} — la suite à partir d’ici`;
+       },
+       q:"Ta question",
+       qSignal:"Ton signal",
+       a:"Réponse",
        p:"Issue & motivations", share:"📤 Partager / Copier", again:"🔁 Poser une autre",
        save:"⭐ Enregistrer", savedOk:"✅ Enregistrée",
        copied:"Copié !", error:"[erreur serveur]",
@@ -523,7 +575,20 @@ const I18N = {
        ttsError:"Erreur de synthèse vocale."
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
-       sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
+       sub:(q)=>`Frage: „${q}“`,
+       subSignal:(slot, phase, mood)=>{
+         const slotMap = {
+           morning: "Morgensignal",
+           afternoon: "Nachmittagssignal",
+           evening: "Abendsignal"
+         };
+         const base = slotMap[slot] || "Signal";
+         const voice = phase === 2 ? "What the F" : "What if";
+         return `${base} · ${voice} — wie es von hier aus weitergeht`;
+       },
+       q:"Deine Frage",
+       qSignal:"Dein Signal",
+       a:"Antwort",
        p:"Ergebnis & Motivationen", share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage",
        save:"⭐ Speichern", savedOk:"✅ Gespeichert",
        copied:"Kopiert!", error:"[Serverfehler]",
@@ -750,14 +815,34 @@ function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
 function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
 
-/* ==== Titles/Text ==== */
-function applyUI(q){
+/* ==== Titles/Text (con supporto segnali) ==== */
+function applyUI(q, opts = {}){
   const T=t();
+  const {isSignal=false, slot=null, phase=null, mood=null} = opts;
+
   setText('#title', style==='wtf'?T.titleWTF:T.titleWHF);
-  subtitle.textContent=T.sub(q||'—'); setText('#lblQ', T.q); setText('#lblA', T.a); setText('#lblP', T.p);
-  shareBtn.textContent=T.share; againBtn.textContent=T.again; if(saveBtn) saveBtn.textContent=T.save;
+
+  if(isSignal && typeof T.subSignal === "function"){
+    subtitle.textContent = T.subSignal(slot, phase, mood);
+  }else{
+    subtitle.textContent = T.sub(q||'—');
+  }
+
+  if(isSignal && T.qSignal){
+    setText('#lblQ', T.qSignal);
+  }else{
+    setText('#lblQ', T.q);
+  }
+
+  setText('#lblA', T.a);
+  setText('#lblP', T.p);
+  shareBtn.textContent=T.share;
+  againBtn.textContent=T.again;
+  if(saveBtn) saveBtn.textContent=T.save;
   styleBadge.textContent=(style==='wtf')?T.styleWTF:T.styleWHF;
-  setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
+  setText('#pctLabel', T.pctLabel);
+  if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel;
+  setText('#metaInfo', T.meta(style,periodo));
 
   setText('#lblVideo', T.videoTitle || 'Video');
   const vh = qs('#videoHelp'); if(vh) vh.textContent = T.videoHelp || '';
@@ -786,6 +871,64 @@ function computeProbability(q){
   if(!/\b\d/.test(t)) s-=6;
   s += (style==='wtf' ? -4 : +2);
   return {pct: Math.max(25, Math.min(92, Math.round(s)))}
+}
+
+/* ==== Riconoscimento SEGNALI ==== */
+function detectSignalFrom(req, domandaRaw){
+  const raw = String(domandaRaw || "").trim();
+  const micro = (req && req.micro) || {};
+  const isSignal = micro.src === "signal" || micro.source === "signal" || /^__signal_/.test(raw);
+  if(!isSignal){
+    return {isSignal:false, slot:null, phase:null, mood:null};
+  }
+  let slot = micro.slot || micro.timeOfDay || micro.time || null;
+  let phase = (typeof micro.phase === "number") ? micro.phase : null;
+  const mood = micro.mood || null;
+
+  if(!slot){
+    const m = raw.match(/^__signal_(morning|afternoon|evening)_/);
+    if(m) slot = m[1];
+  }
+  if(phase == null){
+    const m2 = raw.match(/^__signal_[a-z]+_(1|2)__/);
+    if(m2) phase = parseInt(m2[1],10);
+  }
+  if(phase !== 1 && phase !== 2) phase = 1;
+
+  return {isSignal:true, slot, phase, mood};
+}
+
+function buildSignalDisplayQuestion(slot, phase){
+  const L = lang;
+  let slotLabel;
+  if(L === "it"){
+    if(slot === "morning") slotLabel = "Segnale del mattino";
+    else if(slot === "afternoon") slotLabel = "Segnale del pomeriggio";
+    else if(slot === "evening") slotLabel = "Segnale della sera";
+    else slotLabel = "Segnale";
+  } else if(L === "es"){
+    if(slot === "morning") slotLabel = "Señal de la mañana";
+    else if(slot === "afternoon") slotLabel = "Señal de la tarde";
+    else if(slot === "evening") slotLabel = "Señal de la noche";
+    else slotLabel = "Señal";
+  } else if(L === "fr"){
+    if(slot === "morning") slotLabel = "Signal du matin";
+    else if(slot === "afternoon") slotLabel = "Signal de l’après-midi";
+    else if(slot === "evening") slotLabel = "Signal du soir";
+    else slotLabel = "Signal";
+  } else if(L === "de"){
+    if(slot === "morning") slotLabel = "Morgensignal";
+    else if(slot === "afternoon") slotLabel = "Nachmittagssignal";
+    else if(slot === "evening") slotLabel = "Abendsignal";
+    else slotLabel = "Signal";
+  } else {
+    if(slot === "morning") slotLabel = "Morning signal";
+    else if(slot === "afternoon") slotLabel = "Afternoon signal";
+    else if(slot === "evening") slotLabel = "Evening signal";
+    else slotLabel = "Signal";
+  }
+  const voice = phase === 2 ? "What the F" : "What if";
+  return `${slotLabel} · ${voice}`;
 }
 
 /* === ORACLE helpers === */
@@ -942,16 +1085,25 @@ function loadResultFromCache(domanda, clarification){
 }
 
 function applyResultToUI(result){
-  const domanda = result.domanda || LS.getItem('domanda') || '';
-  applyUI(domanda);
-  qView.textContent = domanda || '—';
+  const domandaRaw = result.domanda || LS.getItem('domanda') || '';
+  const sigInfo = detectSignalFrom(result, domandaRaw);
+  const domandaDisplay = sigInfo.isSignal ? buildSignalDisplayQuestion(sigInfo.slot, sigInfo.phase) : domandaRaw;
+
+  applyUI(domandaDisplay, {
+    isSignal: sigInfo.isSignal,
+    slot: sigInfo.slot,
+    phase: sigInfo.phase,
+    mood: sigInfo.mood
+  });
+
+  qView.textContent = domandaDisplay || '—';
 
   const finalAnswer = result.answer || '—';
   showAnswerWithTyping(finalAnswer);
 
   const usedPct = (typeof result.pct === 'number' && isFinite(result.pct))
     ? Math.max(0, Math.min(100, Math.round(result.pct)))
-    : computeProbability(domanda).pct;
+    : computeProbability(domandaDisplay || domandaRaw).pct;
   const pStr = usedPct + "%";
   topPct.textContent = pStr;
   bottomPct.textContent = pStr;
@@ -1002,19 +1154,41 @@ function applyResultToUI(result){
 /* ==== Question & UI load ==== */
 function applyQuestion(){
   const req=JSON.parse(LS.getItem('whatif_request')||'{}');
-  const domanda=req.domanda || LS.getItem('domanda') || '';
+  const domandaRaw=req.domanda || LS.getItem('domanda') || '';
   const clarification = req.clarification || req.answer || '';
-  applyUI(domanda);
-  qView.textContent = domanda || '—';
+
+  const sigInfo = detectSignalFrom(req, domandaRaw);
+  const domandaDisplay = sigInfo.isSignal ? buildSignalDisplayQuestion(sigInfo.slot, sigInfo.phase) : domandaRaw;
+
+  applyUI(domandaDisplay, {
+    isSignal: sigInfo.isSignal,
+    slot: sigInfo.slot,
+    phase: sigInfo.phase,
+    mood: sigInfo.mood
+  });
+
+  qView.textContent = domandaDisplay || '—';
+
   const surprise = (new URLSearchParams(location.search)).get('src')==='surprise'
     || req?.surprise===true || req?.micro?.surprise===true
     || LS.getItem('surprise_mode')==='1';
-  return {req, domanda, clarification, surprise};
+
+  return {
+    req,
+    domanda: domandaRaw,
+    domandaDisplay,
+    clarification,
+    surprise,
+    isSignal: sigInfo.isSignal,
+    slot: sigInfo.slot,
+    phase: sigInfo.phase,
+    mood: sigInfo.mood
+  };
 }
 
 /* ==== Salvataggio domanda ==== */
 function saveCurrentQuestion(){
-  const domanda = (LS.getItem('domanda') || '').trim();
+  const domanda = (qView?.textContent || '').trim();
   if(!domanda) return;
   let arr=[];
   try{ arr = JSON.parse(LS.getItem('next_prompts')||'[]'); if(!Array.isArray(arr)) arr=[]; }catch{ arr=[]; }
@@ -1028,7 +1202,7 @@ function saveCurrentQuestion(){
 
 /* ==== Main flow ==== */
 async function startFlow(){
-  const {req, domanda, clarification, surprise} = applyQuestion();
+  const {req, domanda, domandaDisplay, clarification, surprise} = applyQuestion();
   updateCreditInfo();
 
   const cached = loadResultFromCache(domanda, clarification);
@@ -1073,7 +1247,7 @@ async function startFlow(){
     revealEffect();
 
     const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
-    const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
+    const usedPct = (apiPct!=null) ? apiPct : computeProbability(domandaDisplay || domanda).pct;
     const pStr = usedPct + "%";
     topPct.textContent = pStr;
     bottomPct.textContent = pStr;
@@ -1124,7 +1298,7 @@ async function startFlow(){
       motIco.style.display='none';
       chipsWrap.style.display='none';
       committeeTitle.textContent = t().seriousTitle;
-      const html = buildWhatIfMotivationsPretty(domanda, usedPct, data.motivation);
+      const html = buildWhatIfMotivationsPretty(domandaDisplay || domanda, usedPct, data.motivation);
       motNote.innerHTML = html;
       motivazioneUsata = html.replace(/<br\s*\/?>/gi," | ");
       motivationMode = 'whatif';
@@ -1132,7 +1306,8 @@ async function startFlow(){
     }
 
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, clarification, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise:surpriseMode, pct:usedPct, motivazione:motivazioneUsata });
+    const domandaStored = domandaDisplay || domanda;
+    hist.push({ domanda:domandaStored, clarification, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise:surpriseMode, pct:usedPct, motivazione:motivazioneUsata });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
 
     const resultForCache = {
@@ -1213,7 +1388,7 @@ let lastVideoMime = null;
 
 async function generateVideoClip(){
   const T = t();
-  const domanda = (localStorage.getItem('domanda') || qView.textContent || '').trim();
+  const domanda = (qView?.textContent || '').trim();
   const answerText = (answerEl.textContent || '').trim();
   const motivationsRaw = (motNote?.innerText || motNote?.textContent || '').trim();
 
@@ -1529,14 +1704,15 @@ qs('#langSelect').onchange=()=>{
   LS.setItem('lang_manual','1');
   document.documentElement.lang=v;
   lang=v;
-  applyUI(LS.getItem('domanda')||'');
+  applyUI(qView?.textContent || LS.getItem('domanda') || '');
   updateCreditInfo();
   oracleDeck = [];
 };
 
 qs('#shareBtn').onclick=async()=>{
   const T=t();
-  const full=`What?f — ${style==='wtf'?(T.styleWTF):(T.styleWHF)}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
+  const qText = (qView?.textContent || '').trim();
+  const full=`What?f — ${style==='wtf'?(T.styleWTF):(T.styleWHF)}\n(${periodo})\n\nQ: ${qText}\n\n${qs('#answer').textContent}`;
   try{
     if(navigator.share){ await navigator.share({title:"What?f",text:full}); }
     else{
