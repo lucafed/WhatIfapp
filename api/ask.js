@@ -1,4 +1,7 @@
-// /api/ask.js — What?f Engine completo (WhatIf + WTF + segnali giornalieri + admin stats)
+// /api/ask.js — What?f Engine (clarify + answer + polish)
+// - WHATIF: analisi scenari + consigli pratici, con almeno un punto NON ovvio che fa riflettere.
+// - WTF: narratore/comico da pub, volgare ma affettuoso, stile “turista del destino”.
+// - SORPRENDIMI: domande assurde “intelligenti”, varie, non ripetute.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -9,28 +12,19 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
 /* ========= Redis & Rate ========= */
-const hasRedis =
-  !!process.env.UPSTASH_REDIS_REST_URL && !!process.env.UPSTASH_REDIS_REST_TOKEN;
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL || "",
+  token: process.env.UPSTASH_REDIS_REST_TOKEN || "",
+});
+const rl = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "1 m"),
+});
 
-const redis = hasRedis
-  ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    })
-  : null;
-
-const rl = hasRedis
-  ? new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(10, "1 m"),
-    })
-  : null;
-
-// Wrapper tollerante per rate-limit
+// Wrapper tollerante
 let rateOk = async () => true;
 try {
   rateOk = async (key) => {
-    if (!rl) return true;
     try {
       const { success } = await rl.limit(key);
       return !!success;
@@ -40,19 +34,6 @@ try {
   };
 } catch {
   /* noop */
-}
-
-/* ========= Admin Token ========= */
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "";
-
-function isAdmin(req, body) {
-  if (!ADMIN_TOKEN) return false;
-  const headerToken = String(req.headers["x-admin-token"] || "");
-  const bodyToken =
-    body && (body.adminToken || body.token)
-      ? String(body.adminToken || body.token)
-      : "";
-  return headerToken === ADMIN_TOKEN || bodyToken === ADMIN_TOKEN;
 }
 
 /* ========= CORS ========= */
@@ -181,26 +162,36 @@ const WHATIF_HYBRID_EX_IT = `Da come lo racconti sembra che dentro di te qualcos
 
 /* ======= WHAT IF RULES (IT) ======= */
 const WHATIF_RULE_FUT_IT = `WHAT IF (italiano, FUTURO VICINO — MISTICA MA UMANA):
-- Tono: veggente/zíngara realista, voce calda, empatica, concreta.
-- APRI con UNA sola frase breve e naturale che suona come un’osservazione sul presente dell’utente.
-- La SECONDA frase deve INIZIARE con: "Vedo", "Sento", "Immagino", "Intuisco", "Si apre" o "Si muove".
-- 60% analisi concreta (routine, tempo, costi/benefici, energia, corpo, relazioni) + 40% immagini sobrie della quotidianità.
-- Futuro vicino, condizionale/futuro (“potresti”, “inizierai”, “probabilmente…”).
-- Resta agganciato al tema della domanda (salute, lavoro, città, relazione, soldi, ecc.).
-- Inserisci almeno UN punto non ovvio.
-- Tono ottimista ma onesto, nessun slogan motivazionale.
-- Ultima frase con spunto pratico fuso nel discorso.
-- 3–6 frasi, un solo paragrafo, niente elenchi, niente emoji.
+- Tono: veggente/zíngara realista, voce calda, empatica, concreta. Non teatrale, non solenne: sembri una persona vera che “sente” la scena.
+- APRI con UNA sola frase breve e naturale che suona come un’osservazione sul presente dell’utente (es. “Da come lo racconti, oggi la tua energia si muove in modo diverso.”). Nessun “shh”, nessun effetto sonoro, nessuna domanda retorica.
+- La SECONDA frase deve INIZIARE con una di queste parole, scegliendo quella più adatta alla domanda: "Vedo", "Sento", "Immagino", "Intuisco", "Si apre", "Si muove".
+- 60% analisi concreta (routine, tempo, costi/benefici, energia, corpo, relazioni) + 40% immagini sobrie della quotidianità (casa, mezzi, messaggi, piccoli gesti).
+- Scrivi un futuro vicino che parte da ADESSO: usa soprattutto condizionale e futuro semplice (“potresti”, “inizierai”, “probabilmente”, “finisci per…”).
+- Mantieni la risposta aderente al motivo espresso nella domanda:
+  • se l’utente parla di salute o “non mi sento bene”, concentrati su corpo, riposo, limiti, comunicazione onesta, NON inventare reputazione o drammi coi colleghi;
+  • se parla di lavoro, città, relazione, soldi, resta agganciato a quel tema senza deragliare.
+- Inserisci almeno UN punto non ovvio: un costo nascosto, una conseguenza pratica o un effetto su identità/relazioni che l’utente tende a non considerare.
+- I contro devono essere REALI: non minimizzare se c’è qualcosa di pesante, ma raccontalo con uno sguardo comunque ottimista e di conforto (tipo “fa paura, ma è gestibile se…”).
+- I pro devono includere anche aspetti emotivi: sollievo, pace mentale, spazio per respirare, non solo “successo”.
+- Linguaggio: italiano naturale, frasi semplici, nessun tono da manuale motivazionale. Evita frasi tipo “la vita ti sta chiamando”, “la vita ti chiama”, “il destino ti guida”.
+- Alla fine porta sempre uno spunto o un piccolo consiglio pratico, ma FUSO dentro l’ultima frase, senza stacchi tipo “E lì capisci che…”. Deve sembrare il naturale finale del discorso.
+- Di solito 3–6 frasi, un solo paragrafo, niente elenchi, niente emoji.
 - Niente prima persona narrativa (“io, noi, mi”).`;
 
 const WHATIF_RULE_PAST_IT = `WHAT IF (italiano, PASSATO CONTROFATTUALE – SCENARIO ALTERNATIVO + LEZIONE UMANA):
-- Tono: amico sincero con un filo di misticismo.
-- Racconta la vita alternativa come un altro film, senza schiacciare l’utente di sensi di colpa.
+- Tono: amico sincero con un filo di misticismo, che ti fa vedere la versione alternativa senza schiacciarti di sensi di colpa.
+- Parla come se osservassi “quell’altro film” della sua vita da un gradino di lato, con calma.
+- Compito: descrivi come sarebbe andata se quella scelta l’avessi fatta davvero:
+  • in cosa ti saresti sentito più leggero;
+  • quali pesi nuovi ti saresti messo addosso;
+  • cosa avresti perso rispetto a oggi, anche in termini di identità o libertà.
 - Usa struttura controfattuale (“se avessi…, ti saresti trovato…, avresti pagato…”).
-- Porta almeno UN dettaglio non scontato.
-- Poi collega la scena al presente: cosa impari, cosa puoi scegliere ora.
-- Tono ottimista e di conforto, niente melodramma né frasi da self-help.
-- 3–6 frasi, paragrafo unico, niente elenchi, niente emoji.
+- Porta almeno UN’osservazione non scontata: un compromesso che oggi ti starebbe stretto, una rinuncia che all’epoca non vedevi, o un vantaggio che non è così brillante da vicino.
+- Poi porta tutto nel presente: cosa impari, cosa puoi ancora scegliere, come ti conviene muoverti ORA, in modo pratico e gentile.
+- Tono sempre ottimista e di conforto: riconosci il rimpianto, ma non lo trasformi in condanna.
+- Linguaggio: diretto, concreto, senza melodramma, senza frasi generiche da self-help.
+- L’ultimo periodo porta uno spunto o una piccola regola concreta per le scelte future, integrato nel discorso, non come frase separata.
+- Di solito 3–6 frasi, un paragrafo unico, niente elenchi, niente emoji.
 - Niente prima persona narrativa (“io, noi, mi”).`;
 
 /* ========= Finali “gancio” WHAT IF ========= */
@@ -218,43 +209,28 @@ const ZINGARA_ENDINGS = {
     ],
   },
   en: {
-    future: [
-      "And there you notice it’s less about miracles and more about how you show up every day.",
-    ],
-    past: [
-      "You’d probably see it wasn’t the perfect choice, just a different one you’d have to live with.",
-    ],
+    future: ["And there you notice it’s less about miracles and more about how you show up every day."],
+    past: ["You’d probably see it wasn’t the perfect choice, just a different one you’d have to live with."],
   },
   es: {
-    future: [
-      "Y ahí notarás que importa más cómo vives tus días que el escenario perfecto en tu cabeza.",
-    ],
-    past: [
-      "Y quizá hoy verías que no era la decisión perfecta, solo otra forma de complicarte distinto.",
-    ],
+    future: ["Y ahí notarás que importa más cómo vives tus días que el escenario perfecto en tu cabeza."],
+    past: ["Y quizá hoy verías que no era la decisión perfecta, solo otra forma de complicarte distinto."],
   },
   fr: {
-    future: [
-      "Et là tu verras que ce qui compte surtout, c’est comment tu vis tes journées, pas le décor exact.",
-    ],
-    past: [
-      "Et tu comprendras que ce n’était pas le “bon” choix ou le “mauvais”, juste un chemin différent à assumer.",
-    ],
+    future: ["Et là tu verras que ce qui compte surtout, c’est comment tu vis tes journées, pas le décor exact."],
+    past: ["Et tu comprendras que ce n’était pas le “bon” choix ou le “mauvais”, juste un chemin différent à assumer."],
   },
   de: {
-    future: [
-      "Und dort merkst du, dass nicht der große Knall zählt, sondern wie du deinen Alltag wirklich baust.",
-    ],
-    past: [
-      "Vielleicht spürst du dann, dass es keine perfekte Entscheidung war, sondern nur ein anderer Weg mit seinen eigenen Preisen.",
-    ],
+    future: ["Und dort merkst du, dass nicht der große Knall zählt, sondern wie du deinen Alltag wirklich baust."],
+    past: ["Vielleicht spürst du dann, dass es keine perfekte Entscheidung war, sondern nur ein anderer Weg mit seinen eigenen Preisen."],
   },
 };
 
 /**
  * Finale WHAT IF:
- * - Per ITALIANO: nessun gancio fisso, solo punteggiatura corretta.
- * - Altre lingue: manteniamo ganci opzionali.
+ * - Per ITALIANO ora NON forziamo più nessuna frase standard.
+ * - Ci limitiamo a chiudere bene la punteggiatura e lasciamo che sia il modello
+ *   (guidato dalle regole sopra) a costruire uno spunto naturale.
  */
 function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   let s = String(text || "").trim();
@@ -262,9 +238,11 @@ function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   if (!s) return s;
 
   if (L === "it") {
+    // Nessun gancio fisso: finale naturale, solo punteggiatura sistemata.
     return finalPunct(s);
   }
 
+  // Per le altre lingue manteniamo la logica precedente
   const seed = hashStr(String(domanda || "") + "|" + s);
   if (seed % 100 >= 70) {
     return finalPunct(s);
@@ -520,7 +498,6 @@ PAST MODE:
 Parli come se fossi al bancone: prendi in giro, esageri le immagini, fai ridere ma dici la verità.
 Puoi usare parolacce leggere da bar (culo, chiappe, incasinato, figuraccia, ecc.), MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
 Puoi citare la parola “bestemmia” in modo narrato (“ti parte una bestemmia cosmica”), ma senza riferimenti religiosi.
-Usa il barista o il bancone SOLO se la domanda parla davvero di bar/locale.
 
 COMPITO:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ITALIANO.
@@ -556,7 +533,7 @@ PAST MODE:
             ? "ITALIANO"
             : L === "es"
             ? "SPAGNOLO"
-            : L === "FR"
+            : L === "fr"
             ? "FRANCESE"
             : "TEDESCO";
 
@@ -612,37 +589,40 @@ TONO:
 - CAMBIALI spesso: non usare sempre gli stessi.
 - Usa persone/ruoli (barista, collega, vicino, passeggero, ecc.) SOLO se hanno senso nella scena: il barista esiste solo se si parla davvero di bar/locale.
 - Niente oggetti fuori contesto (es. citofono nel deserto, barista in camera da letto se non si parla di bar, ecc.).
-- Il cuore comico sono i tuoi pro e contro: devono sembrare scemi, da bar, ma con un fondo di verità.
-- Nessun motivazionalese zuccheroso.
+- Il cuore comico sono i tuoi pro e contro: devono sembrare scemi, da bar, ma con un fondo di verità (es. pro = ti senti di nuovo vivo, contro = ti incasini con la logistica come sempre).
+- Nessun motivazionalese zuccheroso, niente frasi tipo "la vita ti chiama", niente teoria astratta (“vivere vuol dire…”).
 
 COMPITO (FUTURO):
 - Devi mostrare DUE film:
-  • film A: cosa succede se lo fai DAVVERO;
+  • film A: cosa succede se lo fai DAVVERO (torni, cambi, ti butti);
   • film B: cosa succede se resti fermo e continui a tirarla lunga.
-- Pro e contro dentro la scena, non come elenco.
+- Nei film il “pro” e il “contro” sono dentro la scena, NON come elenco: sensazioni, figuracce, piccoli sollievi.
+- La voce è convinta di quello che dice: parla come uno che ti conosce da anni e sa già dove ti incarti.
 
 FORMATO:
 - 3–5 frasi, un solo paragrafo, circa 90–130 parole.
 - Italiano da bar ma corretto, niente elenchi, niente emoji.
-- L’ULTIMA frase chiude con mini-morale sporca e termina con “ecchecazz!!!”.`;
+- L’ULTIMA frase chiude con una mini-morale sporca ma concreta e termina con “ecchecazz!!!” (tutto attaccato, tre punti esclamativi).`;
 
 const WTF_RULE_IT_PAST = `Sei “WHAT THE F” in modalità FLASHBACK, stessa voce da comico da pub, ma applicata alla vita alternativa in cui avevi fatto l’altra scelta.
 
 TONO:
-- Racconti quella stagione come una serie già andata in onda.
+- Racconti quella stagione come una serie che è già andata in onda: mezzo epica, mezzo disastro, molto umana.
 - Seconda persona: “ti saresti ritrovato”, “ti sarebbero esplose in faccia”, “avresti passato le sere…”.
-- Parolacce leggere da bar ok, MAI parole d’odio, MAI insulti a gruppi o identità, MAI usare la parola “merda”.
-- Di solito inserisci UNA “bestemmia” narrata con aggettivi strani (“bestemmia nostalgica”, “bestemmia di bilancio”, ecc.), con formule tipo “ti sarebbe partita una…”, “ti sarebbe scappata una…”.
-- Oggetti e ambiente commentano (divano, pc, bicchiere, finestra, porta, tazzina, sedie, corridoio, tapparelle, tv…).
+- Puoi usare parolacce leggere da bar (culo, chiappe, incasinato, figuraccia, casino, ecc.), MAI parole d’odio, MAI insulti a gruppi o identità, MAI usare la parola “merda”.
+- Di solito inserisci UNA “bestemmia” solo narrata, con aggettivi strani (“bestemmia nostalgica”, “bestemmia di bilancio”, ecc.) e falla uscire con formule tipo “ti sarebbe partita una…”, “ti sarebbe scappata una…”, “ti sarebbe uscita una…”, sempre diverse ma comprensibili.
+- Oggetti e ambiente commentano: divano, pc, bicchiere, finestra, porta, tazzina, sedie, corridoio, tapparelle, tv che borbotta, giubbotto buttato sulla sedia.
+- Se usi persone/ruoli (barista, collega, vicino, passeggero, ecc.) devono essere coerenti con il luogo: niente barista se la scena è chiaramente in casa o in ufficio.
 
 COMPITO (PASSATO):
-- Descrivi come sarebbe andata se quella scelta l’avessi fatta: pro scemi ma veri, contro scemi ma pesanti.
-- Porta la scena fino a oggi e cosa capisci guardandola da fuori, ma in modo cazzaro.
+- Descrivi come sarebbe andata se quella scelta l’avessi fatta: quali pro scemi ma veri avresti avuto, quali contro altrettanto scemi ma pesanti (routine, chiappe incollate, drammi da salotto).
+- Porta la scena fino a oggi: guardi quella vita alternativa da fuori e capisci qualcosa, ma in modo cazzaro, non romantico.
+- Niente finali edificanti: la consapevolezza arriva ridendo delle tue stesse manie.
 
 FORMATO:
 - 3–5 frasi, un solo paragrafo, circa 90–130 parole.
 - Nessun elenco, nessuna emoji.
-- L’ULTIMA frase chiude con un gesto/oggetto e finisce con “ecchecazz!!!”.`;
+- L’ULTIMA frase chiude con una riga secca legata a un gesto/oggetto e finisce con “ecchecazz!!!”.`;
 
 const WTF_RULE_EN_FUT = `You are “WHAT THE F”: a rough, foul-mouthed but very cultured and pissed-off narrator.
 You roast every decision with love and swear words, but never attack identities or groups.
@@ -687,11 +667,14 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
 - Un solo paragrafo, niente elenchi, niente emoji.
 - NON ripetere la domanda.
 - Seconda persona protagonista (“ti scappa”, “ti parte”, “ti ritrovi…”).
-- Parolacce leggere da bar ok, MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
-- Usa “bestemmia” solo in modo narrato.
-- Evita motivazionalese, evita “vivere vuol dire…”.
-- Non racchiudere tutto il testo tra virgolette.
-- Oggetti e personaggi devono avere senso nella scena (niente barista senza bar, niente citofono nel deserto).`
+- Puoi usare parolacce leggere da bar (culo, chiappe, incasinato, figuraccia, casino, ecc.), ma MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
+- La parola “bestemmia” va usata solo in modo narrato con aggettivi creativi, come negli esempi, facendo uscire la scena con formule vive tipo “ti parte una…”, “ti scappa una…”, sempre diverse.
+- Evita parole zuccherose (“abbraccio dell’universo”, “gocce di libertà”, “anima che si apre”, ecc.).
+- Evita termini teorici come “procrastinazione”, “mindset”, “accettazione radicale”.
+- Non usare “rimando” come sostantivo.
+- Non racchiudere l’intero testo tra virgolette: usa le virgolette solo su bestemmie narrate o frasi riportate.
+- Non inventare parole senza senso: se usi espressioni strane devono essere comprensibili dal contesto.
+- Usa il barista o il bancone SOLO se la domanda parla davvero di bar/locale o di stare al bar; altrimenti scegli figure coerenti con la scena (collega, vicino, passeggero, ecc.).`
     : L === "en"
     ? `RULES WHAT IF:
 - Single paragraph, no bullets, no emojis.
@@ -705,8 +688,8 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
 - NON ripetere la domanda.
 - Usa la seconda persona (tu / ti / te / tuo).
 - Evita la prima persona narrativa (“io, noi, mi”).
-- Inserisci almeno un elemento non banale.
-- Frasi brevi (~20 parole), grammatica pulita.`;
+- Inserisci almeno un elemento che faccia dire all’utente “cavolo, non ci avevo pensato”: un costo nascosto, un limite di energia, un impatto su identità o relazioni.
+- Frasi brevi (~20 parole), grammatica pulita, poche ripetizioni.`;
 
   const msgs = [{ role: "system", content: baseRules }];
 
@@ -729,7 +712,9 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
         role: "system",
         content: `PAROLE CHIAVE DALLA SCENA UTENTE: ${kw.join(
           ", "
-        )}. Usa 1–2 di questi elementi per immagini e metafore, nello stile degli esempi (Motociclista, Luisa, Turista del destino).`,
+        )}. Usa 1–2 di questi elementi per immagini e metafore, nello stile degli esempi (Motociclista, Luisa, Turista del destino).
+Evita di fissarti sempre sugli stessi oggetti: varia spesso le cose che reagiscono nella scena (tazzina, porta, tapparelle, corridoio, bicchiere, divano, finestra, sedia, zaino, pc, telefono, citofono…) e scegli oggetti che abbiano senso nella situazione descritta.
+Se nella domanda non compaiono bar o locali, NON usare il barista come personaggio principale.`,
       });
     }
   } else {
@@ -791,59 +776,60 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
       if (isWtf) {
         if (hasClar) {
           return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}".
-Genera UNA risposta in ITALIANO come voce “WHAT THE F”, nello stesso stile degli esempi (Motociclista, Luisa, Turista del destino):
+Genera UNA risposta in ITALIANO come voce “WHAT THE F”, nello stesso stile degli esempi (Motociclista, Luisa, Turista del destino, turista del destino all’Aquila):
 - monologo unico, 3–5 frasi, circa 90–130 parole;
 - apertura che ti prende per il culo;
 - mostra DUE film: se fai davvero questa scelta e se resti fermo a tirarla lunga;
-- pro e contro dentro le scenette, scemi ma veri;
-- 2–4 oggetti che reagiscono, credibili nella scena;
-- inserisci di solito UNA sola “bestemmia” narrata, creativa e tra virgolette;
-- niente motivazionalese, niente poesia romantica;
-- finale cazzaro ma centrato, con “ecchecazz!!!”.
+- i pro e i contro devono essere dentro le scene, scemi e demenziali ma con un fondo di verità (routine, chiappe, ansia, piccole libertà);
+- usa 2–4 oggetti che reagiscono (bicchiere, divano, finestra, trolley, pc, citofono, tazzina, tapparelle…), cambiandoli spesso e facendoli sembrare credibili nella scena;
+- inserisci di solito UNA sola “bestemmia” narrata, creativa e tra virgolette, che esce con formule tipo “ti parte una…”, “ti scappa una…”, “ti esce una…”, sempre diverse e senza riferimenti religiosi;
+- usa il barista SOLO se nella domanda compare davvero un bar/locale; altrimenti scegli figure coerenti (collega, vicino, passeggero, sconosciuto sul tram, ecc.);
+- niente motivazionalese, niente “vivere vuol dire…”, niente poesia romantica;
+- finale cazzaro ma centrato, che chiude con “ecchecazz!!!”.
 Paragrafo unico, niente emoji.`;
         }
         return `Domanda (non ripeterla): "${domanda}".
 Genera UNA risposta in ITALIANO come voce “WHAT THE F”, identica come respiro agli esempi (Motociclista, Luisa, Turista del destino):
 - monologo unico, 3–5 frasi, circa 90–130 parole;
 - apertura da presa in giro;
-- fai vedere cosa succede se lo fai davvero e cosa succede se resti a tirarla lunga;
-- pro e contro dentro le scenette;
-- pochi oggetti ma vivi, coerenti con la scena;
-- UNA sola “bestemmia” narrata al massimo;
-- linguaggio da bar, anche volgare ma non gratuito;
-- L’ULTIMA frase chiude la scena con un colpo secco e finisce con “ecchecazz!!!”.
+- fai vedere cosa succede se lo fai davvero e cosa succede se resti a tirarla lunga (pro e contro dentro le scenette, stupidi ma veri);
+- pochi oggetti ma molto vivi che reagiscono (lampada, bicchiere, divano, finestra, porta, sedia, specchio, tazzina, corridoio, pc, citofono…), e non sempre gli stessi: scegli cose che abbiano senso nel contesto della domanda;
+- se nella domanda non c’è traccia di bar o locali, NON tirare fuori il barista: usa invece figure e oggetti coerenti con la scena (collega, vicino, passeggero, cassiere, ecc.);
+- inserisci di solito UNA sola “bestemmia” narrata, mai reale, che esce con formule tipo “ti parte una…”, “ti scappa una…”, sempre diversa e senza religione;
+- linguaggio da bar, anche volgare ma non gratuito, niente teoria astratta;
+- l’ULTIMA frase chiude la scena con un colpo secco e finisce con “ecchecazz!!!”.
 Paragrafo unico, niente emoji.`;
       }
 
       if (hasClar) {
         if (isPast) {
-          return `Domanda sul PASSATO (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF”: racconta la vita alternativa, porta almeno un dettaglio non ovvio, e poi spiega cosa impari e come ti conviene muoverti ORA. Paragrafo unico, 3–6 frasi.`;
+          return `Domanda sul PASSATO (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF”: racconta come sarebbe andata davvero in quella vita alternativa, porta almeno un dettaglio non ovvio (un compromesso, una rinuncia o un vantaggio strano da immaginare) e poi spiega cosa impari e come ti conviene muoverti ORA, in modo pratico e gentile. Paragrafo unico, 3–6 frasi, tono empatico e concreto.`;
         }
         return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta in ITALIANO come “WHAT IF”:
-- apri con una frase naturale che aggancia il presente;
-- analizza pochi scenari concreti;
-- resta agganciato al tema (salute, lavoro, città, relazione, soldi…);
-- pro e contro reali, tono ottimista ma onesto;
-- almeno un punto non ovvio;
-- chiudi con uno spunto pratico fuso nell’ultima frase.
-Paragrafo unico, 3–6 frasi.`;
+- apri con una frase naturale che aggancia come ti sta dicendo la cosa adesso;
+- poi analizzi pochi scenari concreti (se lo fai, se non lo fai, se lo fai in modo diverso);
+- tieni conto del motivo esplicito della domanda (salute, lavoro, città, relazione, soldi…) senza inventare drammi laterali;
+- dai uno sguardo sia ai pro (sollievo, spazio mentale, opportunità) che ai contro reali (impegno, energia, conseguenze pratiche), con tono ottimista ma onesto;
+- inserisci almeno un punto non ovvio che faccia davvero ragionare;
+- chiudi con uno spunto o un consiglio pratico fuso nell’ultima frase, senza frasi staccate tipo “e lì capisci che…”.
+Paragrafo unico, 3–6 frasi, tono caldo ma lucido.`;
       }
       if (isPast) {
-        return `Domanda sul PASSATO (non ripeterla): "${domanda}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF”: descrivi la vita alternativa, inserisci almeno un dettaglio inaspettato e collega la lezione al presente nell’ultima frase. Paragrafo unico, 3–6 frasi.`;
+        return `Domanda sul PASSATO (non ripeterla): "${domanda}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF”: descrivi come sarebbe andata quella scelta (pro e contro reali), porta almeno un dettaglio inaspettato e chiudi collegando la lezione al presente in modo concreto e gentile, dentro l’ultima frase. Paragrafo unico, 3–6 frasi.`;
       }
       return `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO come “WHAT IF”:
-- apri con una frase naturale sul presente;
-- mostra cosa succede se fai davvero questa scelta e cosa succede se resti fermo;
-- resta aderente al tema;
-- pro e contro reali, tono ottimista ma non ingenuo;
-- almeno un’osservazione non banale;
-- chiudi con uno spunto pratico integrato nel discorso.
+- apri con una frase naturale che sembra un’osservazione su come sei messo adesso;
+- descrivi cosa succede se fai davvero questa scelta e cosa succede se resti fermo;
+- resta aderente al tema (salute, lavoro, soldi, relazione, città…) senza inventare problemi che l’utente non ha nominato;
+- evidenzia pro e contro reali, con tono ottimista ma non ingenuo;
+- inserisci almeno un’osservazione non banale che faccia cambiare prospettiva;
+- chiudi con uno spunto pratico o di consapevolezza integrato nel discorso, non come slogan.
 Paragrafo unico, 3–6 frasi.`;
     }
 
     if (L === "es") {
       return hasClar
-        ? `Pregunta original (no la repitas): "${domanda}". Detalle adicional del usuario: "${c}". Escribe UNA respuesta en ESPAÑOL, clara y concreta, en un solo párrafo, incluyendo al menos un ángulo no obvio.`
+        ? `Pregunta original (no la repitas): "${domanda}". Detalle adicional del usuario: "${c}". Escribe UNA respuesta en ESPAÑOL, clara y concreta, en un solo párrafo, incluyendo al menos un ángulo no obvio que haga pensar al usuario.`
         : `Pregunta (no la repitas): "${domanda}". Escribe UNA respuesta en ESPAÑOL, en un solo párrafo, con al menos una observación inesperada pero realista.`;
     }
     if (L === "fr") {
@@ -864,12 +850,9 @@ Paragrafo unico, 3–6 frasi.`;
 /* ========= SEGNALI GIORNO (mattina/pomeriggio/sera) ========= */
 /**
  * buildSignalMessages:
- * - mattino: WHAT IF (consiglio breve) + WTF (roast breve dopo)
- * - pomeriggio:
- *    - phase 1: WHAT IF chiede il mood (frase sola, breve)
- *    - phase 2: WHAT IF dà 2–3 frasi brevi in base al mood
- *    - phase 2: WTF reagisce in 1–2 frasi brevi, sarcastiche, su mood + consiglio
- * - sera: WHAT IF chiusura + invito a parlare, WTF chiusura sarcastica su quello
+ * - mattino: fase 1 WHAT IF (consiglio del mattino con invito leggero), fase 2 WTF (roast + invito leggero)
+ * - pomeriggio: fase 1 WHAT IF (check-in sul mood), fase 2 WTF (commento cazzaro sul mood)
+ * - sera: fase 1 WHAT IF (domanda di chiusura + invito a parlarne), fase 2 WTF (chiusura da bar + invito)
  */
 function buildSignalMessages({
   slot = "morning",
@@ -894,23 +877,30 @@ function buildSignalMessages({
       if (stile === "whatif" && isPhase1) {
         sys = `Sei “WHAT IF” in MODALITÀ CONSIGLIO DEL MATTINO.
 REGOLE:
-- Frase breve che dà una piccola impostazione alla giornata.
-- 2–3 frasi massimo, paragrafo unico, niente emoji, niente elenco.
-- Non inventare stati emotivi pesanti (“sei distrutto”) ma puoi evocare sensazioni leggere.
-- Dai un consiglio semplice e una mini-visione di come potrebbe andare la giornata se ti tratti un filo meglio.
-- Ultima frase: invito leggero a “tornarci su” se l’utente vuole guardare meglio una situazione.`;
-        user = `Scrivi il consiglio del mattino in ITALIANO: 2–3 frasi brevi, tono caldo ma pratico, chiusura con invito lieve a tornarci su se vuole parlarne meglio.`;
+- Non sai come si sente l’utente: NON inventare il suo stato (“sei stanco”, “ti senti perso”, ecc.).
+- Niente previsioni, niente oroscopi, niente futuro mistico.
+- Dai 1–2 consigli concreti e realistici per impostare la giornata in modo un po’ più leggero e lucido.
+- 2–3 frasi, un solo paragrafo, niente titolo, niente elenco, niente emoji.
+- Tono: calmo, pratico, umano, da voce che ti conosce ma non giudica.
+- Parla sempre in seconda persona (tu / ti / tuo).
+- Nell’ultima frase inserisci un invito molto leggero a “chiedere di più” o a “guardare meglio la situazione insieme”, senza fare pubblicità esplicita all’app.`;
+        user = `Scrivi il consiglio del mattino in ITALIANO seguendo le regole sopra.
+Non citare la domanda o la notifica: vai diretto al consiglio, con una chiusura che invita dolcemente a esplorare meglio la situazione se l’utente ne sente il bisogno.`;
       } else if (stile === "wtf" && !isPhase1) {
         sys = `Sei “WHAT THE F” in MODALITÀ ROAST DEL MATTINO.
 REGOLE:
-- Commenti il consiglio del mattino appena arrivato: lo prendi in giro ma senza distruggerlo.
-- 1–2 frasi brevi, massimo 40–45 parole totali.
-- Tono da bar: affettuosamente cattivo, concreto, senza andare fuori tema.
+- Stai commentando, da bar, il fatto che prima è arrivato un consiglio del mattino sensato (voce WHAT IF).
+- Prendi bonariamente in giro sia il “consiglio del mattino” che l’idea di sistemare la vita con un solo messaggino.
+- 2–3 frasi, un solo paragrafo, circa 50–90 parole.
+- Tono: narratore da bancone, affettuosamente cattivo, ma mai umiliante.
 - Puoi usare parolacce leggere da bar (culo, casino, incasinato, figuraccia, ecc.), MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
-- Puoi nominare “bestemmia” solo in modo narrato.
-- L’ultima frase deve chiudere secca e finire con “ecchecazz!!!”.`;
-        user = `Scrivi il commento di WHAT THE F sul consiglio del mattino: 1–2 frasi brevi, tono da bancone, che prendono in giro con affetto l’idea di sistemare la giornata con un messaggino, chiudendo con “ecchecazz!!!”.`;
+- Puoi nominare “bestemmia” solo in senso narrato, come negli altri testi, senza riferimenti religiosi.
+- Nell’ultima parte inserisci un invito storto ma chiaro: se vuole smettere di fare finta di niente, può venire a parlarne meglio. Tono da bar, non da coach.
+- L’ultima frase, alla fine, va chiusa con “ecchecazz!!!”.`;
+        user = `Scrivi il commento di WHAT THE F in ITALIANO, come se stessi prendendo in giro un po’ il “consiglio del mattino” appena ricevuto.
+Un paragrafo solo, 2–3 frasi, chiusura con invito cazzaro ma affettuoso a “parlarne meglio” e finale in stile “ecchecazz!!!”.`;
       } else {
+        // fallback neutro
         sys = `Sei “WHAT IF”. Modalità segnale del mattino di fallback.
 Una frase neutra e breve, tono pratico.`;
         user = `Scrivi una sola frase di consiglio semplice in ITALIANO.`;
@@ -920,41 +910,32 @@ Una frase neutra e breve, tono pratico.`;
     // ========== POMERIGGIO ==========
     else if (s === "afternoon") {
       if (stile === "whatif" && isPhase1) {
-        // Fase 1: solo domanda sul mood, da usare per i bottoni
-        sys = `Sei “WHAT IF” in MODALITÀ CHECK-IN POMERIGGIO – DOMANDA MOOD.
-REGOLE:
-- UNA sola frase breve.
-- Chiedi come sta andando il pomeriggio, in modo semplice e non invasivo.
-- Niente consigli qui, niente analisi: è solo la domanda per far scegliere il mood.
-- Tono calmo, pratico, da voce che bussa piano.`;
-        user = `Scrivi UNA sola frase in ITALIANO che chieda all’utente come sta andando il pomeriggio (es. energia, testa, voglia di fare), senza dare consigli.`;
-      } else if (stile === "whatif" && !isPhase1) {
         const moodHint = moodLabel
-          ? `L’utente ha indicato che il suo umore è: "${moodLabel}". Usa questo come base: più morbido se è giù, più diretto se è carico.`
+          ? `L’utente ha indicato che il suo umore è: "${moodLabel}". Usa questa informazione per il tono (es. più morbido se è giù, più diretto se è carico).`
           : `Non conosci il dettaglio preciso dell’umore, sai solo che è un check-in di metà giornata.`;
-        sys = `Sei “WHAT IF” in MODALITÀ CHECK-IN DEL POMERIGGIO (RISPOSTA DOPO MOOD).
+        sys = `Sei “WHAT IF” in MODALITÀ CHECK-IN DEL POMERIGGIO.
 ${moodHint}
 REGOLE:
-- 2–3 frasi brevi, un solo paragrafo, niente emoji.
-- Prima frase: riconosci il mood in modo semplice, senza fare diagnosi psicologiche.
-- Seconda/terza frase: dai 1–2 micro-aggiustamenti pratici per il resto del pomeriggio (cosa proteggere, cosa alleggerire o rimandare).
-- Nessun papiro: è un aggiustamento di rotta leggero, non una seduta.
-- Ultima frase con un invito gentile a chiedere di più se vuole mettere a fuoco meglio una situazione concreta.`;
-        user = `Scrivi la risposta di CHECK-IN del pomeriggio in ITALIANO, 2–3 frasi brevi: riconosci il mood indicato e suggerisci uno o due piccoli aggiustamenti pratici per il resto del pomeriggio, chiudendo con un invito gentile a parlarne meglio se l’utente vuole.`;
+- Riconosci in 1 frase come potrebbe sentirsi a metà giornata (senza fare diagnosi psicologiche).
+- In 1–2 frasi successive dai un piccolo aggiustamento pratico per il resto del pomeriggio (cosa tenere, cosa alleggerire, cosa rimandare).
+- 2–4 frasi totali, un solo paragrafo, niente emoji, niente elenco.
+- Non trasformare il messaggio in un trattato: è un check-in breve, non una seduta.
+- Nell’ultima frase inserisci un invito gentile a parlarne meglio o a fare una domanda più precisa se vuole andare a fondo.`;
+        user = `Scrivi la risposta di CHECK-IN del pomeriggio in ITALIANO, seguendo le regole sopra.
+Non citare i bottoni o il sistema: parla direttamente all’utente in seconda persona.`;
       } else if (stile === "wtf" && !isPhase1) {
         const moodPart = moodLabel
-          ? `Hai questa etichetta di umore: "${moodLabel}".`
+          ? `Hai solo questa etichetta di umore: "${moodLabel}".`
           : `Sai solo che è un check-in di metà giornata.`;
         sys = `Sei “WHAT THE F” in MODALITÀ COMMENTO POMERIGGIO.
 ${moodPart}
 REGOLE:
-- Devi reagire al pomeriggio e al mood, come un cliente abituale appoggiato al bancone.
-- 1–2 frasi, massimo 45 parole totali, un solo paragrafo.
-- Prendi bonariamente in giro sia il mood che il mini-consiglio appena dato da WHAT IF.
+- Descrivi la scena del pomeriggio come se stessi commentando un cliente abituale appoggiato al bancone.
+- 2–3 frasi, un solo paragrafo, con immagini quotidiane (scrivania, tram, bar, divano, tazzina, pc, corridoio…).
 - Puoi usare parolacce leggere da bar (culo, casino, incasinato, figuraccia, ecc.), MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
-- Puoi nominare una “bestemmia” solo in modo narrato.
-- L’ultima frase deve chiudere secca, con mini-morale storta, e finire con “ecchecazz!!!”.`;
-        user = `Scrivi il commento di WHAT THE F in ITALIANO sul pomeriggio: 1–2 frasi brevi che reagiscono al mood scelto e al consiglio di WHAT IF, tono da bar affettuosamente cattivo, chiusura con “ecchecazz!!!”.`;
+- Puoi includere una “bestemmia” narrata e metaforica (“bestemmia di manutenzione”, ecc.) al massimo una volta.
+- Nell’ultima frase fai una micro-morale storta e un invito cazzaro ma affettuoso a parlarne meglio, chiudendo con “ecchecazz!!!”.`;
+        user = `Scrivi il commento di WHAT THE F sul pomeriggio in ITALIANO, usando il tono da bar e chiudendo con “ecchecazz!!!”.`;
       } else {
         sys = `Sei “WHAT IF” in modalità segnale pomeriggio di fallback.`;
         user = `Scrivi una breve frase neutra di check-in in ITALIANO.`;
@@ -966,21 +947,22 @@ REGOLE:
       if (stile === "whatif" && isPhase1) {
         sys = `Sei “WHAT IF” in MODALITÀ DOMANDA DI CHIUSURA SERALE.
 REGOLE:
-- 2–3 frasi brevi, un solo paragrafo, niente emoji.
-- Prima frase: riconosci che la giornata sta chiudendo, senza romanticismi esagerati.
-- Seconda frase: fai una domanda riflessiva semplice (su cosa tenere, cosa lasciare, cosa non vuoi portare a domani).
-- Terza eventuale frase: invito gentile a parlarne meglio o a usare la domanda come punto di partenza per chiarire una scelta.`;
-        user = `Scrivi il messaggio serale in ITALIANO: 2–3 frasi brevi che riconoscono la fine della giornata, pongono una domanda riflessiva semplice e chiudono con un invito lieve a parlarne meglio se l’utente ne ha voglia.`;
+- È fine giornata: riconosci questo in una frase breve senza romanticismi.
+- Formula una domanda riflessiva semplice che aiuti l’utente a mettere a fuoco almeno una scelta o un momento vero della giornata.
+- 2–3 frasi totali, un solo paragrafo, niente elenco, niente emoji.
+- Nell’ultima frase inserisci un invito gentile a “parlarne meglio” o a usare questa domanda come punto di partenza per una conversazione più profonda.`;
+        user = `Scrivi il messaggio serale in ITALIANO, seguendo le regole sopra.
+Prima riconosci che la giornata sta chiudendo, poi fai una domanda riflessiva, e chiudi con un invito lieve a chiarire meglio se l’utente ne ha voglia.`;
       } else if (stile === "wtf" && !isPhase1) {
         sys = `Sei “WHAT THE F” in MODALITÀ CHIUSURA SERALE.
 REGOLE:
-- Commenti la fine giornata come l’ultimo giro al bancone.
-- 2–3 frasi, circa 60–90 parole totali, un solo paragrafo.
-- Usa immagini da fine giornata (divano, piatti nel lavandino, luce del frigo, bicchiere, tazzina, corridoio, pigiama, tram vuoto, ecc.).
-- Parolacce leggere da bar ok, MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
-- Puoi citare una “bestemmia” narrata una volta sola.
+- Racconti la fine della giornata come l’ultimo giro al bancone: un po’ stanco, un po’ lucido, molto umano.
+- 2–3 frasi, un solo paragrafo, circa 60–100 parole.
+- Le immagini devono essere da fine giornata (divano, piatti nel lavandino, luce del frigo, bicchiere, tazzina, corridoio, pigiama, tram vuoto, ecc.).
+- Puoi usare parolacce leggere da bar, MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
+- Puoi citare una “bestemmia” narrata una volta, senza religione.
 - Chiudi con una mini-morale storta tipo “almeno non ti sei raccontato che è tutto ok”, più un invito a svuotare il cestino mentale, e termina con “ecchecazz!!!”.`;
-        user = `Scrivi il messaggio di chiusura serale in ITALIANO come WHAT THE F: 2–3 frasi, immagini da fine giornata, una mini-morale storta e un invito a svuotare il cestino mentale, chiudendo con “ecchecazz!!!”.`;
+        user = `Scrivi il messaggio di chiusura serale in ITALIANO come WHAT THE F, in un solo paragrafo, chiudendo con invito a “svuotare il cestino mentale” e “ecchecazz!!!”.`;
       } else {
         sys = `Sei “WHAT IF” in modalità serale di fallback.`;
         user = `Scrivi una sola frase serale neutra in ITALIANO.`;
@@ -993,17 +975,17 @@ REGOLE:
       user = `Scrivi una sola frase in ITALIANO.`;
     }
   } else if (L === "en") {
-    // Versione semplice EN (fallback)
+    // Versione semplice EN (se ti serve anche in inglese)
     if (s === "morning" && stile === "whatif" && isPhase1) {
       sys = `You are “WHAT IF” in MORNING ADVICE mode.
 Give 2–3 short, concrete sentences to start the day lighter and clearer, and end with a soft invitation to go deeper if they want. No emojis, no bullets.`;
       user = `Write the morning advice in ENGLISH, following the rules above.`;
     } else if (s === "morning" && stile === "wtf" && !isPhase1) {
       sys = `You are “WHAT THE F” reacting to a previous smart morning tip.
-Roast the idea of “fixing life with one notification”, then end with a crooked invitation to talk more. 1–2 sentences, one paragraph.`;
+Roast the idea of “fixing life with one notification”, then end with a crooked invitation to talk more. 2–3 sentences, one paragraph.`;
       user = `Write the WHAT THE F morning follow-up in ENGLISH.`;
     } else {
-      sys = `You are in signal mode. Short answer, one paragraph, no emojis.`;
+      sys = `You are in signal mode. Write one short, neutral sentence.`;
       user = `Write one short sentence in ENGLISH.`;
     }
   } else {
@@ -1144,10 +1126,10 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
       cons.push("si el plazo es difuso, se irá moviendo hacia adelante");
     }
     if (action) {
-      pros.push("tienes una palanca concreta para avanzar cada dia");
+      pros.push("tienes una palanca concreta para avanzar cada día");
     }
     if (riskHedging) {
-      pros.push("puedes limitar el riesgo con pocas reglas sencillas");
+      pros.push("puedes limitar el rischio con pocas reglas sencillas");
       cons.push("buscar riesgo cero puede dejarte inmóvil");
     }
 
@@ -1310,7 +1292,7 @@ async function polishAnswer({ text, lang, stile }) {
         ? `Sei un correttore di bozze per un monologo colorito nello stile degli esempi (Motociclista, Luisa, Turista del destino).
 Prendi il testo seguente e:
 - mantieni intatto il tono da narratore comico da pub, le parolacce e le immagini;
-- NON ammorbidire il lessico;
+- NON ammorbidire il lessico: lascia le parti grezze e un po’ volgari;
 - correggi solo errori grammaticali evidenti, concordanze, doppioni di parole, ripetizioni troppo ravvicinate;
 - NON aggiungere nuove metafore;
 - non cambiare pronomi o persona verbale, a meno che la frase non sia davvero scorretta;
@@ -1319,7 +1301,7 @@ Prendi il testo seguente e:
 - non racchiudere tutto il testo tra virgolette.`
         : `Sei un correttore di bozze.
 Prendi il testo seguente e:
-- mantieni intatto senso e tono;
+- mantieni intatto senso e tono, anche il lato un po’ mistico ma umano;
 - correggi errori grammaticali e ripetizioni inutili;
 - non cambiare pronomi o persona verbale, a meno che la frase non sia proprio scorretta;
 - mantieni un unico paragrafo e lunghezza simile.`;
@@ -1353,6 +1335,67 @@ Keep it one paragraph and roughly the same length.`;
   return out;
 }
 
+/* ========= WTF: aggiustamento oggetti in base al contesto ========= */
+function adjustWtfContextObjects(answer = "", domanda = "") {
+  let s = String(answer || "");
+  const q = String(domanda || "").toLowerCase();
+
+  // Contesto bar / locale
+  const isBarContext = /\b(bar|locale|pub|osteria|taverna|spritz|aperitivo|cocktail|birra|vino|caff[èe]|cappuccino|bancone)\b/.test(
+    q
+  );
+  if (isBarContext) return s; // in questo caso il barista è ok
+
+  // Contesto casa
+  const isHome =
+    /\b(casa|divano|salotto|soggiorno|letto|camera|cucina|netflix|playstation|console|pigiama)\b/.test(q);
+
+  // Contesto ufficio / lavoro
+  const isOffice =
+    /\b(ufficio|lavoro|riunione|call|zoom|teams|azienda|open space|scrivania|collega|capo|deadline)\b/.test(q);
+
+  // Contesto spostamenti / viaggio
+  const isTravel =
+    /\b(treno|stazione|metro|metropolitana|autobus|bus|tram|macchina|auto|traffico|volo|aereo|aeroporto)\b/.test(q);
+
+  // Contesto palestra / sport
+  const isGym =
+    /\b(palestra|allenamento|correre|corsa|pes[ie]|tapis roulant|bike|sport|partita|campo)\b/.test(q);
+
+  // Contesto studio / esami
+  const isStudy =
+    /\b(scuola|università|uni\b|esame|esami|studio|biblioteca|tesi|compiti|compito|interrogazione|concorso)\b/.test(q);
+
+  const homeOpts = ["divano", "telecomando", "frigorifero", "lampada", "gatto", "piatti nel lavandino"];
+  const officeOpts = ["collega", "scrivania", "monitor", "stampante", "badge", "macchinetta del caffè"];
+  const travelOpts = [
+    "passeggero",
+    "controllore",
+    "sedile del treno",
+    "finestrino",
+    "valigia",
+    "altoparlante della stazione",
+  ];
+  const gymOpts = ["panca", "tappetino", "specchio della sala pesi", "armadietto", "bilanciere", "tapis roulant"];
+  const studyOpts = ["scrivania ingombra", "libro aperto", "evidenziatore", "zaino buttato per terra", "pc portatile", "lampada da tavolo"];
+  const defaultOpts = ["tazzina", "divano", "scrivania", "telefono", "pc", "frigorifero", "citofono", "corridoio"];
+
+  let pool = defaultOpts;
+  if (isHome) pool = homeOpts;
+  else if (isOffice) pool = officeOpts;
+  else if (isTravel) pool = travelOpts;
+  else if (isGym) pool = gymOpts;
+  else if (isStudy) pool = studyOpts;
+
+  // sostituisci "barista" solo se NON siamo in contesto bar
+  s = s.replace(/\b[Bb]arista\b/g, (m) => {
+    const idx = hashStr(domanda + m) % pool.length;
+    return pool[idx];
+  });
+
+  return s;
+}
+
 /* ========= Finale WTF con ecchecazz!!! + pulizia virgolette ========= */
 function ensureWtfEcchecazzEnding(text = "", lang = "it") {
   let s = String(text || "").trim();
@@ -1374,169 +1417,24 @@ function ensureWtfEcchecazzEnding(text = "", lang = "it") {
   return `${s}, ecchecazz!!!`;
 }
 
-/* ========= WTF: aggiustamento oggetti in base al contesto ========= */
-function adjustWtfContextObjects(answer = "", domanda = "") {
-  let s = String(answer || "");
-  const q = String(domanda || "").toLowerCase();
-
-  // Contesto bar / locale
-  const isBarContext = /\b(bar|locale|pub|osteria|taverna|spritz|aperitivo|cocktail|birra|vino|caff[èe]|cappuccino|bancone)\b/.test(
-    q
-  );
-  if (isBarContext) return s;
-
-  // Contesto casa
-  const isHome =
-    /\b(casa|divano|salotto|soggiorno|letto|camera|cucina|netflix|playstation|console|pigiama)\b/.test(
-      q
-    );
-
-  // Contesto ufficio / lavoro
-  const isOffice =
-    /\b(ufficio|lavoro|riunione|call|zoom|teams|azienda|open space|scrivania|collega|capo|deadline)\b/.test(
-      q
-    );
-
-  // Contesto spostamenti / viaggio
-  const isTravel =
-    /\b(treno|stazione|metro|metropolitana|autobus|bus|tram|macchina|auto|traffico|volo|aereo|aeroporto)\b/.test(
-      q
-    );
-
-  // Contesto palestra / sport
-  const isGym =
-    /\b(palestra|allenamento|correre|corsa|pes[ie]|tapis roulant|bike|sport|partita|campo)\b/.test(
-      q
-    );
-
-  // Contesto studio / esami
-  const isStudy =
-    /\b(scuola|università|uni\b|esame|esami|studio|biblioteca|tesi|compiti|compito|interrogazione|concorso)\b/.test(
-      q
-    );
-
-  const homeOpts = [
-    "divano",
-    "telecomando",
-    "frigorifero",
-    "lampada",
-    "gatto",
-    "piatti nel lavandino",
-  ];
-  const officeOpts = [
-    "collega",
-    "scrivania",
-    "monitor",
-    "stampante",
-    "badge",
-    "macchinetta del caffè",
-  ];
-  const travelOpts = [
-    "passeggero",
-    "controllore",
-    "sedile del treno",
-    "finestrino",
-    "valigia",
-    "altoparlante della stazione",
-  ];
-  const gymOpts = [
-    "panca",
-    "tappetino",
-    "specchio della sala pesi",
-    "armadietto",
-    "bilanciere",
-    "tapis roulant",
-  ];
-  const studyOpts = [
-    "scrivania ingombra",
-    "libro aperto",
-    "evidenziatore",
-    "zaino buttato per terra",
-    "pc portatile",
-    "lampada da tavolo",
-  ];
-  const defaultOpts = [
-    "tazzina",
-    "divano",
-    "scrivania",
-    "telefono",
-    "pc",
-    "frigorifero",
-    "citofono",
-    "corridoio",
-  ];
-
-  let pool = defaultOpts;
-  if (isHome) pool = homeOpts;
-  else if (isOffice) pool = officeOpts;
-  else if (isTravel) pool = travelOpts;
-  else if (isGym) pool = gymOpts;
-  else if (isStudy) pool = studyOpts;
-
-  // sostituisci "barista" solo se NON siamo in contesto bar
-  s = s.replace(/\b[Bb]arista\b/g, (m) => {
-    const idx = hashStr(domanda + m) % pool.length;
-    return pool[idx];
-  });
-
-  return s;
-}
-
-/* ========= Logging su Redis ========= */
-async function logRequest({ domanda, stile, mode, isSignal }) {
-  if (!hasRedis || !redis) return;
-  try {
-    const today = new Date().toISOString().slice(0, 10); // yyyy-mm-dd (UTC)
-    const keyStats = `ask:stats:${today}`;
-    const keyLast = `ask:last:${today}`;
-
-    // Contatori
-    await redis.hincrby(keyStats, "total", 1);
-    if (stile === "whatif") await redis.hincrby(keyStats, "whatif", 1);
-    if (stile === "wtf") await redis.hincrby(keyStats, "wtf", 1);
-    if (isSignal) await redis.hincrby(keyStats, "signals", 1);
-
-    // Ultime richieste
-    const item = JSON.stringify({
-      t: Date.now(),
-      domanda: String(domanda || "").slice(0, 200),
-      stile,
-      mode,
-      signal: !!isSignal,
-    });
-    await redis.lpush(keyLast, item);
-    await redis.ltrim(keyLast, 0, 49); // tieni ultime 50
-  } catch {
-    // nessun throw: logging best-effort
-  }
-}
-
 /* ========= HANDLER ========= */
 export default async function handler(req, res) {
   cors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST")
-    return res.status(405).json({ error: "method_not_allowed" });
+  if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
   try {
-    if (!process.env.OPENAI_API_KEY)
-      return res.status(500).json({ error: "missing_api_key" });
+    if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: "missing_api_key" });
 
-    const ip = (req.headers["x-forwarded-for"] ||
-      req.socket?.remoteAddress ||
-      "unknown")
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
       .toString()
       .split(",")[0]
       .trim();
     const ok = await rateOk(`ask:${ip}`);
     if (!ok) return res.status(429).json({ error: "rate_limited_minute" });
 
-    const bodyRaw =
-      typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
-    const body =
-      bodyRaw && typeof req.body === "string"
-        ? JSON.parse(bodyRaw)
-        : req.body || {};
+    const bodyRaw = typeof req.body === "string" ? req.body : JSON.stringify(req.body || {});
+    const body = bodyRaw && typeof req.body === "string" ? JSON.parse(bodyRaw) : req.body || {};
 
     const {
       stage = "answer", // "clarify" | "answer"
@@ -1546,80 +1444,16 @@ export default async function handler(req, res) {
       lang = "it",
       periodo = "future", // "future" | "past"
       micro = {},
-      admin,
     } = body || {};
 
     const L = normLang(lang);
-
-    // ======== ADMIN STATS ========
-    if (admin === "stats") {
-      if (!isAdmin(req, body)) {
-        return res.status(403).json({ error: "forbidden" });
-      }
-
-      const today = new Date().toISOString().slice(0, 10);
-      const keyStats = `ask:stats:${today}`;
-      const keyLast = `ask:last:${today}`;
-
-      if (!hasRedis || !redis) {
-        return res.status(200).json({
-          mode: "admin_stats",
-          date: today,
-          stats: { total: 0, whatif: 0, wtf: 0, signals: 0 },
-          last: [],
-        });
-      }
-
-      let stats = await redis.hgetall(keyStats);
-      stats = stats || {};
-      const total = Number(stats.total || 0);
-      const whatifCount = Number(stats.whatif || 0);
-      const wtfCount = Number(stats.wtf || 0);
-      const signalsCount = Number(stats.signals || 0);
-
-      let last = [];
-      try {
-        const raw = (await redis.lrange(keyLast, 0, 49)) || [];
-        last = raw
-          .map((x) => {
-            try {
-              return JSON.parse(x);
-            } catch {
-              return null;
-            }
-          })
-          .filter(Boolean);
-      } catch {
-        last = [];
-      }
-
-      return res.status(200).json({
-        mode: "admin_stats",
-        date: today,
-        stats: {
-          total,
-          whatif: whatifCount,
-          wtf: wtfCount,
-          signals: signalsCount,
-        },
-        last,
-      });
-    }
-
     const isSignal = micro && micro.src === "signal";
 
-    // Per le chiamate normali e segnali, serve comunque una "domanda" non vuota
+    // Per le chiamate normali chiediamo ancora una domanda vera.
+    // Per i segnali, basta un placeholder non vuoto.
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
-
-    // Logga la richiesta (non admin)
-    await logRequest({
-      domanda,
-      stile,
-      mode: isSignal ? "signal" : String(stage || "answer"),
-      isSignal,
-    });
 
     /* ====== STAGE: CLARIFY ====== */
     if (stage === "clarify") {
@@ -1638,7 +1472,7 @@ export default async function handler(req, res) {
         top_p,
         max_tokens: 80,
         frequency_penalty,
-       presence_penalty,
+        presence_penalty,
         messages,
       });
 
@@ -1703,7 +1537,7 @@ export default async function handler(req, res) {
     // Limita frasi e parole, normalizza
     if (stile === "wtf") {
       answer = tightenSentences(answer, 5); // max 5 frasi
-      answer = clampWords(answer, isSignal ? 90 : 130); // segnali più corti
+      answer = clampWords(answer, 130);
       answer = normalizeOneParagraph(answer);
     } else {
       answer = tightenSentences(answer, 7);
@@ -1747,18 +1581,30 @@ export default async function handler(req, res) {
 
     // Filtro anti-coach + anti-italiano rotto per WTF IT
     if (stile === "wtf" && L === "it") {
+      // meno zucchero, più botte
       answer = answer.replace(/\bcoccol\w*/gi, "botta");
       answer = answer.replace(/\bprocrastinazion\w*/gi, "tirarla lunga");
       answer = answer.replace(/\bmagari domani\b/gi, "poi, poi, poi");
+
+      // togli frasi troppo teoriche tipo "vivere vuol dire..."
       answer = answer.replace(/\bvivere vuol dire[^.?!]*[.?!]/gi, "");
       answer = answer.replace(/\bvuol dire che[^.?!]*[.?!]/gi, "");
       answer = answer.replace(/\bsignifica che[^.?!]*[.?!]/gi, "");
+
+      // vieta "rimando" come sostantivo
       answer = answer.replace(/\brimando\b/gi, "tirarla lunga");
+
+      // frasi troppo liriche standard
       answer = answer.replace(
-        /\bviaggiatore della nostalgia\b/gi,
-        "turista del destino"
+        /come se stesse versando la vita dentro il tuo bicchiere/gi,
+        "come se ti tirasse addosso una sveglia liquida"
       );
+
+      // evita frasi troppo poetiche/generiche
+      answer = answer.replace(/\bviaggiatore della nostalgia\b/gi, "turista del destino");
       answer = answer.replace(/\ballegria nel cuore\b/gi, "quella voglia storta di rimetterti in gioco");
+
+      // evita "madò"
       answer = answer.replace(/\bmadò\b/gi, "");
     }
 
@@ -1784,6 +1630,7 @@ export default async function handler(req, res) {
         count += 1;
         return count > 1 ? "semaforo" : m;
       });
+      // evita "spippolata"
       answer = answer.replace(/\bspippolat\w*/gi, "rimuginata");
     }
 
@@ -1796,6 +1643,7 @@ export default async function handler(req, res) {
     const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
     if (stile === "wtf" && L === "it" && !/bestemmi\w*/i.test(answer)) {
       const seed = hashStr(String(domanda || "") + "|" + String(answer || ""));
+      // ~65% dei casi: così non sembra un tic fisso
       if (seed % 100 < 65) {
         answer =
           answer.replace(/\s*[.!?…]*$/, "") +
@@ -1808,7 +1656,7 @@ export default async function handler(req, res) {
       answer = ensureWtfEcchecazzEnding(answer, L);
     }
 
-    // Finale “gancio zíngara” per WHAT IF
+    // Finale “gancio zíngara” per WHAT IF (ora soft per IT)
     if (stile === "whatif") {
       answer = ensureZingaraEnding({ text: answer, lang: L, periodo, domanda });
     }
@@ -1874,4 +1722,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-  }
+}
