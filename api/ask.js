@@ -622,7 +622,7 @@ COMPITO (PASSATO):
 FORMATO:
 - 3–5 frasi, un solo paragrafo, circa 90–130 parole.
 - Nessun elenco, nessuna emoji.
-- L’ULTIMA frase chiude con una riga secca legata a un gesto/oggetto e finisce con “ecchecazz!!!”.`;
+- L’ULTIMA frase chiude una riga secca legata a un gesto/oggetto e finisce con “ecchecazz!!!”.`;
 
 const WTF_RULE_EN_FUT = `You are “WHAT THE F”: a rough, foul-mouthed but very cultured and pissed-off narrator.
 You roast every decision with love and swear words, but never attack identities or groups.
@@ -1236,7 +1236,7 @@ Deve essere coerente con la risposta principale. Niente emoji, niente elenco. Ma
   } else if (L === "es") {
     sys = `Eres el MÓDULO DE MOTIVACIÓN de “WHAT IF”.
 Escribe UNA sola frase que explique por qué la probabilidad es aproximadamente ${pct}% en este escenario.
-Coherente con la respuesta principal, máximo 25 palabras, sin emojis.`;
+Coherente con la respuesta principale, máximo 25 palabras, sin emojis.`;
   } else if (L === "fr") {
     sys = `Tu es le MODULE MOTIVATION de “WHAT IF”.
 Écris UNE phrase qui explique pourquoi la probabilité est d’environ ${pct}% dans ce scénario.
@@ -1437,7 +1437,7 @@ export default async function handler(req, res) {
     const body = bodyRaw && typeof req.body === "string" ? JSON.parse(bodyRaw) : req.body || {};
 
     const {
-      stage = "answer", // "clarify" | "answer"
+      stage = "answer", // "clarify" | "answer" | (per noi anche "signal" lato frontend)
       domanda = "",
       clarification = "",
       stile = "whatif", // "whatif" | "wtf"
@@ -1447,16 +1447,19 @@ export default async function handler(req, res) {
     } = body || {};
 
     const L = normLang(lang);
-    const isSignal = micro && micro.src === "signal";
+
+    // 🔴 IMPORTANTE: consideriamo "segnale" sia quando micro.src === "signal"
+    // sia quando il frontend manda stage === "signal"
+    const isSignal = (micro && micro.src === "signal") || stage === "signal";
 
     // Per le chiamate normali chiediamo ancora una domanda vera.
-    // Per i segnali, basta un placeholder non vuoto.
-    if (!domanda || typeof domanda !== "string") {
+    // Per i segnali, può anche essere vuota (non blocchiamo).
+    if ((!domanda || typeof domanda !== "string") && !isSignal) {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
     /* ====== STAGE: CLARIFY ====== */
-    if (stage === "clarify") {
+    if (stage === "clarify" && !isSignal) {
       const messages = buildClarifyMessages({ domanda, stile, lang: L, periodo, micro });
 
       const isSurprise = micro && (micro.surprise === true || micro.src === "surprise");
@@ -1494,7 +1497,7 @@ export default async function handler(req, res) {
       });
     }
 
-    /* ====== STAGE: ANSWER ====== */
+    /* ====== STAGE: ANSWER (normale o segnale) ====== */
     let messages;
     if (isSignal) {
       const slot = micro.slot || micro.time || micro.timeOfDay || "morning";
@@ -1722,4 +1725,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-                                  }
+}
