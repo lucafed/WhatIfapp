@@ -46,7 +46,7 @@
       min-height:100%;    
       display:flex;flex-direction:column;align-items:center;text-align:center;    
       padding:20px;    
-      padding-bottom:40px; /* ↓ prima era 120px */    
+      padding-bottom:40px;    
       gap:14px;    
     }    
 
@@ -111,14 +111,13 @@
     }    
     .cta[disabled]{opacity:.45;cursor:not-allowed}    
 
-    /* 🔁 Footer che SCORRE con la pagina, ma più vicino */    
     footer{    
       position:static;    
       text-align:center;    
       color:var(--muted);    
       font-size:12px;    
-      padding:16px 14px 28px; /* ↓ prima 30px 14px 40px */    
-      margin-top:16px;        /* ↓ prima 40px */    
+      padding:16px 14px 28px;    
+      margin-top:16px;        
     }    
     footer a{color:var(--accent);text-decoration:none;font-weight:600}    
     footer .sep{opacity:.6;margin:0 6px}    
@@ -413,11 +412,9 @@
     if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());    
     applyLang();    
 
-    // esporta per script Firebase    
     window.I18N = DICT;    
     window.getCurrentLang = getLang;    
 
-    // gestisci chip selezioni    
     const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');    
     function wireGroup(g){    
       if(!g) return;    
@@ -436,7 +433,6 @@
     wireGroup(document.getElementById('periodGroup'));    
     wireGroup(document.getElementById('styleGroup'));    
 
-    // menu lingua    
     (function(){    
       const toggle = document.getElementById('langToggle');    
       const menu   = document.getElementById('langMenu');    
@@ -474,7 +470,7 @@
     })();
   </script>    
 
-  <!-- 🔐 Firebase Auth: usa firebase.init.js -->    
+  <!-- 🔐 Firebase Auth -->    
   <script type="module">
     const dbg = document.getElementById('debug');
     const DO_DEBUG = new URLSearchParams(location.search).get('debug') === '1';
@@ -485,7 +481,6 @@
       if(t) log('❌', t);
     };
 
-    // Usa l'app già inizializzata    
     import { auth } from "./firebase.init.js";    
 
     import {    
@@ -572,7 +567,6 @@
 
       if(user){    
         if(selectionsReady()){    
-          // qui prosegui verso la tua app    
           location.href = "fourth.html";    
         }else{    
           showErrText(d.needChoices);    
@@ -637,13 +631,42 @@
         setTimeout(()=>f.style.opacity="0",150);
         setTimeout(()=>f.remove(),800);
       }
-      function success(){
+
+      // 🔐 NUOVA VERSIONE: verifica il PIN con /api/admin-token
+      async function success(){
         reset();
-        const pin=prompt("PIN amministratore:");
-        if(!pin) return;
-        try{ sessionStorage.setItem("pending_admin_pin", pin);}catch{}
-        location.href="admin.html";
+        const pin = prompt("PIN amministratore:");
+        if (!pin) return;
+
+        try {
+          const resp = await fetch("/api/admin-token", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "admin-secret": pin
+            },
+            body: JSON.stringify({ pin }),
+            credentials: "include"
+          });
+
+          const data = await resp.json().catch(() => ({}));
+
+          if (!resp.ok || !data.ok) {
+            alert("PIN errato");
+            return;
+          }
+
+          try {
+            localStorage.setItem("admin_token", data.token);
+          } catch (e) {}
+
+          location.href = "admin.html";
+        } catch (e) {
+          console.error("Errore login admin", e);
+          alert("Errore durante la verifica del PIN. Controlla la connessione e riprova.");
+        }
       }
+
       title.addEventListener('click', ()=>{
         if(++tapTitle>=3){
           stage=1; tapTitle=0; flash();
@@ -697,7 +720,6 @@
           params.set('phase', phase);
           if(mood) params.set('mood', mood);
 
-          // Usa il flusso autoSignalFromURL in fourth.html
           location.href = 'fourth.html?' + params.toString();
         });
       }catch(e){
