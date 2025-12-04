@@ -11,13 +11,6 @@ import { Ratelimit } from "@upstash/ratelimit";
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-/* ========= Admin Token (per segnali giornalieri) ========= */
-const ADMIN_TOKEN =
-  process.env.ADMIN_TOKEN ||
-  process.env.WHATIF_ADMIN_TOKEN ||
-  process.env.WHATF_ADMIN_TOKEN ||
-  "";
-
 /* ========= Redis & Rate ========= */
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL || "",
@@ -541,7 +534,7 @@ PAST MODE:
             ? "ITALIANO"
             : L === "es"
             ? "SPAGNOLO"
-            : L === "fr"
+            : L === "FR"
             ? "FRANCESE"
             : "TEDESCO";
 
@@ -887,13 +880,14 @@ function buildSignalMessages({
 REGOLE:
 - Non sai come si sente l’utente: NON inventare il suo stato (“sei stanco”, “ti senti perso”, ecc.).
 - Niente previsioni, niente oroscopi, niente futuro mistico.
-- Dai 1–2 consigli concreti e realistici per impostare la giornata in modo un po’ più leggero e lucido.
-- 2–3 frasi, un solo paragrafo, niente titolo, niente elenco, niente emoji.
+- Dai una piccola visione di come può scorrere la giornata se ti tratti un minimo meglio e proteggi due cose che contano.
+- Consiglio concreto ma leggero: massimo 1 frase principale, al massimo una seconda frase breve di aggancio, niente monologhi.
+- 1–2 frasi, un solo paragrafo, niente titolo, niente elenco, niente emoji.
 - Tono: calmo, pratico, umano, da voce che ti conosce ma non giudica.
 - Parla sempre in seconda persona (tu / ti / tuo).
 - Nell’ultima frase inserisci un invito molto leggero a “chiedere di più” o a “guardare meglio la situazione insieme”, senza fare pubblicità esplicita all’app.`;
         user = `Scrivi il consiglio del mattino in ITALIANO seguendo le regole sopra.
-Non citare la domanda o la notifica: vai diretto al consiglio, con una chiusura che invita dolcemente a esplorare meglio la situazione se l’utente ne sente il bisogno.`;
+Non citare la domanda o la notifica: vai diretto al consiglio, con una chiusura che dà una piccola visione di come può andare la giornata e invita dolcemente a esplorare meglio la situazione se l’utente ne sente il bisogno.`;
       } else if (stile === "wtf" && !isPhase1) {
         sys = `Sei “WHAT THE F” in MODALITÀ ROAST DEL MATTINO.
 REGOLE:
@@ -1500,14 +1494,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    /* ====== ADMIN CHECK per SEGNALI ====== */
-    if (isSignal) {
-      const reqToken = String(req.headers["x-admin-token"] || "");
-      if (!ADMIN_TOKEN || !reqToken || reqToken !== ADMIN_TOKEN) {
-        return res.status(401).json({ error: "admin_unauthorized" });
-      }
-    }
-
     /* ====== STAGE: CLARIFY ====== */
     if (stage === "clarify") {
       const messages = buildClarifyMessages({ domanda, stile, lang: L, periodo, micro });
@@ -1731,9 +1717,6 @@ export default async function handler(req, res) {
         periodo,
         model: MODEL,
         answer,
-        // questi dati li puoi usare come "log" nella tua dashboard admin
-        domanda,
-        micro,
       });
     }
 
@@ -1778,4 +1761,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-      }
+    }
