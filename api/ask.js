@@ -36,6 +36,45 @@ try {
   /* noop */
 }
 
+/* ========= LOGGING ANONIMO DOMANDE VERE ========= */
+/**
+ * logUserQuestion:
+ * - conta SOLO le domande vere dell’utente (chiamate normali, non segnali)
+ * - niente testo della domanda, niente risposta, niente IP
+ * - salva solo un contatore per giorno, tipo: stats:questions:2025-12-04 { count: 3 }
+ */
+async function logUserQuestion({ stile, lang, periodo }) {
+  try {
+    if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+      // se Redis non è configurato, non facciamo nulla
+      return;
+    }
+    const ts = Date.now();
+    const d = new Date(ts).toISOString().slice(0, 10); // YYYY-MM-DD
+    const key = `stats:questions:${d}`;
+
+    // contatore totale del giorno
+    await redis.hincrby(key, "count", 1).catch(() => {});
+
+    // opzionale: breakdown leggero per stile/periodo/lingua (sempre anonimo)
+    if (stile) {
+      await redis.hincrby(key, `style:${stile}`, 1).catch(() => {});
+    }
+    if (lang) {
+      const L = String(lang).slice(0, 2).toLowerCase();
+      await redis.hincrby(key, `lang:${L}`, 1).catch(() => {});
+    }
+    if (periodo) {
+      await redis.hincrby(key, `periodo:${periodo}`, 1).catch(() => {});
+    }
+
+    // contatore globale totale (tutte le date)
+    await redis.incr("stats:questions:total").catch(() => {});
+  } catch (e) {
+    console.error("logUserQuestion error (ignored):", e);
+  }
+}
+
 /* ========= CORS ========= */
 const ALLOWED_ORIGINS = [
   "https://what-ifapp.vercel.app",
@@ -851,8 +890,8 @@ Paragrafo unico, 3–6 frasi.`;
 /**
  * buildSignalMessages:
  * - mattino: fase 1 WHAT IF (consiglio del mattino con invito leggero), fase 2 WTF (roast + invito leggero)
- * - pomeriggio: fase 1 WHAT IF (check-in sul mood), fase 2 WTF (commento cazzaro sul mood)
- * - sera: fase 1 WHAT IF (domanda di chiusura + invito a parlarne), fase 2 WTF (chiusura da bar + invito)
+ * - pomeriggio: fase 1 WHAT IF (check-in sul mood), fase 2 WTF (commento cazzaro collegato a WHAT IF)
+ * - sera: fase 1 WHAT IF (domanda di chiusura + invito a parlarne), fase 2 WTF (risposta sarcastica a WHAT IF + invito)
  */
 function buildSignalMessages({
   slot = "morning",
@@ -889,16 +928,16 @@ Non citare la domanda o la notifica: vai diretto al consiglio, con una chiusura 
       } else if (stile === "wtf" && !isPhase1) {
         sys = `Sei “WHAT THE F” in MODALITÀ ROAST DEL MATTINO.
 REGOLE:
-- Stai commentando, da bar, il fatto che prima è arrivato un consiglio del mattino sensato (voce WHAT IF).
+- Stai commentando, da bar, il fatto che prima è arrivato un consiglio del mattino sensato (voce WHAT IF) e rispondi proprio a quel tipo di consiglio, in modo sarcastico ma collegato.
 - Prendi bonariamente in giro sia il “consiglio del mattino” che l’idea di sistemare la vita con un solo messaggino.
 - 2–3 frasi, un solo paragrafo, circa 50–90 parole.
 - Tono: narratore da bancone, affettuosamente cattivo, ma mai umiliante.
 - Puoi usare parolacce leggere da bar (culo, casino, incasinato, figuraccia, ecc.), MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
 - Puoi nominare “bestemmia” solo in senso narrato, come negli altri testi, senza riferimenti religiosi.
-- Nell’ultima parte inserisci un invito storto ma chiaro: se vuole smettere di fare finta di niente, può venire a parlarne meglio. Tono da bar, non da coach.
+- Nell’ultima parte inserisci un invito storto ma chiaro: se vuole smettere di fare finta di niente, può venire a parlarne meglio o fare una domanda vera.
 - L’ultima frase, alla fine, va chiusa con “ecchecazz!!!”.`;
         user = `Scrivi il commento di WHAT THE F in ITALIANO, come se stessi prendendo in giro un po’ il “consiglio del mattino” appena ricevuto.
-Un paragrafo solo, 2–3 frasi, chiusura con invito cazzaro ma affettuoso a “parlarne meglio” e finale in stile “ecchecazz!!!”.`;
+Un paragrafo solo, 2–3 frasi, chiusura con invito cazzaro ma affettuoso a “parlarne meglio” o fare una domanda, e finale in stile “ecchecazz!!!”.`;
       } else {
         // fallback neutro
         sys = `Sei “WHAT IF”. Modalità segnale del mattino di fallback.
@@ -930,12 +969,13 @@ Non citare i bottoni o il sistema: parla direttamente all’utente in seconda pe
         sys = `Sei “WHAT THE F” in MODALITÀ COMMENTO POMERIGGIO.
 ${moodPart}
 REGOLE:
+- Stai reagendo in modo sarcastico a quello che WHAT IF ha appena detto nel messaggio di check-in del pomeriggio: lo prendi in giro, ma resti collegato a quel tipo di consiglio.
 - Descrivi la scena del pomeriggio come se stessi commentando un cliente abituale appoggiato al bancone.
 - 2–3 frasi, un solo paragrafo, con immagini quotidiane (scrivania, tram, bar, divano, tazzina, pc, corridoio…).
 - Puoi usare parolacce leggere da bar (culo, casino, incasinato, figuraccia, ecc.), MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
 - Puoi includere una “bestemmia” narrata e metaforica (“bestemmia di manutenzione”, ecc.) al massimo una volta.
-- Nell’ultima frase fai una micro-morale storta e un invito cazzaro ma affettuoso a parlarne meglio, chiudendo con “ecchecazz!!!”.`;
-        user = `Scrivi il commento di WHAT THE F sul pomeriggio in ITALIANO, usando il tono da bar e chiudendo con “ecchecazz!!!”.`;
+- Nell’ultima frase fai una micro-morale storta e un invito cazzaro ma affettuoso a parlarne meglio, fare una domanda o raccontare cosa sta succedendo, e chiudi con “ecchecazz!!!”.`;
+        user = `Scrivi il commento di WHAT THE F sul pomeriggio in ITALIANO, reagendo a quello che ha detto WHAT IF e chiudendo con un invito a parlarne o chiedere qualcosa e “ecchecazz!!!”.`;
       } else {
         sys = `Sei “WHAT IF” in modalità segnale pomeriggio di fallback.`;
         user = `Scrivi una breve frase neutra di check-in in ITALIANO.`;
@@ -956,13 +996,14 @@ Prima riconosci che la giornata sta chiudendo, poi fai una domanda riflessiva, e
       } else if (stile === "wtf" && !isPhase1) {
         sys = `Sei “WHAT THE F” in MODALITÀ CHIUSURA SERALE.
 REGOLE:
+- Stai reagendo in modo sarcastico e affettuoso alla domanda o al messaggio di chiusura che WHAT IF ha appena fatto: commenti quella cosa lì, non parli a caso.
 - Racconti la fine della giornata come l’ultimo giro al bancone: un po’ stanco, un po’ lucido, molto umano.
 - 2–3 frasi, un solo paragrafo, circa 60–100 parole.
 - Le immagini devono essere da fine giornata (divano, piatti nel lavandino, luce del frigo, bicchiere, tazzina, corridoio, pigiama, tram vuoto, ecc.).
 - Puoi usare parolacce leggere da bar, MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
 - Puoi citare una “bestemmia” narrata una volta, senza religione.
-- Chiudi con una mini-morale storta tipo “almeno non ti sei raccontato che è tutto ok”, più un invito a svuotare il cestino mentale, e termina con “ecchecazz!!!”.`;
-        user = `Scrivi il messaggio di chiusura serale in ITALIANO come WHAT THE F, in un solo paragrafo, chiudendo con invito a “svuotare il cestino mentale” e “ecchecazz!!!”.`;
+- Chiudi con una mini-morale storta tipo “almeno non ti sei raccontato che è tutto ok”, più un invito a svuotare il cestino mentale, a raccontare o a fare una domanda vera, e termina con “ecchecazz!!!”.`;
+        user = `Scrivi il messaggio di chiusura serale in ITALIANO come WHAT THE F, reagendo a quello che ha appena detto WHAT IF, e chiudi con invito a “svuotare il cestino mentale”, raccontare o fare una domanda, più “ecchecazz!!!”.`;
       } else {
         sys = `Sei “WHAT IF” in modalità serale di fallback.`;
         user = `Scrivi una sola frase serale neutra in ITALIANO.`;
@@ -1709,6 +1750,12 @@ export default async function handler(req, res) {
       }
     }
 
+    // 🔴 LOG DOMANDE VERE (solo qui, NON per segnali)
+    // Niente testo utente, niente risposta, solo contatore anonimo
+    if (!isSignal && stage === "answer") {
+      logUserQuestion({ stile, lang: L, periodo }).catch(() => {});
+    }
+
     return res.status(200).json({
       mode: "answer",
       answer,
@@ -1725,4 +1772,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-}
+  }
