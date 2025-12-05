@@ -140,7 +140,7 @@
       display:none;max-width:680px;margin:0 auto;white-space:pre-wrap;    
     }
 
-    /* 🔬 Pulsanti test segnali (pannellino admin/debug) */
+    /* 🔬 Pulsanti test segnali */
     .sig-btn{
       appearance:none;
       border:1px solid var(--card-border);
@@ -225,7 +225,7 @@
     </div>    
   </footer>    
 
-  <!-- 🔔 Toggle e pannello test segnali (solo admin/debug) -->
+  <!-- 🔔 Toggle e pannello test segnali (ora sempre visibile) -->
   <button
     id="signalTestToggle"
     style="
@@ -233,7 +233,6 @@
       bottom:70px;
       right:14px;
       z-index:60;
-      display:none;
       border-radius:999px;
       border:1px solid var(--card-border);
       background:#141c22;
@@ -244,7 +243,7 @@
       opacity:.9;
     "
   >
-    ⏱ Test segnali
+    ⏱ Frase del giorno (test)
   </button>
 
   <div
@@ -265,30 +264,30 @@
       text-align:left;
     "
   >
-    <div style="font-weight:800;margin-bottom:4px;">Test segnali (solo admin)</div>
+    <div style="font-weight:800;margin-bottom:4px;">Frasi del giorno (test)</div>
 
     <div class="sig-section-title">☀️ Mattina</div>
-    <button class="sig-btn" data-signal="morning" data-phase="1">
-      What if · mattina
+    <button class="sig-btn" data-signal="morning" data-phase="1" data-mood="ok">
+      What if · mattina (ok)
     </button>
-    <button class="sig-btn" data-signal="morning" data-phase="2">
-      What the F · mattina
+    <button class="sig-btn" data-signal="morning" data-phase="2" data-mood="ok">
+      What the F · mattina (ok)
     </button>
 
     <div class="sig-section-title">🌤 Pomeriggio</div>
-    <button class="sig-btn" data-signal="afternoon" data-phase="1" data-mood="ok">
-      What if · pomeriggio (mood=ok)
+    <button class="sig-btn" data-signal="afternoon" data-phase="1" data-mood="meh">
+      What if · pomeriggio (meh)
     </button>
     <button class="sig-btn" data-signal="afternoon" data-phase="2" data-mood="meh">
-      What the F · pomeriggio (mood=meh)
+      What the F · pomeriggio (meh)
     </button>
 
     <div class="sig-section-title">🌙 Sera</div>
     <button class="sig-btn" data-signal="evening" data-phase="1" data-mood="tired">
-      What if · sera (mood=tired)
+      What if · sera (tired)
     </button>
     <button class="sig-btn" data-signal="evening" data-phase="2" data-mood="wired">
-      What the F · sera (mood=wired)
+      What the F · sera (wired)
     </button>
   </div>
 
@@ -356,7 +355,158 @@
         privacy:"Datenschutz", terms:"Nutzungsbedingungen", info:"Info",    
         delete:"Konto löschen"    
       }    
-    };    
+    };
+
+    /* 🌡️ MOODS: frasi base per segnali, per lingua / slot / mood */
+    const MOODS = {
+      it: {
+        morning: {
+          ok: {
+            q: "Se oggi proteggo l’energia che ho e metto un confine chiaro a una cosa che mi pesa, come cambia la mia giornata?"
+          },
+          default: {
+            q: "Che tipo di giornata viene fuori se oggi mi concedo un piccolo gesto di cura per me, anche se ho poco tempo?"
+          }
+        },
+        afternoon: {
+          meh: {
+            q: "Se questo pomeriggio scelgo una sola cosa piccola ma concreta da portare a casa, quale sarebbe e cosa sblocca per i prossimi giorni?"
+          },
+          default: {
+            q: "Come cambia il resto della giornata se smetto di inseguire tutto e mi concentro bene su una sola priorità?"
+          }
+        },
+        evening: {
+          tired: {
+            q: "Se stasera rallento, chiudo dignitosamente la giornata e preparo un domani leggermente migliore, cosa faccio concretamente?"
+          },
+          wired: {
+            q: "Se sfrutto l’energia della sera senza bruciarmi, su cosa ha più senso che la scarichi adesso?"
+          },
+          default: {
+            q: "Che cosa posso fare stasera per chiudere il giorno con una sensazione di 'ok, così va bene'?"
+          }
+        }
+      },
+      en: {
+        morning: {
+          ok: {
+            q: "If today I protect the energy I have and draw one clear boundary, how does my day change?"
+          },
+          default: {
+            q: "What kind of day do I get if I give myself one small act of self-care, even with very little time?"
+          }
+        },
+        afternoon: {
+          meh: {
+            q: "If this afternoon I commit to one small but concrete task, which one unlocks the most for the next few days?"
+          },
+          default: {
+            q: "How does the rest of the day change if I stop chasing everything and focus deeply on a single priority?"
+          }
+        },
+        evening: {
+          tired: {
+            q: "If tonight I slow down, close the day with dignity and set up a slightly better tomorrow, what do I actually do?"
+          },
+          wired: {
+            q: "If I use tonight’s energy without burning myself out, what’s the best target to pour it into?"
+          },
+          default: {
+            q: "What can I do this evening so that I go to bed with a quiet 'okay, this was enough' feeling?"
+          }
+        }
+      },
+      es: {
+        morning: {
+          ok: {
+            q: "Si hoy protejo la energía que tengo y marco un límite claro, ¿cómo cambia mi día?"
+          },
+          default: {
+            q: "¿Qué tipo de día sale si hoy me permito un pequeño gesto de autocuidado aunque tenga poco tiempo?"
+          }
+        },
+        afternoon: {
+          meh: {
+            q: "Si esta tarde elijo una sola cosa pequeña pero concreta para terminar, ¿cuál desbloquea más para los próximos días?"
+          },
+          default: {
+            q: "¿Cómo cambia el resto del día si dejo de perseguirlo todo y me concentro en una sola prioridad?"
+          }
+        },
+        evening: {
+          tired: {
+            q: "Si esta noche bajo el ritmo, cierro el día con dignidad y preparo un mañana un poco mejor, ¿qué hago en concreto?"
+          },
+          wired: {
+            q: "Si aprovecho la energía de la noche sin quemarme, ¿en qué tiene más sentido volcarla ahora?"
+          },
+          default: {
+            q: "¿Qué puedo hacer esta noche para irme a dormir con la sensación de 'ok, así está bien'?"
+          }
+        }
+      },
+      fr: {
+        morning: {
+          ok: {
+            q: "Si aujourd’hui je protège l’énergie que j’ai et je pose une limite claire, en quoi ma journée change-t-elle?"
+          },
+          default: {
+            q: "À quoi ressemble ma journée si je m’accorde un petit geste de soin pour moi, même avec peu de temps?"
+          }
+        },
+        afternoon: {
+          meh: {
+            q: "Si cet après-midi je choisis une seule petite action concrète à accomplir, laquelle débloque le plus pour les prochains jours?"
+          },
+          default: {
+            q: "Comment le reste de la journée change si j’arrête de tout courir et que je me concentre sur une seule priorité?"
+          }
+        },
+        evening: {
+          tired: {
+            q: "Si ce soir je ralentis, je clôture la journée correctement et je prépare un demain un peu meilleur, que fais-je concrètement?"
+          },
+          wired: {
+            q: "Si j’utilise l’énergie de ce soir sans me cramer, où est-ce le plus intelligent de la diriger?"
+          },
+          default: {
+            q: "Que puis-je faire ce soir pour me coucher avec un 'ok, ça va comme ça' honnête?"
+          }
+        }
+      },
+      de: {
+        morning: {
+          ok: {
+            q: "Wenn ich heute meine Energie schütze und eine klare Grenze ziehe, wie verändert sich mein Tag?"
+          },
+          default: {
+            q: "Was für ein Tag entsteht, wenn ich mir heute eine kleine Form von Selbstfürsorge gönne, auch wenn ich wenig Zeit habe?"
+          }
+        },
+        afternoon: {
+          meh: {
+            q: "Wenn ich mir heute Nachmittag eine kleine, aber konkrete Aufgabe vornehme, welche bringt in den nächsten Tagen am meisten Bewegung?"
+          },
+          default: {
+            q: "Wie verändert sich der Rest des Tages, wenn ich aufhöre allem hinterherzurennen und mich auf eine einzige Priorität konzentriere?"
+          }
+        },
+        evening: {
+          tired: {
+            q: "Wenn ich heute Abend das Tempo rausnehme, den Tag ordentlich abschließe und ein etwas besseres Morgen vorbereite, was tue ich konkret?"
+          },
+          wired: {
+            q: "Wenn ich die Abendenergie nutze ohne mich zu verbrennen, wo setze ich sie am sinnvollsten ein?"
+          },
+          default: {
+            q: "Was kann ich heute Abend tun, damit ich mit einem ehrlichen 'okay, das reicht so' ins Bett gehe?"
+          }
+        }
+      }
+    };
+
+    window.MOODS = MOODS;
 
     const LS = localStorage;    
     const $  = s => document.querySelector(s);    
@@ -690,25 +840,14 @@
       });    
     }
 
-    // 🔔 Pannello test segnali (visibile se admin_token O cookie adm_tok O ?debug=1)
+    // 🔔 Pannello test segnali: SEMPRE visibile, scrive whatif_request e va su fifth.html
     (function(){
       try{
-        const hasLocalToken = !!localStorage.getItem('admin_token');
-        const debugOn = new URLSearchParams(location.search).get('debug') === '1';
-
-        const cookieToken = document.cookie
-          .split(";")
-          .map(s => s.trim())
-          .find(s => s.startsWith("adm_tok="));
-
-        const hasCookieToken = !!cookieToken;
-
-        if(!hasLocalToken && !hasCookieToken && !debugOn) return;
-
         const toggle = document.getElementById('signalTestToggle');
         const panel  = document.getElementById('signalTestPanel');
         if(!toggle || !panel) return;
 
+        // sempre visibile
         toggle.style.display = 'inline-flex';
 
         toggle.addEventListener('click', ()=>{
@@ -719,16 +858,59 @@
         panel.addEventListener('click', (e)=>{
           const btn = e.target.closest('.sig-btn');
           if(!btn) return;
-          const slot = btn.dataset.signal || 'morning';
-          const phase = btn.dataset.phase || '1';
-          const mood = btn.dataset.mood || '';
 
-          const params = new URLSearchParams();
-          params.set('signal', slot);
-          params.set('phase', phase);
-          if(mood) params.set('mood', mood);
+          const slot  = btn.dataset.signal || 'morning';
+          const phase = parseInt(btn.dataset.phase || '1', 10) || 1;
+          const mood  = btn.dataset.mood || 'default';
 
-          location.href = 'fourth.html?' + params.toString();
+          const L = (window.getCurrentLang && window.getCurrentLang()) || 'it';
+          const moodsLang = (window.MOODS && window.MOODS[L]) || (window.MOODS && window.MOODS.it) || {};
+          const slotObj = moodsLang[slot] || {};
+          const entry = slotObj[mood] || slotObj.default || null;
+
+          let domanda = entry && entry.q;
+          let clarification = entry && entry.clarification;
+          if(!domanda){
+            domanda = (L === 'en')
+              ? "Give me a short, realistic daily scenario to reset my day."
+              : "Dammi uno scenario giornaliero sintetico e realistico per rimettere in carreggiata la giornata.";
+          }
+          clarification = clarification || "";
+
+          // prefs stile/periodo
+          let prefsRaw = localStorage.getItem('whatif_prefs') || '{}';
+          let prefs;
+          try{ prefs = JSON.parse(prefsRaw) || {}; }catch{ prefs = {}; }
+
+          let stile = prefs.stile || (phase === 2 ? 'wtf' : 'whatif');
+          let periodo = prefs.periodo || 'future';
+
+          prefs.stile = stile;
+          prefs.periodo = periodo;
+          localStorage.setItem('whatif_prefs', JSON.stringify(prefs));
+
+          try{
+            localStorage.setItem('domanda', domanda);
+            const req = {
+              source: "signal",
+              domanda,
+              clarification,
+              lang: L,
+              stile,
+              periodo,
+              micro: {
+                signal: slot,
+                phase,
+                mood,
+                ts: Date.now()
+              }
+            };
+            localStorage.setItem('whatif_request', JSON.stringify(req));
+          }catch(err){
+            console.warn("cannot save signal request", err);
+          }
+
+          location.href = "fifth.html";
         });
       }catch(e){
         console.warn('signal test panel error', e);
