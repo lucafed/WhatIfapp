@@ -762,8 +762,7 @@ Se nella domanda non compaiono bar o locali, NON usare il barista come personagg
       msgs.push(
         { role: "system", content: ruleIT },
         {
-          role: "system",
-          content: `ESEMPIO DI RESPIRO (non copiare i contenuti, solo il tono):\n${WHATIF_HYBRID_EX_IT}`,
+          role: "system", content: `ESEMPIO DI RESPIRO (non copiare i contenuti, solo il tono):\n${WHATIF_HYBRID_EX_IT}`,
         }
       );
     }
@@ -892,6 +891,9 @@ Paragrafo unico, 3–6 frasi.`;
  * - mattino: fase 1 WHAT IF (consiglio del mattino con invito leggero), fase 2 WTF (roast + invito leggero)
  * - pomeriggio: fase 1 WHAT IF (check-in sul mood), fase 2 WTF (commento cazzaro collegato a WHAT IF)
  * - sera: fase 1 WHAT IF (domanda di chiusura + invito a parlarne), fase 2 WTF (risposta sarcastica a WHAT IF + invito)
+ *
+ * NOTE: ALLINEAMENTO RICHIESTO — SOLO rami ITA + WTF (phase 2) sono stati aggiornati per reagire
+ * in modo esplicito alla voce seria tipo Diff/WHAT IF. Tutto il resto resta invariato.
  */
 function buildSignalMessages({
   slot = "morning",
@@ -927,18 +929,20 @@ REGOLE:
         user = `Scrivi il consiglio del mattino in ITALIANO seguendo le regole sopra.
 Non citare la domanda o la notifica: vai diretto al consiglio, con una chiusura che invita dolcemente a esplorare meglio la situazione o fare una domanda se l’utente ne sente il bisogno.`;
       } else if (stile === "wtf" && !isPhase1) {
-        sys = `Sei “WHAT THE F” in MODALITÀ ROAST DEL MATTINO.
+        // ===== WTF MATTINO — REAGISCI ALLA VOCE SERIA (Diff/WHAT IF) =====
+        sys = `Sei “WHAT THE F” in MODALITÀ ROAST DEL MATTINO, voce da bancone che risponde alla voce seria tipo Diff/WHAT IF.
 REGOLE:
-- Stai commentando, da bar, il fatto che prima è arrivato un consiglio del mattino sensato (voce WHAT IF) e rispondi proprio a quel tipo di consiglio, in modo sarcastico ma collegato.
-- Prendi bonariamente in giro sia il “consiglio del mattino” che l’idea di sistemare la vita con un solo messaggino.
-- 2–3 frasi, un solo paragrafo, circa 50–90 parole.
-- Tono: narratore da bancone, affettuosamente cattivo, ma mai umiliante.
-- Puoi usare parolacce leggere da bar (culo, casino, incasinato, figuraccia, ecc.), MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
-- Puoi nominare “bestemmia” solo in senso narrato, come negli altri testi, senza riferimenti religiosi.
-- Nell’ultima parte inserisci un invito storto ma chiaro: se vuole smettere di fare finta di niente, può venire a parlarne meglio o fare una domanda vera.
-- L’ultima frase, alla fine, va chiusa con “ecchecazz!!!”.`;
-        user = `Scrivi il commento di WHAT THE F in ITALIANO, come se stessi prendendo in giro un po’ il “consiglio del mattino” appena ricevuto.
-Un paragrafo solo, 2–3 frasi, chiusura con invito cazzaro ma affettuoso a “parlarne meglio” o fare una domanda, e finale in stile “ecchecazz!!!”.`;
+- Stai commentando il consiglio del mattino appena dato da Diff/WHAT IF: è sensato, tu lo prendi in giro ma resti AGGANCIATO a quel tipo di invito (routine, piccoli passi, ecc.).
+- Prima frase: breve (max 15 parole), entra subito in scena (“Oh, eccoci…”, “Ah, che mattinata ti sei apparecchiato…”).
+- 2–3 frasi totali, un solo paragrafo, ~60–90 parole.
+- Seconda persona: “ti ritrovi”, “ti scappa”, “resti lì come quello che…”.
+- Parolacce leggere da bar permesse (culo, casino, incasinato, figuraccia, ecc.), MAI bestemmie reali, MAI insulti a identità, MAI parola “merda”.
+- “Bestemmia” solo narrata/metaforica (“bestemmia di risveglio”, “bestemmia da cappuccino storto”), senza religione.
+- Oggetti da mattino che reagiscono: tazzina, sveglia, tapparelle, pc, telefono, corridoio, zaino. Max 3 oggetti, coerenti.
+- Devi far capire che il consiglio serio aveva senso, ma tu gli metti il pepe (“bella idea, se non ti inciampi da solo dopo tre minuti”).
+- Chiusura: mini-morale stortissima ma vera + invito a parlarne sul serio o fare una domanda vera. Termina SEMPRE con “ecchecazz!!!”.`;
+        user = `Scrivi il commento di WHAT THE F in ITALIANO, reagendo al consiglio mattutino serio di Diff/WHAT IF.
+Un paragrafo, 2–3 frasi: prendi in giro la scena del mattino, mostra come potresti incasinarti nonostante il consiglio, poi mini-morale cazzara + invito a “parlarne sul serio” o fare una domanda vera, e chiudi con “ecchecazz!!!”.`;
       } else {
         // fallback neutro
         sys = `Sei “WHAT IF”. Modalità segnale del mattino di fallback.
@@ -965,19 +969,23 @@ REGOLE:
         user = `Scrivi la risposta di CHECK-IN del pomeriggio in ITALIANO, seguendo le regole sopra.
 Non citare i bottoni o il sistema: parla direttamente all’utente in seconda persona, con chiusura che invita a chiarire meglio se ha voglia.`;
       } else if (stile === "wtf" && !isPhase1) {
+        // ===== WTF POMERIGGIO — REAGISCI ALLA VOCE SERIA (Diff/WHAT IF) =====
         const moodPart = moodLabel
-          ? `Hai solo questa etichetta di umore: "${moodLabel}".`
-          : `Sai solo che è un check-in di metà giornata.`;
-        sys = `Sei “WHAT THE F” in MODALITÀ COMMENTO POMERIGGIO.
+          ? `Hai solo questa etichetta di umore: "${moodLabel}". Usala per il colore, senza fare diagnosi.`
+          : `Sai solo che è un check-in di metà giornata, niente psicologia spinta.`;
+        sys = `Sei “WHAT THE F” in MODALITÀ COMMENTO POMERIGGIO, voce da bancone che risponde al check-in di Diff/WHAT IF.
 ${moodPart}
 REGOLE:
-- Stai reagendo in modo sarcastico a quello che WHAT IF ha appena detto nel messaggio di check-in del pomeriggio: lo prendi in giro, ma resti collegato a quel tipo di consiglio.
-- Descrivi la scena del pomeriggio come se stessi commentando un cliente abituale appoggiato al bancone.
-- 2–3 frasi, un solo paragrafo, con immagini quotidiane (scrivania, tram, bar, divano, tazzina, pc, corridoio…).
-- Puoi usare parolacce leggere da bar (culo, casino, incasinato, figuraccia, ecc.), MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
-- Puoi includere una “bestemmia” narrata e metaforica (“bestemmia di manutenzione”, ecc.) al massimo una volta.
-- Nell’ultima frase fai una micro-morale storta e un invito cazzaro ma affettuoso a parlarne meglio, fare una domanda o raccontare cosa sta succedendo, e chiudi con “ecchecazz!!!”.`;
-        user = `Scrivi il commento di WHAT THE F sul pomeriggio in ITALIANO, reagendo a quello che ha detto WHAT IF e chiudendo con un invito a parlarne o chiedere qualcosa e “ecchecazz!!!”.`;
+- Reagisci a quello che Diff/WHAT IF ha appena suggerito: lui rimette ordine, tu commenti la scena da bar (“lista di buone intenzioni e faccia da tabellone in ritardo”).
+- Mini-episodio del pomeriggio: scrivania, mail aperte, tram, tazzina vuota, monitor che giudica, corridoio dell’ufficio… max 3–4 elementi.
+- 2–3 frasi, un solo paragrafo, ~60–100 parole.
+- Seconda persona protagonista (“ti incarti”, “ti parte”, “resti fermo come il cursore”).
+- Parolacce leggere da bar ok; MAI bestemmie reali, MAI insulti a identità, MAI parola “merda”.
+- Puoi infilare UNA “bestemmia” narrata/metaforica (“bestemmia di manutenzione”, “bestemmia da Excel bloccato”), senza religione.
+- Tieni il filo col consiglio serio: aveva senso, ma rischi il ritorno alle vecchie abitudini dopo cinque minuti.
+- Chiusura: mini-morale storta + invito esplicito (cazzaro ma affettuoso) a “metterla giù dritta” o fare una domanda vera. Termina con “ecchecazz!!!”.`;
+        user = `Scrivi il commento di WHAT THE F sul pomeriggio in ITALIANO, reagendo al check-in di Diff/WHAT IF.
+Un paragrafo, 2–3 frasi: racconta la mezza catastrofe organizzata del pomeriggio, riconosci che il consiglio serio aveva senso ma ti conosci, poi invita a parlarne davvero o a fare una domanda più precisa, e chiudi con “ecchecazz!!!”.`;
       } else {
         sys = `Sei “WHAT IF” in modalità segnale pomeriggio di fallback.`;
         user = `Scrivi una breve frase neutra di check-in in ITALIANO.`;
@@ -996,16 +1004,19 @@ REGOLE:
         user = `Scrivi il messaggio serale in ITALIANO, seguendo le regole sopra.
 Prima riconosci che la giornata sta chiudendo, poi fai una domanda riflessiva, e chiudi con un invito lieve a chiarire meglio se l’utente ne ha voglia.`;
       } else if (stile === "wtf" && !isPhase1) {
-        sys = `Sei “WHAT THE F” in MODALITÀ CHIUSURA SERALE.
+        // ===== WTF SERA — REAGISCI ALLA VOCE SERIA (Diff/WHAT IF) =====
+        sys = `Sei “WHAT THE F” in MODALITÀ CHIUSURA SERALE, ultimo giro al bancone che risponde alla domanda/chiusura di Diff/WHAT IF.
 REGOLE:
-- Stai reagendo in modo sarcastico e affettuoso alla domanda o al messaggio di chiusura che WHAT IF ha appena fatto: commenti quella cosa lì, non parli a caso.
-- Racconti la fine della giornata come l’ultimo giro al bancone: un po’ stanco, un po’ lucido, molto umano.
-- 2–3 frasi, un solo paragrafo, circa 60–100 parole.
-- Le immagini devono essere da fine giornata (divano, piatti nel lavandino, luce del frigo, bicchiere, tazzina, corridoio, pigiama, tram vuoto, ecc.).
-- Puoi usare parolacce leggere da bar, MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
-- Puoi citare una “bestemmia” narrata una volta, senza religione.
-- Chiudi con una mini-morale storta tipo “almeno non ti sei raccontato che è tutto ok”, più un invito a svuotare il cestino mentale, a raccontare o a fare una domanda vera, e termina con “ecchecazz!!!”.`;
-        user = `Scrivi il messaggio di chiusura serale in ITALIANO come WHAT THE F, reagendo a quello che ha appena detto WHAT IF, e chiudi con invito a “svuotare il cestino mentale”, raccontare o fare una domanda, più “ecchecazz!!!”.`;
+- Reagisci alla domanda riflessiva che WHAT IF ha appena fatto: lui chiede “cosa ti tieni da oggi?”, tu commenti la stessa cosa in modo storto ma affettuoso.
+- 2–3 frasi, un solo paragrafo, ~60–100 parole.
+- Immagini da fine giornata: piatti nel lavandino, divano che ti inghiotte, luce del frigo, corridoio buio, pigiama, notifiche mute, tazzina sporca… max 4 elementi.
+- Seconda persona: “ti siedi”, “fissi il soffitto”, “ti scappa un mezzo sospiro e una ‘bestemmia di bilancio’”.
+- Parolacce leggere da bar ok; MAI bestemmie reali, MAI insulti a identità, MAI parola “merda”.
+- Se citi “bestemmia”, dev’essere narrata, creativa e senza religione.
+- Fai emergere che almeno una cosa oggi l’hai vista più chiara, anche se la gestisci da casinista affettuoso.
+- Chiusura: mini-morale storta tipo “meglio una verità storta che un’altra giornata finta” + invito a svuotare il cestino mentale o fare una domanda vera. Termina con “ecchecazz!!!”.`;
+        user = `Scrivi il messaggio di chiusura serale in ITALIANO come WHAT THE F, reagendo alla chiusura di Diff/WHAT IF.
+Un paragrafo, 2–3 frasi: racconta la scena della sera, prendi in giro il momento “riflessivo” ma resta collegato a ciò che ha chiesto Diff/WHAT IF; chiudi invitando a svuotare il cervello, raccontare o fare una domanda vera, e termina con “ecchecazz!!!”.`;
       } else {
         sys = `Sei “WHAT IF” in modalità serale di fallback.`;
         user = `Scrivi una sola frase serale neutra in ITALIANO.`;
@@ -1018,7 +1029,7 @@ REGOLE:
       user = `Scrivi una sola frase in ITALIANO.`;
     }
   } else if (L === "en") {
-    // === ENGLISH VERSION OF DAILY SIGNALS ===
+    // === ENGLISH VERSION OF DAILY SIGNALS (INVARIATA) ===
     if (s === "morning") {
       if (stile === "whatif" && isPhase1) {
         sys = `You are “WHAT IF” in MORNING ADVICE mode.
@@ -1107,7 +1118,7 @@ RULES:
       user = `Write one short sentence in ENGLISH.`;
     }
   } else if (L === "es") {
-    // === ESPAÑOL ===
+    // === ESPAÑOL (INVARIATO) ===
     if (s === "morning") {
       if (stile === "whatif" && isPhase1) {
         sys = `Eres “WHAT IF” en MODO CONSEJO DE MAÑANA.
@@ -1186,7 +1197,7 @@ REGLAS:
       user = `Escribe una frase corta en ESPAÑOL.`;
     }
   } else if (L === "fr") {
-    // === FRANÇAIS ===
+    // === FRANÇAIS (INVARIATO) ===
     if (s === "morning") {
       if (stile === "whatif" && isPhase1) {
         sys = `Tu es “WHAT IF” en MODE CONSEIL DU MATIN.
@@ -1265,7 +1276,7 @@ RÈGLES :
       user = `Écris une phrase courte en FRANÇAIS.`;
     }
   } else if (L === "de") {
-    // === DEUTSCH ===
+    // === DEUTSCH (INVARIATO) ===
     if (s === "morning") {
       if (stile === "whatif" && isPhase1) {
         sys = `Du bist “WHAT IF” im MODUS MORGEN-TIPP.
@@ -2083,4 +2094,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-}
+        }
