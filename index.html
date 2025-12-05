@@ -225,7 +225,7 @@
     </div>    
   </footer>    
 
-  <!-- 🔔 Toggle e pannello test segnali (ORA sempre presente, visibile per tutti) -->
+  <!-- 🔔 Toggle e pannello test segnali (solo admin/debug) -->
   <button
     id="signalTestToggle"
     style="
@@ -233,7 +233,7 @@
       bottom:70px;
       right:14px;
       z-index:60;
-      display:inline-flex;
+      display:none;
       border-radius:999px;
       border:1px solid var(--card-border);
       background:#141c22;
@@ -265,7 +265,7 @@
       text-align:left;
     "
   >
-    <div style="font-weight:800;margin-bottom:4px;">Test segnali (debug)</div>
+    <div style="font-weight:800;margin-bottom:4px;">Test segnali (solo admin)</div>
 
     <div class="sig-section-title">☀️ Mattina</div>
     <button class="sig-btn" data-signal="morning" data-phase="1">
@@ -357,40 +357,6 @@
         delete:"Konto löschen"    
       }    
     };    
-
-    /* 🌡️ MOODS per lingua (per i segnali giornalieri) */
-    const MOODS = {
-      it:{
-        ok:"Ti senti abbastanza ok, con energia media.",
-        meh:"Ti senti un po' meh, basso di energia.",
-        tired:"Ti senti stanco e con la testa piena.",
-        wired:"Ti senti carico, con la testa iper-attiva."
-      },
-      en:{
-        ok:"You feel fairly okay, medium energy.",
-        meh:"You feel kind of meh, low energy.",
-        tired:"You feel tired and mentally overloaded.",
-        wired:"You feel wired, very active in your head."
-      },
-      es:{
-        ok:"Te sientes bastante bien, con energía media.",
-        meh:"Te sientes un poco meh, con poca energía.",
-        tired:"Te sientes cansado y con la cabeza llena.",
-        wired:"Te sientes muy activado, con la mente acelerada."
-      },
-      fr:{
-        ok:"Tu te sens plutôt bien, avec une énergie moyenne.",
-        meh:"Tu te sens un peu meh, énergie basse.",
-        tired:"Tu te sens fatigué, la tête pleine.",
-        wired:"Tu te sens survolté, l’esprit très actif."
-      },
-      de:{
-        ok:"Du fühlst dich ganz okay, mit mittlerer Energie.",
-        meh:"Du fühlst dich etwas meh, wenig Energie.",
-        tired:"Du fühlst dich müde und überladen im Kopf.",
-        wired:"Du fühlst dich aufgekratzt, geistig sehr aktiv."
-      }
-    };
 
     const LS = localStorage;    
     const $  = s => document.querySelector(s);    
@@ -724,62 +690,31 @@
       });    
     }
 
-    // 🔔 Pannello test segnali: SEMPRE attivo, e manda direttamente a fifth.html simulando il segnale
+    // 🔔 Pannello test segnali (visibile se admin_token O cookie adm_tok O ?debug=1)
     (function(){
       try{
+        const hasLocalToken = !!localStorage.getItem('admin_token');
+        const debugOn = new URLSearchParams(location.search).get('debug') === '1';
+
+        const cookieToken = document.cookie
+          .split(";")
+          .map(s => s.trim())
+          .find(s => s.startsWith("adm_tok="));
+
+        const hasCookieToken = !!cookieToken;
+
+        if(!hasLocalToken && !hasCookieToken && !debugOn) return;
+
         const toggle = document.getElementById('signalTestToggle');
         const panel  = document.getElementById('signalTestPanel');
         if(!toggle || !panel) return;
+
+        toggle.style.display = 'inline-flex';
 
         toggle.addEventListener('click', ()=>{
           const open = panel.style.display === 'block';
           panel.style.display = open ? 'none' : 'block';
         });
-
-        function getCurrentLangSafe(){
-          try{
-            if(window.getCurrentLang) return window.getCurrentLang();
-            return (localStorage.getItem('lang') || 'it').toLowerCase();
-          }catch{
-            return 'it';
-          }
-        }
-
-        function simulateSignal(slot, phaseStr, moodKey){
-          const lang = getCurrentLangSafe();
-          const prefs = JSON.parse(localStorage.getItem('whatif_prefs') || '{}') || {};
-          const phase = Number(phaseStr) || 1;
-
-          // stile/periodo: se l'utente li ha scelti, usiamo quelli. Altrimenti inferiamo da phase/slot
-          let stile = prefs.stile || (phase === 2 ? 'wtf' : 'whatif');
-          let periodo = prefs.periodo || 'future';
-
-          const moodByLang = (MOODS[lang] || MOODS.it || {});
-          const moodText = (moodKey && moodByLang[moodKey]) ? moodByLang[moodKey] : (moodKey || "");
-
-          const req = {
-            source: "signal",
-            lang,
-            domanda: "",
-            stile,
-            periodo,
-            micro: {
-              src: "signal",
-              slot,      // morning | afternoon | evening
-              phase,     // 1 = What if, 2 = WTF
-              mood: moodText
-            }
-          };
-
-          try{
-            localStorage.setItem('whatif_request', JSON.stringify(req));
-          }catch(e){
-            console.warn('cannot set whatif_request', e);
-          }
-
-          // vai direttamente alla pagina risultato (fifth) come se fosse arrivata da notifica
-          location.href = 'fifth.html';
-        }
 
         panel.addEventListener('click', (e)=>{
           const btn = e.target.closest('.sig-btn');
@@ -787,7 +722,13 @@
           const slot = btn.dataset.signal || 'morning';
           const phase = btn.dataset.phase || '1';
           const mood = btn.dataset.mood || '';
-          simulateSignal(slot, phase, mood);
+
+          const params = new URLSearchParams();
+          params.set('signal', slot);
+          params.set('phase', phase);
+          if(mood) params.set('mood', mood);
+
+          location.href = 'fourth.html?' + params.toString();
         });
       }catch(e){
         console.warn('signal test panel error', e);
