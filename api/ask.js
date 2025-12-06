@@ -1,8 +1,7 @@
-// /api/ask.js — What?f Engine (clarify + answer + polish + daily signals)
+// /api/ask.js — What?f Engine (clarify + answer + polish)
 // - WHATIF: analisi scenari + consigli pratici, con almeno un punto NON ovvio che fa riflettere.
 // - WTF: narratore/comico da pub, volgare ma affettuoso, stile “turista del destino”.
 // - SORPRENDIMI: domande assurde “intelligenti”, varie, non ripetute.
-// - SIGNAL: messaggi giornalieri (mattino / pomeriggio / sera) per WHAT IF + WHAT THE F.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -47,13 +46,17 @@ try {
 async function logUserQuestion({ stile, lang, periodo }) {
   try {
     if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+      // se Redis non è configurato, non facciamo nulla
       return;
     }
     const ts = Date.now();
     const d = new Date(ts).toISOString().slice(0, 10); // YYYY-MM-DD
     const key = `stats:questions:${d}`;
 
+    // contatore totale del giorno
     await redis.hincrby(key, "count", 1).catch(() => {});
+
+    // opzionale: breakdown leggero per stile/periodo/lingua (sempre anonimo)
     if (stile) {
       await redis.hincrby(key, `style:${stile}`, 1).catch(() => {});
     }
@@ -65,6 +68,7 @@ async function logUserQuestion({ stile, lang, periodo }) {
       await redis.hincrby(key, `periodo:${periodo}`, 1).catch(() => {});
     }
 
+    // contatore globale totale (tutte le date)
     await redis.incr("stats:questions:total").catch(() => {});
   } catch (e) {
     console.error("logUserQuestion error (ignored):", e);
@@ -261,15 +265,23 @@ const ZINGARA_ENDINGS = {
   },
 };
 
+/**
+ * Finale WHAT IF:
+ * - Per ITALIANO ora NON forziamo più nessuna frase standard.
+ * - Ci limitiamo a chiudere bene la punteggiatura e lasciamo che sia il modello
+ *   (guidato dalle regole sopra) a costruire uno spunto naturale.
+ */
 function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   let s = String(text || "").trim();
   const L = normLang(lang);
   if (!s) return s;
 
   if (L === "it") {
+    // Nessun gancio fisso: finale naturale, solo punteggiatura sistemata.
     return finalPunct(s);
   }
 
+  // Per le altre lingue manteniamo la logica precedente
   const seed = hashStr(String(domanda || "") + "|" + s);
   if (seed % 100 >= 70) {
     return finalPunct(s);
@@ -875,6 +887,12 @@ Paragrafo unico, 3–6 frasi.`;
 }
 
 /* ========= SEGNALI GIORNO (mattina/pomeriggio/sera) ========= */
+/**
+ * buildSignalMessages:
+ * - mattino: fase 1 WHAT IF (consiglio del mattino), fase 2 WTF (roast del mattino)
+ * - pomeriggio: fase 1 WHAT IF (check-in su come procede), fase 2 WTF (commento cazzaro)
+ * - sera: fase 1 WHAT IF (chiusura + domanda), fase 2 WTF (chiusura sarcastica)
+ */
 function buildSignalMessages({
   slot = "morning",
   phase = 1,
@@ -884,7 +902,7 @@ function buildSignalMessages({
   domanda = "",
 }) {
   const L = normLang(lang);
-  const s = String(slot || "morning").toLowerCase(); // "morning" | "afternoon" | "evening"
+  const s = String(slot || "morning").toLowerCase();
   const ph = Number(phase) || 1;
   const isPhase1 = ph === 1;
   const moodLabel = (mood || "").toString().toLowerCase();
@@ -892,208 +910,153 @@ function buildSignalMessages({
   let sys;
   let user;
 
+  /* ========= ITALIANO: STILE DEFINITIVO ========= */
   if (L === "it") {
-    // ========== MATTINO ==========
+    /* ===== MATTINO ===== */
     if (s === "morning") {
-      // WHAT IF – apertura giorno
       if (stile === "whatif" && isPhase1) {
-        sys = `Sei “WHAT IF” in MODALITÀ APERTURA DEL MATTINO.
+        // WHAT IF — MATTINO: predittivo, di buon augurio, riflessivo, breve
+        sys = `Sei “WHAT IF” in MODALITÀ MATTINO BUON PRESAGIO.
 REGOLE:
-- È MATTINO: parla SEMPRE di INIZIO GIORNATA, non di pomeriggio e non di sera.
-- Non inventare come si sente l’utente: niente “sei distrutto”, “sei nel pallone”.
-- Fai intravedere una previsione REALISTICA ma positiva: 1–2 cose che potrebbero davvero andare meglio oggi se ti tratti un minimo meglio.
-- Nessun oroscopo, nessuna magia: parla solo di cose quotidiane (tempo, energia, priorità, relazioni, margini di respiro).
-- Aggiungi 1–2 consigli pratici per impostare bene la giornata (una scelta concreta, un confine, una cosa importante da proteggere).
-- 2–3 frasi, un solo paragrafo, niente emoji e niente elenchi.
-- Tono: caldo, concreto, leggermente ottimista.
+- Non inventi come si sente l’utente (niente “sei stanco”, “sei a pezzi”): ti limiti a parlare della GIORNATA che si apre.
+- Prima frase: piccola “previsione concreta” positiva ma realistica (es. oggi hai più margine del solito su una cosa che conta davvero).
+- Seconda parte: 1–2 micro consigli pratici, molto semplici, per sfruttare quel margine (un passo chiaro, non 10).
+- Il tono è di BUON AUGURIO lucido, non oroscopo magico: “se ti giochi bene questo pezzetto, la giornata gira meglio”.
+- 2–3 frasi, un solo paragrafo, niente elenco, niente emoji.
 - Parla sempre in seconda persona (tu / ti / tuo).
-- L’ULTIMA frase contiene SEMPRE un invito esplicito ma leggero a rispondere o fare una domanda (es. “se vuoi, rispondi qui e la guardiamo meglio”).`;
-        user = `Scrivi il messaggio del MATTINO in ITALIANO come “WHAT IF”.
-Deve:
-- parlare chiaramente di inizio giornata;
-- mostrare una previsione realistica ma positiva;
-- dare 1–2 consigli concreti;
-- chiudere invitando a RISPONDERE a questa notifica o a fare UNA DOMANDA.`;
-      }
-      // WHAT THE F – risposta 5 minuti dopo
-      else if (stile === "wtf" && !isPhase1) {
-        sys = `Sei “WHAT THE F” in MODALITÀ RISPOSTA DEL MATTINO.
+- L’ultima frase contiene SEMPRE un invito morbido a rispondere o fare una domanda (“se vuoi mi racconti cosa vuoi sbloccare oggi” o simili).`;
+        user = `Scrivi il messaggio del mattino in ITALIANO seguendo le regole sopra.
+Deve suonare come: piccola previsione positiva + un gesto concreto per sfruttarla + invito a rispondere o fare una domanda su cosa vuoi sbloccare oggi.`;
+      } else if (stile === "wtf" && !isPhase1) {
+        // WHAT THE F — MATTINO: reagisce al buon presagio di WHAT IF
+        sys = `Sei “WHAT THE F” in MODALITÀ ROAST DEL MATTINO.
 REGOLE:
-- È MATTINO: la scenetta è di risveglio o inizio giornata, non di pomeriggio e non di sera.
-- Arrivi dopo il collega WHAT IF: lui ha appena mandato il messaggio serio del mattino, tu lo commenti come al bancone.
-- A volte gli dai ragione (“per una volta il collega non ha sparato cavolate”), a volte lo prendi in giro (“sì vabbè, facile a dirlo dal suo ufficio mentale”).
-- Racconta una micro-scena del risveglio o dell’inizio giornata: tazzina, sveglia, tapparelle, telefono, corridoio, zaino, pc… massimo 3 oggetti coerenti.
-- 2–3 frasi, un solo paragrafo (~60–100 parole).
-- Seconda persona: “ti ritrovi”, “ti scappa”, “resti lì come uno che…”.
-- Parolacce leggere da bar permesse (culo, casino, incasinato, figuraccia, ecc.), MAI bestemmie reali, MAI insulti a categorie o identità, MAI parola “merda”.
-- Se usi “bestemmia”, solo narrata/metaforica (“bestemmia di risveglio”, “bestemmia di manutenzione”), senza religione.
-- Non fare teoria: mostra nella scena come potresti seguire oppure mandare a fanculo il consiglio del collega.
-- L’ULTIMA frase deve SEMPRE:
-  • chiudere con una mini-morale storta ma vera;
-  • invitare esplicitamente a RISPONDERE o FARE UNA DOMANDA seria;
-  • terminare con “ecchecazz!!!” (tutto attaccato, tre punti esclamativi).`;
-        user = `Scrivi il messaggio del MATTINO di WHAT THE F in ITALIANO.
-Devi:
-- reagire in modo sarcastico ma affettuoso a WHAT IF;
-- raccontare una scenetta di risveglio / inizio giornata;
-- chiudere invitando a RISPONDERE o fare UNA DOMANDA vera, finendo con “ecchecazz!!!”.`;
+- Stai reagendo al messaggio del mattino di WHAT IF: lui ti ha appena tirato fuori un buon presagio concreto.
+- Prima frase: apertura breve (max 15 parole), cambia spesso: puoi usare “Oh guarda che mattina ti sei apparecchiato…”, “Ah, ti hanno già promesso che oggi gira bene…”, “Eccoti lì, eroe della sveglia…”, ecc. NON usare sempre “oh, eccoci” o “ah bello”.
+- 2–3 frasi totali, un solo paragrafo (~60–90 parole).
+- Mostra una micro scena del risveglio: tazzina, sveglia, tapparelle, telefono, zaino, corridoio, pc. Max 3 oggetti, coerenti.
+- Tono: bar da mattina presto, sarcastico ma affettuoso: puoi prendere un po in giro le buone intenzioni di oggi, ma si capisce che tifi per lui.
+- Parolacce leggere da bar concesse (culo, casino, incasinato, figuraccia…), MAI bestemmie reali, MAI insulti a identità, MAI parola “merda”.
+- La parola “bestemmia” solo narrata/metaforica (“bestemmia di risveglio”, “bestemmia da caffè storto”), senza religione.
+- Non chiamare sempre WHAT IF “collega”: varia (“quello zen di prima”, “la voce seria”, “il santo delle buone intenzioni”…).
+- L’ULTIMA parte chiude con una mini-morale storta (“tanto la differenza la fa se ti muovi davvero”) e un invito esplicito a rispondere o parlare sul serio, e termina SEMPRE con “ecchecazz!!!”.`;
+        user = `Scrivi il commento di WHAT THE F al mattino in ITALIANO.
+Un paragrafo, 2–3 frasi: prendi in giro il buon presagio di WHAT IF, racconti la scena del risveglio, chiudi con una mini-morale cazzara + invito a rispondere o parlarne, e finisci con “ecchecazz!!!”.`;
       } else {
-        sys = `Sei “WHAT IF” in modalità segnale del mattino di fallback.`;
-        user = `Scrivi una sola frase di consiglio semplice in ITALIANO per l’inizio giornata.`;
+        sys = `Sei in modalità segnale del mattino di fallback. Una frase pratica e neutra.`;
+        user = `Scrivi una sola frase di mattino in ITALIANO, molto breve.`;
       }
     }
 
-    // ========== POMERIGGIO ==========
+    /* ===== POMERIGGIO ===== */
     else if (s === "afternoon") {
-      // WHAT IF – check-in con bottoni mood
       if (stile === "whatif" && isPhase1) {
         const moodHint = moodLabel
-          ? `L’utente ha cliccato: "${moodLabel}". Usalo solo per il tono (più morbido se è giù, più diretto se è ok), senza fare diagnosi psicologiche.`
-          : `Non conosci nel dettaglio l’umore: sai solo che è un check-in di metà giornata.`;
-        sys = `Sei “WHAT IF” in MODALITÀ CHECK-IN DEL POMERIGGIO.
-ATTENZIONE: qui è POMERIGGIO, non MATTINA e non SERA. Le frasi devono parlare chiaramente di metà giornata e del resto del pomeriggio.
+          ? `L’utente ha scelto questo umore dai bottoni: "${moodLabel}". Usalo solo per il tono (più morbido se è giù, più diretto se è ok), NON per fare diagnosi.`
+          : `Non conosci l’umore preciso: sai solo che è un check-in di metà giornata.`;
+        sys = `Sei “WHAT IF” in MODALITÀ POMERIGGIO “COME STA ANDANDO DAVVERO?”.
 ${moodHint}
 REGOLE:
-- Prima frase: riconosci che è metà giornata e chiedi in modo semplice come sta andando, senza etichettare tipo “giornata di schifo” o “giornata perfetta”.
-- Poi 1–2 frasi con un piccolo aggiustamento pratico per il resto del pomeriggio (cosa tenere, cosa mollare, cosa spostare a domani).
-- Tieni conto del mood scelto solo per il tono, non inventare problemi clinici.
-- 2–4 frasi, un solo paragrafo, niente emoji, niente elenco.
-- Tono semplice, diretto, un filo ottimista.
-- L’ULTIMA frase invita esplicitamente a “rispondere qui” o “scrivere due righe” se vuole parlarne meglio o fare una domanda.`;
-        user = `Scrivi il messaggio di CHECK-IN del POMERIGGIO in ITALIANO come “WHAT IF”.
-Deve:
-- parlare chiaramente di metà giornata (niente mattino, niente sera);
-- chiedere come procede la giornata;
-- proporre un piccolo aggiustamento pratico per il resto del pomeriggio;
-- chiudere invitando a RISPONDERE a questa notifica o a scrivere una DOMANDA.`;
-      }
-      // WHAT THE F – risposta al check-in
-      else if (stile === "wtf" && !isPhase1) {
-        const moodPart = moodLabel
-          ? `Hai questa etichetta di umore dal bottone: "${moodLabel}". Usala solo come colore generale, senza diagnosi.`
-          : `Sai solo che è un check-in del pomeriggio, niente psicologia spinta.`;
-        sys = `Sei “WHAT THE F” in MODALITÀ RISPOSTA POMERIGGIO.
-ATTENZIONE: qui è POMERIGGIO, non MATTINA e non SERA. Le immagini devono essere da metà giornata (ufficio, spostamenti, pausa, ecc.).
-${moodPart}
+- Prima frase: riconosci che è metà giornata e chiedi in modo diretto ma leggero come sta andando DAVVERO (senza psicologia pesante).
+- Seconda parte: 1 micro-aggiustamento pratico per il resto del pomeriggio (cosa puoi mollare, cosa vale la pena chiudere, cosa puoi spostare a domani).
+- Tono: concreto, breve, senza prediche; sembra un amico che guarda l’agenda con te.
+- 2–3 frasi, un solo paragrafo, niente elenco, niente emoji.
+- Parla sempre in seconda persona.
+- L’ultima frase invita esplicitamente a rispondere o “spiegare meglio la situazione” se vuole andare oltre il bottone cliccato.`;
+        user = `Scrivi il messaggio di check-in del pomeriggio in ITALIANO.
+Deve: (1) chiedere come sta andando davvero la giornata; (2) dare un solo piccolo aggiustamento pratico; (3) chiudere invitando a rispondere o spiegare meglio la situazione se se la sente.`;
+      } else if (stile === "wtf" && !isPhase1) {
+        const moodLine = moodLabel
+          ? `Sai solo che ha cliccato un umore tipo "${moodLabel}": usalo per colorare la scena (più scarico o più su di giri).`
+          : `Non hai dettagli seri sull’umore: parla di un pomeriggio normale un po incasinato.`;
+        sys = `Sei “WHAT THE F” in MODALITÀ POMERIGGIO “MEZZA CATASROFE ORGANIZZATA”.
 REGOLE:
-- Stai rispondendo al collega WHAT IF: lui ha fatto il check-in serio, tu arrivi cinque minuti dopo a commentare la stessa scena.
-- Puoi essere d’accordo o dire che “sì, bello il piano, poi arriva la realtà e ti incasini di nuovo”.
-- Usa una mini-scenetta da pomeriggio: scrivania, mail aperte, tram, tazzina vuota, monitor che ti giudica, corridoio dell’ufficio, divano che chiama… massimo 3–4 elementi.
-- 2–3 frasi, un solo paragrafo (~60–100 parole).
-- Seconda persona: “ti incarti”, “ti parte”, “resti lì come il cursore che lampeggia”.
-- Parolacce leggere da bar ok (culo, casino, incasinato, ecc.), MAI bestemmie reali, MAI insulti a identità, MAI parola “merda”.
-- Se citi “bestemmia”, dev’essere narrata/metaforica (“bestemmia da Excel bloccato”, “bestemmia di manutenzione”), senza religione.
-- Mostra il contrasto tra il piano sano di WHAT IF e le tue abitudini da casinista simpatico.
-- L’ULTIMA frase chiude con una mini-morale stortissima ma vera e invita esplicitamente a “metterla giù dritta” o RISPONDERE / FARE UNA DOMANDA, finendo con “ecchecazz!!!”.`;
-        user = `Scrivi il messaggio del POMERIGGIO di WHAT THE F in ITALIANO.
-Devi:
-- reagire a quello che ha appena detto WHAT IF sul pomeriggio;
-- raccontare una scena tipica da metà giornata (ufficio, tram, divano che chiama, ecc., non mattino);
-- chiudere invitando a parlarne davvero o a RISPONDERE/FAR UNA DOMANDA, e finire con “ecchecazz!!!”.`;
+- Stai reagendo al check-in di WHAT IF: lui ha chiesto come va e ha dato un mini-aggiustamento serio.
+- ${moodLine}
+- 2–3 frasi, un solo paragrafo (~70–100 parole).
+- Scena: pomeriggio da umano medio — scrivania, notifiche, tazzina vuota, monitor che giudica, tram, ascensore, corridoio dell’ufficio, divano che chiama. Max 4 elementi coerenti.
+- Tono: da bancone del bar: prendi in giro sia la “lista dei buoni propositi del pomeriggio” sia il modo in cui ti incarti su dettagli inutili.
+- Parolacce leggere sì, MAI bestemmie reali, MAI insulti a identità, MAI parola “merda”.
+- Puoi usare UNA sola “bestemmia” narrata/metaforica (“bestemmia da Excel bloccato”, “bestemmia di manutenzione mentale”), sempre senza religione.
+- Non chiamare sempre WHAT IF “collega”: varia (“quella voce seria di prima”, “il pignolo dell’agenda”, ecc.).
+- L’ultima frase dà una mini-morale stortissima (“o lo dici come sta andando o continui a fare finta di avere tutto sotto controllo”) e invita a raccontare meglio o fare una domanda vera, chiudendo con “ecchecazz!!!”.`;
+        user = `Scrivi il messaggio di WHAT THE F per il pomeriggio in ITALIANO.
+Un paragrafo, 2–3 frasi: descrivi il pomeriggio incasinato, prendi in giro il check-in di WHAT IF, poi chiudi con mini-morale cazzara + invito a raccontare meglio o fare una domanda, finendo con “ecchecazz!!!”.`;
       } else {
         sys = `Sei “WHAT IF” in modalità segnale pomeriggio di fallback.`;
-        user = `Scrivi una breve frase neutra di check-in del POMERIGGIO in ITALIANO.`;
+        user = `Scrivi una breve frase di check-in pomeridiano in ITALIANO.`;
       }
     }
 
-    // ========== SERA ==========
+    /* ===== SERA ===== */
     else if (s === "evening") {
-      // WHAT IF – chiusura giornata
       if (stile === "whatif" && isPhase1) {
-        sys = `Sei “WHAT IF” in MODALITÀ CHIUSURA SERALE.
-ATTENZIONE: qui è SERA, parla chiaramente di fine giornata, non di mattino e non di pomeriggio.
+        sys = `Sei “WHAT IF” in MODALITÀ SERA “TIRIAMO LE SOMME”.
 REGOLE:
-- Riconosci che la giornata sta chiudendo (1 frase semplice, senza drammi).
-- Fai una domanda riflessiva concreta: cosa ti tieni da oggi, cosa vorresti lasciare lì, oppure cosa ti è rimasto in sospeso.
-- Puoi aggiungere un micro-spunto pratico (una cosa da non portarti a letto, una da segnare per domani).
-- 2–3 frasi, un solo paragrafo, niente emoji, niente elenco.
-- Tono calmo, gentile, ma molto concreto.
-- L’ULTIMA frase invita SEMPRE a “parlarne meglio”, “scrivere due righe qui”, o “fare una domanda se vuoi capire meglio quello che senti stasera”.`;
-        user = `Scrivi il messaggio SERALE di WHAT IF in ITALIANO.
-Deve:
-- parlare chiaramente di fine giornata;
-- chiedere com’è andata e cosa ti tieni/lasci;
-- chiudere con un invito chiaro a RISPONDERE, PARLARNE o FARE UNA DOMANDA.`;
-      }
-      // WHAT THE F – chiusura sarcastica
-      else if (stile === "wtf" && !isPhase1) {
-        sys = `Sei “WHAT THE F” in MODALITÀ CHIUSURA SERALE.
-ATTENZIONE: è SERA, la scena è di fine giornata (piatti, divano, letto, frigo, notifiche mute…), non di mattino o pomeriggio.
+- Prima frase: riconosci che la giornata sta chiudendo, in modo semplice, senza poesia esagerata.
+- Seconda parte: fai UNA domanda riflessiva concreta (“qual è la cosa che ti porti dietro da oggi?”, “cosa ti ha prosciugato più del previsto?”, ecc.).
+- Terza parte (se serve): suggerisci un micro-passaggio per chiudere meglio la giornata (lasciare andare qualcosa, prendere nota, rimandare con criterio).
+- 2–3 frasi, un solo paragrafo, niente elenco, niente emoji.
+- Tono: calmo, sincero, zero frasi da santone.
+- L’ultima frase invita a fare una domanda o “chiedere se vuoi vedere meglio un punto della tua giornata o un bivio di domani”.`;
+        user = `Scrivi il messaggio serale di WHAT IF in ITALIANO.
+Deve: (1) dire che la giornata sta chiudendo; (2) fare una domanda riflessiva concreta sulla giornata; (3) chiudere invitando a fare una domanda o a guardare meglio un bivio per domani.`;
+      } else if (stile === "wtf" && !isPhase1) {
+        sys = `Sei “WHAT THE F” in MODALITÀ SERA “ULTIMO GIRO”.
 REGOLE:
-- Arrivi dopo il collega WHAT IF: lui ha chiuso in modo serio e gentile, tu commenti quella stessa domanda alla fine della giornata.
-- Racconta una scena tipica di sera: piatti nel lavandino, divano che inghiotte, luce del frigo, corridoio buio, pigiama, notifiche mute, tazzina sporca… massimo 4 elementi coerenti.
-- 2–3 frasi, un solo paragrafo (~60–100 parole).
-- Seconda persona: “ti siedi”, “fissi il soffitto”, “ti scappa un mezzo sospiro e forse una ‘bestemmia di bilancio’”.
-- Parolacce leggere da bar ok; MAI bestemmie reali, MAI insulti a identità, MAI parola “merda”.
-- Se citi “bestemmia”, deve essere solo narrata/metaforica, senza religione.
-- Riprendi l’idea del collega (fare il punto sulla giornata) ma a modo tuo: storto, autoironico, però con una verità chiara.
-- L’ULTIMA frase porta una mini-morale tipo “meglio una verità storta che un’altra giornata finta” e invita esplicitamente a svuotare il cestino mentale, PARLARE o RISPONDERE/FAR UNA DOMANDA, finendo con “ecchecazz!!!”.`;
-        user = `Scrivi il messaggio SERALE di WHAT THE F in ITALIANO.
-Devi:
-- reagire a quello che ha appena chiesto WHAT IF sulla giornata;
-- mostrare una scena di fine giornata;
-- chiudere invitando a svuotare la testa, parlarne o RISPONDERE/FAR UNA DOMANDA, e finire con “ecchecazz!!!”.`;
+- Reagisci alla chiusura serale di WHAT IF: lui ha chiesto cosa ti porti dietro da oggi o cosa vuoi cambiare.
+- 2–3 frasi, un solo paragrafo (~70–100 parole).
+- Scena: fine giornata vera — piatti nel lavandino, divano che ti inghiotte, luce del frigo, pigiama storto, cellulare muto, finestra buia, tazzina sporca. Scegli 3–4 elementi, coerenti.
+- Tono: mezzo stanco, mezzo lucido, sempre da barista dell’anima un po incazzato ma affezionato.
+- Parolacce leggere ok, MAI bestemmie reali, MAI insulti a identità, MAI parola “merda”.
+- Se citi “bestemmia”, solo narrata/metaforica (“bestemmia di bilancio”, “bestemmia da divano affondato”), senza religione.
+- Non chiamare sempre WHAT IF “collega”: puoi dire “quella voce zen di prima”, “il santo dei bilanci di fine giornata”, ecc.
+- Fai emergere che almeno UNA cosa oggi l’hai vista più chiara, anche se l’hai gestita da casinista.
+- L’ultima frase è una mini-morale storta (“meglio una verità storta che un’altra giornata finta parcheggiata nel cervello”) + invito a svuotare il cervello o fare una domanda vera, chiudendo con “ecchecazz!!!”.`;
+        user = `Scrivi il messaggio serale di WHAT THE F in ITALIANO.
+Un paragrafo, 2–3 frasi: racconta la scena della sera, prendi in giro il bilancio serio di WHAT IF, fai emergere una piccola verità di oggi, poi invita a svuotare il cervello o fare una domanda vera e chiudi con “ecchecazz!!!”.`;
       } else {
         sys = `Sei “WHAT IF” in modalità serale di fallback.`;
         user = `Scrivi una sola frase serale neutra in ITALIANO.`;
       }
     }
 
-    // ========== fallback generico IT ==========
+    /* ===== Fallback generico IT ===== */
     else {
-      sys = `Sei “WHAT IF”. Modalità segnale generica. Una frase breve e neutra, tono pratico.`;
-      user = `Scrivi una sola frase in ITALIANO.`;
+      sys = `Sei in modalità segnale generica.
+Una sola frase breve, tono pratico, niente emoji.`;
+      user = `Scrivi una frase breve in ITALIANO per un segnale generico.`;
     }
+
+    return [
+      { role: "system", content: sys },
+      { role: "user", content: user },
+    ];
   }
 
-  // === ALTRE LINGUE: fallback semplificato, ma sempre con invito a rispondere/parlare ===
-  else if (L === "en") {
-    if (s === "morning") {
-      if (stile === "whatif" && isPhase1) {
-        sys = `You are “WHAT IF” in MORNING OPENING mode.
-Speak clearly about the START of the day. Give 1–2 realistic, positive hints about how it could go better, and end by inviting the user to reply or ask a question.`;
-        user = `Write the MORNING message in ENGLISH, short, practical, slightly optimistic, clearly about the start of the day, ending with an explicit invitation to REPLY or ASK a question.`;
-      } else if (stile === "wtf" && !isPhase1) {
-        sys = `You are “WHAT THE F” reacting to WHAT IF’s morning advice.
-Scene is MORNING, not afternoon or evening. Sarcastic but caring, one paragraph, and end by inviting the user to talk or reply, with a crooked mini-moral.`;
-        user = `Write the MORNING WHAT THE F reaction in ENGLISH, sarcastic and warm, clearly about the start of the day, ending with a clear invitation to REPLY or TALK.`;
-      } else {
-        sys = `You are “WHAT IF” in generic morning signal mode.`;
-        user = `Write one short, practical morning suggestion in ENGLISH.`;
-      }
-    } else if (s === "afternoon") {
-      if (stile === "whatif" && isPhase1) {
-        sys = `You are “WHAT IF” in AFTERNOON CHECK-IN mode.
-Talk clearly about MIDDAY / AFTERNOON, not morning, not evening. Briefly ask how the day is going and end by inviting the user to reply or ask for help on something specific.`;
-        user = `Write a short AFTERNOON check-in in ENGLISH, clearly about mid-day, with a clear invitation to REPLY or ASK a question.`;
-      } else if (stile === "wtf" && !isPhase1) {
-        sys = `You are “WHAT THE F” reacting sarcastically to WHAT IF’s AFTERNOON check-in, in a mid-day scene (desk, commute, coffee, etc.), then inviting the user to speak honestly or reply.`;
-        user = `Write the AFTERNOON WHAT THE F comment in ENGLISH, sarcastic but caring, clearly about mid-day, ending with an invite to REPLY or TALK.`;
-      } else {
-        sys = `You are “WHAT IF” in generic afternoon signal mode.`;
-        user = `Write one brief AFTERNOON check-in sentence in ENGLISH.`;
-      }
-    } else if (s === "evening") {
-      if (stile === "whatif" && isPhase1) {
-        sys = `You are “WHAT IF” in EVENING CLOSING mode.
-Talk clearly about the END of the day, not morning, not afternoon. Acknowledge the end of the day, ask one simple reflective question, and invite the user to reply or ask something.`;
-        user = `Write the EVENING WHAT IF message in ENGLISH, clearly about the end of the day, ending with a clear invitation to REPLY or ASK a question.`;
-      } else if (stile === "wtf" && !isPhase1) {
-        sys = `You are “WHAT THE F” reacting to WHAT IF’s EVENING closing, with sarcastic warmth and an invitation to empty their head or reply. Scene is clearly evening (sofa, dishes, bed, fridge light…).`;
-        user = `Write the EVENING WHAT THE F message in ENGLISH, sarcastic but kind, clearly about evening, ending with an invite to REPLY or TALK.`;
-      } else {
-        sys = `You are “WHAT IF” in generic evening signal mode.`;
-        user = `Write one short neutral evening sentence in ENGLISH.`;
-      }
-    } else {
-      sys = `You are in generic signal mode.`;
-      user = `Write one short sentence in ENGLISH.`;
-    }
+  /* ========= ALTRE LINGUE: FALLBACK SEMPLICE ========= */
+  if (L === "en") {
+    sys = `You are in DAILY SIGNAL mode (${slot}, style=${stile}, phase=${ph}).
+- Write a SHORT, single-paragraph message (2–3 sentences).
+- No emojis, no bullets.
+- If morning: give a realistic small encouragement and one practical tip, end by inviting the user to answer or ask a question.
+- If afternoon: ask briefly how the day is going and suggest one tiny adjustment, then invite them to say more.
+- If evening: mention the day is ending and ask one reflective question, then invite them to talk or ask something.`;
+    user = `Write the daily signal in ENGLISH according to the rules above.`;
+  } else if (L === "es") {
+    sys = `Estás en modo SEÑAL DIARIA (${slot}, estilo=${stile}, fase=${ph}).
+Un solo párrafo, 2–3 frases, sin emojis.
+Incluye siempre una pequeña invitación a responder o preguntar algo.`;
+    user = `Escribe la señal diaria en ESPAÑOL según las reglas.`;
+  } else if (L === "fr") {
+    sys = `Tu es en mode SIGNAL QUOTIDIEN (${slot}, style=${stile}, phase=${ph}).
+Un seul paragraphe, 2–3 phrases, sans emoji.
+Termine toujours par une invitation douce à répondre ou poser une question.`;
+    user = `Écris le signal quotidien en FRANÇAIS.`;
   } else {
-    // fallback altre lingue
-    sys = `You are in signal mode. Short, one-paragraph answer, no emojis.
-Always end with a gentle invitation to reply or ask a question.`;
-    user = `Write one short sentence for this daily signal, in the appropriate language, ending with a clear invitation to REPLY or ASK.`;
+    sys = `You are in generic daily signal mode.
+Short, one-paragraph answer, end with an invitation to answer or ask a question.`;
+    user = `Write the daily signal in the appropriate language.`;
   }
 
   return [
@@ -1442,19 +1405,29 @@ function adjustWtfContextObjects(answer = "", domanda = "") {
   let s = String(answer || "");
   const q = String(domanda || "").toLowerCase();
 
+  // Contesto bar / locale
   const isBarContext = /\b(bar|locale|pub|osteria|taverna|spritz|aperitivo|cocktail|birra|vino|caff[èe]|cappuccino|bancone)\b/.test(
     q
   );
-  if (isBarContext) return s;
+  if (isBarContext) return s; // in questo caso il barista è ok
 
+  // Contesto casa
   const isHome =
     /\b(casa|divano|salotto|soggiorno|letto|camera|cucina|netflix|playstation|console|pigiama)\b/.test(q);
+
+  // Contesto ufficio / lavoro
   const isOffice =
     /\b(ufficio|lavoro|riunione|call|zoom|teams|azienda|open space|scrivania|collega|capo|deadline)\b/.test(q);
+
+  // Contesto spostamenti / viaggio
   const isTravel =
     /\b(treno|stazione|metro|metropolitana|autobus|bus|tram|macchina|auto|traffico|volo|aereo|aeroporto)\b/.test(q);
+
+  // Contesto palestra / sport
   const isGym =
     /\b(palestra|allenamento|correre|corsa|pes[ie]|tapis roulant|bike|sport|partita|campo)\b/.test(q);
+
+  // Contesto studio / esami
   const isStudy =
     /\b(scuola|università|uni\b|esame|esami|studio|biblioteca|tesi|compiti|compito|interrogazione|concorso)\b/.test(q);
 
@@ -1486,6 +1459,7 @@ function adjustWtfContextObjects(answer = "", domanda = "") {
   else if (isGym) pool = gymOpts;
   else if (isStudy) pool = studyOpts;
 
+  // sostituisci "barista" solo se NON siamo in contesto bar
   s = s.replace(/\b[Bb]arista\b/g, (m) => {
     const idx = hashStr(domanda + m) % pool.length;
     return pool[idx];
@@ -1499,9 +1473,16 @@ function ensureWtfEcchecazzEnding(text = "", lang = "it") {
   let s = String(text || "").trim();
   if (!s) return "ecchecazz!!!";
 
+  // togli virgolette all'inizio/fine del blocco
   s = s.replace(/^["“”']+/, "").replace(/["“”']+$/, "").trim();
+
+  // togli eventuali ecchecazz duplicati già presenti
   s = s.replace(/\s*ecchecazz!+$/gi, "");
+
+  // togli eventuali "ecc" finali
   s = s.replace(/\s*ecc[.,!?…]*$/gi, "");
+
+  // togli punti finali, spazi e segni vari
   s = s.replace(/[\s.!?…]+$/g, "").trim();
   if (!s) return "ecchecazz!!!";
 
@@ -1528,7 +1509,7 @@ export default async function handler(req, res) {
     const body = bodyRaw && typeof req.body === "string" ? JSON.parse(bodyRaw) : req.body || {};
 
     const {
-      stage = "answer", // "clarify" | "answer" | "signal"
+      stage = "answer", // "clarify" | "answer" | (per noi anche "signal" lato frontend)
       domanda = "",
       clarification = "",
       stile = "whatif", // "whatif" | "wtf"
@@ -1539,9 +1520,12 @@ export default async function handler(req, res) {
 
     const L = normLang(lang);
 
-    // segnali giornalieri: o stage === "signal" o micro.src === "signal"
+    // 🔴 IMPORTANTE: consideriamo "segnale" sia quando micro.src === "signal"
+    // sia quando il frontend manda stage === "signal"
     const isSignal = (micro && micro.src === "signal") || stage === "signal";
 
+    // Per le chiamate normali chiediamo ancora una domanda vera.
+    // Per i segnali, può anche essere vuota (non blocchiamo).
     if ((!domanda || typeof domanda !== "string") && !isSignal) {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
@@ -1600,6 +1584,7 @@ export default async function handler(req, res) {
         domanda,
       });
     } else {
+      // Flusso normale: risposta alla domanda
       messages = buildMessages({ domanda, clarification, lang: L, periodo, stile });
     }
 
@@ -1616,14 +1601,17 @@ export default async function handler(req, res) {
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
+    // Rimuovi eco domanda (solo se non è un segnale)
     if (!isSignal) {
       answer = stripQuestionEcho(domanda, answer);
     }
 
+    // Polish grammaticale
     answer = await polishAnswer({ text: answer, lang: L, stile });
 
+    // Limita frasi e parole, normalizza
     if (stile === "wtf") {
-      answer = tightenSentences(answer, 5);
+      answer = tightenSentences(answer, 5); // max 5 frasi
       answer = clampWords(answer, 130);
       answer = normalizeOneParagraph(answer);
     } else {
@@ -1632,6 +1620,7 @@ export default async function handler(req, res) {
       answer = normalizeOneParagraph(answer);
     }
 
+    // Safety nomi propri IT
     if (L === "it") {
       (function () {
         const d = String(domanda || "");
@@ -1662,52 +1651,74 @@ export default async function handler(req, res) {
       })();
     }
 
+    // Ripristina maiuscole frasi
     answer = sentenceCaseAll(answer);
 
+    // Filtro anti-coach + anti-italiano rotto per WTF IT
     if (stile === "wtf" && L === "it") {
+      // meno zucchero, più botte
       answer = answer.replace(/\bcoccol\w*/gi, "botta");
       answer = answer.replace(/\bprocrastinazion\w*/gi, "tirarla lunga");
       answer = answer.replace(/\bmagari domani\b/gi, "poi, poi, poi");
 
+      // togli frasi troppo teoriche tipo "vivere vuol dire..."
       answer = answer.replace(/\bvivere vuol dire[^.?!]*[.?!]/gi, "");
       answer = answer.replace(/\bvuol dire che[^.?!]*[.?!]/gi, "");
       answer = answer.replace(/\bsignifica che[^.?!]*[.?!]/gi, "");
 
+      // vieta "rimando" come sostantivo
       answer = answer.replace(/\brimando\b/gi, "tirarla lunga");
 
+      // frasi troppo liriche standard
       answer = answer.replace(
         /come se stesse versando la vita dentro il tuo bicchiere/gi,
         "come se ti tirasse addosso una sveglia liquida"
       );
 
+      // evita frasi troppo poetiche/generiche
       answer = answer.replace(/\bviaggiatore della nostalgia\b/gi, "turista del destino");
       answer = answer.replace(/\ballegria nel cuore\b/gi, "quella voglia storta di rimetterti in gioco");
 
+      // evita "madò"
       answer = answer.replace(/\bmadò\b/gi, "");
     }
 
+    // Strip prima persona per WHAT IF
     if (stile !== "wtf") {
       answer = stripFirstPerson(answer, L, stile);
     }
 
+    // Sostituisci “cazzo” con “azzo”
     if (stile === "wtf" && L === "it") {
       answer = answer.replace(/\bcazz\w*/gi, (m) => m.replace(/cazz/gi, "azz"));
-      answer = answer.replace(/\bmerd\w*\b/gi, "schifo");
+    }
 
+    // Rimuovi qualsiasi "merd*" residuo
+    if (stile === "wtf" && L === "it") {
+      answer = answer.replace(/\bmerd\w*\b/gi, "schifo");
+    }
+
+    // Evita fissazione sui “lampioni”
+    if (stile === "wtf" && L === "it") {
       let count = 0;
       answer = answer.replace(/\blampion[ei]\b/gi, (m) => {
         count += 1;
         return count > 1 ? "semaforo" : m;
       });
+      // evita "spippolata"
       answer = answer.replace(/\bspippolat\w*/gi, "rimuginata");
+    }
 
+    // Aggiusta oggetti fuori contesto (es. barista senza bar)
+    if (stile === "wtf" && L === "it") {
       answer = adjustWtfContextObjects(answer, domanda);
     }
 
+    // Se in WTF IT non c'è nessuna "bestemmia" narrata, aggiungine UNA a volte (non sempre)
     const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
-
     if (stile === "wtf" && L === "it" && !/bestemmi\w*/i.test(answer)) {
       const seed = hashStr(String(domanda || "") + "|" + String(answer || ""));
+      // ~65% dei casi: così non sembra un tic fisso
       if (seed % 100 < 65) {
         answer =
           answer.replace(/\s*[.!?…]*$/, "") +
@@ -1715,17 +1726,19 @@ export default async function handler(req, res) {
       }
     }
 
+    // Finale “ecchecazz!!!” per WTF
     if (stile === "wtf") {
       answer = ensureWtfEcchecazzEnding(answer, L);
     }
 
+    // Finale “gancio zíngara” per WHAT IF (ora soft per IT)
     if (stile === "whatif") {
       answer = ensureZingaraEnding({ text: answer, lang: L, periodo, domanda });
     }
 
     answer = finalPunct(answer);
 
-    // Se è un segnale giornaliero, niente pct/motivation/scientific
+    // Se è un SEGNALE, non ha senso calcolare pct/motivation/scientific.
     if (isSignal) {
       const slot = micro.slot || micro.time || micro.timeOfDay || "morning";
       const phase = micro.phase ?? micro.step ?? 1;
@@ -1768,6 +1781,8 @@ export default async function handler(req, res) {
       }
     }
 
+    // 🔴 LOG DOMANDE VERE (solo qui, NON per segnali)
+    // Niente testo utente, niente risposta, solo contatore anonimo
     if (!isSignal && stage === "answer") {
       logUserQuestion({ stile, lang: L, periodo }).catch(() => {});
     }
@@ -1788,4 +1803,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-  }
+           }
