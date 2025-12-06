@@ -1059,7 +1059,7 @@ Paragrafo unico, 3–6 frasi.`;
         }
 /* ========= SEGNALI GIORNO (mattina/pomeriggio/sera) ========= */
 /**
- * slot:  "morning" | "afternoon" | "evening"
+ * slot:  "morning" | "afternoon" | "evening" | "mattina" | "pomeriggio" | "sera" | "notte"
  * phase: 1 = WHAT IF (notifica principale)
  *        2 = WHAT THE F (risposta 5 minuti dopo)
  */
@@ -1072,10 +1072,20 @@ function buildSignalMessages({
   domanda = "",
 }) {
   const L = normLang(lang);
-  const s = String(slot || "morning").toLowerCase();
   const ph = Number(phase) || 1;
   const isPhase1 = ph === 1;
   const moodLabel = (mood || "").toString().toLowerCase();
+
+  // 🔁 Normalizzo anche in italiano
+  const raw = String(slot || "").toLowerCase();
+  const s =
+    raw === "morning" || raw === "mattina"
+      ? "morning"
+      : raw === "afternoon" || raw === "pomeriggio"
+      ? "afternoon"
+      : raw === "evening" || raw === "sera" || raw === "night" || raw === "notte"
+      ? "evening"
+      : "morning";
 
   let sys;
   let user;
@@ -1089,7 +1099,9 @@ function buildSignalMessages({
         sys = `Sei “WHAT IF” in MODALITÀ CONSIGLIO DEL MATTINO.
 
 REGOLE:
-- Non inventare come si sente: niente “sei distrutto”, “sei perso”.
+- Devi parlare chiaramente di INIZIO GIORNATA: usa parole come “stamattina”, “all’inizio della giornata”, “appena parti”.
+- NON parlare di pomeriggio o sera, non usare parole come “pomeriggio”, “stasera”, “più tardi”.
+- Non inventare come si sente: niente diagnosi (“sei distrutto”, “sei perso”).
 - Niente oroscopi: solo piccole cose reali che può fare oggi.
 - Dai 1–2 consigli concreti per impostare la giornata un po’ più leggera e lucida.
 - Consigli pratici e variati (non sempre “fai sport”): una cosa da chiudere, una da mollare, un confine da mettere, una pausa da prendersi.
@@ -1107,6 +1119,8 @@ Stai commentando il consiglio del mattino appena dato da WHAT IF:
 - lui prova a mettere ordine, tu arrivi dopo 5 minuti e lo prendi bonariamente per il culo.
 
 REGOLE:
+- Devi parlare chiaramente di RISVEGLIO e INIZIO GIORNO: sveglia, caffè, colazione, uscire di casa, traffico del mattino.
+- NON parlare di “pomeriggio” o “sera”.
 - Prima frase breve (max 15 parole), subito scena: “Oh, eccoci…”, “Ah, che mattinata ti sei apparecchiato…”.
 - Descrivi un mini-film del risveglio: tazzina che giudica, sveglia incazzata, tapparelle pigre, corridoio, zaino, telefono che vibra e ti sfida.
 - 2–3 frasi totali, un solo paragrafo, 60–90 parole.
@@ -1131,12 +1145,14 @@ Un solo paragrafo, 2–3 frasi: prendi in giro il consiglio di WHAT IF, mostra c
       if (stile === "whatif" && isPhase1) {
         const moodHint = moodLabel
           ? `L’utente ha indicato che il suo umore è: "${moodLabel}". Usa questo solo per il tono (più morbido se è giù, più diretto se è ok).`
-          : `Non conosci il dettaglio preciso dell’umore, solo che è un check-in di metà giornata.`;
+          : `Sai solo che è un check-in di metà giornata: niente diagnosi pesanti.`;
 
         sys = `Sei “WHAT IF” in MODALITÀ CHECK-IN DEL POMERIGGIO.
 ${moodHint}
 
 REGOLE:
+- Devi parlare chiaramente di METÀ GIORNATA: usa parole come “pomeriggio”, “a metà giornata”, “nelle ore che restano oggi”.
+- NON usare parole tipo “stamattina”, “questa mattina”, “buongiorno”.
 - In una frase riconosci la sensazione da metà giornata (ritmo, testa piena, inerzia, mille cose a metà) senza fare diagnosi psicologiche.
 - In 1–2 frasi successive proponi un piccolo aggiustamento pratico per il resto del pomeriggio: cosa ha senso chiudere, cosa lasciare stare, cosa spostare a domani.
 - Consigli molto concreti: una mail da rimandare, una cosa da finire e basta, una pausa corta per rimettere a fuoco.
@@ -1155,6 +1171,8 @@ Stai reagendo al check-in pratico appena fatto da WHAT IF:
 - lui prova a raddrizzare il pomeriggio, tu arrivi dopo 5 minuti e commenti da bancone.
 
 REGOLE:
+- Devi parlare chiaramente di POMERIGGIO: scrivania molle, luce del pomeriggio, notifiche che lampeggiano, tram pieno, ufficio che sbadiglia.
+- NON usare parole di mattina (“stamattina”, “risveglio”, “colazione”, “buongiorno”).
 - Racconta una micro-scena: scrivania, notifiche che lampeggiano, tazzina vuota che ti giudica, monitor che fa finta di non vederti, corridoio dell’ufficio, tram pieno… massimo 3–4 elementi.
 - 2–3 frasi, un solo paragrafo, 60–100 parole.
 - Seconda persona: “ti incarti”, “ti parte”, “resti lì come il cursore che lampeggia”.
@@ -1177,6 +1195,8 @@ Un paragrafo, 2–3 frasi: descrivi il pomeriggio mezzo incasinato, prendi in gi
         sys = `Sei “WHAT IF” in MODALITÀ DOMANDA DI CHIUSURA SERALE.
 
 REGOLE:
+- Devi parlare chiaramente di FINE GIORNATA: usa parole come “stasera”, “a fine giornata”, “prima di chiudere la giornata”.
+- NON parlare di “stamattina” o di “pomeriggio”.
 - È fine giornata: dillo in una frase normale, senza poesia.
 - Fai una domanda riflessiva semplice che aiuti l’utente a guardare almeno una scelta o un momento vero di oggi (cosa tenere, cosa lasciare, cosa cambiare da domani).
 - 2–3 frasi totali, un solo paragrafo, niente emoji, niente elenco.
@@ -1191,6 +1211,8 @@ Stai rispondendo alla domanda serale di WHAT IF:
 - lui ti chiede cosa ti tieni dalla giornata, tu arrivi dopo 5 minuti e lo trasformi in una scena da divano contro mondo.
 
 REGOLE:
+- Devi parlare chiaramente di SERA: buio, divano, piatti nel lavandino, luce del frigo, pigiama, notifiche mute, corridoio buio.
+- NON usare parole tipo “stamattina”, “questa mattina”, “buongiorno”.
 - 2–3 frasi, un solo paragrafo, 60–100 parole.
 - Prima frase: stile che hai chiesto tu, ad esempio “Eccola la sera: tu guardi il divano, il divano guarda te, e nessuno dei due ha un piano.”
 - Usa immagini da fine giornata: piatti nel lavandino, luce del frigo, pigiama, notifiche mute, corridoio buio, tazzina sporca sul tavolo.
@@ -1219,6 +1241,123 @@ Un paragrafo, 2–3 frasi: apri con una frase forte alla “tu guardi il divano,
     ];
   }
 
+  /* ============= ALTRE LINGUE – versione compatta ma coerente ============= */
+
+  if (L === "en") {
+    if (s === "morning") {
+      if (stile === "whatif" && isPhase1) {
+        sys = `You are “WHAT IF” in MORNING mode.
+Talk clearly about the START of the day (morning), not afternoon or evening.
+Give 1–2 very practical suggestions to start the day a bit lighter and clearer, then gently invite them to ask or share more.
+2–3 sentences, one paragraph, no emojis.`;
+        user = `Write the morning message in ENGLISH, following the rules above.`;
+      } else if (stile === "wtf" && !isPhase1) {
+        sys = `You are “WHAT THE F” in MORNING ROAST mode.
+React to WHAT IF’s serious tip about the morning: tease it, stay connected to it, be sarcastic but secretly caring.
+End with a crooked but clear invite to “talk properly” or ask a real question.`;
+        user = `Write the WHAT THE F morning reply in ENGLISH.`;
+      } else {
+        sys = `You are “WHAT IF” in generic morning signal mode.`;
+        user = `Write one short practical sentence in ENGLISH.`;
+      }
+    } else if (s === "afternoon") {
+      if (stile === "whatif" && isPhase1) {
+        sys = `You are “WHAT IF” in AFTERNOON CHECK-IN mode.
+Talk clearly about the AFTERNOON or middle of the day, not morning or evening.
+Acknowledge mid-day, suggest one small realistic adjustment, and end with a soft invitation to ask something more specific if they want.
+2–4 sentences, one paragraph.`;
+        user = `Write the AFTERNOON CHECK-IN message in ENGLISH.`;
+      } else if (stile === "wtf" && !isPhase1) {
+        sys = `You are “WHAT THE F” in AFTERNOON COMMENT mode.
+React sarcastically but warmly to WHAT IF’s message about the afternoon (desk, tram, coffee cup, screen, sofa…).
+Finish with a crooked mini-moral and an invite to vent or ask something real.`;
+        user = `Write the WHAT THE F afternoon comment in ENGLISH.`;
+      } else {
+        sys = `You are “WHAT IF” in generic afternoon signal mode.`;
+        user = `Write one short check-in sentence in ENGLISH.`;
+      }
+    } else if (s === "evening") {
+      if (stile === "whatif" && isPhase1) {
+        sys = `You are “WHAT IF” in EVENING CLOSING mode.
+Talk clearly about the END of the day (evening, night), not the morning.
+Recognise the day is ending, ask one simple reflective question, and end with a gentle invite to talk it through if they want.
+2–3 sentences, one paragraph.`;
+        user = `Write the evening message in ENGLISH.`;
+      } else if (stile === "wtf" && !isPhase1) {
+        sys = `You are “WHAT THE F” in EVENING CLOSING mode.
+React to WHAT IF’s reflective question about the evening with bar-counter sarcasm but care.
+End with a crooked mini-moral and a clear invite to “empty the mental trash” or ask something real.`;
+        user = `Write the WHAT THE F evening message in ENGLISH.`;
+      } else {
+        sys = `You are “WHAT IF” in generic evening signal mode.`;
+        user = `Write one short neutral evening sentence in ENGLISH.`;
+      }
+    } else {
+      sys = `You are in generic signal mode.`;
+      user = `Write one short sentence in ENGLISH.`;
+    }
+
+    return [
+      { role: "system", content: sys },
+      { role: "user", content: user },
+    ];
+  }
+
+  // ES / FR / DE – versioni compatte ma coerenti
+  const label = L === "es" ? "ESPAÑOL" : L === "fr" ? "FRANÇAIS" : "DEUTSCH";
+
+  if (s === "morning") {
+    if (stile === "whatif" && isPhase1) {
+      sys = `Eres “WHAT IF” en modo MAÑANA (${label}).
+Habla claramente del INICIO DEL DÍA (mañana), no de la tarde o la noche.
+Da 1–2 consejos prácticos para empezar el día un poco más claro y ligero, y termina con una invitación suave a preguntar o hablar más.`;
+      user = `Escribe el mensaje de la mañana en ${label}.`;
+    } else if (stile === "wtf" && !isPhase1) {
+      sys = `Eres “WHAT THE F” en modo ROAST DE MAÑANA (${label}).
+Reaccionas con ironía cariñosa al mensaje de WHAT IF sobre la mañana y terminas invitando a hablarlo en serio o hacer una pregunta real.`;
+      user = `Escribe la respuesta de la mañana de WHAT THE F en ${label}.`;
+    } else {
+      sys = `Eres “WHAT IF” en modo señal de mañana genérica (${label}).`;
+      user = `Escribe una frase breve de consejo de mañana en ${label}.`;
+    }
+  } else if (s === "afternoon") {
+    if (stile === "whatif" && isPhase1) {
+      sys = `Eres “WHAT IF” en modo CHEQUEO DE TARDE (${label}).
+Habla claramente de la TARDE / mitad del día, no de la mañana.
+Reconoce la mitad del día, ofrece un pequeño ajuste práctico y termina con una invitación suave a contar mejor o preguntar algo concreto.`;
+      user = `Escribe el mensaje de chequeo de tarde en ${label}.`;
+    } else if (stile === "wtf" && !isPhase1) {
+      sys = `Eres “WHAT THE F” en modo COMENTARIO DE TARDE (${label}).
+Reaccionas al mensaje de WHAT IF con sarcasmo pero cariño y terminas con una mini-moraleja torcida y una invitación a desahogarse o preguntar algo real.`;
+      user = `Escribe el comentario de WHAT THE F de la tarde en ${label}.`;
+    } else {
+      sys = `Eres “WHAT IF” en modo señal de tarde genérica (${label}).`;
+      user = `Escribe una frase corta de chequeo en ${label}.`;
+    }
+  } else if (s === "evening") {
+    if (stile === "whatif" && isPhase1) {
+      sys = `Eres “WHAT IF” en modo CIERRE DE NOCHE (${label}).
+Habla claramente del FINAL DEL DÍA (noche), no de la mañana.
+Reconoce que el día se cierra, haz una pregunta reflexiva sencilla y termina invitando a hablarlo mejor o usarla como punto de partida.`;
+      user = `Escribe el mensaje de la noche en ${label}.`;
+    } else if (stile === "wtf" && !isPhase1) {
+      sys = `Eres “WHAT THE F” en modo CIERRE DE NOCHE (${label}).
+Reaccionas al mensaje de WHAT IF con ironía cariñosa y terminas invitando a vaciar la cabeza, contar o hacer una pregunta real.`;
+      user = `Escribe el mensaje nocturno de WHAT THE F en ${label}.`;
+    } else {
+      sys = `Eres “WHAT IF” en modo noche genérica (${label}).`;
+      user = `Escribe una frase corta de noche en ${label}.`;
+    }
+  } else {
+    sys = `Eres “WHAT IF” en modo señal genérica (${label}).`;
+    user = `Escribe una frase corta en ${label}.`;
+  }
+
+  return [
+    { role: "system", content: sys },
+    { role: "user", content: user },
+  ];
+}
   /* ============= ALTRE LINGUE – versione compatta ma coerente ============= */
 
   if (L === "en") {
