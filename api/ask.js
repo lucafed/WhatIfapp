@@ -1078,6 +1078,7 @@ function buildSignalMessages({
   const isPhase1 = ph === 1;
   const moodLabel = (mood || "").toString().toLowerCase();
 
+  // Normalizzo lo slot
   const raw = String(slot || "").toLowerCase();
   const s =
     raw === "morning" || raw === "mattina"
@@ -1091,11 +1092,12 @@ function buildSignalMessages({
   let sys;
   let user;
 
-  /* ============= ITALIANO ============= */
+  /* ============= ITALIANO: versione definitiva ============= */
   if (L === "it") {
     /* --------- MATTINO --------- */
     if (s === "morning") {
       if (stile === "whatif" && isPhase1) {
+        // WHAT IF – mattino
         sys = `Sei “WHAT IF” in MODALITÀ CONSIGLIO DEL MATTINO.
 
 REGOLE:
@@ -1112,6 +1114,7 @@ REGOLE:
         user = `Scrivi il consiglio del mattino in ITALIANO seguendo le regole sopra.
 Vai dritto al punto: parla all’utente in seconda persona, chiudi con un invito morbido a chiedere o rispondere se vuole.`;
       } else if (stile === "wtf" && !isPhase1) {
+        // WHAT THE F – mattino
         sys = `Sei “WHAT THE F” in MODALITÀ ROAST DEL MATTINO.
 
 Stai commentando il consiglio del mattino appena dato da WHAT IF:
@@ -1190,6 +1193,7 @@ Un paragrafo, 2–3 frasi: descrivi il pomeriggio mezzo incasinato, prendi in gi
     /* --------- SERA --------- */
     else if (s === "evening") {
       if (stile === "whatif" && isPhase1) {
+        // WHAT IF – sera
         sys = `Sei “WHAT IF” in MODALITÀ DOMANDA DI CHIUSURA SERALE.
 
 REGOLE:
@@ -1202,6 +1206,7 @@ REGOLE:
         user = `Scrivi il messaggio SERALE di WHAT IF in ITALIANO.
 Prima riconosci che la giornata sta chiudendo, poi fai una domanda riflessiva concreta, e chiudi invitando a parlare o a fare una domanda se gli va.`;
       } else if (stile === "wtf" && !isPhase1) {
+        // WHAT THE F – sera
         sys = `Sei “WHAT THE F” in MODALITÀ CHIUSURA SERALE, ultimo giro al bancone.
 
 Stai rispondendo alla domanda serale di WHAT IF:
@@ -1336,7 +1341,7 @@ Reaccionas al mensaje de WHAT IF con sarcasmo pero cariño y terminas con una mi
     if (stile === "whatif" && isPhase1) {
       sys = `Eres “WHAT IF” en modo CIERRE DE NOCHE (${label}).
 Habla claramente del FINAL DEL DÍA (noche), no de la mañana.
-Reconoce que el día se cierra, haz una pregunta reflexiva sencilla y termina invitando a hablarlo mejor o usarla como punto de partida.`;
+Reconoce que el día se cierra, haz una pregunta reflexiva sencilla y termina invitando a hablarlo mejor o usarlo como punto de partida.`;
       user = `Escribe el mensaje de la noche en ${label}.`;
     } else if (stile === "wtf" && !isPhase1) {
       sys = `Eres “WHAT THE F” en modo CIERRE DE NOCHE (${label}).
