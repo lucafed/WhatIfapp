@@ -1057,7 +1057,241 @@ Paragrafo unico, 3–6 frasi.`;
   msgs.push({ role: "user", content: ask });
   return msgs;
         }
-/* ========= SEGNALI GIORNO (mattina/pomeriggio/sera) ========= */
+
+
+/* ========= Server-side PCT ========= */
+function computePct(domanda, stile) {
+  const t = String(domanda || "").toLowerCase();
+  let s = 55;
+
+  if (/\b(7|14|21|30|60|90)\b/.test(t)) s += 10;
+  if (/\b\d+([.,]\d+)?\b/.test(t)) s += 6;
+  if (/budget|€|euro|spesa|max|under|sotto|prezzo|costo/.test(t)) s += 6;
+  if (/senza|solo|al massimo|minimo|entro|prima delle|ogni|per/.test(t)) s += 8;
+  if (/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa|cambia|trasferisc/i.test(t)) s += 6;
+  if (/forse|magari|maybe|quizás|chissà/.test(t)) s -= 8;
+  if (!/\b\d/.test(t)) s -= 4;
+
+  s += stile === "wtf" ? -3 : +3;
+
+  const h = hashStr(String(domanda || "") + "|" + String(stile || ""));
+  const jitter = (h % 31) - 15;
+  s += jitter;
+
+  const pct = Math.max(10, Math.min(95, Math.round(s)));
+  return pct;
+}
+
+/* ========= WHAT IF: motivazione fallback ========= */
+function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
+  const L = (lang || "it").slice(0, 2);
+  const t = String(domanda || "").toLowerCase();
+
+  const hasTime = /\b(7|14|21|30|60|90|giorn|settiman|mes|mesi|anni|days?|weeks?|months?|years?)\b/.test(
+    t
+  );
+  const hasBudget = /(budget|€|euro|spesa|costo|prezzo|max|under|sotto|caparra|cost|money)/.test(t);
+  const hasDeadline = /(entro|prima|scadenza|deadline|by\s+\d|before\s+\d)/.test(t);
+  const action =
+    /(apri|lancia|impara|studia|scrivi|automatizza|testa|cambia|trova|assumi|costruisci|crea|launch|start|learn|build|create)/.test(
+      t
+    );
+  const riskHedging = /(senza|solo|al massimo|minimo|rischio|risk|minimize|hedge)/.test(t);
+
+  if (L === "it") {
+    const pros = [];
+    const cons = [];
+
+    if (hasTime) {
+      pros.push("la timeline è gestibile se spezzetti il percorso");
+      cons.push("se non proteggi il tempo, rischi di tirarla lunga all’infinito");
+    }
+    if (hasBudget) {
+      pros.push("puoi tenere i costi sotto controllo fissando un tetto chiaro");
+      cons.push("se sottostimi le spese, la pressione economica può frenarti");
+    }
+    if (hasDeadline) {
+      pros.push("una scadenza esplicita ti aiuta a decidere prima");
+      cons.push("se la scadenza è vaga tenderai a spostarla sempre più avanti");
+    }
+    if (action) {
+      pros.push("hai una leva concreta su cui agire ogni giorno");
+    }
+    if (riskHedging) {
+      pros.push("puoi limitare il rischio con poche regole semplici");
+      cons.push("se cerchi rischio zero potresti non muoverti mai davvero");
+    }
+
+    if (!pros.length) {
+      pros.push("la vera leva è la routine: piccoli passi costanti battono le grandi intenzioni");
+    }
+    if (!cons.length) {
+      cons.push("il collo di bottiglia è la tua energia più che la fortuna");
+    }
+
+    const pSentence = `Probabilità circa ${pct}%.`;
+    const proConSentence = `A favore: ${pros[0]}. Contro: ${cons[0]}.`;
+    return `${pSentence} ${proConSentence}`.trim();
+  }
+
+  if (L === "en") {
+    const pros = [];
+    const cons = [];
+
+    if (hasTime) {
+      pros.push("the timeline is realistic if you break it into small chunks");
+      cons.push("if you don’t protect time, you’ll quietly postpone it forever");
+    }
+    if (hasBudget) {
+      pros.push("you can keep costs under control with a clear cap");
+      cons.push("underestimating expenses can add pressure and slow you down");
+    }
+    if (hasDeadline) {
+      pros.push("an explicit deadline helps you decide sooner");
+      cons.push("a fuzzy deadline tends to drift and weaken your commitment");
+    }
+    if (action) {
+      pros.push("you have a concrete lever you can pull every day");
+    }
+    if (riskHedging) {
+      pros.push("simple constraints can cap the downside");
+      cons.push("chasing zero risk can keep you stuck at the start line");
+    }
+
+    if (!pros.length) {
+      pros.push("the real lever is routine: small consistent steps beat big intentions");
+    }
+    if (!cons.length) {
+      cons.push("your main bottleneck is energy and focus, not luck");
+    }
+
+    const pSentence = `Estimated probability around ${pct}%.`;
+    const proConSentence = `Pros: ${pros[0]}. Cons: ${cons[0]}.`;
+    return `${pSentence} ${proConSentence}`.trim();
+  }
+
+  if (L === "es") {
+    const pros = [];
+    const cons = [];
+
+    if (hasTime) {
+      pros.push("el tiempo es manejable si divides el camino en pasos pequeños");
+      cons.push("si no proteges tu tiempo, acabarás posponiéndolo una y otra vez");
+    }
+    if (hasBudget) {
+      pros.push("puedes mantener los costes bajo control con un límite claro");
+      cons.push("si infravaloras los gastos, la presión económica puede frenarte");
+    }
+    if (hasDeadline) {
+      pros.push("un plazo definido empuja a decidir antes");
+      cons.push("si el plazo es difuso, se irá moviendo hacia adelante");
+    }
+    if (action) {
+      pros.push("tienes una palanca concreta para avanzar cada día");
+    }
+    if (riskHedging) {
+      pros.push("puedes limitar el riesgo con pocas reglas sencillas");
+      cons.push("buscar riesgo cero puede dejarte inmóvil");
+    }
+
+    if (!pros.length) {
+      pros.push("la palanca real es la rutina: pequeños pasos constantes vencen a los grandes planes");
+    }
+    if (!cons.length) {
+      cons.push("el cuello de botella es tu energía y foco, no la suerte");
+    }
+
+    const pSentence = `Probabilidad aproximada ${pct}%.`;
+    const proConSentence = `A favor: ${pros[0]}. En contra: ${cons[0]}.`;
+    return `${pSentence} ${proConSentence}`.trim();
+  }
+
+  if (L === "fr") {
+    const pros = [];
+    const cons = [];
+
+    if (hasTime) {
+      pros.push("le calendrier reste gérable si tu découpes en petites étapes");
+      cons.push("sans temps protégé, tu repousseras discrètement sans fin");
+    }
+    if (hasBudget) {
+      pros.push("tu peux contenir les coûts avec un plafond clair");
+      cons.push("si tu sous-estimes les dépenses, la pression financière peut te freiner");
+    }
+    if (hasDeadline) {
+      pros.push("une échéance claire aide à trancher plus vite");
+      cons.push("une date floue glisse facilement et affaiblit ton engagement");
+    }
+    if (action) {
+      pros.push("tu as un levier concret à actionner chaque jour");
+    }
+    if (riskHedging) {
+      pros.push("quelques règles simples peuvent limiter le risque");
+      cons.push("viser le risque zéro risque justement de t’immobiliser");
+    }
+
+    if (!pros.length) {
+      pros.push("le vrai levier, c’est la routine: de petits pas réguliers dépassent les grandes intentions");
+    }
+    if (!cons.length) {
+      cons.push("le principal goulot d’étranglement est ton énergie et ta clarté, pas la chance");
+    }
+
+    const pSentence = `Probabilité estimée autour de ${pct}%.`;
+    const proConSentence = `Atouts: ${pros[0]}. Freins: ${cons[0]}.`;
+    return `${pSentence} ${proConSentence}`.trim();
+  }
+
+  if (L === "de") {
+    const pros = [];
+    const cons = [];
+
+    if (hasTime) {
+      pros.push("der Zeitplan ist machbar, wenn du ihn in kleine Schritte teilst");
+      cons.push("ohne geschützte Zeit wirst du es immer wieder verschieben");
+    }
+    if (hasBudget) {
+      pros.push("mit einem klaren Kostenlimit bleibt das Budget unter Kontrolle");
+      cons.push("wenn du Ausgaben unterschätzt, entsteht Druck, der dich bremst");
+    }
+    if (hasDeadline) {
+      pros.push("eine klare Deadline zwingt zu früheren Entscheidungen");
+      cons.push("eine vage Frist rutscht leicht nach hinten");
+    }
+    if (action) {
+      pros.push("du hast einen konkreten Hebel, den du täglich bewegen kannst");
+    }
+    if (riskHedging) {
+      pros.push("einfache Regeln können das Risiko begrenzen");
+      cons.push("wenn du null Risiko willst, kommst du vielleicht nie in Gang");
+    }
+
+    if (!pros.length) {
+      pros.push("der wahre Hebel ist Routine: kleine, konstante Schritte schlagen große Vorsätze");
+    }
+    if (!cons.length) {
+      cons.push("der Engpass ist deine Energie und Fokussierung, nicht das Schicksal");
+    }
+
+    const pSentence = `Geschätzte Wahrscheinlichkeit etwa ${pct}%.`;
+    const proConSentence = `Dafür: ${pros[0]}. Dagegen: ${cons[0]}.`;
+    return `${pSentence} ${proConSentence}`.trim();
+  }
+
+  return buildWhatIfMotivation(domanda, "it", pct);
+}
+
+/* ========= MOTIVAZIONE LLM ========= */
+async function generateMotivationLLM({ domanda, clarification, answer, lang, pct }) {
+  const L = normLang(lang);
+
+  let sys;
+  if (L === "en") {
+    sys = `You are the MOTIVATION MODULE of “WHAT IF”. Write ONE short sentence that explains, in a practical way, WHY the probability is around ${pct}% for this scenario. Be consistent with the main answer. No emojis, no lists. Max 25 words.`;
+  } else if (L === "it") {
+    sys = `Sei il MODULO MOTIVAZIONE di “WHAT IF”. Scrivi UNA sola frase che spiega in modo pratico perché la probabilità è circa ${pct}% in questo scenario. Deve essere coerente con la risposta principale. Niente emoji, niente elenco. Massimo 25 parole.`;
+  } else if (L === "es") {
+    sys = `Eres el MÓDULO DE MOTIVACIÓN de “WHAT IF”. Escribe UNA sola frase que explique por qué la probabilidad es aproximadamente ${pct}%/* ========= SEGNALI GIORNO (mattina/pomeriggio/sera) ========= */
 /**
  * slot:  "morning" | "afternoon" | "evening" | "mattina" | "pomeriggio" | "sera" | "notte"
  * phase: 1 = WHAT IF (notifica principale)
@@ -1357,352 +1591,7 @@ Reaccionas al mensaje de WHAT IF con ironía cariñosa y terminas invitando a va
     { role: "system", content: sys },
     { role: "user", content: user },
   ];
-}
-  /* ============= ALTRE LINGUE – versione compatta ma coerente ============= */
-
-  if (L === "en") {
-    if (s === "morning") {
-      if (stile === "whatif" && isPhase1) {
-        sys = `You are “WHAT IF” in MORNING mode.
-Give 1–2 very practical suggestions to start the day a bit lighter and clearer, then gently invite them to ask or share more.
-2–3 sentences, one paragraph, no emojis.`;
-        user = `Write the morning message in ENGLISH, following the rules above.`;
-      } else if (stile === "wtf" && !isPhase1) {
-        sys = `You are “WHAT THE F” in MORNING ROAST mode.
-React to WHAT IF’s serious tip: tease it, stay connected to it, be sarcastic but secretly caring.
-End with a crooked but clear invite to “talk properly” or ask a real question.`;
-        user = `Write the WHAT THE F morning reply in ENGLISH.`;
-      } else {
-        sys = `You are “WHAT IF” in generic morning signal mode.`;
-        user = `Write one short practical sentence in ENGLISH.`;
-      }
-    } else if (s === "afternoon") {
-      if (stile === "whatif" && isPhase1) {
-        sys = `You are “WHAT IF” in AFTERNOON CHECK-IN mode.
-Acknowledge mid-day, suggest one small realistic adjustment, and end with a soft invitation to ask something more specific if they want.
-2–4 sentences, one paragraph.`;
-        user = `Write the AFTERNOON CHECK-IN message in ENGLISH.`;
-      } else if (stile === "wtf" && !isPhase1) {
-        sys = `You are “WHAT THE F” in AFTERNOON COMMENT mode.
-React sarcastically but warmly to WHAT IF’s message (desk, tram, coffee cup, screen, sofa…).
-Finish with a crooked mini-moral and an invite to vent or ask something real.`;
-        user = `Write the WHAT THE F afternoon comment in ENGLISH.`;
-      } else {
-        sys = `You are “WHAT IF” in generic afternoon signal mode.`;
-        user = `Write one short check-in sentence in ENGLISH.`;
-      }
-    } else if (s === "evening") {
-      if (stile === "whatif" && isPhase1) {
-        sys = `You are “WHAT IF” in EVENING CLOSING mode.
-Recognise the day is ending, ask one simple reflective question, and end with a gentle invite to talk it through if they want.
-2–3 sentences, one paragraph.`;
-        user = `Write the evening message in ENGLISH.`;
-      } else if (stile === "wtf" && !isPhase1) {
-        sys = `You are “WHAT THE F” in EVENING CLOSING mode.
-React to WHAT IF’s reflective question with bar-counter sarcasm but care.
-End with a crooked mini-moral and a clear invite to “empty the mental trash” or ask something real.`;
-        user = `Write the WHAT THE F evening message in ENGLISH.`;
-      } else {
-        sys = `You are “WHAT IF” in generic evening signal mode.`;
-        user = `Write one short neutral evening sentence in ENGLISH.`;
-      }
-    } else {
-      sys = `You are in generic signal mode.`;
-      user = `Write one short sentence in ENGLISH.`;
-    }
-
-    return [
-      { role: "system", content: sys },
-      { role: "user", content: user },
-    ];
-  }
-
-  // ES / FR / DE – versioni compatte ma coerenti
-  const label = L === "es" ? "ESPAÑOL" : L === "fr" ? "FRANÇAIS" : "DEUTSCH";
-
-  if (s === "morning") {
-    if (stile === "whatif" && isPhase1) {
-      sys = `Eres “WHAT IF” en modo MAÑANA (${label}).
-Da 1–2 consejos prácticos para empezar el día un poco más claro y ligero, y termina con una invitación suave a preguntar o hablar más.`;
-      user = `Escribe el mensaje de la mañana en ${label}.`;
-    } else if (stile === "wtf" && !isPhase1) {
-      sys = `Eres “WHAT THE F” en modo ROAST DE MAÑANA (${label}).
-Reaccionas con ironía cariñosa al mensaje de WHAT IF y terminas invitando a hablarlo en serio o hacer una pregunta real.`;
-      user = `Escribe la respuesta de la mañana de WHAT THE F en ${label}.`;
-    } else {
-      sys = `Eres “WHAT IF” en modo señal de mañana genérica (${label}).`;
-      user = `Escribe una frase breve de consejo de mañana en ${label}.`;
-    }
-  } else if (s === "afternoon") {
-    if (stile === "whatif" && isPhase1) {
-      sys = `Eres “WHAT IF” en modo CHEQUEO DE TARDE (${label}).
-Reconoce la mitad del día, ofrece un pequeño ajuste práctico y termina con una invitación suave a contar mejor o preguntar algo concreto.`;
-      user = `Escribe el mensaje de chequeo de tarde en ${label}.`;
-    } else if (stile === "wtf" && !isPhase1) {
-      sys = `Eres “WHAT THE F” en modo COMENTARIO DE TARDE (${label}).
-Reaccionas al mensaje de WHAT IF con sarcasmo pero cariño y terminas con una mini-moraleja torcida y una invitación a desahogarse o preguntar algo real.`;
-      user = `Escribe el comentario de WHAT THE F de la tarde en ${label}.`;
-    } else {
-      sys = `Eres “WHAT IF” en modo señal de tarde genérica (${label}).`;
-      user = `Escribe una frase corta de chequeo en ${label}.`;
-    }
-  } else if (s === "evening") {
-    if (stile === "whatif" && isPhase1) {
-      sys = `Eres “WHAT IF” en modo CIERRE DE NOCHE (${label}).
-Reconoce que el día se cierra, haz una pregunta reflexiva sencilla y termina invitando a hablarlo mejor o usarla como punto de partida.`;
-      user = `Escribe el mensaje de la noche en ${label}.`;
-    } else if (stile === "wtf" && !isPhase1) {
-      sys = `Eres “WHAT THE F” en modo CIERRE DE NOCHE (${label}).
-Reaccionas al mensaje de WHAT IF con ironía cariñosa y terminas invitando a vaciar la cabeza, contar o hacer una pregunta real.`;
-      user = `Escribe el mensaje nocturno de WHAT THE F en ${label}.`;
-    } else {
-      sys = `Eres “WHAT IF” en modo noche genérica (${label}).`;
-      user = `Escribe una frase corta de noche en ${label}.`;
-    }
-  } else {
-    sys = `Eres “WHAT IF” en modo señal genérica (${label}).`;
-    user = `Escribe una frase corta en ${label}.`;
-  }
-
-  return [
-    { role: "system", content: sys },
-    { role: "user", content: user },
-  ];
-}
-
-/* ========= Server-side PCT ========= */
-function computePct(domanda, stile) {
-  const t = String(domanda || "").toLowerCase();
-  let s = 55;
-
-  if (/\b(7|14|21|30|60|90)\b/.test(t)) s += 10;
-  if (/\b\d+([.,]\d+)?\b/.test(t)) s += 6;
-  if (/budget|€|euro|spesa|max|under|sotto|prezzo|costo/.test(t)) s += 6;
-  if (/senza|solo|al massimo|minimo|entro|prima delle|ogni|per/.test(t)) s += 8;
-  if (/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa|cambia|trasferisc/i.test(t)) s += 6;
-  if (/forse|magari|maybe|quizás|chissà/.test(t)) s -= 8;
-  if (!/\b\d/.test(t)) s -= 4;
-
-  s += stile === "wtf" ? -3 : +3;
-
-  const h = hashStr(String(domanda || "") + "|" + String(stile || ""));
-  const jitter = (h % 31) - 15;
-  s += jitter;
-
-  const pct = Math.max(10, Math.min(95, Math.round(s)));
-  return pct;
-}
-
-/* ========= WHAT IF: motivazione fallback ========= */
-function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
-  const L = (lang || "it").slice(0, 2);
-  const t = String(domanda || "").toLowerCase();
-
-  const hasTime = /\b(7|14|21|30|60|90|giorn|settiman|mes|mesi|anni|days?|weeks?|months?|years?)\b/.test(
-    t
-  );
-  const hasBudget = /(budget|€|euro|spesa|costo|prezzo|max|under|sotto|caparra|cost|money)/.test(t);
-  const hasDeadline = /(entro|prima|scadenza|deadline|by\s+\d|before\s+\d)/.test(t);
-  const action =
-    /(apri|lancia|impara|studia|scrivi|automatizza|testa|cambia|trova|assumi|costruisci|crea|launch|start|learn|build|create)/.test(
-      t
-    );
-  const riskHedging = /(senza|solo|al massimo|minimo|rischio|risk|minimize|hedge)/.test(t);
-
-  if (L === "it") {
-    const pros = [];
-    const cons = [];
-
-    if (hasTime) {
-      pros.push("la timeline è gestibile se spezzetti il percorso");
-      cons.push("se non proteggi il tempo, rischi di tirarla lunga all’infinito");
-    }
-    if (hasBudget) {
-      pros.push("puoi tenere i costi sotto controllo fissando un tetto chiaro");
-      cons.push("se sottostimi le spese, la pressione economica può frenarti");
-    }
-    if (hasDeadline) {
-      pros.push("una scadenza esplicita ti aiuta a decidere prima");
-      cons.push("se la scadenza è vaga tenderai a spostarla sempre più avanti");
-    }
-    if (action) {
-      pros.push("hai una leva concreta su cui agire ogni giorno");
-    }
-    if (riskHedging) {
-      pros.push("puoi limitare il rischio con poche regole semplici");
-      cons.push("se cerchi rischio zero potresti non muoverti mai davvero");
-    }
-
-    if (!pros.length) {
-      pros.push("la vera leva è la routine: piccoli passi costanti battono le grandi intenzioni");
-    }
-    if (!cons.length) {
-      cons.push("il collo di bottiglia è la tua energia più che la fortuna");
-    }
-
-    const pSentence = `Probabilità circa ${pct}%.`;
-    const proConSentence = `A favore: ${pros[0]}. Contro: ${cons[0]}.`;
-    return `${pSentence} ${proConSentence}`.trim();
-  }
-
-  if (L === "en") {
-    const pros = [];
-    const cons = [];
-
-    if (hasTime) {
-      pros.push("the timeline is realistic if you break it into small chunks");
-      cons.push("if you don’t protect time, you’ll quietly postpone it forever");
-    }
-    if (hasBudget) {
-      pros.push("you can keep costs under control with a clear cap");
-      cons.push("underestimating expenses can add pressure and slow you down");
-    }
-    if (hasDeadline) {
-      pros.push("an explicit deadline helps you decide sooner");
-      cons.push("a fuzzy deadline tends to drift and weaken your commitment");
-    }
-    if (action) {
-      pros.push("you have a concrete lever you can pull every day");
-    }
-    if (riskHedging) {
-      pros.push("simple constraints can cap the downside");
-      cons.push("chasing zero risk can keep you stuck at the start line");
-    }
-
-    if (!pros.length) {
-      pros.push("the real lever is routine: small consistent steps beat big intentions");
-    }
-    if (!cons.length) {
-      cons.push("your main bottleneck is energy and focus, not luck");
-    }
-
-    const pSentence = `Estimated probability around ${pct}%.`;
-    const proConSentence = `Pros: ${pros[0]}. Cons: ${cons[0]}.`;
-    return `${pSentence} ${proConSentence}`.trim();
-  }
-
-  if (L === "es") {
-    const pros = [];
-    const cons = [];
-
-    if (hasTime) {
-      pros.push("el tiempo es manejable si divides el camino en pasos pequeños");
-      cons.push("si no proteges tu tiempo, acabarás posponiéndolo una y otra vez");
-    }
-    if (hasBudget) {
-      pros.push("puedes mantener los costes bajo control con un límite claro");
-      cons.push("si infravaloras los gastos, la presión económica puede frenarte");
-    }
-    if (hasDeadline) {
-      pros.push("un plazo definido empuja a decidir antes");
-      cons.push("si el plazo es difuso, se irá moviendo hacia adelante");
-    }
-    if (action) {
-      pros.push("tienes una palanca concreta para avanzar cada día");
-    }
-    if (riskHedging) {
-      pros.push("puedes limitar el riesgo con pocas reglas sencillas");
-      cons.push("buscar riesgo cero puede dejarte inmóvil");
-    }
-
-    if (!pros.length) {
-      pros.push("la palanca real es la rutina: pequeños pasos constantes vencen a los grandes planes");
-    }
-    if (!cons.length) {
-      cons.push("el cuello de botella es tu energía y foco, no la suerte");
-    }
-
-    const pSentence = `Probabilidad aproximada ${pct}%.`;
-    const proConSentence = `A favor: ${pros[0]}. En contra: ${cons[0]}.`;
-    return `${pSentence} ${proConSentence}`.trim();
-  }
-
-  if (L === "fr") {
-    const pros = [];
-    const cons = [];
-
-    if (hasTime) {
-      pros.push("le calendrier reste gérable si tu découpes en petites étapes");
-      cons.push("sans temps protégé, tu repousseras discrètement sans fin");
-    }
-    if (hasBudget) {
-      pros.push("tu peux contenir les coûts avec un plafond clair");
-      cons.push("si tu sous-estimes les dépenses, la pression financière peut te freiner");
-    }
-    if (hasDeadline) {
-      pros.push("une échéance claire aide à trancher plus vite");
-      cons.push("une date floue glisse facilement et affaiblit ton engagement");
-    }
-    if (action) {
-      pros.push("tu as un levier concret à actionner chaque jour");
-    }
-    if (riskHedging) {
-      pros.push("quelques règles simples peuvent limiter le risque");
-      cons.push("viser le risque zéro risque justement de t’immobiliser");
-    }
-
-    if (!pros.length) {
-      pros.push("le vrai levier, c’est la routine: de petits pas réguliers dépassent les grandes intentions");
-    }
-    if (!cons.length) {
-      cons.push("le principal goulot d’étranglement est ton énergie et ta clarté, pas la chance");
-    }
-
-    const pSentence = `Probabilité estimée autour de ${pct}%.`;
-    const proConSentence = `Atouts: ${pros[0]}. Freins: ${cons[0]}.`;
-    return `${pSentence} ${proConSentence}`.trim();
-  }
-
-  if (L === "de") {
-    const pros = [];
-    const cons = [];
-
-    if (hasTime) {
-      pros.push("der Zeitplan ist machbar, wenn du ihn in kleine Schritte teilst");
-      cons.push("ohne geschützte Zeit wirst du es immer wieder verschieben");
-    }
-    if (hasBudget) {
-      pros.push("mit einem klaren Kostenlimit bleibt das Budget unter Kontrolle");
-      cons.push("wenn du Ausgaben unterschätzt, entsteht Druck, der dich bremst");
-    }
-    if (hasDeadline) {
-      pros.push("eine klare Deadline zwingt zu früheren Entscheidungen");
-      cons.push("eine vage Frist rutscht leicht nach hinten");
-    }
-    if (action) {
-      pros.push("du hast einen konkreten Hebel, den du täglich bewegen kannst");
-    }
-    if (riskHedging) {
-      pros.push("einfache Regeln können das Risiko begrenzen");
-      cons.push("wenn du null Risiko willst, kommst du vielleicht nie in Gang");
-    }
-
-    if (!pros.length) {
-      pros.push("der wahre Hebel ist Routine: kleine, konstante Schritte schlagen große Vorsätze");
-    }
-    if (!cons.length) {
-      cons.push("der Engpass ist deine Energie und Fokussierung, nicht das Schicksal");
-    }
-
-    const pSentence = `Geschätzte Wahrscheinlichkeit etwa ${pct}%.`;
-    const proConSentence = `Dafür: ${pros[0]}. Dagegen: ${cons[0]}.`;
-    return `${pSentence} ${proConSentence}`.trim();
-  }
-
-  return buildWhatIfMotivation(domanda, "it", pct);
-}
-
-/* ========= MOTIVAZIONE LLM ========= */
-async function generateMotivationLLM({ domanda, clarification, answer, lang, pct }) {
-  const L = normLang(lang);
-
-  let sys;
-  if (L === "en") {
-    sys = `You are the MOTIVATION MODULE of “WHAT IF”. Write ONE short sentence that explains, in a practical way, WHY the probability is around ${pct}% for this scenario. Be consistent with the main answer. No emojis, no lists. Max 25 words.`;
-  } else if (L === "it") {
-    sys = `Sei il MODULO MOTIVAZIONE di “WHAT IF”. Scrivi UNA sola frase che spiega in modo pratico perché la probabilità è circa ${pct}% in questo scenario. Deve essere coerente con la risposta principale. Niente emoji, niente elenco. Massimo 25 parole.`;
-  } else if (L === "es") {
-    sys = `Eres el MÓDULO DE MOTIVACIÓN de “WHAT IF”. Escribe UNA sola frase que explique por qué la probabilidad es aproximadamente ${pct}% en este escenario. Coherente con la respuesta principal, máximo 25 palabras, sin emojis.`;
+  } en este escenario. Coherente con la respuesta principal, máximo 25 palabras, sin emojis.`;
   } else if (L === "fr") {
     sys = `Tu es le MODULE MOTIVATION de “WHAT IF”. Écris UNE phrase qui explique pourquoi la probabilité est d’environ ${pct}% dans ce scénario. Reste cohérent avec la réponse principale, max 25 mots, sans emoji.`;
   } else {
