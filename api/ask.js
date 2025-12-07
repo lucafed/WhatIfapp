@@ -545,7 +545,7 @@ Make clear you refer to that former chapter or missed path.`;
             ? "ITALIANO"
             : L === "es"
             ? "SPAGNOLO"
-            : L === "FR"
+            : L === "fr"
             ? "FRANCESE"
             : "TEDESCO";
 
@@ -1060,15 +1060,13 @@ Paragrafo unico, 3–6 frasi.`;
 }
 
 /* ========= SEGNALI GIORNO (mattina/pomeriggio/sera) ========= */
-/* 
-   QUI ORA USIAMO FRASI FISSE, NON PIÙ L’IA, QUINDI
-   LE FUNZIONI buildSignalMessages RESTANO COME BACKUP
-   MA IL CODICE PRINCIPALE PER I SIGNAL È SOTTO (DAILY TEXT).
-*/
 /**
  * slot:  "morning" | "afternoon" | "evening" | "mattina" | "pomeriggio" | "sera" | "notte"
  * phase: 1 = WHAT IF (notifica principale)
  *        2 = WHAT THE F (risposta 5 minuti dopo)
+ *
+ * ATTENZIONE: nel codice principale usiamo SOLO le frasi statiche (buildDailyStaticSignal),
+ * questa funzione resta come backup se un domani vuoi tornare all’IA per i segnali.
  */
 function buildSignalMessages({
   slot = "morning",
@@ -1724,20 +1722,13 @@ export default async function handler(req, res) {
     if (stage === "clarify") {
       const messages = buildClarifyMessages({ domanda, stile, lang: L, periodo, micro });
 
-      const isSurprise = micro && (micro.surprise === true || micro.src === "surprise");
-
-      let temperature = stile === "wtf" ? 1.0 : 0.7;
-      let top_p = 0.96;
-      let frequency_penalty = stile === "wtf" ? 0.8 : 0.2;
-      let presence_penalty = stile === "wtf" ? 0.7 : 0.1;
-
       const completion = await client.chat.completions.create({
         model: MODEL,
-        temperature,
-        top_p,
+        temperature: stile === "wtf" ? 1.0 : 0.7,
+        top_p: 0.96,
         max_tokens: 80,
-        frequency_penalty,
-        presence_penalty,
+        frequency_penalty: stile === "wtf" ? 0.8 : 0.2,
+        presence_penalty: stile === "wtf" ? 0.7 : 0.1,
         messages,
       });
 
@@ -1927,8 +1918,9 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
-    return res
-      .status(500)
-      .json({ error: "server_error", detail: String(err?.message || err) });
+    return res.status(500).json({
+      error: "server_error",
+      detail: String(err?.message || err),
+    });
   }
-                       }
+    }
