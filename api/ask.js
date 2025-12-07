@@ -343,7 +343,7 @@ const WTF_STYLE_EXAMPLES_IT = `Esempio 1:
 "Oh, eccoci, centauro dell’inferno. Casco lucido, petto in fuori e cervello rimasto indietro di due curve. Parti, il vento ti fa sentire un dio… poi un’ape ti punta il collo come se avessi firmato un contratto. Ti scappa un “bestemmione a motore caldo!” così forte che il semaforo si mette al rosso da solo e un cane attraversa la strada cambiando idea sulla sua vita. Ti fermi, respiri, e ne lasci andare un’altra più piccola, quasi affettuosa, tipo rito di purificazione. Al bar ordini “qualcosa per sciacquare la bestemmia” e il barista annuisce come uno che ha visto troppo, ecchecazz!!!"
 
 Esempio 2:
-"Ah, Luisa… eccoci di nuovo, come una ferita che ha nostalgia del coltello. Ci ricaschi: ti lanci nel suo buco nero emotivo e poi ti spaventi dell’eco. Lei ti visualizza, poi sparisce, e ti sale la pressione come una pentola col coperchio che urla. Ti parte una “bestemmia della miseria incrociata” talmente sincera che la lampada sfarfalla e il bicchiere applaude. Il gatto scappa, Alexa finge un aggiornamento, e tu lasci cadere un’altra imprecazione che sembra una preghiera marcia. Bevi un sorso di rosso e riconosci che ogni storia finisce così: una bestemmia e un brindisi storto — ma almeno il vino lo scegli tu, ecchecazz!!!"
+"Ah, Luisa… eccoci di nuovo, come una ferita che ha nostalgia del coltello. Ci ricaschi: ti lanci nel suo buco nero emotivo e poi ti spaventi dell’eco. Lei ti visualizza, poi sparisce, ja ti sale la pressione come una pentola col coperchio che urla. Ti parte una “bestemmia della miseria incrociata” talmente sincera che la lampada sfarfalla e il bicchiere applaude. Il gatto scappa, Alexa finge un aggiornamento, e tu lasci cadere un’altra imprecazione che sembra una preghiera marcia. Bevi un sorso di rosso e riconosci che ogni storia finisce così: una bestemmia e un brindisi storto — ma almeno il vino lo scegli tu, ecchecazz!!!"
 
 Esempio 3:
 "Oh, eccoci, turista del destino con la valigia piena di “poi vediamo”. Torni in città e ti parte una “bestemmia di ritorno” così tonda che perfino il piccione sul cornicione fa finta di non conoscerti. Il barista ti piazza il bicchiere davanti senza chiedere niente, come se stesse timbrando il tuo rientro nella vita vera. Se fai il passo, i vicoli ti si appiccicano addosso e il divano resta vuoto; se resti dove sei, passi le sere a fissare il muro mentre il citofono tace per imbarazzo. Morale storta: o rientri nel film o resti la comparsa dei tuoi stessi pensieri, ecchecazz!!!"`;
@@ -965,9 +965,7 @@ monologo unico, 3–5 frasi, circa 90–130 parole;
 
 apertura che ti prende per il culo;
 
-mostra DUE film: se fai davvero questa scelta e se resti fermo a tirarla lunga;
-
-i pro e i contro devono essere dentro le scene, scemi e demenziali ma con un fondo di verità (routine, chiappe, ansia, piccole libertà);
+mostra DUE film: se fai davvero questa scelta e se resti fermo a tirarla lunga (pro e contro dentro le scenette, stupidi ma veri);
 
 usa 2–4 oggetti che reagiscono (bicchiere, divano, finestra, trolley, pc, citofono, tazzina, tapparelle…), cambiandoli spesso e facendoli sembrare credibili nella scena;
 
@@ -1070,7 +1068,8 @@ function normalizeSignalSlot(slot) {
   const raw = String(slot || "").toLowerCase();
   if (raw === "morning" || raw === "mattina") return "morning";
   if (raw === "afternoon" || raw === "pomeriggio") return "afternoon";
-  if (raw === "evening" || raw === "sera" || raw === "night" || raw === "notte") return "evening";
+  if (raw === "evening" || raw === "sera" || raw === "night" || raw === "notte")
+    return "evening";
   return "morning";
 }
 
@@ -1092,9 +1091,7 @@ function fixSignalTimeRefs(answer = "", slot = "morning", lang = "it") {
 
   if (s === "afternoon") {
     out = out.replace(mattinaRegex, "oggi");
-  }
-
-  if (s === "evening") {
+  } else if (s === "evening") {
     out = out.replace(mattinaRegex, "oggi");
     out = out.replace(pomeriggioRegex, "oggi");
   }
@@ -1115,15 +1112,7 @@ function buildSignalMessages({
   const isPhase1 = ph === 1;
   const moodLabel = (mood || "").toString().toLowerCase();
 
-  const raw = String(slot || "").toLowerCase();
-  const s =
-    raw === "morning" || raw === "mattina"
-      ? "morning"
-      : raw === "afternoon" || raw === "pomeriggio"
-      ? "afternoon"
-      : raw === "evening" || raw === "sera" || raw === "night" || raw === "notte"
-      ? "evening"
-      : "morning";
+  const s = normalizeSignalSlot(slot);
 
   let sys;
   let user;
@@ -1838,11 +1827,26 @@ export default async function handler(req, res) {
       lang = "it",
       periodo = "future", // "future" | "past"
       micro = {},
+      slot: bodySlot,
+      timeOfDay: bodyTimeOfDay,
+      time: bodyTime,
     } = body || {};
 
     const L = normLang(lang);
 
-    const isSignal = (micro && micro.src === "signal") || stage === "signal";
+    // Detect segnali anche se il client non mette micro.src = "signal"
+    const looksLikeSignal =
+      stage === "signal" ||
+      (micro &&
+        (micro.src === "signal" ||
+          micro.slot ||
+          micro.time ||
+          micro.timeOfDay)) ||
+      bodySlot ||
+      bodyTimeOfDay ||
+      bodyTime;
+
+    const isSignal = !!looksLikeSignal;
 
     if ((!domanda || typeof domanda !== "string") && !isSignal) {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
@@ -1889,12 +1893,24 @@ export default async function handler(req, res) {
 
     /* ====== STAGE: ANSWER (normale o segnale) ====== */
     let messages;
+    let usedSlot = "morning";
+
     if (isSignal) {
-      const slot = micro.slot || micro.time || micro.timeOfDay || "morning";
+      const rawSlot =
+        micro.slot ||
+        micro.time ||
+        micro.timeOfDay ||
+        bodySlot ||
+        bodyTimeOfDay ||
+        bodyTime ||
+        "morning";
+
+      usedSlot = rawSlot;
+
       const phase = micro.phase ?? micro.step ?? 1;
 
       messages = buildSignalMessages({
-        slot,
+        slot: rawSlot,
         phase,
         mood: micro.mood || null,
         lang: L,
@@ -2030,16 +2046,16 @@ export default async function handler(req, res) {
     answer = finalPunct(answer);
 
     if (isSignal) {
-      const slot = micro.slot || micro.time || micro.timeOfDay || "morning";
-      const phase = micro.phase ?? micro.step ?? 1;
-
       // Fix temporale: niente mattina nei messaggi di pomeriggio/sera
-      answer = fixSignalTimeRefs(answer, slot, L);
+      answer = fixSignalTimeRefs(answer, usedSlot, L);
+
+      const normalizedSlot = normalizeSignalSlot(usedSlot);
+      const phase = micro.phase ?? micro.step ?? 1;
 
       return res.status(200).json({
         mode: "signal",
-        time: slot,
-        slot,
+        time: normalizedSlot,
+        slot: normalizedSlot,
         phase,
         mood: micro.mood || null,
         style: stile,
@@ -2097,4 +2113,4 @@ export default async function handler(req, res) {
       .status(500)
       .json({ error: "server_error", detail: String(err?.message || err) });
   }
-    }
+          }
