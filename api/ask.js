@@ -12,18 +12,33 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
 /* ========= Redis & Rate ========= */
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || "",
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || "",
-});
-const rl = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(10, "1 m"),
-});
+// versione sicura: non esplode se le env non ci sono / sono sbagliate
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+let redis = null;
+let rl = null;
+
+if (redisUrl && redisToken) {
+  try {
+    redis = new Redis({
+      url: redisUrl,
+      token: redisToken,
+    });
+    rl = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(10, "1 m"),
+    });
+  } catch (e) {
+    console.error("Upstash init error, disabling rate limit/logging:", e);
+    redis = null;
+    rl = null;
+  }
+}
 
 // Wrapper tollerante
 let rateOk = async () => true;
-try {
+if (rl) {
   rateOk = async (key) => {
     try {
       const { success } = await rl.limit(key);
@@ -32,8 +47,6 @@ try {
       return true;
     }
   };
-} catch {
-  /* noop */
 }
 
 /* ========= LOGGING ANONIMO DOMANDE VERE ========= */
@@ -45,9 +58,12 @@ logUserQuestion:
 */
 async function logUserQuestion({ stile, lang, periodo }) {
   try {
+    // se Redis non è inizializzato, non loggare
+    if (!redis) return;
     if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
       return;
     }
+
     const ts = Date.now();
     const d = new Date(ts).toISOString().slice(0, 10); // YYYY-MM-DD
     const key = `stats:questions:${d}`;
@@ -545,7 +561,7 @@ Make clear you refer to that former chapter or missed path.`;
             ? "ITALIANO"
             : L === "es"
             ? "SPAGNOLO"
-            : L === "FR"
+            : L === "fr"
             ? "FRANCESE"
             : "TEDESCO";
 
@@ -1064,6 +1080,9 @@ Paragrafo unico, 3–6 frasi.`;
  * slot:  "morning" | "afternoon" | "evening" | "mattina" | "pomeriggio" | "sera" | "notte"
  * phase: 1 = WHAT IF (notifica principale)
  *        2 = WHAT THE F (risposta 5 minuti dopo)
+ *
+ * ATTENZIONE: nel codice principale usiamo SOLO le frasi statiche (buildDailyStaticSignal),
+ * questa funzione resta come backup se un domani vuoi tornare all’IA per i segnali.
  */
 function buildSignalMessages({
   slot = "morning",
@@ -1666,6 +1685,8 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
   try {
+    if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: "missing_api_key" });
+
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
       .toString()
       .split(",")[0]
@@ -1690,7 +1711,7 @@ export default async function handler(req, res) {
 
     const isSignal = (micro && micro.src === "signal") || stage === "signal";
 
-    // ====== SEGNALI GIORNALIERI: SOLO FRASI STATICHE, NIENTE OPENAI ======
+    // ====== SEGNALI GIORNALIERI: USIAMO SOLO LE FRASI FISSE, NIENTE LLM ======
     if (isSignal) {
       const slot = micro.slot || micro.time || micro.timeOfDay || "morning";
       const answer = buildDailyStaticSignal({ slot, stile, lang: L }) || "";
@@ -1707,11 +1728,6 @@ export default async function handler(req, res) {
         model: MODEL,
         answer,
       });
-    }
-
-    // Da qui in giù servono davvero le API OpenAI
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ error: "missing_api_key" });
     }
 
     if (!domanda || typeof domanda !== "string") {
@@ -1923,4 +1939,4 @@ export default async function handler(req, res) {
       detail: String(err?.message || err),
     });
   }
-  }
+}
