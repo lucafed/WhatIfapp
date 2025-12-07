@@ -200,29 +200,45 @@ const ZINGARA_ENDINGS = {
     future: [
       "E piano piano ti rendi conto che conta più come ti tratti ogni giorno che la singola decisione di oggi.",
       "E quasi senza accorgertene inizi a capire che la svolta vera è nel modo in cui ti prendi cura di te.",
-      "E alla fine ti accorgi che non stai salvando il mondo, ma ti stai dando un modo più gentile di viverci."
+      "E alla fine ti accorgi che non stai salvando il mondo, ma ti stai dando un modo più gentile di viverci.",
     ],
     past: [
       "E guardando quella versione di te capisci che non era la scelta perfetta, solo un modo diverso di complicarti la vita.",
       "Da fuori ti rendi conto che non hai buttato via la vita, l’hai solo portata su un binario diverso da imparare a usare.",
-      "E lì cominci a usare quel rimpianto più come un promemoria per le prossime scelte che come una condanna."
+      "E lì cominci a usare quel rimpianto più come un promemoria per le prossime scelte che come una condanna.",
     ],
   },
   en: {
-    future: ["And there you notice it’s less about miracles and more about how you show up every day."],
-    past: ["You’d probably see it wasn’t the perfect choice, just a different one you’d have to live with."],
+    future: [
+      "And there you notice it’s less about miracles and more about how you show up every day.",
+    ],
+    past: [
+      "You’d probably see it wasn’t the perfect choice, just a different one you’d have to live with.",
+    ],
   },
   es: {
-    future: ["Y ahí notarás que importa más cómo vives tus días que el escenario perfecto en tu cabeza."],
-    past: ["Y quizá hoy verías que no era la decisión perfecta, solo otra forma de complicarte distinto."],
+    future: [
+      "Y ahí notarás que importa más cómo vives tus días que el escenario perfecto en tu cabeza.",
+    ],
+    past: [
+      "Y quizá hoy verías que no era la decisión perfecta, solo otra forma de complicarte distinto.",
+    ],
   },
   fr: {
-    future: ["Et là tu verras que ce qui compte surtout, c’est comment tu vis tes journées, pas le décor exact."],
-    past: ["Et tu comprendras que ce n’était pas le “bon” choix ou le “mauvais”, juste un chemin différent à assumer."],
+    future: [
+      "Et là tu verras que ce qui compte surtout, c’est comment tu vis tes journées, pas le décor exact.",
+    ],
+    past: [
+      "Et tu comprendras que ce n’était pas le “bon” choix ou le “mauvais”, juste un chemin différent à assumer.",
+    ],
   },
   de: {
-    future: ["Und dort merkst du, dass nicht der große Knall zählt, sondern wie du deinen Alltag wirklich baust."],
-    past: ["Vielleicht spürst du dann, dass es keine perfekte Entscheidung war, sondern nur ein anderer Weg mit seinen eigenen Preisen."],
+    future: [
+      "Und dort merkst du, dass nicht der große Knall zählt, sondern wie du deinen Alltag wirklich baust.",
+    ],
+    past: [
+      "Vielleicht spürst du dann, dass es keine perfekte Entscheidung war, sondern nur ein anderer Weg mit seinen eigenen Preisen.",
+    ],
   },
 };
 
@@ -618,7 +634,7 @@ COMPITO (PASSATO):
 FORMATO:
 - 3–5 frasi, un solo paragrafo, circa 90–130 parole.
 - Nessun elenco, nessuna emoji.
-- L’ULTIMA frase chiude con una riga secca legata a un gesto/oggetto e finisce con “ecchecazz!!!”.`;
+- L’ULTIMA frase chiude una riga secca legata a un gesto/oggetto e finisce con “ecchecazz!!!”.`;
 
 const WTF_RULE_EN_FUT = `You are “WHAT THE F”: a rough, foul-mouthed but very cultured and pissed-off narrator.
 You roast every decision with love and swear words, but never attack identities or groups.
@@ -841,13 +857,15 @@ Paragrafo unico, 3–6 frasi.`;
 /* ========= SEGNALI GIORNO (mattina/pomeriggio/sera) ========= */
 /**
  * buildSignalMessages:
- * per ora gestiamo SOLO il segnale del mattino di WHAT IF.
- * Più avanti aggiungiamo:
- * - pomeriggio con mood
- * - sera con mood
- * - what the f che risponde al segnale
+ * lasciata come backup LLM (non più usata per i signal giornalieri).
  */
-function buildSignalMessages({ time = "morning", mood = null, lang = "it", stile = "whatif", domanda = "" }) {
+function buildSignalMessages({
+  time = "morning",
+  mood = null,
+  lang = "it",
+  stile = "whatif",
+  domanda = "",
+}) {
   const L = normLang(lang);
   const t = String(time || "morning").toLowerCase();
 
@@ -880,7 +898,7 @@ No emotion guessing, no predictions. 2–3 sentences, one paragraph, no emojis. 
       user = `Write the morning advice in the user language.`;
     }
   } else {
-    // Placeholder per le altre combinazioni che aggiungeremo dopo
+    // Placeholder per le altre combinazioni
     if (L === "it") {
       sys = `Sei “WHAT IF”. Questa modalità segnale è in fase iniziale. Scrivi una frase neutra e breve.`;
       user = `Scrivi una sola frase neutra in ITALIANO.`;
@@ -894,6 +912,101 @@ No emotion guessing, no predictions. 2–3 sentences, one paragraph, no emojis. 
     { role: "system", content: sys },
     { role: "user", content: user },
   ];
+}
+
+/* ========= DAILY STATIC PHRASES (IT) ========= */
+/* WHAT IF — mattina, pomeriggio, sera */
+const WHATIF_MORNING = [
+  "Stamattina hai più margine di quanto pensi: dimmi una cosa sola che, se la sistemi, ti alleggerisce la giornata.",
+  "Oggi puoi partire meglio scegliendo un passo semplice e concreto: qual è il primo gesto che vuoi fare per te?",
+  "Si muove già l’idea di una giornata più semplice: scrivimi in una frase con che intenzione vuoi iniziare.",
+  "Intuisco che oggi guadagni pace se togli un peso inutile dal tavolo: quale vorresti mollare per primo?",
+  "Vedo una versione di te che parte senza correre ma deciso: che cosa scegli di mettere in cima alla lista, adesso?",
+];
+
+const WHATIF_AFTERNOON = [
+  "È metà giornata: cosa ti sta consumando e cosa ti sta aiutando davvero? Dimmi in due parole così capiamo come chiuderla meglio.",
+  "Siamo nel pomeriggio: ti senti più in attacco o in difesa oggi? Rispondimi al volo, così vediamo se rallentare o spingere.",
+  "A metà giornata puoi ancora cambiare rotta: come sta andando davvero finora, se la dici senza filtri?",
+  "Nel pomeriggio spesso si decide il tono del resto del giorno: com’è il tuo in questo momento?",
+  "Se ti chiedo “come procede sul serio?”, qual è la prima risposta che ti viene da dare senza pensarci troppo?",
+];
+
+const WHATIF_EVENING = [
+  "A fine giornata conta cosa ti tieni e cosa lasci andare: cosa resta davvero di oggi che vale la pena guardare meglio?",
+  "Stasera puoi guardare la giornata senza farti il processo: com’è andata, a grandi linee, se la racconti in una frase?",
+  "Prima di chiudere, c’è qualcosa che oggi ti ha chiarito un pezzo di te? Se vuoi, raccontamelo al volo.",
+  "La sera serve più a fare ordine che a giudicarsi: qual è il pensiero con cui vorresti chiudere oggi?",
+  "Se dovessi riassumere la tua giornata in una sensazione, quale sarebbe? Dimmela e, se vuoi, ci lavoriamo sopra.",
+];
+
+/* WHAT THE F — mattina, pomeriggio, sera */
+const WTF_MORNING = [
+  "Ah, eccoci: WHAT IF ti parla di “intenzione del giorno” e tu stai ancora lottando col cuscino. Di’ com’è davvero il risveglio, ecchecazz!!!",
+  "Il collega mistico ti dice di partire leggero… e tu cerchi il caffè come fosse un miracolo a capsule. Raccontami la scena reale, ecchecazz!!!",
+  "WHAT IF vede spazio e possibilità, tu vedi solo la sveglia che ti insulta. Scrivimi in che stato ti ha trovato stamattina, ecchecazz!!!",
+  "Lui ti parla di “primo passo consapevole”, tu inciampi nelle ciabatte e bestemmi mentalmente contro l’armadio. Spara la verità nuda, ecchecazz!!!",
+  "Il collega zen sogna routine perfette, tu sei già in ritardo di testa prima ancora di alzarti. Dimmi dov’è il casino, stamattina, ecchecazz!!!",
+];
+
+const WTF_AFTERNOON = [
+  "WHAT IF ti chiede come va il pomeriggio e tu fissi lo schermo come se dovesse risponderti lui. Dimmi il livello di coma operativo, ecchecazz!!!",
+  "Il collega serio parla di “aggiustare la rotta”, ma tu hai parcheggiato le chiappe sulla sedia dopo pranzo. Raccontami il decadimento energetico, ecchecazz!!!",
+  "Lui dice che puoi ancora recuperare la giornata, tu stai contrattando con la graffetta sulla scrivania. Scrivimi la scena senza trucco, ecchecazz!!!",
+  "What If vuole il check-in, io voglio sapere quante volte hai pensato “mo’ dopo” e non hai fatto niente. Confessa il bilancio reale, ecchecazz!!!",
+  "Il collega spirituale chiede il tuo “ritmo pomeridiano”, ma il tuo è wifi scrauso: parte, salta, lagga. Dimmi a che tacche sei, ecchecazz!!!",
+];
+
+const WTF_EVENING = [
+  "WHAT IF ti parla di cosa ti tieni dalla giornata, io voglio sapere dove hai perso la dignità tra piatti e divano. Fammi il resoconto onesto, ecchecazz!!!",
+  "Il collega morbido dice di non giudicarti, ma tu stai facendo il processo a ogni scelta mentre il frigo ti guarda. Raccontami il momento più trash, ecchecazz!!!",
+  "Lui sogna bilanci profondi, tu hai solo voglia di spegnere tutto e sparire nel plaid. Dimmi com’è davvero il finale di puntata, ecchecazz!!!",
+  "What If parla di “lezioni di oggi”, io parlo di sopravvivenza: qual è stata la scena più tragicomica che ti porti a letto? ecchecazz!!!",
+  "Il collega ti invita a fare ordine, ma la tua testa è un cassetto che non si chiude. Scrivimi il casino in una frase, ecchecazz!!!",
+];
+
+function pickRandom(arr = []) {
+  if (!arr.length) return "";
+  const i = Math.floor(Math.random() * arr.length);
+  return arr[i];
+}
+
+function normalizeSlot(slot = "morning") {
+  const raw = String(slot || "").toLowerCase();
+  if (raw === "morning" || raw === "mattina") return "morning";
+  if (raw === "afternoon" || raw === "pomeriggio") return "afternoon";
+  if (raw === "evening" || raw === "sera" || raw === "night" || raw === "notte") return "evening";
+  return "morning";
+}
+
+function buildDailyStaticSignal({ slot = "morning", stile = "whatif", lang = "it" }) {
+  const L = normLang(lang);
+  const s = normalizeSlot(slot);
+
+  if (L !== "it") {
+    // fallback minimale per lingue non italiane
+    if (stile === "wtf") {
+      return "Ok, giornata ancora in corso: dimmi in due parole com’è messa davvero, così ti prendo un po’ in giro, ecchecazz!!!";
+    }
+    if (s === "morning") {
+      return "Stamattina hai spazio per fare un passo semplice e sensato: dimmi quale, così lo mettiamo a fuoco.";
+    }
+    if (s === "afternoon") {
+      return "È metà giornata: come sta andando davvero fino ad ora?";
+    }
+    return "A fine giornata conta cosa ti tieni e cosa lasci andare: cosa resta davvero di oggi?";
+  }
+
+  if (stile === "wtf") {
+    if (s === "morning") return pickRandom(WTF_MORNING);
+    if (s === "afternoon") return pickRandom(WTF_AFTERNOON);
+    return pickRandom(WTF_EVENING);
+  }
+
+  // WHAT IF
+  if (s === "morning") return pickRandom(WHATIF_MORNING);
+  if (s === "afternoon") return pickRandom(WHATIF_AFTERNOON);
+  return pickRandom(WHATIF_EVENING);
 }
 
 /* ========= Server-side PCT ========= */
@@ -924,7 +1037,9 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
   const L = (lang || "it").slice(0, 2);
   const t = String(domanda || "").toLowerCase();
 
-  const hasTime = /\b(7|14|21|30|60|90|giorn|settiman|mes|mesi|anni|days?|weeks?|months?|years?)\b/.test(t);
+  const hasTime = /\b(7|14|21|30|60|90|giorn|settiman|mes|mesi|anni|days?|weeks?|months?|years?)\b/.test(
+    t
+  );
   const hasBudget = /(budget|€|euro|spesa|costo|prezzo|max|under|sotto|caparra|cost|money)/.test(t);
   const hasDeadline = /(entro|prima|scadenza|deadline|by\s+\d|before\s+\d)/.test(t);
   const action =
@@ -1272,7 +1387,7 @@ export default async function handler(req, res) {
     const body = bodyRaw && typeof req.body === "string" ? JSON.parse(bodyRaw) : req.body || {};
 
     const {
-      stage = "answer", // "clarify" | "answer"
+      stage = "answer", // "clarify" | "answer" | "signal"
       domanda = "",
       clarification = "",
       stile = "whatif", // "whatif" | "wtf"
@@ -1282,12 +1397,29 @@ export default async function handler(req, res) {
     } = body || {};
 
     const L = normLang(lang);
-    const isSignal = micro && micro.src === "signal";
+    const isSignal = (micro && micro.src === "signal") || stage === "signal";
 
-    // Per le chiamate normali chiediamo ancora una domanda vera.
-    // Per i segnali, basta un placeholder non vuoto.
-    if (!domanda || typeof domanda !== "string") {
+    // Per le chiamate normali chiediamo una domanda vera.
+    // Per i segnali giornalieri basta che la richiesta arrivi, anche con domanda vuota.
+    if (!isSignal && (!domanda || typeof domanda !== "string")) {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
+    }
+
+    // ====== SEGNALI GIORNALIERI STATICI (no LLM) ======
+    if (isSignal) {
+      const slot = micro.slot || micro.time || micro.timeOfDay || "morning";
+      const answer = buildDailyStaticSignal({ slot, stile, lang: L }) || "";
+
+      return res.status(200).json({
+        mode: "signal",
+        time: slot,
+        slot,
+        style: stile,
+        lang: L,
+        periodo,
+        model: MODEL,
+        answer,
+      });
     }
 
     /* ====== STAGE: CLARIFY ====== */
@@ -1330,20 +1462,7 @@ export default async function handler(req, res) {
     }
 
     /* ====== STAGE: ANSWER ====== */
-    let messages;
-    if (isSignal) {
-      // Nuova modalità: segnale del giorno (per ora solo mattino WHAT IF)
-      messages = buildSignalMessages({
-        time: micro.time || micro.timeOfDay || "morning",
-        mood: micro.mood || null,
-        lang: L,
-        stile,
-        domanda,
-      });
-    } else {
-      // Flusso normale: risposta alla domanda
-      messages = buildMessages({ domanda, clarification, lang: L, periodo, stile });
-    }
+    const messages = buildMessages({ domanda, clarification, lang: L, periodo, stile });
 
     const completion = await client.chat.completions.create({
       model: MODEL,
@@ -1358,10 +1477,8 @@ export default async function handler(req, res) {
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // Rimuovi eco domanda (solo se non è un segnale)
-    if (!isSignal) {
-      answer = stripQuestionEcho(domanda, answer);
-    }
+    // Rimuovi eco domanda
+    answer = stripQuestionEcho(domanda, answer);
 
     // Polish grammaticale
     answer = await polishAnswer({ text: answer, lang: L, stile });
@@ -1434,7 +1551,10 @@ export default async function handler(req, res) {
 
       // evita frasi troppo poetiche/generiche
       answer = answer.replace(/\bviaggiatore della nostalgia\b/gi, "turista del destino");
-      answer = answer.replace(/\ballegria nel cuore\b/gi, "quella voglia storta di rimetterti in gioco");
+      answer = answer.replace(
+        /\ballegria nel cuore\b/gi,
+        "quella voglia storta di rimetterti in gioco"
+      );
 
       // evita "madò"
       answer = answer.replace(/\bmadò\b/gi, "");
@@ -1468,7 +1588,7 @@ export default async function handler(req, res) {
 
     // Se in WTF IT non c'è nessuna "bestemmia" narrata, aggiungine UNA a volte (non sempre)
     const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
-    if (stile === "wtf" && L === "it" && !/bestemmi\w*/i.test(answer)) {
+    if (stile === "wtf" && L === "it" && !/bestemmi\w*/i.test(answer) && !isSurprise) {
       const seed = hashStr(String(domanda || "") + "|" + String(answer || ""));
       // ~65% dei casi: così non sembra un tic fisso
       if (seed % 100 < 65) {
@@ -1489,19 +1609,6 @@ export default async function handler(req, res) {
     }
 
     answer = finalPunct(answer);
-
-    // Se è un SEGNALE, non ha senso calcolare pct/motivation/scientific.
-    if (isSignal) {
-      return res.status(200).json({
-        mode: "signal",
-        time: micro.time || micro.timeOfDay || "morning",
-        style: stile,
-        lang: L,
-        periodo,
-        model: MODEL,
-        answer,
-      });
-    }
 
     const pct = computePct(domanda, stile);
 
@@ -1542,6 +1649,8 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
-    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
+    return res
+      .status(500)
+      .json({ error: "server_error", detail: String(err?.message || err) });
   }
-      }
+          }
