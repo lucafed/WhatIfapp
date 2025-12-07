@@ -11,13 +11,6 @@ import { Ratelimit } from "@upstash/ratelimit";
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-/* ========= Admin Token (per segnali giornalieri) ========= */
-const ADMIN_TOKEN =
-  process.env.ADMIN_TOKEN ||
-  process.env.WHATIF_ADMIN_TOKEN ||
-  process.env.WHATF_ADMIN_TOKEN ||
-  "";
-
 /* ========= Redis & Rate ========= */
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL || "",
@@ -424,8 +417,8 @@ Puoi nominare la parola “bestemmia” in modo narrato, ma MAI bestemmie reali 
 MODALITÀ SORPRENDIMI (DOMANDA ASSURDA “INTELLIGENTE”):
 - Fai ESATTAMENTE UNA domanda di chiarimento in ${LANG_LABEL}.
 - La domanda deve essere assurda ma non gratuita: scena strana, oggetti che reagiscono, però legata alla scelta vera.
-- Puoi usare UNA micro-scenetta (frigorifero che ti giudica, tazzina che vibra, sedia che ti guarda storto, vicino che alza il sopracciglio).
-- Ogni volta inventi una scena nuova: NON riutilizzare sempre le stesse metafore o oggetti, e gli oggetti devono avere senso nella scena (niente citofoni nel deserto, niente ascensori in spiaggia, niente barista se non c’è un bar/locale nella domanda).
+- Puoi usare UNA micro-scenetta (frigorifero che ti giudica, tazzina che vibra, sedia che ti guarda storto, barista che alza il sopracciglio).
+- Ogni volta inventi una scena nuova: NON riutilizzare sempre le stesse metafore o oggetti, e gli oggetti devono avere senso nella scena (niente citofoni nel deserto, niente ascensori in spiaggia).
 - Niente morale, niente consigli: solo una domanda.
 - Una sola frase, massimo 22 parole, niente emoji, niente elenco.
 - NON chiudere con “ecchecazz!!!”.`;
@@ -505,7 +498,6 @@ PAST MODE:
 Parli come se fossi al bancone: prendi in giro, esageri le immagini, fai ridere ma dici la verità.
 Puoi usare parolacce leggere da bar (culo, chiappe, incasinato, figuraccia, ecc.), MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
 Puoi citare la parola “bestemmia” in modo narrato (“ti parte una bestemmia cosmica”), ma senza riferimenti religiosi.
-Usa il barista o il bancone SOLO se la domanda parla davvero di bar/locale.
 
 COMPITO:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ITALIANO.
@@ -541,7 +533,7 @@ PAST MODE:
             ? "ITALIANO"
             : L === "es"
             ? "SPAGNOLO"
-            : L === "fr"
+            : L === "FR"
             ? "FRANCESE"
             : "TEDESCO";
 
@@ -593,10 +585,7 @@ TONO:
 - Seconda persona: “ti scappa”, “ti ritrovi”, “ti parte”, “resti lì come un cretino simpatico”.
 - Puoi usare parolacce leggere da bar (culo, chiappe, incasinato, figuraccia, casino, ecc.), MAI parole d’odio, MAI insulti a gruppi o identità, MAI usare la parola “merda”.
 - Di solito inserisci UNA sola “bestemmia” narrata, creativa e tra virgolette (“bestemmia di ritorno”, “bestemmia mal calibrata”, ecc.) e falla uscire con formule vive tipo “ti parte una…”, “ti scappa una…”, “ti esce una…”, variandole ogni volta.
-- Oggetti e ambiente reagiscono (divano, finestra, trolley, lampada, piccione, tazzina, porta, sedia, specchio, ascensore, bicchiere, corridoio, pc, citofono…), massimo 3–5 elementi.
-- CAMBIALI spesso: non usare sempre gli stessi.
-- Usa persone/ruoli (barista, collega, vicino, passeggero, ecc.) SOLO se hanno senso nella scena: il barista esiste solo se si parla davvero di bar/locale.
-- Niente oggetti fuori contesto (es. citofono nel deserto, barista in camera da letto se non si parla di bar, ecc.).
+- Oggetti e ambiente reagiscono (divano, barista, finestra, trolley, lampada, piccione, tazzina, porta, sedia, specchio, ascensore, bicchiere…), massimo 3–5 elementi, e CAMBIALI spesso: non usare sempre gli stessi, e devono avere senso nella scena (niente oggetti a caso fuori contesto).
 - Il cuore comico sono i tuoi pro e contro: devono sembrare scemi, da bar, ma con un fondo di verità (es. pro = ti senti di nuovo vivo, contro = ti incasini con la logistica come sempre).
 - Nessun motivazionalese zuccheroso, niente frasi tipo "la vita ti chiama", niente teoria astratta (“vivere vuol dire…”).
 
@@ -619,8 +608,7 @@ TONO:
 - Seconda persona: “ti saresti ritrovato”, “ti sarebbero esplose in faccia”, “avresti passato le sere…”.
 - Puoi usare parolacce leggere da bar (culo, chiappe, incasinato, figuraccia, casino, ecc.), MAI parole d’odio, MAI insulti a gruppi o identità, MAI usare la parola “merda”.
 - Di solito inserisci UNA “bestemmia” solo narrata, con aggettivi strani (“bestemmia nostalgica”, “bestemmia di bilancio”, ecc.) e falla uscire con formule tipo “ti sarebbe partita una…”, “ti sarebbe scappata una…”, “ti sarebbe uscita una…”, sempre diverse ma comprensibili.
-- Oggetti e ambiente commentano: divano, pc, bicchiere, finestra, porta, tazzina, sedie, corridoio, tapparelle, tv che borbotta, giubbotto buttato sulla sedia.
-- Se usi persone/ruoli (barista, collega, vicino, passeggero, ecc.) devono essere coerenti con il luogo: niente barista se la scena è chiaramente in casa o in ufficio.
+- Oggetti e ambiente commentano: divano, pc, bicchiere, barista, finestra, porta, tazzina, sedie, corridoio, tapparelle, tv che borbotta, giubbotto buttato sulla sedia.
 
 COMPITO (PASSATO):
 - Descrivi come sarebbe andata se quella scelta l’avessi fatta: quali pro scemi ma veri avresti avuto, quali contro altrettanto scemi ma pesanti (routine, chiappe incollate, drammi da salotto).
@@ -681,8 +669,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
 - Evita termini teorici come “procrastinazione”, “mindset”, “accettazione radicale”.
 - Non usare “rimando” come sostantivo.
 - Non racchiudere l’intero testo tra virgolette: usa le virgolette solo su bestemmie narrate o frasi riportate.
-- Non inventare parole senza senso: se usi espressioni strane devono essere comprensibili dal contesto.
-- Usa il barista o il bancone SOLO se la domanda parla davvero di bar/locale o di stare al bar; altrimenti scegli figure coerenti con la scena (collega, vicino, passeggero, ecc.).`
+- Non inventare parole senza senso: se usi espressioni strane devono essere comprensibili dal contesto.`
     : L === "en"
     ? `RULES WHAT IF:
 - Single paragraph, no bullets, no emojis.
@@ -720,9 +707,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
         role: "system",
         content: `PAROLE CHIAVE DALLA SCENA UTENTE: ${kw.join(
           ", "
-        )}. Usa 1–2 di questi elementi per immagini e metafore, nello stile degli esempi (Motociclista, Luisa, Turista del destino).
-Evita di fissarti sempre sugli stessi oggetti: varia spesso le cose che reagiscono nella scena (tazzina, porta, tapparelle, corridoio, bicchiere, divano, finestra, sedia, zaino, pc, telefono, citofono…) e scegli oggetti che abbiano senso nella situazione descritta.
-Se nella domanda non compaiono bar o locali, NON usare il barista come personaggio principale.`,
+        )}. Usa 1–2 di questi elementi per immagini e metafore, nello stile degli esempi (Motociclista, Luisa, Turista del destino). Evita di fissarti sempre sugli stessi oggetti, varia spesso le cose che reagiscono nella scena (tazzina, porta, tapparelle, corridoio, bicchiere, divano, finestra, sedia, zaino, ecc.) e scegli oggetti che abbiano senso nella situazione descritta.`,
       });
     }
   } else {
@@ -789,9 +774,8 @@ Genera UNA risposta in ITALIANO come voce “WHAT THE F”, nello stesso stile d
 - apertura che ti prende per il culo;
 - mostra DUE film: se fai davvero questa scelta e se resti fermo a tirarla lunga;
 - i pro e i contro devono essere dentro le scene, scemi e demenziali ma con un fondo di verità (routine, chiappe, ansia, piccole libertà);
-- usa 2–4 oggetti che reagiscono (bicchiere, divano, finestra, trolley, pc, citofono, tazzina, tapparelle…), cambiandoli spesso e facendoli sembrare credibili nella scena;
+- usa 2–4 oggetti che reagiscono (bicchiere, divano, finestra, trolley, barista, piccione, porta, tazzina, tapparelle…), cambiandoli spesso e facendoli sembrare credibili nella scena;
 - inserisci di solito UNA sola “bestemmia” narrata, creativa e tra virgolette, che esce con formule tipo “ti parte una…”, “ti scappa una…”, “ti esce una…”, sempre diverse e senza riferimenti religiosi;
-- usa il barista SOLO se nella domanda compare davvero un bar/locale; altrimenti scegli figure coerenti (collega, vicino, passeggero, sconosciuto sul tram, ecc.);
 - niente motivazionalese, niente “vivere vuol dire…”, niente poesia romantica;
 - finale cazzaro ma centrato, che chiude con “ecchecazz!!!”.
 Paragrafo unico, niente emoji.`;
@@ -801,8 +785,7 @@ Genera UNA risposta in ITALIANO come voce “WHAT THE F”, identica come respir
 - monologo unico, 3–5 frasi, circa 90–130 parole;
 - apertura da presa in giro;
 - fai vedere cosa succede se lo fai davvero e cosa succede se resti a tirarla lunga (pro e contro dentro le scenette, stupidi ma veri);
-- pochi oggetti ma molto vivi che reagiscono (lampada, bicchiere, divano, finestra, porta, sedia, specchio, tazzina, corridoio, pc, citofono…), e non sempre gli stessi: scegli cose che abbiano senso nel contesto della domanda;
-- se nella domanda non c’è traccia di bar o locali, NON tirare fuori il barista: usa invece figure e oggetti coerenti con la scena (collega, vicino, passeggero, cassiere, ecc.);
+- pochi oggetti ma molto vivi che reagiscono (lampada, bicchiere, barista, divano, finestra, porta, sedia, specchio, tazzina…), e non sempre gli stessi: scegli cose che abbiano senso nel contesto della domanda;
 - inserisci di solito UNA sola “bestemmia” narrata, mai reale, che esce con formule tipo “ti parte una…”, “ti scappa una…”, sempre diversa e senza religione;
 - linguaggio da bar, anche volgare ma non gratuito, niente teoria astratta;
 - l’ULTIMA frase chiude la scena con un colpo secco e finisce con “ecchecazz!!!”.
@@ -1364,104 +1347,6 @@ function ensureWtfEcchecazzEnding(text = "", lang = "it") {
   return `${s}, ecchecazz!!!`;
 }
 
-/* ========= WTF: aggiustamento oggetti in base al contesto ========= */
-function adjustWtfContextObjects(answer = "", domanda = "") {
-  let s = String(answer || "");
-  const q = String(domanda || "").toLowerCase();
-
-  // Contesto bar / locale
-  const isBarContext = /\b(bar|locale|pub|osteria|taverna|spritz|aperitivo|cocktail|birra|vino|caff[èe]|cappuccino|bancone)\b/.test(
-    q
-  );
-  if (isBarContext) return s; // in questo caso il barista è ok
-
-  // Contesto casa
-  const isHome =
-    /\b(casa|divano|salotto|soggiorno|letto|camera|cucina|netflix|playstation|console|pigiama)\b/.test(q);
-
-  // Contesto ufficio / lavoro
-  const isOffice =
-    /\b(ufficio|lavoro|riunione|call|zoom|teams|azienda|open space|scrivania|collega|capo|deadline)\b/.test(q);
-
-  // Contesto spostamenti / viaggio
-  const isTravel =
-    /\b(treno|stazione|metro|metropolitana|autobus|bus|tram|macchina|auto|traffico|volo|aereo|aeroporto)\b/.test(q);
-
-  // Contesto palestra / sport
-  const isGym =
-    /\b(palestra|allenamento|correre|corsa|pes[ie]|tapis roulant|bike|sport|partita|campo)\b/.test(q);
-
-  // Contesto studio / esami
-  const isStudy =
-    /\b(scuola|università|uni\b|esame|esami|studio|biblioteca|tesi|compiti|compito|interrogazione|concorso)\b/.test(q);
-
-  const homeOpts = [
-    "divano",
-    "telecomando",
-    "frigorifero",
-    "lampada",
-    "gatto",
-    "piatti nel lavandino",
-  ];
-  const officeOpts = [
-    "collega",
-    "scrivania",
-    "monitor",
-    "stampante",
-    "badge",
-    "macchinetta del caffè",
-  ];
-  const travelOpts = [
-    "passeggero",
-    "controllore",
-    "sedile del treno",
-    "finestrino",
-    "valigia",
-    "altoparlante della stazione",
-  ];
-  const gymOpts = [
-    "panca",
-    "tappetino",
-    "specchio della sala pesi",
-    "armadietto",
-    "bilanciere",
-    "tapis roulant",
-  ];
-  const studyOpts = [
-    "scrivania ingombra",
-    "libro aperto",
-    "evidenziatore",
-    "zaino buttato per terra",
-    "pc portatile",
-    "lampada da tavolo",
-  ];
-  const defaultOpts = [
-    "tazzina",
-    "divano",
-    "scrivania",
-    "telefono",
-    "pc",
-    "frigorifero",
-    "citofono",
-    "corridoio",
-  ];
-
-  let pool = defaultOpts;
-  if (isHome) pool = homeOpts;
-  else if (isOffice) pool = officeOpts;
-  else if (isTravel) pool = travelOpts;
-  else if (isGym) pool = gymOpts;
-  else if (isStudy) pool = studyOpts;
-
-  // sostituisci "barista" solo se NON siamo in contesto bar
-  s = s.replace(/\b[Bb]arista\b/g, (m) => {
-    const idx = hashStr(domanda + m) % pool.length;
-    return pool[idx];
-  });
-
-  return s;
-}
-
 /* ========= HANDLER ========= */
 export default async function handler(req, res) {
   cors(req, res);
@@ -1498,14 +1383,6 @@ export default async function handler(req, res) {
     // Per i segnali, basta un placeholder non vuoto.
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
-    }
-
-    /* ====== ADMIN CHECK per SEGNALI ====== */
-    if (isSignal) {
-      const reqToken = String(req.headers["x-admin-token"] || "");
-      if (!ADMIN_TOKEN || !reqToken || reqToken !== ADMIN_TOKEN) {
-        return res.status(401).json({ error: "admin_unauthorized" });
-      }
     }
 
     /* ====== STAGE: CLARIFY ====== */
@@ -1687,11 +1564,6 @@ export default async function handler(req, res) {
       answer = answer.replace(/\bspippolat\w*/gi, "rimuginata");
     }
 
-    // Aggiusta oggetti fuori contesto (es. barista senza bar)
-    if (stile === "wtf" && L === "it") {
-      answer = adjustWtfContextObjects(answer, domanda);
-    }
-
     // Se in WTF IT non c'è nessuna "bestemmia" narrata, aggiungine UNA a volte (non sempre)
     const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
     if (stile === "wtf" && L === "it" && !/bestemmi\w*/i.test(answer)) {
@@ -1731,9 +1603,6 @@ export default async function handler(req, res) {
         periodo,
         model: MODEL,
         answer,
-        // questi dati li puoi usare come "log" nella tua dashboard admin
-        domanda,
-        micro,
       });
     }
 
@@ -1778,4 +1647,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-  }
+    }
