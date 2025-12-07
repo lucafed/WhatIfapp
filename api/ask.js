@@ -545,7 +545,7 @@ Make clear you refer to that former chapter or missed path.`;
             ? "ITALIANO"
             : L === "es"
             ? "SPAGNOLO"
-            : L === "fr"
+            : L === "FR"
             ? "FRANCESE"
             : "TEDESCO";
 
@@ -1064,9 +1064,6 @@ Paragrafo unico, 3–6 frasi.`;
  * slot:  "morning" | "afternoon" | "evening" | "mattina" | "pomeriggio" | "sera" | "notte"
  * phase: 1 = WHAT IF (notifica principale)
  *        2 = WHAT THE F (risposta 5 minuti dopo)
- *
- * ATTENZIONE: nel codice principale usiamo SOLO le frasi statiche (buildDailyStaticSignal),
- * questa funzione resta come backup se un domani vuoi tornare all’IA per i segnali.
  */
 function buildSignalMessages({
   slot = "morning",
@@ -1669,8 +1666,6 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
   try {
-    if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: "missing_api_key" });
-
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
       .toString()
       .split(",")[0]
@@ -1695,7 +1690,7 @@ export default async function handler(req, res) {
 
     const isSignal = (micro && micro.src === "signal") || stage === "signal";
 
-    // ====== SEGNALI GIORNALIERI: USIAMO SOLO LE FRASI FISSE, NIENTE LLM ======
+    // ====== SEGNALI GIORNALIERI: SOLO FRASI STATICHE, NIENTE OPENAI ======
     if (isSignal) {
       const slot = micro.slot || micro.time || micro.timeOfDay || "morning";
       const answer = buildDailyStaticSignal({ slot, stile, lang: L }) || "";
@@ -1712,6 +1707,11 @@ export default async function handler(req, res) {
         model: MODEL,
         answer,
       });
+    }
+
+    // Da qui in giù servono davvero le API OpenAI
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: "missing_api_key" });
     }
 
     if (!domanda || typeof domanda !== "string") {
@@ -1923,4 +1923,4 @@ export default async function handler(req, res) {
       detail: String(err?.message || err),
     });
   }
-    }
+  }
