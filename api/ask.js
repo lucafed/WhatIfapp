@@ -1,8 +1,8 @@
-// /api/ask.js — What?f Engine (clarify + answer + polish + daily signals static)
+// /api/ask.js — What?f Engine (clarify + answer + polish + daily signals statici)
 // - WHATIF: analisi scenari + consigli pratici, con almeno un punto NON ovvio che fa riflettere.
 // - WTF: narratore/comico da pub, volgare ma affettuoso, stile “turista del destino”.
 // - SORPRENDIMI: domande assurde “intelligenti”, varie, non ripetute.
-// - SIGNAL (mattina/pomeriggio/sera): frasi statiche, senza chiamare OpenAI, in tutte le lingue.
+// - SIGNAL: frasi giornaliere (mattina/pomeriggio/sera) SENZA usare token OpenAI.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -142,11 +142,6 @@ function hashStr(str = "") {
 function pickDet(arr, seed) {
   return arr[arr.length ? seed % arr.length : 0] || "";
 }
-function pickRandom(arr = []) {
-  if (!arr || !arr.length) return "";
-  const i = Math.floor(Math.random() * arr.length);
-  return arr[i];
-}
 
 /* ========= Rimozione prima persona (WHAT IF) ========= */
 function stripFirstPerson(text = "", lang = "it", stile = "whatif") {
@@ -235,7 +230,8 @@ const ZINGARA_ENDINGS = {
 /**
  * Finale WHAT IF:
  * - Per ITALIANO ora NON forziamo più nessuna frase standard.
- * - Per le altre lingue manteniamo un possibile gancio.
+ * - Ci limitiamo a chiudere bene la punteggiatura e lasciamo che sia il modello
+ *   (guidato dalle regole sopra) a costruire uno spunto naturale.
  */
 function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   let s = String(text || "").trim();
@@ -243,9 +239,11 @@ function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   if (!s) return s;
 
   if (L === "it") {
+    // Nessun gancio fisso: finale naturale, solo punteggiatura sistemata.
     return finalPunct(s);
   }
 
+  // Per le altre lingue manteniamo la logica precedente
   const seed = hashStr(String(domanda || "") + "|" + s);
   if (seed % 100 >= 70) {
     return finalPunct(s);
@@ -278,7 +276,7 @@ Esempio 2:
 "Ah, Luisa… eccoci di nuovo, come una ferita che ha nostalgia del coltello. Ci ricaschi: ti lanci nel suo buco nero emotivo e poi ti spaventi dell’eco. Lei ti visualizza, poi sparisce, e ti sale la pressione come una pentola col coperchio che urla. Ti parte una “bestemmia della miseria incrociata” talmente sincera che la lampada sfarfalla e il bicchiere applaude. Il gatto scappa, Alexa finge un aggiornamento, e tu lasci cadere un’altra imprecazione che sembra una preghiera marcia. Bevi un sorso di rosso e riconosci che ogni storia finisce così: una bestemmia e un brindisi storto — ma almeno il vino lo scegli tu, ecchecazz!!!"
 
 Esempio 3:
-"Oh, eccoci, turista del destino con la valigia piena di “poi vediamo”. Torni in città e ti parte una “bestemmia di ritorno” così tonda che perfino il piccione sul cornicione fa finta di non conoscerti. Il barista ti piazza il bicchiere davanti senza chiedere niente, come se stesse timbrando il tuo rientro nella vita vera. Se fai il passo, i vicoli ti si appiccicano addosso e il divano resta vuoto; se resti dove sei, passi le sere a fissare il muro mentre il citofono tace per imbarazzo. Morale storta: o rientri nel film o resti la comparsa dei tuoi stessi pensieri, ecchecazz!!!"`;
+"Og, eccoci, turista del destino con la valigia piena di “poi vediamo”. Torni in città e ti parte una “bestemmia di ritorno” così tonda che perfino il piccione sul cornicione fa finta di non conoscerti. Il barista ti piazza il bicchiere davanti senza chiedere niente, come se stesse timbrando il tuo rientro nella vita vera. Se fai il passo, i vicoli ti si appiccicano addosso e il divano resta vuoto; se resti dove sei, passi le sere a fissare il muro mentre il citofono tace per imbarazzo. Morale storta: o rientri nel film o resti la comparsa dei tuoi stessi pensieri, ecchecazz!!!"`;
 
 /* ========= WTF: stop words & keyword helper ========= */
 const WTF_STOP_IT = new Set([
@@ -629,7 +627,7 @@ You roast every decision with love and swear words, but never attack identities 
 TASK (FUTURE):
 - Show what happens if they actually do this and what happens if they keep delaying.
 - Turn the scene into a mini-episode, not a novel.
-- Last sentence: blunt, foul-mouthed, like a crooked summary.
+- Last sentence: blunt, foul-mouthed line about what makes sense today.
 
 FORMAT:
 - 3–5 sentences, one paragraph, max ~120 words.
@@ -750,7 +748,6 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
 
   const ask = (function () {
     if (L === "en") {
-      const isPastLower = isPast;
       if (isWtf) {
         if (hasClar) {
           return `Original question (do not repeat it): "${domanda}". Extra detail: "${c}". Write ONE absurd, brutally honest answer in ENGLISH as “WHAT THE F”. Single paragraph, 3–5 sentences, loud, sarcastic, messy but secretly wise. Show what happens if they do it and if they keep dodging it, then close with a crooked but clear piece of advice.`;
@@ -758,19 +755,18 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
         return `Question (do not repeat it): "${domanda}". Write ONE answer in ENGLISH as “WHAT THE F”. Single paragraph, 3–5 sentences, extremely ironic and over-the-top, but still answering what happens with this choice and what you’d recommend.`;
       }
       if (hasClar) {
-        if (isPastLower) {
+        if (isPast) {
           return `Original question about the PAST (do not repeat it): "${domanda}". Extra detail: "${c}". Write ONE COUNTERFACTUAL answer in ENGLISH as “WHAT IF”: describe the alternate timeline, then extract what matters now and give practical advice, including at least one angle they probably haven’t considered.`;
         }
         return `Original question (do not repeat it): "${domanda}". Extra detail: "${c}". Write ONE answer in ENGLISH as “WHAT IF”: first analyse different scenarios, then clearly suggest what makes more sense and how to act, and add at least one non-obvious insight that makes the user think “oh, right, I hadn’t seen that”.`;
       }
-      if (isPastLower) {
+      if (isPast) {
         return `Question about the PAST (do not repeat it): "${domanda}". Write ONE COUNTERFACTUAL answer in ENGLISH, including at least one hidden trade-off or consequence the user is likely overlooking.`;
       }
       return `Question (do not repeat it): "${domanda}". Write ONE answer in ENGLISH as “WHAT IF”: analyse different scenarios and then give clear, practical advice, adding at least one surprising but realistic angle the user might have missed.`;
     }
 
     if (L === "it") {
-      const isPastLower = isPast;
       if (isWtf) {
         if (hasClar) {
           return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}".
@@ -798,7 +794,7 @@ Paragrafo unico, niente emoji.`;
       }
 
       if (hasClar) {
-        if (isPastLower) {
+        if (isPast) {
           return `Domanda sul PASSATO (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF”: racconta come sarebbe andata davvero in quella vita alternativa, porta almeno un dettaglio non ovvio (un compromesso, una rinuncia o un vantaggio strano da immaginare) e poi spiega cosa impari e come ti conviene muoverti ORA, in modo pratico e gentile. Paragrafo unico, 3–6 frasi, tono empatico e concreto.`;
         }
         return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta in ITALIANO come “WHAT IF”:
@@ -810,7 +806,7 @@ Paragrafo unico, niente emoji.`;
 - chiudi con uno spunto o un consiglio pratico fuso nell’ultima frase, senza frasi staccate tipo “e lì capisci che…”.
 Paragrafo unico, 3–6 frasi, tono caldo ma lucido.`;
       }
-      if (isPastLower) {
+      if (isPast) {
         return `Domanda sul PASSATO (non ripeterla): "${domanda}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF”: descrivi come sarebbe andata quella scelta (pro e contro reali), porta almeno un dettaglio inaspettato e chiudi collegando la lezione al presente in modo concreto e gentile, dentro l’ultima frase. Paragrafo unico, 3–6 frasi.`;
       }
       return `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO come “WHAT IF”:
@@ -843,267 +839,225 @@ Paragrafo unico, 3–6 frasi.`;
   return msgs;
 }
 
-/* ========= SEGNALI GIORNO: NORMALIZZAZIONE SLOT ========= */
-function normalizeSlot(slot = "morning") {
-  const raw = String(slot || "").toLowerCase();
+/* ========= SEGNALI GIORNO (mattina/pomeriggio/sera, STATICI) ========= */
+/**
+ * N.B.:
+ * - Qui NON usiamo OpenAI.
+ * - Frasi predefinite per:
+ *   • stile: whatif / wtf
+ *   • lingua: it / en / es / fr / de
+ *   • slot: morning / afternoon / evening
+ * - Vengono scelte in modo deterministico su base GIORNO + domanda,
+ *   così cambiano ogni giorno ma restano stabili durante la giornata.
+ */
 
-  if (raw.includes("matt") || raw.includes("morn")) return "morning";
-  if (raw.includes("pom") || raw.includes("after")) return "afternoon";
-  if (
-    raw.includes("sera") ||
-    raw.includes("even") ||
-    raw.includes("night") ||
-    raw.includes("notte")
-  )
-    return "evening";
-
+function normSignalSlot(raw = "") {
+  const s = String(raw || "").toLowerCase();
+  if (/pom|after/.test(s)) return "afternoon";
+  if (/sera|even|night/.test(s)) return "evening";
   return "morning";
 }
 
-/* ========= SEGNALI GIORNO: LISTE STATICHE MULTILINGUA ========= */
-/*
-  Struttura:
-  DAILY_TEXT[lang][stile][slot] = [frasi...]
-
-  - lang: it | en | es | fr | de
-  - stile: whatif | wtf
-  - slot: morning | afternoon | evening
-*/
-
-const DAILY_TEXT = {
-  it: {
-    whatif: {
+const SIGNAL_PHRASES = {
+  whatif: {
+    it: {
       morning: [
-        "Stamattina hai più spazio di quanto credi: scegli una cosa che ti facilita la giornata e, se ti va, raccontamela in due parole.",
-        "Oggi parti meglio se scegli un passo semplice e lo fai senza correre: qual è il tuo primo passo? Scrivilo al volo.",
-        "La giornata gira subito se togli un piccolo peso all’inizio: quale vuoi alleggerire stamattina? Dimmi la prima cosa che ti viene in mente.",
-        "Questa mattina non serve fare tutto: serve fare bene una cosa sola. Se vuoi, dimmi quale scegli così ci lavoriamo intorno."
+        "Stamattina prenditi dieci minuti veri per una cosa sola e lascia il resto sullo sfondo: non devi salvare la giornata, solo darle un appoggio.",
+        "All’inizio del giorno scegli una micro-vittoria gestibile: qualcosa che puoi chiudere in meno di mezz’ora e che ti faccia sentire un filo più in mano alle cose.",
+        "Prima che parta il caos, togli un peso piccolo ma concreto dalla lista: spesso è quello che ti rosicchia più energia in silenzio.",
+        "Invece di prometterti miracoli per oggi, scegli una cosa che sei quasi certo di riuscire a fare e usala come ancora per tutto il resto.",
+        "Appena puoi, sistema il pezzetto di casa o di lavoro che guardi sempre storto: è un modo semplice per dire alla testa “qui dentro comando io”."
       ],
       afternoon: [
-        "È metà giornata: cos’è che ti sta pesando e cos’è che ti sta aiutando? Se ti va, raccontamelo in una frase così capiamo come chiuderla meglio.",
-        "Siamo nel pomeriggio: stai andando più in spinta o più in difesa oggi? Rispondimi al volo, così vediamo come regolarci per il resto.",
-        "A metà giornata puoi ancora sistemare la rotta: come sta andando davvero finora? Dimmi la versione sincera, anche se è storta.",
-        "Nel pomeriggio spesso si decide il tono della serata: in questo momento ti senti più scarico o più in controllo? Se vuoi, scrivimelo in due parole."
+        "A metà giornata non devi per forza rilanciare: puoi anche solo rimettere in pari il fiato, chiudere un angolo aperto e salvare il resto per domani.",
+        "Nel pomeriggio guarda dove stai sprecando clic e pensieri: se chiudi una sola micro-dispersione, arrivi a sera molto più leggero.",
+        "Se senti che la testa sbanda, spezza il pomeriggio in due blocchi chiari: prima sistemi il necessario, poi ti concedi qualcosa che ti rimette carburante.",
+        "Il pomeriggio è il momento perfetto per una piccola scelta di manutenzione: dire un no, spostare un impegno, o chiarire un dettaglio che ti incastra sempre.",
+        "Non chiedere al pomeriggio di ribaltare la tua vita: chiedigli solo di sistemare una cosa che ti farà respirare meglio stasera."
       ],
       evening: [
-        "A fine giornata conta cosa ti tieni e cosa lasci andare: cosa resta davvero di oggi? Se ti va, raccontamelo in una frase.",
-        "Stasera puoi guardare la giornata senza farti la guerra: com’è andata, a grandi linee? Se vuoi, ti aiuto a leggerla meglio.",
-        "Prima di chiudere, c’è qualcosa che oggi ti ha chiarito un pezzo di te? Se ti va, scrivilo qui e ci ragioniamo insieme.",
-        "La sera serve a fare ordine, non a giudicarsi: qual è il pensiero con cui vuoi chiudere oggi? Puoi dirmelo e lo sistemiamo un po."
-      ],
+        "A fine giornata conta due cose che hai effettivamente fatto, anche minuscole, prima di giudicare tutto il resto: la mente tende a cancellare i passi piccoli.",
+        "La sera non è per farti il processo, ma per prendere nota di cosa ti ha svuotato davvero e cosa invece ti ha tenuto in piedi.",
+        "Prima di crollare, sposta fuori dalla stanza mentale almeno un pensiero che ti inseguiva tutto il giorno, scrivendolo da qualche parte come promemoria chiaro.",
+        "Chiudi la giornata scegliendo un dettaglio che domani vuoi fare in modo diverso: non serve risolvere tutto, basta decidere dove non vuoi più incastrarti uguale.",
+        "Stasera trattati come tratteresti un amico stanco: meno giudizi, più nota spese onesta di dove ti sei prosciugato e dove ti sei dato una mano."
+      ]
     },
-    wtf: {
+    en: {
       morning: [
-        "Ah, senti che roba… WHAT IF ti parla di “partire bene”, e tu stai ancora litigando con il cuscino. Dai, dimmi che disastro è sto risveglio, ecchecazz!!!",
-        "Il collega zen dice “primo passo”… peccato che il tuo primo passo sia inciampare nelle ciabatte. Raccontami come sono andati i primi 10 minuti, ecchecazz!!!",
-        "WHAT IF ti vende la “calma mattutina”, mentre tu cerchi il caffè come fosse un Pokémon raro. Com’è andato il safari stamattina? ecchecazz!!!",
-        "Lui parla di “ordine”, tu hai già perso il telefono nel letto. Confessa: che casino hai combinato prima ancora di aprire gli occhi? ecchecazz!!!"
+        "This morning pick one small, realistic win and let the rest stay blurry: you don’t need a miracle, just a stable first brick.",
+        "Before the noise ramps up, remove one tiny annoyance from your list; it’s usually what’s quietly draining the most energy.",
+        "Start the day by protecting a short block of focused time, even 15 minutes: it’s your way of telling your brain you’re in charge here.",
       ],
       afternoon: [
-        "WHAT IF ti chiede come va il pomeriggio… io voglio sapere da quanto fissi lo schermo senza concludere niente. Raccontami il coma operativo, ecchecazz!!!",
-        "Il collega poetico parla di “aggiustare la rotta”. Ma quale rotta, se sei parcheggiato alla scrivania dal pranzo? Dimmi la scena vera, ecchecazz!!!",
-        "Lui dice che “puoi recuperare”. Io direi che puoi almeno non addormentarti in call. Scrivimi il livello di sonno professionale, ecchecazz!!!",
-        "WHAT IF vuole capire il “ritmo”, ma oggi sembri wifi scadente: parti, cadi, riparti. Raccontami come stai sopravvivendo al pomeriggio, ecchecazz!!!"
+        "Midday is not about heroic pushes: it’s a good moment to trim one commitment you don’t really want and reclaim a bit of energy.",
+        "If your focus is all over the place, split the afternoon in two: one block for what must be done, one for what actually feeds you.",
+        "Instead of forcing yourself to do more, fix one leak: a distraction, a pointless chat, or a task that should have been a no.",
       ],
       evening: [
-        "WHAT IF vuole sapere cosa ti tieni dalla giornata. Io voglio sapere come hai perso la dignità litigando col microonde. Sputa il resoconto, ecchecazz!!!",
-        "Il collega saggio parla di “bilanci serali”. Il tuo bilancio: 1 caffè, 3 errori, 7 sospiri. Fammi l’inventario onesto, ecchecazz!!!",
-        "Lui dice “chiudi con calma”, ma il divano ti ha inghiottito come un parente disperato. Com’è il finale della puntata di oggi? ecchecazz!!!",
-        "WHAT IF vuole lezioni profonde, io voglio il momento più tragicomico della giornata. Raccontami la scena top del disastro, ecchecazz!!!"
-      ],
+        "Tonight, before you judge the whole day, name two things you actually did, however small; your brain loves to erase the quiet wins.",
+        "Use the evening to notice what really drained you and what quietly helped you, so tomorrow you can protect at least one of those helps.",
+        "Rather than rewriting your entire life in your head, choose one small tweak for tomorrow and let the rest wait outside your pillow.",
+      ]
     },
+    es: {
+      morning: [
+        "Por la mañana elige una victoria pequeña y realista y deja el resto de fondo: no necesitas un milagro, solo un primer ladrillo estable.",
+        "Antes de que empiece el ruido, quita de en medio una molestia pequeña; suele ser la que más energía te roba en silencio."
+      ],
+      afternoon: [
+        "A media tarde no hace falta que seas héroe: basta con cerrar un frente abierto o decir un no que llevas posponiendo.",
+        "Si vas a trompicones, parte la tarde en dos bloques claros: lo obligatorio primero y luego algo que te recargue de verdad."
+      ],
+      evening: [
+        "Por la noche cuenta dos cosas que sí hiciste, aunque sean mínimas, antes de decidir que el día ha sido un desastre.",
+        "Antes de dormir, saca de tu cabeza al menos una preocupación escribiéndola en otro sitio: así no tiene barra libre en la almohada."
+      ]
+    },
+    fr: {
+      morning: [
+        "Ce matin, choisis une petite victoire réaliste et laisse le reste en arrière-plan : pas besoin de miracle, juste d’un premier appui solide.",
+        "Avant que le bruit démarre, enlève un petit caillou de ta chaussure : souvent c’est lui qui te pompe le plus d’énergie."
+      ],
+      afternoon: [
+        "L’après-midi n’a pas à être héroïque : profite-en pour fermer un dossier ouvert ou dire un non qui traîne depuis trop longtemps.",
+        "Si tu te sens dispersé, coupe l’après-midi en deux blocs clairs : d’abord le nécessaire, ensuite ce qui te recharge vraiment."
+      ],
+      evening: [
+        "Le soir, avant de juger ta journée, nomme deux choses que tu as vraiment faites, même petites : ton cerveau a tendance à les effacer.",
+        "Avant de dormir, mets noir sur blanc au moins une inquiétude pour l’empêcher de tourner en boucle dans ton oreiller."
+      ]
+    },
+    de: {
+      morning: [
+        "Heute Morgen reicht eine kleine, machbare Sache, die du wirklich abschließt – der Rest darf unscharf bleiben.",
+        "Bevor der Lärm losgeht, entferne eine winzige Nervigkeit von deiner Liste; oft frisst sie heimlich am meisten Energie."
+      ],
+      afternoon: [
+        "Am Nachmittag musst du kein Held sein: schließe lieber eine alte offene Baustelle oder sag ein Nein, das längst fällig ist.",
+        "Wenn du zerstreut bist, teile den Nachmittag in zwei klare Blöcke: zuerst Pflicht, dann etwas, das dich wirklich auftankt."
+      ],
+      evening: [
+        "Am Abend, bevor du den Tag verurteilst, zähl zwei Dinge auf, die du wirklich getan hast, auch wenn sie klein sind.",
+        "Schreib eine Sorge auf Papier, bevor du ins Bett gehst, damit sie nicht die ganze Nacht im Kopf Karussell fährt."
+      ]
+    }
   },
 
-  en: {
-    whatif: {
+  wtf: {
+    it: {
       morning: [
-        "This morning you don’t have to fix everything: pick one thing that would make your day lighter and, if you want, tell me which.",
-        "Today flows better if you start with one small, clear win. What could that be for you? Say it in one line if you like.",
-        "You can make the day simpler by removing just one useless weight. If you want, tell me which one you’d cut first.",
-        "You don’t need a perfect morning, just a realistic one: choose one priority and, if it helps, write it here in two words."
+        "Oh, buongiorno campione del rinvio: oggi scegli UNA cosa da chiudere davvero e il resto lo mandi cortesemente a domani, ecchecazz!!!",
+        "Ti svegli, guardi la giornata e lei ti guarda peggio: fai pace con un impegno solo, non con l’universo intero, ecchecazz!!!",
+        "Stamattina niente promesse epiche: scegli un micro casino da sistemare e lascia stare l’idea di diventare supereroe entro pranzo, ecchecazz!!!",
+        "Appena puoi, spegni una notifica di troppo: è il modo più veloce per far capire al telefono chi comanda in casa, ecchecazz!!!"
       ],
       afternoon: [
-        "Midday check: what’s draining you and what’s actually helping? If you want, tell me both in one sentence and we adjust the rest.",
-        "It’s afternoon: are you more in attack mode or just surviving? Drop me a quick line so we can tune the pace.",
-        "You still have time to turn the day a bit: how is it really going so far? Be honest if you feel like it.",
-        "The afternoon often decides the tone of your evening: do you feel more scattered or focused? If you want, put it into a short sentence."
+        "Oh, è pomeriggio: o ti muovi ora o affoghi nella palude delle notifiche e dei “poi vedo” fino a sera, ecchecazz!!!",
+        "Metà giornata andata e tu ancora in trattativa con il divano: firma almeno un accordo con la realtà e chiudi qualcosa, ecchecazz!!!",
+        "Se il pomeriggio ti sembra un blob, ritaglia dieci minuti blindati per una sola cosa e difendili come il tuo ultimo neurone, ecchecazz!!!",
+        "Invece di aprire l’ennesima scheda, chiudine tre e guarda come respira meglio pure il browser, ecchecazz!!!"
       ],
       evening: [
-        "By the end of the day, what really stays with you and what can go? If you want, tell me the first thing that comes up.",
-        "Tonight you can review the day without beating yourself up: overall, how did it go? Share it in a line if it helps.",
-        "Before you sleep, is there one thing today that showed you something about yourself? You can write it here and we look at it calmly.",
-        "Evening is for sorting, not judging: what’s the thought you’d like to end the day with? If you want, tell me and we anchor it."
-      ],
+        "Oh, è sera: smettila di menarti per quello che non hai fatto e salva almeno un gesto decente per il te di domani, ecchecazz!!!",
+        "Arrivi a fine giornata e fai l’inventario solo dei casini: conta anche le briciole buone, che non campi solo di bastonate, ecchecazz!!!",
+        "Stasera chiudi almeno un pensiero in un appunto invece che in testa, così l’ansia non ti paga l’affitto del cervello, ecchecazz!!!",
+        "Prima di addormentarti, scegli una cosa che domani NON ripeterai identica e chiamala evoluzione low cost, ecchecazz!!!"
+      ]
     },
-    wtf: {
+    en: {
       morning: [
-        "Oh look, WHAT IF wants you to “start strong” while you’re wrestling with your pillow like it’s a boss fight. Tell me the chaos level, ecchecazz!!!",
-        "The wise colleague says “first step”, but your first step was tripping over your socks. Describe the mess of your morning launch, ecchecazz!!!",
-        "WHAT IF preaches “calm morning”, and you’re hunting coffee like rare loot. How did that epic quest go today, ecchecazz!!!",
-        "They talk about “intentions”, you’re just trying not to send messages to the wrong chat. Tell me the first screw-up, ecchecazz!!!"
+        "Oh look, morning again: pick one thing to actually finish and stop flirting with twelve half-baked plans, what the f.",
+        "You wake up negotiating with the snooze button like it’s the UN; sign one tiny ceasefire and do something concrete, what the f."
       ],
       afternoon: [
-        "WHAT IF asks how your afternoon is going, I ask how long you’ve been staring at the same email. Tell me the damage, ecchecazz!!!",
-        "The poetic colleague talks about “course correction”. Buddy, you’re docked at the desk since lunch. Give me the real picture, ecchecazz!!!",
-        "They say “you can still recover”, but you’re negotiating with the chair not to fall asleep. Rate your zombie mode, ecchecazz!!!",
-        "WHAT IF wants your “rhythm”, but your rhythm is buffering. Share the most tragicomic moment of this afternoon, ecchecazz!!!"
+        "Afternoon mode: either you move now or you drown in pings, snacks and “I’ll do it later” until midnight, what the f.",
+        "If your day feels like soup, fish out one solid potato of a task and bite that first, what the f."
       ],
       evening: [
-        "WHAT IF wants highlights of the day, I want the part where you argued with the microwave. Drop tonight’s blooper, ecchecazz!!!",
-        "The wise one talks about “evening balance”. Your balance is snacks, regrets and one tiny win. List them honestly, ecchecazz!!!",
-        "They say “close the day with peace”, but your sofa swallowed you whole. What’s the last ridiculous scene of today, ecchecazz!!!",
-        "WHAT IF hunts for lessons, I hunt for survival stories. Tell me the most chaotic moment you survived today, ecchecazz!!!"
-      ],
+        "End of day and you only count failures: add two small wins to the receipt before trashing the whole movie, what the f.",
+        "Tonight, park at least one worry on paper instead of letting it rent your brain all night, what the f."
+      ]
     },
-  },
-
-  es: {
-    whatif: {
+    es: {
       morning: [
-        "Esta mañana no tienes que arreglarlo todo: elige una cosa que haga el día más ligero y, si quieres, cuéntamela en una frase.",
-        "El día arranca mejor si consigues una pequeña victoria clara al principio. ¿Cuál podría ser? Escríbela rápido si te apetece.",
-        "Puedes mejorar el día quitando solo un peso tonto. Si quieres, dime cuál sería el primero en desaparecer.",
-        "No necesitas una mañana perfecta, solo una manejable: elige una prioridad y, si te ayuda, escríbela en pocas palabras."
+        "Buenos días, héroe del “luego veo”: hoy caza una cosa de verdad y deja de seducir cuarenta pendientes a la vez, qué carajo.",
+        "Te levantas y ya vas negociando con la cama; firma un trato y levanta al menos una cosa del suelo, qué carajo."
       ],
       afternoon: [
-        "Es mitad de día: ¿qué te está agotando y qué te está sosteniendo? Si quieres, cuéntamelo en una frase y ajustamos el resto.",
-        "Ya es tarde: ¿hoy estás más en modo ataque o en modo aguantar? Dímelo rápido y vemos cómo seguir.",
-        "Todavía puedes corregir la ruta: ¿cómo va de verdad el día hasta ahora? Si te apetece, sé sincero en una línea.",
-        "La tarde suele marcar el tono de la noche: ¿te sientes más disperso o más centrado? Escríbelo si quieres ponerle nombre."
+        "Por la tarde o te mueves o te come el pantano de notificaciones y paseos a la nevera, qué carajo.",
+        "Si la tarde es un puré mental, elige un trozo sólido y muérdelo primero, qué carajo."
       ],
       evening: [
-        "Al final del día importa qué te quedas y qué dejas ir: ¿qué se queda de hoy? Cuéntamelo en una frase si te ayuda.",
-        "Esta noche puedes mirar el día sin machacarte: en general, ¿cómo ha ido? Si quieres, escríbelo y lo miramos juntos.",
-        "Antes de dormir, ¿hay algo de hoy que te haya aclarado un poco quién eres? Puedes contarlo aquí sin filtro.",
-        "La noche sirve para ordenar, no para juzgar: ¿con qué pensamiento quieres cerrar el día? Escríbelo si te apetece."
-      ],
+        "Acaba el día y solo ves lo que faltó: cuenta también las dos chorradas que sí hiciste, que no eres tan desastre, qué carajo.",
+        "Antes de dormir, aparca una preocupación en un papel y no encima de tu almohada, qué carajo."
+      ]
     },
-    wtf: {
+    fr: {
       morning: [
-        "WHAT IF habla de “empezar bien” y tú sigues peleando con la almohada. Venga, cuéntame el nivel de desastre matutino, ecchecazz!!!",
-        "El colega zen dice “primer paso”… y tu primer paso fue tropezarte descalzo. Descríbeme el show de esta mañana, ecchecazz!!!",
-        "WHAT IF vende calma y tú buscas café como si fuera tesoro. ¿Cómo fue la expedición hoy? ecchecazz!!!",
-        "Ellos hablan de intención, tú solo intentas no contestar al grupo equivocado. Suelta la primera cagada del día, ecchecazz!!!"
+        "Bonjour, athlète du “on verra”: aujourd’hui tu clos une vraie chose et tu arrêtes de draguer tous les projets à la fois, bordel.",
+        "Tu te réveilles déjà en négociation avec le lit; signe la paix et relève au moins un truc de la journée, bordel."
       ],
       afternoon: [
-        "WHAT IF pregunta cómo va la tarde, yo pregunto cuánto llevas mirando la misma pantalla. Cuéntame el coma productivo, ecchecazz!!!",
-        "El colega poético dice “ajustar rumbo”. ¿Qué rumbo, si llevas aparcado en la silla desde la comida? Dime la verdad, ecchecazz!!!",
-        "Dicen que “aún puedes remontar” y tú luchas por no dormirte. Pon nota a tu modo zombi, ecchecazz!!!",
-        "WHAT IF quiere tu “ritmo”, pero hoy vas a golpes de wifi. Cuéntame el momento más tragicómico de la tarde, ecchecazz!!!"
+        "L’après-midi, soit tu bouges, soit tu te noies dans les notifications et les grignotages philosophiques, bordel.",
+        "Si tout ressemble à une purée mentale, trouve un morceau solide à mordre et commence par là, bordel."
       ],
       evening: [
-        "WHAT IF quiere lecciones del día, yo quiero saber cuándo discutiste con el microondas. Suelta la escena, ecchecazz!!!",
-        "Hablan de “balance nocturno”: el tuyo es snacks, cansancio y alguna victoria rara. Hazme la lista sincera, ecchecazz!!!",
-        "Te dicen que cierres el día con calma y tú te has fusionado con el sofá. ¿Cómo termina el capítulo de hoy? ecchecazz!!!",
-        "WHAT IF busca profundidad, yo busco el momento más ridículo que has sobrevivido. Cuéntamelo sin filtro, ecchecazz!!!"
-      ],
+        "Fin de journée et tu ne vois que le carnage: compte aussi les miettes réussies avant de jeter le film entier, bordel.",
+        "Ce soir, gare une inquiétude sur papier plutôt que dans ton oreiller, bordel."
+      ]
     },
-  },
-
-  fr: {
-    whatif: {
+    de: {
       morning: [
-        "Ce matin tu n’as pas besoin de tout régler: choisis une chose qui allégerait ta journée et, si tu veux, dis-moi laquelle.",
-        "La journée démarre mieux si tu valides une petite victoire claire au début. Laquelle pourrait être la tienne? Écris-la en une phrase.",
-        "Tu peux améliorer ton jour en enlevant juste un poids inutile. Si tu veux, dis-moi lequel tu laisserais tomber en premier.",
-        "Pas besoin d’une matinée parfaite, juste gérable: choisis une priorité et, si ça t’aide, mets-la en mots ici."
+        "Guten Morgen, Meister des “später”: heute machst du eine Sache wirklich fertig und hörst auf, zehn Baustellen gleichzeitig anzustarren, verdammt nochmal.",
+        "Du verhandelst schon mit dem Wecker wie im Bundestag; triff eine Mini-Entscheidung und komm in Gang, verdammt nochmal."
       ],
       afternoon: [
-        "Milieu de journée: qu’est-ce qui te vide et qu’est-ce qui t’aide vraiment? Si tu veux, résume-le en une phrase et on ajuste.",
-        "Cet après-midi, tu es plutôt en mode attaque ou survie? Dis-le-moi vite et on voit comment gérer la suite.",
-        "Tu peux encore corriger le tir: comment ça se passe vraiment jusqu’ici? Si tu veux, sois honnête en deux lignes.",
-        "L’après-midi prépare souvent ta soirée: tu te sens plutôt dispersé ou posé? Mets-le en mots si tu veux y voir plus clair."
+        "Nachmittag: entweder du bewegst dich jetzt oder du ersäufst in Pings, Snacks und “mach ich später”, verdammt nochmal.",
+        "Wenn der Tag wie Brei wirkt, such dir ein festes Stück und beiß zuerst da rein, verdammt nochmal."
       ],
       evening: [
-        "En fin de journée, l’important c’est ce que tu gardes et ce que tu lâches: qu’est-ce qui reste de ce jour? Dis-le-moi en une phrase.",
-        "Ce soir tu peux regarder ta journée sans te juger: globalement, comment ça s’est passé? Si tu veux, écris-le et on le relit ensemble.",
-        "Avant de dormir, y a-t-il quelque chose aujourd’hui qui t’a fait comprendre un peu mieux comment tu fonctionnes? Tu peux me le raconter ici.",
-        "Le soir sert à ranger, pas à t’enfoncer: avec quelle pensée tu aimerais finir la journée? Écris-la si tu veux l’ancrer un peu."
-      ],
-    },
-    wtf: {
-      morning: [
-        "WHAT IF parle de “bien commencer”, toi tu te bats encore avec la couette. Allez, raconte-moi le carnage du réveil, ecchecazz!!!",
-        "Le collègue zen dit “premier pas” et ton premier pas, c’est marcher sur ton chargeur. Décris-moi la scène, ecchecazz!!!",
-        "WHAT IF vend une matinée calme, toi tu chasses le café comme un animal rare. Comment s’est passée la chasse aujourd’hui? ecchecazz!!!",
-        "On parle d’intentions, toi tu essaies juste de ne pas répondre au mauvais groupe. Donne-moi la première bourde du jour, ecchecazz!!!"
-      ],
-      afternoon: [
-        "WHAT IF demande comment va ton après-midi, moi je demande depuis combien de temps tu fixes le même mail. Raconte, ecchecazz!!!",
-        "Le poète du comptoir dit “corriger la trajectoire”. Quelle trajectoire, si tu es soudé à ta chaise depuis midi? Dis la vérité, ecchecazz!!!",
-        "On te dit que “tu peux encore rattraper”, alors que tu luttes pour ne pas t’endormir. Note ton mode zombie, ecchecazz!!!",
-        "WHAT IF veut ton “rythme”, mais tu es en mode wifi instable. Donne-moi le moment le plus tragicomique de l’après-midi, ecchecazz!!!"
-      ],
-      evening: [
-        "WHAT IF veut savoir ce que tu retiens de la journée, moi je veux savoir quand tu t’es engueulé avec ton micro-ondes. Lâche l’anecdote, ecchecazz!!!",
-        "On parle de “bilan du soir”: le tien, c’est grignotage, soupirs et une mini-victoire. Fais la liste honnête, ecchecazz!!!",
-        "On te dit de finir la journée en paix, toi tu es fusionné avec ton canapé. Comment se termine l’épisode d’aujourd’hui? ecchecazz!!!",
-        "WHAT IF cherche des leçons, moi je cherche le moment le plus absurde que tu as survécu. Raconte sans filtre, ecchecazz!!!"
-      ],
-    },
-  },
-
-  de: {
-    whatif: {
-      morning: [
-        "Heute Morgen musst du nicht alles lösen: such dir eine Sache aus, die den Tag leichter macht, und erzähl sie mir, wenn du magst.",
-        "Der Tag startet besser, wenn du dir gleich am Anfang einen kleinen klaren Erfolg holst. Welcher könnte das sein? Schreib ihn kurz auf.",
-        "Du kannst den Tag verbessern, indem du nur ein unnötiges Gewicht loslässt. Wenn du willst, sag mir, welches zuerst fliegen würde.",
-        "Du brauchst keinen perfekten Morgen, nur einen machbaren: wähle eine Priorität und formulier sie in ein paar Worten, wenn es hilft."
-      ],
-      afternoon: [
-        "Mitte des Tages: was zieht dich runter und was trägt dich noch? Wenn du magst, fass es in einem Satz zusammen.",
-        "Es ist Nachmittag: bist du heute eher im Angriffsmodus oder im Überlebensmodus? Schreib’s mir kurz, dann justieren wir den Rest.",
-        "Du kannst den Kurs immer noch leicht korrigieren: wie läuft der Tag wirklich bisher? Wenn du willst, sei ehrlich in einer Zeile.",
-        "Der Nachmittag legt oft die Stimmung für den Abend fest: fühlst du dich eher zerstreut oder fokussiert? Formulier es, wenn du Klarheit willst."
-      ],
-      evening: [
-        "Am Ende des Tages zählt, was du behältst und was du loslässt: was bleibt heute übrig? Erzähl es mir in einem Satz.",
-        "Heute Abend kannst du auf den Tag schauen, ohne dich fertig zu machen: wie war er insgesamt? Schreib’s, wenn du willst.",
-        "Bevor du schlafen gehst: gab es heute etwas, das dir gezeigt hat, wie du eigentlich tickst? Du kannst es hier festhalten.",
-        "Der Abend ist zum Sortieren da, nicht zum Verurteilen: mit welchem Gedanken willst du den Tag beenden? Schreib ihn, wenn du magst."
-      ],
-    },
-    wtf: {
-      morning: [
-        "WHAT IF redet von “gut starten”, du kämpfst noch mit der Decke wie im Wrestling. Erzähl mir das Morgenchaos, ecchecazz!!!",
-        "Der Zen-Kollege sagt “erster Schritt” und dein erster Schritt ist auf den Stecker. Beschreib mir die Szene, ecchecazz!!!",
-        "WHAT IF verkauft einen ruhigen Morgen, du jagst den Kaffee wie ein seltenes Tier. Wie lief die Jagd heute? ecchecazz!!!",
-        "Alle reden von Intention, du versuchst nur, keine Nachricht an den falschen Chat zu schicken. Erste Panne des Tages, los, ecchecazz!!!"
-      ],
-      afternoon: [
-        "WHAT IF fragt, wie dein Nachmittag läuft, ich frage, wie lange du schon denselben Tab anstarrst. Erzähl mir den Produktivitätskoma, ecchecazz!!!",
-        "Der Theoretiker sagt “Kurs korrigieren”. Welcher Kurs, wenn du seit Mittag an den Stuhl geschweißt bist? Sei ehrlich, ecchecazz!!!",
-        "Sie sagen, du kannst noch “aufholen”, während du gegen das Eindösen kämpfst. Bewerte deinen Zombie-Modus, ecchecazz!!!",
-        "WHAT IF will deinen “Rhythmus”, aber du lädst dauernd nach. Verrat mir den tragikomischsten Moment des Nachmittags, ecchecazz!!!"
-      ],
-      evening: [
-        "WHAT IF will die Lehren des Tages, ich will wissen, wann du dich mit der Mikrowelle gestritten hast. Raus mit der Story, ecchecazz!!!",
-        "Alle reden von “Abendbilanz”: deine ist Snacks, Müdigkeit und ein schiefer kleiner Sieg. Mach die ehrliche Liste, ecchecazz!!!",
-        "Sie sagen, du sollst den Tag in Ruhe beenden, du bist mit dem Sofa verschmolzen. Wie endet die Folge heute? ecchecazz!!!",
-        "WHAT IF sucht Tiefe, ich suche deinen chaotischsten Überlebensmoment. Schreib ihn mir, ungefiltert, ecchecazz!!!"
-      ],
-    },
-  },
+        "Am Abend siehst du nur, was gefehlt hat: zähl auch zwei kleine Treffer, bevor du den ganzen Tag in den Müll wirfst, verdammt nochmal.",
+        "Bevor du schlafen gehst, park eine Sorge auf Papier statt im Kopfkino, verdammt nochmal."
+      ]
+    }
+  }
 };
 
-/* ========= COSTRUTTORE FRASE GIORNALIERA ========= */
-function buildDailyStaticSignal({ slot = "morning", stile = "whatif", lang = "it" }) {
+function pickSignalPhrase({ stile, lang, slot, mood, domanda }) {
   const L = normLang(lang);
-  const s = normalizeSlot(slot);
-
-  const langPack = DAILY_TEXT[L] || DAILY_TEXT.it;
   const styleKey = stile === "wtf" ? "wtf" : "whatif";
-  const stylePack = langPack[styleKey] || langPack.whatif;
+  const slotKey = normSignalSlot(slot);
 
-  const arr =
-    s === "afternoon"
-      ? stylePack.afternoon || stylePack.morning
-      : s === "evening"
-      ? stylePack.evening || stylePack.morning
-      : stylePack.morning;
+  const libStyle = SIGNAL_PHRASES[styleKey] || SIGNAL_PHRASES.whatif;
+  let libLang = libStyle[L];
+  if (!libLang) libLang = libStyle.it || Object.values(libStyle)[0];
 
-  return pickRandom(arr);
+  let list = libLang[slotKey];
+  if (!list || !list.length) {
+    // fallback: mattina IT
+    list = SIGNAL_PHRASES.whatif.it.morning;
+  }
+
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const seedBase = `${styleKey}|${L}|${slotKey}|${mood || ""}|${today}|${domanda || ""}`;
+  const seed = hashStr(seedBase);
+
+  const idx = list.length ? seed % list.length : 0;
+  let text = list[idx] || list[0] || "";
+
+  // pulizia finale
+  text = normalizeOneParagraph(text);
+  text = sentenceCaseAll(text);
+  text = finalPunct(text);
+
+  // in italiano, se è wtf assicuriamoci che chiuda con ecchecazz!!! almeno se non c'è già
+  if (styleKey === "wtf" && L === "it" && !/ecchecazz!+/i.test(text)) {
+    text = text.replace(/[\s.!?…]+$/g, "");
+    text = `${text}, ecchecazz!!!`;
+  }
+
+  return text;
 }
 
 /* ========= Server-side PCT ========= */
@@ -1446,9 +1400,16 @@ function ensureWtfEcchecazzEnding(text = "", lang = "it") {
   let s = String(text || "").trim();
   if (!s) return "ecchecazz!!!";
 
+  // togli virgolette all'inizio/fine del blocco
   s = s.replace(/^["“”']+/, "").replace(/["“”']+$/, "").trim();
+
+  // togli eventuali ecchecazz duplicati già presenti
   s = s.replace(/\s*ecchecazz!+$/gi, "");
+
+  // togli eventuali "ecc" finali
   s = s.replace(/\s*ecc[.,!?…]*$/gi, "");
+
+  // togli punti finali, spazi e segni vari
   s = s.replace(/[\s.!?…]+$/g, "").trim();
   if (!s) return "ecchecazz!!!";
 
@@ -1485,29 +1446,37 @@ export default async function handler(req, res) {
     } = body || {};
 
     const L = normLang(lang);
-    const isSignal = (micro && micro.src === "signal") || stage === "signal";
+    const isSignal = micro && micro.src === "signal";
 
-    // ====== SEGNALI GIORNO: NO OPENAI, SOLO LISTE STATICHE ======
-    if (isSignal) {
-      const slotRaw = micro.slot || micro.timeOfDay || micro.time || "morning";
-      const slot = normalizeSlot(slotRaw);
-      const answer = buildDailyStaticSignal({ slot, stile, lang: L }) || "";
+    // Per le chiamate normali chiediamo ancora una domanda vera.
+    // Per i segnali, basta un placeholder non vuoto.
+    if (!domanda || typeof domanda !== "string") {
+      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
+    }
+
+    /* ====== STAGE: SIGNAL (frasi statiche, niente OpenAI) ====== */
+    if (stage === "signal" || isSignal) {
+      const slot =
+        micro.slot || micro.timeOfDay || micro.time || "morning";
+      const mood = micro.mood || null;
+
+      const text = pickSignalPhrase({
+        stile,
+        lang: L,
+        slot,
+        mood,
+        domanda,
+      });
 
       return res.status(200).json({
         mode: "signal",
-        time: slotRaw,
-        slot,
+        time: normSignalSlot(slot),
         style: stile,
         lang: L,
         periodo,
-        model: "static",
-        answer,
+        model: "signal-local-v1",
+        answer: text,
       });
-    }
-
-    // Per le chiamate normali serve una domanda vera
-    if (!domanda || typeof domanda !== "string") {
-      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
     /* ====== STAGE: CLARIFY ====== */
@@ -1549,7 +1518,8 @@ export default async function handler(req, res) {
       });
     }
 
-    /* ====== STAGE: ANSWER (normale, con OpenAI) ====== */
+    /* ====== STAGE: ANSWER ====== */
+
     const messages = buildMessages({ domanda, clarification, lang: L, periodo, stile });
 
     const completion = await client.chat.completions.create({
@@ -1565,12 +1535,15 @@ export default async function handler(req, res) {
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
+    // Rimuovi eco domanda
     answer = stripQuestionEcho(domanda, answer);
 
+    // Polish grammaticale
     answer = await polishAnswer({ text: answer, lang: L, stile });
 
+    // Limita frasi e parole, normalizza
     if (stile === "wtf") {
-      answer = tightenSentences(answer, 5);
+      answer = tightenSentences(answer, 5); // max 5 frasi
       answer = clampWords(answer, 130);
       answer = normalizeOneParagraph(answer);
     } else {
@@ -1579,6 +1552,7 @@ export default async function handler(req, res) {
       answer = normalizeOneParagraph(answer);
     }
 
+    // Safety nomi propri IT
     if (L === "it") {
       (function () {
         const d = String(domanda || "");
@@ -1609,8 +1583,10 @@ export default async function handler(req, res) {
       })();
     }
 
+    // Ripristina maiuscole frasi
     answer = sentenceCaseAll(answer);
 
+    // Filtro anti-coach + anti-italiano rotto per WTF IT
     if (stile === "wtf" && L === "it") {
       answer = answer.replace(/\bcoccol\w*/gi, "botta");
       answer = answer.replace(/\bprocrastinazion\w*/gi, "tirarla lunga");
@@ -1633,14 +1609,23 @@ export default async function handler(req, res) {
       answer = answer.replace(/\bmadò\b/gi, "");
     }
 
+    // Strip prima persona per WHAT IF
     if (stile !== "wtf") {
       answer = stripFirstPerson(answer, L, stile);
     }
 
+    // Sostituisci “cazzo” con “azzo”
     if (stile === "wtf" && L === "it") {
       answer = answer.replace(/\bcazz\w*/gi, (m) => m.replace(/cazz/gi, "azz"));
-      answer = answer.replace(/\bmerd\w*\b/gi, "schifo");
+    }
 
+    // Rimuovi qualsiasi "merd*" residuo
+    if (stile === "wtf" && L === "it") {
+      answer = answer.replace(/\bmerd\w*\b/gi, "schifo");
+    }
+
+    // Evita fissazione sui “lampioni”
+    if (stile === "wtf" && L === "it") {
       let count = 0;
       answer = answer.replace(/\blampion[ei]\b/gi, (m) => {
         count += 1;
@@ -1649,20 +1634,23 @@ export default async function handler(req, res) {
       answer = answer.replace(/\bspippolat\w*/gi, "rimuginata");
     }
 
+    // Se in WTF IT non c'è nessuna "bestemmia" narrata, aggiungine UNA a volte (non sempre)
     const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
-    if (stile === "wtf" && L === "it" && !/bestemmi\w*/i.test(answer) && !isSurprise) {
-      const seedSci = hashStr(String(domanda || "") + "|" + String(answer || ""));
-      if (seedSci % 100 < 65) {
+    if (stile === "wtf" && L === "it" && !/bestemmi\w*/i.test(answer)) {
+      const seed = hashStr(String(domanda || "") + "|" + String(answer || ""));
+      if (seed % 100 < 65) {
         answer =
           answer.replace(/\s*[.!?…]*$/, "") +
           `, e ti scappa una "bestemmia di manutenzione" che fa vibrare pure la tazzina sul tavolo`;
       }
     }
 
+    // Finale “ecchecazz!!!” per WTF
     if (stile === "wtf") {
       answer = ensureWtfEcchecazzEnding(answer, L);
     }
 
+    // Finale “gancio zíngara” per WHAT IF
     if (stile === "whatif") {
       answer = ensureZingaraEnding({ text: answer, lang: L, periodo, domanda });
     }
@@ -1708,8 +1696,6 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error("❌ [/api/ask] error:", err);
-    return res
-      .status(500)
-      .json({ error: "server_error", detail: String(err?.message || err) });
+    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-        }
+                                                                     }
