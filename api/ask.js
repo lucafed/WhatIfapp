@@ -1,8 +1,7 @@
-// /api/ask.js — What?f Engine (clarify + answer + polish + daily signals statici)
+// /api/ask.js — What?f Engine (clarify + answer + polish)
 // - WHATIF: analisi scenari + consigli pratici, con almeno un punto NON ovvio che fa riflettere.
 // - WTF: narratore/comico da pub, volgare ma affettuoso, stile “turista del destino”.
 // - SORPRENDIMI: domande assurde “intelligenti”, varie, non ripetute.
-// - SIGNAL: frasi giornaliere statiche (mattina / pomeriggio / sera) per WHAT IF e WHAT THE F.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -244,9 +243,7 @@ const ZINGARA_ENDINGS = {
 };
 
 /**
- * Finale WHAT IF:
- * - Per ITALIANO ora NON forziamo più nessuna frase standard.
- * - Ci limitiamo a chiudere bene la punteggiatura.
+ * Finale WHAT IF (per IT lasciamo il finale naturale, sistemiamo solo punteggiatura).
  */
 function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   let s = String(text || "").trim();
@@ -281,6 +278,7 @@ function ensureZingaraEnding({ text, lang, periodo, domanda }) {
 }
 
 /* ========= WTF: stile ufficiale (few-shot) ========= */
+
 const WTF_STYLE_EXAMPLES_IT = `Esempio 1:
 "Oh, eccoci, centauro dell’inferno. Casco lucido, petto in fuori e cervello rimasto indietro di due curve. Parti, il vento ti fa sentire un dio… poi un’ape ti punta il collo come se avessi firmato un contratto. Ti scappa un “bestemmione a motore caldo!” così forte che il semaforo si mette al rosso da solo e un cane attraversa la strada cambiando idea sulla sua vita. Ti fermi, respiri, e ne lasci andare un’altra più piccola, quasi affettuosa, tipo rito di purificazione. Al bar ordini “qualcosa per sciacquare la bestemmia” e il barista annuisce come uno che ha visto troppo, ecchecazz!!!"
 
@@ -587,6 +585,7 @@ MODALITÀ PASSATO:
 }
 
 /* ========= WTF RULES (risposte, non Sorprendimi) ========= */
+
 const WTF_RULE_IT_FUT = `Sei “WHAT THE F”: narratore/comico da pub che parla ESATTAMENTE con il respiro degli esempi seguenti (non copiare frasi, imita ritmo, voce, struttura):
 
 ${WTF_STYLE_EXAMPLES_IT}
@@ -781,7 +780,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
       if (isWtf) {
         if (hasClar) {
           return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}".
-Genera UNA risposta in ITALIANO come voce “WHAT THE F”, nello stesso stile degli esempi (Motociclista, Luisa, Turista del destino):
+Genera UNA risposta in ITALIANO come voce “WHAT THE F”, nello stesso stile degli esempi (Motociclista, Luisa, Turista del destino, turista del destino all’Aquila):
 - monologo unico, 3–5 frasi, circa 90–130 parole;
 - apertura che ti prende per il culo;
 - mostra DUE film: se fai davvero questa scelta e se resti fermo a tirarla lunga;
@@ -863,56 +862,55 @@ function normalizeSlot(slot = "morning") {
 }
 
 /* WHAT IF — mattina, pomeriggio, sera (IT) */
-const WHATIF_MORNING = [
-  "Stamattina il gioco è semplice: scegli una cosa che ti alleggerisce la giornata e dimmela in due parole.",
-  "Oggi non devi sistemare tutto, solo spostare di un millimetro quello che pesa di più: ti va di dirmi qual è?",
-  "Considera questa mattina come un reset piccolo ma vero: cosa vuoi che vada diversamente rispetto a ieri?",
-  "Hai più margine di quanto credi: se oggi andasse un filo meglio, da che dettaglio si vedrebbe?",
-  "Oggi la tua testa non ha bisogno di miracoli, ma di una decisione piccola e chiara: quale ti gira per la mente adesso?",
-  "Chiamiamola così: micro-profezia del giorno. Scegli una cosa che vuoi vada meglio e scrivimela, la teniamo d’occhio.",
-];
-
-const WHATIF_AFTERNOON = [
-  "Pomeriggio, tempo di bilancio parziale: com’è messa davvero la tua giornata, più “ok dai” o più “ma chi me l’ha fatto fare”?",
-  "Se dovessi raccontare il tuo pomeriggio con una parola sola, quale useresti? Scrivimela e vediamo come usarla a tuo favore.",
-  "Metà giornata è andata: cosa ti sta mangiando più energia e cosa invece te ne sta ridando un po’?",
-  "Piccolo check: ti senti più in modalità attacco o difesa oggi? Dimmi la prima cosa che ti viene, senza sistemarla.",
-  "Da adesso in poi puoi ancora cambiare il finale di oggi: come sta andando finora, a spanne?",
-];
-
-const WHATIF_EVENING = [
-  "Fine giornata: cosa vuoi portarti dietro di oggi e cosa preferisci lasciare qui senza souvenir?",
-  "Se questa giornata fosse un episodio di serie tv, come lo intitoleresti? Scrivimi il titolo onesto, anche storto.",
-  "Prima di chiudere, guardiamo semplice: cosa è andato meglio del previsto e cosa ti ha spremuto più del previsto?",
-  "La domanda di stasera è facile: cosa ti farebbe dire “ok, posso andare a dormire un po’ più tranquillo”?",
-  "Immagina di mandarti un messaggio dal futuro di domani mattina: che cosa ti consiglierebbe su oggi?",
-];
+const WHATIF_SIGNALS = {
+  morning: [
+    "Stamattina il gioco è semplice: scegli una cosa che ti alleggerisce la giornata e dimmela in due parole.",
+    "Oggi non devi sistemare tutto, solo spostare di un millimetro quello che pesa di più: ti va di dirmi qual è?",
+    "Considera questa mattina come un reset piccolo ma vero: cosa vuoi che vada diversamente rispetto a ieri?",
+    "Hai più margine di quanto credi: se oggi andasse un filo meglio, da che dettaglio si vedrebbe?",
+    "Oggi la tua testa non ha bisogno di miracoli, ma di una decisione piccola e chiara: quale ti gira per la mente adesso?",
+    "Chiamiamola così: micro-profezia del giorno. Scegli una cosa che vuoi vada meglio e scrivimela, la teniamo d’occhio."
+  ],
+  afternoon: [
+    "Pomeriggio, tempo di bilancio parziale: com’è messa davvero la tua giornata, più “ok dai” o più “ma chi me l’ha fatto fare”?",
+    "Se dovessi raccontare il tuo pomeriggio con una parola sola, quale useresti? Scrivimela e vediamo come usarla a tuo favore.",
+    "Metà giornata è andata: cosa ti sta mangiando più energia e cosa invece te ne sta ridando un po’?",
+    "Piccolo check: ti senti più in modalità attacco o difesa oggi? Dimmi la prima cosa che ti viene, senza sistemarla.",
+    "Da adesso in poi puoi ancora cambiare il finale di oggi: come sta andando finora, a spanne?"
+  ],
+  evening: [
+    "Fine giornata: cosa vuoi portarti dietro di oggi e cosa preferisci lasciare qui senza souvenir?",
+    "Se questa giornata fosse un episodio di serie tv, come lo intitoleresti? Scrivimi il titolo onesto, anche storto.",
+    "Prima di chiudere, guardiamo semplice: cosa è andato meglio del previsto e cosa ti ha spremuto più del previsto?",
+    "La domanda di stasera è facile: cosa ti farebbe dire “ok, posso andare a dormire un po’ più tranquillo”?",
+    "Immagina di mandarti un messaggio dal futuro di domani mattina: che cosa ti consiglierebbe su oggi?"
+  ]
+};
 
 /* WHAT THE F — mattina, pomeriggio, sera (IT) */
-const WTF_MORNING = [
-  "Ah eccoti, devoto della sveglia ignorata: WHAT IF ti parla di micro-profezie e tu stai ancora contrattando col cuscino. Racconta come hai davvero iniziato, ecchecazz!!!",
-  "Il collega zen ti dice di “spostare un millimetro quello che pesa”. Tu hai spostato solo la tazza del caffè e già sei stanco, ecchecazz!!!",
-  "Lui ti offre il reset gentile, tu apri gli occhi e trovi il caos identico a ieri con più briciole sul tavolo, ecchecazz!!!",
-  "WHAT IF ti chiede una decisione piccola e chiara, tu hai deciso solo che il telefono viene a letto con te. Confessa il resto, ecchecazz!!!",
-  "Qui si parla di “giornata che parte meglio” mentre tu hai già litigato con il telefono, le chiavi e il dentifricio. Dimmi il disastro, ecchecazz!!!",
-  "Micro-profezia un corno: la tua vera profezia mattutina è “arriverò tardi”. Raccontami quanto sei già in ritardo dentro la testa, ecchecazz!!!",
-];
-
-const WTF_AFTERNOON = [
-  "WHAT IF ti fa il check-in elegante, io voglio il report grezzo: dopo pranzo sei più utile o più arredo? Sputa il verdetto, ecchecazz!!!",
-  "Lui ti chiede la “parola del pomeriggio”, io punto un euro su “sbatti”. Dimmi se devo cambiare scommessa, ecchecazz!!!",
-  "Metà giornata è andata, metà del tuo cervello è in modalità aereo: racconta dove ti sei perso per strada davvero, ecchecazz!!!",
-  "Il collega parla di energia che va e viene, ma il tuo grafico è crollo verticale dopo il caffè. Dimmi dove hai mollato, ecchecazz!!!",
-  "Qui si discute di finali da aggiustare e tu sei bloccato alla scena pausa-scroll infinito. Descrivi il livello di coma operativo, ecchecazz!!!",
-];
-
-const WTF_EVENING = [
-  "WHAT IF ti chiede cosa ti porti dietro, io ti chiedo cos’hai lanciato mentalmente dalla finestra oggi. Fai l’elenco sporco, ecchecazz!!!",
-  "Serie tv della giornata? A occhio si chiama “Ce la cavo domani”. Dimmi la trama senza filtri, ecchecazz!!!",
-  "Lui parla di dormire più tranquillo, tu hai la testa che fa after con tutte le scene di oggi. Racconta la peggiore, ecchecazz!!!",
-  "Fine puntata e il divano ti ha firmato un contratto a tempo indeterminato. Com’è la chiusura della giornata davvero, ecchecazz!!!",
-  "Le lezioni di oggi? Scommetto: “mai più così”… finché non lo rifai uguale. Dimmi almeno cosa vorresti cambiare davvero, ecchecazz!!!",
-];
+const WTF_SIGNALS = {
+  morning: [
+    "Ah eccoti, devoto della sveglia ignorata: tutti parlano di “iniziare bene la giornata” e tu sei già in ritardo mentale, ecchecazz!!!",
+    "Ti vendono il reset mattutino e tu hai resettato solo la sveglia tre volte di fila, ecchecazz!!!",
+    "Qui si parla di micro-decisioni e tu hai deciso solo che il telefono viene a letto con te, ecchecazz!!!",
+    "Altro che alba nuova: hai iniziato la giornata litigando con le chiavi, il caffè e il primo messaggio non letto, ecchecazz!!!",
+    "Chiamano “mattina leggera” quella in cui almeno non rovesci il caffè: dimmi che danno hai già fatto tu, ecchecazz!!!"
+  ],
+  afternoon: [
+    "WHAT IF ti fa il check-in elegante, io voglio il report grezzo: dopo pranzo sei più utile o più arredo? Sputa il verdetto, ecchecazz!!!",
+    "Metà giornata è andata e metà del tuo cervello è in modalità aereo: racconta dov’è che ti sei perso per strada, ecchecazz!!!",
+    "Dicono “pomeriggio di produttività”, tu hai fatto pace solo col frigorifero: com’è messo il resto, ecchecazz!!!",
+    "Il caffè ti ha promesso miracoli, tu hai risposto con uno scroll infinito: descrivi il livello di coma operativo, ecchecazz!!!",
+    "A quest’ora dovresti essere in corsa, invece sei parcheggiato in doppia fila sui pensieri: che casino hai in testa, ecchecazz!!!"
+  ],
+  evening: [
+    "Fine puntata: altro che crescita personale, stai solo cercando una posizione comoda per rimandare i pensieri a domani, ecchecazz!!!",
+    "Oggi doveva essere la giornata della svolta, si è trasformata nella serata del “vabbè dai domani”: raccontami il best of, ecchecazz!!!",
+    "Mentre il divano ti assume a tempo indeterminato, prova almeno a dirmi cosa non vuoi rivedere domani, ecchecazz!!!",
+    "Tutti a parlare di gratitudine serale, tu sei grato solo se il telefono smette di vibrare: com’è davvero la chiusura, ecchecazz!!!",
+    "Se questa giornata fosse una serie, stai guardando i titoli di coda chiedendoti quando inizia la stagione buona, ecchecazz!!!"
+  ]
+};
 
 function pickDailyFromArray(arr, stile, slot) {
   if (!arr || !arr.length) return "";
@@ -922,19 +920,14 @@ function pickDailyFromArray(arr, stile, slot) {
   return arr[idx];
 }
 
-function buildDailyStaticSignal({ slot = "morning", stile = "whatif", lang = "it" }) {
-  const L = normLang(lang);
+function buildDailyStaticSignal({ slot = "morning", stile = "whatif" }) {
   const s = normalizeSlot(slot);
-
-  // Per ora supportiamo solo IT in modo ricco. Per le altre lingue, riusiamo l'italiano.
   if (stile === "wtf") {
-    if (s === "morning") return pickDailyFromArray(WTF_MORNING, stile, s);
-    if (s === "afternoon") return pickDailyFromArray(WTF_AFTERNOON, stile, s);
-    return pickDailyFromArray(WTF_EVENING, stile, s);
+    const bag = WTF_SIGNALS[s] || WTF_SIGNALS.morning;
+    return pickDailyFromArray(bag, stile, s);
   } else {
-    if (s === "morning") return pickDailyFromArray(WHATIF_MORNING, stile, s);
-    if (s === "afternoon") return pickDailyFromArray(WHATIF_AFTERNOON, stile, s);
-    return pickDailyFromArray(WHATIF_EVENING, stile, s);
+    const bag = WHATIF_SIGNALS[s] || WHATIF_SIGNALS.morning;
+    return pickDailyFromArray(bag, stile, s);
   }
 }
 
@@ -1098,7 +1091,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
       cons.push("si tu sous-estimes les dépenses, la pression financière peut te freiner");
     }
     if (hasDeadline) {
-      pros.push("une échéance claire aide à trancher più vite");
+      pros.push("une échéance claire aide à trancher plus vite");
       cons.push("une date floue glisse facilement et affaiblit ton engagement");
     }
     if (action) {
@@ -1321,26 +1314,16 @@ export default async function handler(req, res) {
     const L = normLang(lang);
     const isSignal = (micro && micro.src === "signal") || stage === "signal";
 
-    // Normalizziamo la domanda: per i segnali non è davvero necessaria
-    let domandaText = typeof domanda === "string" ? domanda : "";
-    if (!domandaText) {
-      if (!isSignal) {
-        return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
-      } else {
-        domandaText = "__signal__";
-      }
-    }
-
-    /* ====== STAGE: SIGNAL (frasi giornaliere statiche) ====== */
+    // 🔔 SEGNALI GIORNALIERI: NON usano l'API, solo liste statiche
     if (isSignal) {
-      const slot = micro.slot || micro.time || micro.timeOfDay || "morning";
-      const normSlot = normalizeSlot(slot);
-      const answer = buildDailyStaticSignal({ slot: normSlot, stile, lang: L }) || "";
+      const slotRaw = micro.slot || micro.timeOfDay || micro.time || "morning";
+      const slot = normalizeSlot(slotRaw);
+      const answer = buildDailyStaticSignal({ slot, stile }) || "";
 
       return res.status(200).json({
         mode: "signal",
-        time: slot,
-        slot: normSlot,
+        time: slotRaw,
+        slot,
         style: stile,
         lang: L,
         periodo,
@@ -1349,17 +1332,29 @@ export default async function handler(req, res) {
       });
     }
 
+    // Per le domande normali serve una vera domanda
+    if (!domanda || typeof domanda !== "string") {
+      return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
+    }
+
     /* ====== STAGE: CLARIFY ====== */
     if (stage === "clarify") {
-      const messages = buildClarifyMessages({ domanda: domandaText, stile, lang: L, periodo, micro });
+      const messages = buildClarifyMessages({ domanda, stile, lang: L, periodo, micro });
+
+      const isSurprise = micro && (micro.surprise === true || micro.src === "surprise");
+
+      let temperature = stile === "wtf" ? 1.0 : 0.7;
+      let top_p = 0.96;
+      let frequency_penalty = stile === "wtf" ? 0.8 : 0.2;
+      let presence_penalty = stile === "wtf" ? 0.7 : 0.1;
 
       const completion = await client.chat.completions.create({
         model: MODEL,
-        temperature: stile === "wtf" ? 1.0 : 0.7,
-        top_p: 0.96,
+        temperature,
+        top_p,
         max_tokens: 80,
-        frequency_penalty: stile === "wtf" ? 0.8 : 0.2,
-        presence_penalty: stile === "wtf" ? 0.7 : 0.1,
+        frequency_penalty,
+        presence_penalty,
         messages,
       });
 
@@ -1381,14 +1376,8 @@ export default async function handler(req, res) {
       });
     }
 
-    /* ====== STAGE: ANSWER (normale) ====== */
-    const messages = buildMessages({
-      domanda: domandaText,
-      clarification,
-      lang: L,
-      periodo,
-      stile,
-    });
+    /* ====== STAGE: ANSWER (normale, usa API) ====== */
+    const messages = buildMessages({ domanda, clarification, lang: L, periodo, stile });
 
     const completion = await client.chat.completions.create({
       model: MODEL,
@@ -1403,13 +1392,9 @@ export default async function handler(req, res) {
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // Rimuovi eco domanda
-    answer = stripQuestionEcho(domandaText, answer);
-
-    // Polish grammaticale
+    answer = stripQuestionEcho(domanda, answer);
     answer = await polishAnswer({ text: answer, lang: L, stile });
 
-    // Limita frasi e parole, normalizza
     if (stile === "wtf") {
       answer = tightenSentences(answer, 5);
       answer = clampWords(answer, 130);
@@ -1420,10 +1405,9 @@ export default async function handler(req, res) {
       answer = normalizeOneParagraph(answer);
     }
 
-    // Safety nomi propri IT
     if (L === "it") {
       (function () {
-        const d = String(domandaText || "");
+        const d = String(domanda || "");
         const nameRx = /\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
         const inQuestion = new Set(d.match(nameRx) || []);
         answer = answer.replace(nameRx, (m) => {
@@ -1451,10 +1435,8 @@ export default async function handler(req, res) {
       })();
     }
 
-    // Ripristina maiuscole frasi
     answer = sentenceCaseAll(answer);
 
-    // Filtro anti-coach + anti-italiano rotto per WTF IT
     if (stile === "wtf" && L === "it") {
       answer = answer.replace(/\bcoccol\w*/gi, "botta");
       answer = answer.replace(/\bprocrastinazion\w*/gi, "tirarla lunga");
@@ -1496,10 +1478,9 @@ export default async function handler(req, res) {
       answer = answer.replace(/\bspippolat\w*/gi, "rimuginata");
     }
 
-    // Aggiungi "bestemmia" narrata in alcuni casi per WTF IT
     const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
     if (stile === "wtf" && L === "it" && !/bestemmi\w*/i.test(answer) && !isSurprise) {
-      const seedSci = hashStr(String(domandaText || "") + "|" + String(answer || ""));
+      const seedSci = hashStr(String(domanda || "") + "|" + String(answer || ""));
       if (seedSci % 100 < 65) {
         answer =
           answer.replace(/\s*[.!?…]*$/, "") +
@@ -1512,33 +1493,33 @@ export default async function handler(req, res) {
     }
 
     if (stile === "whatif") {
-      answer = ensureZingaraEnding({ text: answer, lang: L, periodo, domanda: domandaText });
+      answer = ensureZingaraEnding({ text: answer, lang: L, periodo, domanda });
     }
 
     answer = finalPunct(answer);
 
-    const pct = computePct(domandaText, stile);
+    const pct = computePct(domanda, stile);
 
     let motivation;
     if (stile === "whatif") {
       try {
         motivation = await generateMotivationLLM({
-          domanda: domandaText,
+          domanda,
           clarification,
           answer,
           lang: L,
           pct,
         });
       } catch (e) {
-        motivation = buildWhatIfMotivation(domandaText, L, pct);
+        motivation = buildWhatIfMotivation(domanda, L, pct);
       }
     }
 
     let scientific;
     if (stile === "wtf" && !isSurprise) {
-      const seedSci = hashStr(String(domandaText || "") + "|scientific");
+      const seedSci = hashStr(String(domanda || "") + "|scientific");
       if (seedSci % 100 < 70) {
-        scientific = scientificReportDemenziale(domandaText, L);
+        scientific = scientificReportDemenziale(domanda, L);
       }
     }
 
