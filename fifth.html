@@ -653,8 +653,8 @@ const IS_SIGNAL = !!(reqEarly && reqEarly.source === "signal" && reqEarly.micro)
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
 function detectLang(text=''){
-  const t=(text||'').toLowerCase();
-  if(/[¿¡]/.test(t)) return 'es';
+  const lower=(text||'').toLowerCase();
+  if(/[¿¡]/.test(lower)) return 'es';
   const bank={
     it:[" che "," perché"," se "," quando"," dove"," non "," sono "," vorrei"," posso"," e se"," una settimana"," come"],
     en:[" what "," if "," the "," and "," you "," are "," will "," would "," can "," should "," could "],
@@ -662,9 +662,22 @@ function detectLang(text=''){
     fr:[" quoi"," si "," pourquoi"," quand"," où"," pas "," je "," peux"," si je"," et si"],
     de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
   };
-  const score={}; for(const L of SUP_LANG){ score[L]=0; (bank[L]||[]).forEach(w=>{ if(t.includes(w)) score[L]++; }); }
-  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; } }
-  if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
+  const score={};
+  for(const L of SUP_LANG){
+    score[L]=0;
+    (bank[L]||[]).forEach(w=>{ if(lower.includes(w)) score[L]++; });
+  }
+  let best='it', max=-1;
+  for(const L of SUP_LANG){
+    if(score[L]>max){
+      max=score[L];
+      best=L;
+    }
+  }
+  if(max<=0){
+    const nav=(navigator.language||'it').slice(0,2).toLowerCase();
+    if(SUP_LANG.includes(nav)) return nav;
+  }
   return best;
 }
 let lang = SUP_LANG.includes(langFromFourth) ? langFromFourth : detectLang(domandaEarly);
@@ -793,7 +806,7 @@ const answerEl=qs('#answer'), shareBtn=qs('#shareBtn'), againBtn=qs('#againBtn')
 const saveBtn=qs('#saveBtn');
 const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct'), bottomPct=qs('#bottomPct');
 const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
-const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
+const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap'];
 const motNote=qs('#motNote'), toastEl=qs('#toast');
 
 /* ==== VIDEO refs ==== */
@@ -1009,7 +1022,7 @@ function buildWhatIfMotivationsPretty(domanda, pct, rawFromAI){
         : "Take a few clear steps that fit who you are now, not who you think you should be.";
     } else if (L === "es") {
       body = isPast
-        ? "Elegiste con la energía y la información de entonces; ahora puedes usar lo aprendido untuk próximos pasos."
+        ? "Elegiste con la energía y la información de entonces; ahora puedes usar lo aprendido para tus próximos pasos."
         : "Da pocos pasos claros que encajen con cómo te sientes hoy, no con lo que “deberías” ser.";
     } else if (L === "fr") {
       body = isPast
