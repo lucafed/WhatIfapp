@@ -136,6 +136,50 @@ font-size:14.5px; line-height:1.55; color:#E7F2EE;
 box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
 }
 
+/* === DAILY MESSAGE BOX (Frase del giorno) === */
+.daily-box{
+  display:none;
+  margin:8px 0 10px;
+  border-radius:14px;
+  padding:10px 12px;
+  background:
+    radial-gradient(600px 380px at 10% 0%, rgba(255,236,1,.15), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.12));
+  border:1px solid rgba(255,255,255,.24);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.10),
+    0 10px 30px rgba(0,0,0,.60),
+    0 0 22px var(--glow);
+}
+.daily-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:4px;
+}
+.daily-tag{
+  font-size:12px;
+  font-weight:800;
+  padding:4px 9px;
+  border-radius:999px;
+  background:rgba(0,0,0,.36);
+  border:1px solid rgba(255,255,255,.35);
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.daily-meta{
+  font-size:11px;
+  opacity:.82;
+  color:var(--muted);
+}
+.daily-text{
+  font-size:15px;
+  line-height:1.6;
+  color:#F7FAFF;
+}
+
 /* === VIDEO SECTION === */
 #videoBox{
 margin-top:10px;
@@ -165,55 +209,6 @@ justify-content:center;
   flex-wrap:wrap;
   gap:8px;
   margin-top:6px;
-}
-
-/* === DAILY MESSAGE BOX (frase del giorno) === */
-.daily-box{
-  background:
-    radial-gradient(520px 320px at 0% 0%, rgba(255,236,1,.20), transparent 60%),
-    rgba(10,14,18,.96);
-  border-radius:14px;
-  padding:12px 14px;
-  margin-bottom:10px;
-  border:1px solid rgba(255,255,255,.16);
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,.05),
-    0 10px 26px rgba(0,0,0,.55),
-    0 0 22px rgba(255,236,1,.20);
-}
-.daily-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-  margin-bottom:4px;
-}
-.daily-title{
-  font-size:14px;
-  font-weight:800;
-  color:var(--acc2);
-  text-shadow:0 0 14px var(--glow);
-}
-.daily-tag{
-  font-size:11px;
-  font-weight:700;
-  padding:3px 9px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.22);
-  background:rgba(0,0,0,.45);
-  color:#fff;
-  opacity:.9;
-}
-.daily-text{
-  font-size:15px;
-  line-height:1.6;
-  margin:2px 0 4px;
-}
-.daily-credit{
-  margin:2px 0 0;
-  font-size:11px;
-  opacity:.86;
-  color:var(--muted);
 }
 
 /* Mobile */
@@ -279,16 +274,6 @@ transition:opacity .35s ease, transform .35s ease;
   <div class="card">
     <div class="label" id="lblA">Risposta</div>
 
-    <!-- 🔆 FRASE DEL GIORNO (daily, NO AI) -->
-    <div id="dailyBox" class="daily-box" style="display:none">
-      <div class="daily-head">
-        <span id="dailyTitle" class="daily-title">—</span>
-        <span id="dailyPersonaTag" class="daily-tag" style="display:none">—</span>
-      </div>
-      <p id="dailyText" class="daily-text">—</p>
-      <p id="dailyCreditHint" class="daily-credit small" style="display:none"></p>
-    </div>
-
     <div class="pct-row">
       <span class="pct-label" id="pctLabel">% probabilità che accada</span>
       <div id="topPct" class="top-pct" aria-live="polite">—</div>
@@ -296,6 +281,15 @@ transition:opacity .35s ease, transform .35s ease;
 
     <!-- INTRO (solo prima volta per stile) -->
     <div id="introBox" class="intro-box" style="display:none"></div>
+
+    <!-- FRASE GIORNALIERA (segnali mattina/pomeriggio/sera) -->
+    <div id="dailyMessageBox" class="daily-box">
+      <div class="daily-head">
+        <span id="dailyMessageTag" class="daily-tag">✨ Frase del giorno</span>
+        <span id="dailyMessageMeta" class="daily-meta"></span>
+      </div>
+      <div id="dailyMessageText" class="daily-text"></div>
+    </div>
 
     <!-- SOLO Oracle (niente frasetta lead) -->
     <div class="oracle-wrap">
@@ -403,8 +397,8 @@ import {
   consumeCredit
 } from "./store/credits.js";
 
-/* 🔆 Frasi giornaliere preimpostate (NO AI) */
-import { getDailyMessage } from "/daily-messages.js";
+/* 🔤 Frasi giornaliere (file statico, NO AI) */
+import { getDailyMessage } from "./daily-messages.js";
 
 /* ==== Base & prefs ==== */
 const LS = localStorage;
@@ -483,7 +477,6 @@ document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'w
 
 /* ==== I18N ==== */
 const I18N = {
-  /* … (TUTTO IL BLOCCO I18N IDENTICO A PRIMA, lo lascio invariato per brevità) … */
   it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
        sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
        p:"Esito & motivazioni", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
@@ -507,6 +500,7 @@ const I18N = {
        guideQuick:"Indicazioni rapide",
        guideAdvice:"Consiglio",
        guideAnalysis:"Analisi sintetica",
+       /* VIDEO */
        videoTitle:"Video condivisibile",
        videoHelp:"Crea un breve video con domanda e risposta, pronto da condividere sui social.",
        videoBtn:"🎬 Crea video",
@@ -518,6 +512,7 @@ const I18N = {
        videoShareCancelled:"Condivisione annullata.",
        videoOpenTikTok:"📱 Apri TikTok",
        videoOpenInsta:"📸 Apri Instagram",
+       /* TTS */
        ttsBtn:"🔊 Ascolta la risposta",
        ttsBtnStop:"⏹ Stop",
        ttsUnsupported:"Il tuo dispositivo non supporta la lettura vocale.",
@@ -525,22 +520,244 @@ const I18N = {
        ttsPlaying:"Riproduzione in corso…",
        ttsError:"Errore nella sintesi vocale."
   },
-  /* … en, es, fr, de restano identici al tuo file precedente … */
+  en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
+       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
+       p:"Outcome & motivations", share:"📤 Share / Copy", again:"🔁 Ask another",
+       save:"⭐ Save", savedOk:"✅ Saved",
+       copied:"Copied!", error:"[server error]",
+       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Style: What the F · 6–9 sentences · single paragraph · dry tone · mode: ${p==='past'?'Past':'Future'}.`
+        : `Style: What if (60% analysis, 40% images) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
+       pctLabel:"% probability it happens",
+       votersTitle:"Committee", seriousTitle:"Motivations", scientificTitle:"Rationale (scientific)",
+       chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained",
+       motFallback:"Reason: short-term, concrete benefits with manageable constraints.",
+       credits:(n)=>`💰 Credits: ${n}`, noCredits:"You ran out of credits.",
+       storeTitle:"Credits", buy5:"Buy +5 credits (test)", buy10:"Buy +10 credits (test)", buy20:"Buy +20 credits (test)",
+       watchAd:"Watch ad (+1)", close:"Close",
+       comingSoon:"Coming soon", buySoonNote:"Credit purchases not available yet.",
+       toastPlus:(n)=>`+${n} credit`,  toastMinus:(n)=>`-${n} credit`,
+       guideTitle:"Guidance",
+       guideQuick:"Quick tips",
+       guideAdvice:"Advice",
+       guideAnalysis:"Concise analysis",
+       /* VIDEO */
+       videoTitle:"Shareable video",
+       videoHelp:"Create a short video with your question and answer, ready to share on social media.",
+       videoBtn:"🎬 Create video",
+       videoReadyNote:"Video ready: download it and upload to TikTok, Instagram or anywhere you like.",
+       videoPreparing:"Generating video…",
+       videoError:"Could not generate the video. Please try again.",
+       videoNoData:"There is no answer yet to turn into a video.",
+       videoShareNotSupported:"Your browser cannot share this file directly.",
+       videoShareCancelled:"Share cancelled.",
+       videoOpenTikTok:"📱 Open TikTok",
+       videoOpenInsta:"📸 Open Instagram",
+       /* TTS */
+       ttsBtn:"🔊 Listen to the answer",
+       ttsBtnStop:"⏹ Stop",
+       ttsUnsupported:"Your device does not support voice reading.",
+       ttsNoAnswer:"No answer to read.",
+       ttsPlaying:"Playing audio…",
+       ttsError:"Speech synthesis error."
+  },
+  es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
+       sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
+       p:"Resultado y motivaciones", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra",
+       save:"⭐ Guardar", savedOk:"✅ Guardada",
+       copied:"¡Copiado!", error:"[error del servidor]",
+       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Estilo: What the F · 6–9 frases · un párrafo · tono seco · modo: ${p==='past'?'Pasado':'Futuro'}.`
+        : `Estilo: What if (60% análisis, 40% imágenes) · 8–11 frases · un párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`,
+       pctLabel:"% probabilidad de que ocurra",
+       votersTitle:"Comité", seriousTitle:"Motivaciones", scientificTitle:"Motivo (científico)",
+       chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",
+       motFallback:"Motivo: beneficios concretos a corto plazo con límites manejables.",
+       credits:(n)=>`💰 Créditos : ${n}`, noCredits:"Se te han acabado los créditos.",
+       storeTitle:"Créditos", buy5:"Comprar +5 créditos (test)", buy10:"Comprar +10 créditos (test)", buy20:"Comprar +20 créditos (test)",
+       watchAd:"Ver anuncio (+1)", close:"Cerrar",
+       comingSoon:"Próximamente", buySoonNote:"La compra de créditos aún no está disponible.",
+       toastPlus:(n)=>`+${n} crédito`,  toastMinus:(n)=>`-${n} crédito`,
+       guideTitle:"Guía",
+       guideQuick:"Indicaciones rápidas",
+       guideAdvice:"Consejo",
+       guideAnalysis:"Analisis sintético",
+       /* VIDEO */
+       videoTitle:"Vídeo compartible",
+       videoHelp:"Crea un vídeo corto con tu pregunta y respuesta, listo para compartir en redes.",
+       videoBtn:"🎬 Crear vídeo",
+       videoReadyNote:"Vídeo listo: descárgalo y súbelo a TikTok, Instagram o donde quieras.",
+       videoPreparing:"Generando vídeo…",
+       videoError:"No se ha podido generar el vídeo. Inténtalo de nuevo.",
+       videoNoData:"Todavía no hay una respuesta para convertir en vídeo.",
+       videoShareNotSupported:"Tu navegador no puede compartir este archivo directamente.",
+       videoShareCancelled:"Compartición cancelada.",
+       videoOpenTikTok:"📱 Abrir TikTok",
+       videoOpenInsta:"📸 Abrir Instagram",
+       /* TTS */
+       ttsBtn:"🔊 Escuchar la respuesta",
+       ttsBtnStop:"⏹ Stop",
+       ttsUnsupported:"Tu dispositivo no soporta la lectura en voz alta.",
+       ttsNoAnswer:"No hay respuesta para leer.",
+       ttsPlaying:"Reproduciendo audio…",
+       ttsError:"Error en la síntesis de voz."
+  },
+  fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
+       sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
+       p:"Issue & motivations", share:"📤 Partager / Copier", again:"🔁 Poser une autre",
+       save:"⭐ Enregistrer", savedOk:"✅ Enregistrée",
+       copied:"Copié !", error:"[erreur serveur]",
+       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Style : What the F · 6–9 phrases · un paragraphe · ton sec · mode : ${p==='past'?'Passé':'Futur'}.`
+        : `Style : What if (60 % analyse, 40 % images) · 8–11 phrases · un paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,
+       pctLabel:"% de probabilité que ça arrive",
+       votersTitle:"Comité", seriousTitle:"Motivations", scientificTitle:"Motivation (scientifique)",
+       chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions",
+       motFallback:"Raison : bénéfices concrets à court terme, contraintes gérables.",
+       credits:(n)=>`💰 Crédits : ${n}`, noCredits:"Crédits épuisés.",
+       storeTitle:"Crédits", buy5:"Acheter +5 crédits (test)", buy10:"Acheter +10 crédits (test)", buy20:"Acheter +20 crédits (test)",
+       watchAd:"Regarder une pub (+1)", close:"Fermer",
+       comingSoon:"Bientôt", buySoonNote:"Achat de crédits pas encore disponible.",
+       toastPlus:(n)=>`+${n} crédit`,  toastMinus:(n)=>`-${n} crédit`,
+       guideTitle:"Conseils",
+       guideQuick:"Conseils rapides",
+       guideAdvice:"Suggestion",
+       guideAnalysis:"Analyse concise",
+       /* VIDEO */
+       videoTitle:"Vidéo partageable",
+       videoHelp:"Crée une courte vidéo avec ta question et la réponse, prête à être partagée sur les réseaux.",
+       videoBtn:"🎬 Créer la vidéo",
+       videoReadyNote:"Vidéo prête : télécharge-la et mets-la sur TikTok, Instagram ou ailleurs.",
+       videoPreparing:"Génération de la vidéo…",
+       videoError:"Impossible de générer le vidéo. Réessaie.",
+       videoNoData:"Il n’y a pas encore de réponse à transformer en vidéo.",
+       videoShareNotSupported:"Ton navigateur ne peut pas partager directement ce fichier.",
+       videoShareCancelled:"Partage annulé.",
+       videoOpenTikTok:"📱 Ouvrir TikTok",
+       videoOpenInsta:"📸 Ouvrir Instagram",
+       /* TTS */
+       ttsBtn:"🔊 Écouter la réponse",
+       ttsBtnStop:"⏹ Stop",
+       ttsUnsupported:"Ton appareil ne supporte pas la lecture vocale.",
+       ttsNoAnswer:"Aucune réponse à lire.",
+       ttsPlaying:"Lecture en cours…",
+       ttsError:"Erreur de synthèse vocale."
+  },
+  de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
+       sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
+       p:"Ergebnis & Motivationen", share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage",
+       save:"⭐ Speichern", savedOk:"✅ Gespeichert",
+       copied:"Kopiert!", error:"[Serverfehler]",
+       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
+       meta:(st,p)=> st==='wtf'
+        ? `Stil: What the F · 6–9 Sätze · ein Absatz · trockener Ton · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
+        : `Stil: What if (60 % Analyse, 40 % Bilder) · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
+       pctLabel:"% Wahrscheinlichkeit",
+       votersTitle:"Gremium", seriousTitle:"Begründungen", scientificTitle:"Begründung (wissenschaftlich)",
+       chipsFav:"dafür", chipsCon:"dagegen", chipsAst:"enthalten",
+       motFallback:"Grund: kurzfristiger, greifbarer Nutzen mit beherrschbaren Einschränkungen.",
+       credits:(n)=>`💰 Credits: ${n}`, noCredits:"Credits aufgebraucht.",
+       storeTitle:"Credits", buy5:"+5 Credits kaufen (Test)", buy10:"+10 Credits kaufen (Test)", buy20:"+20 Credits kaufen (Test)",
+       watchAd:"Werbung ansehen (+1)", close:"Schließen",
+       comingSoon:"Bald verfügbar", buySoonNote:"Kauf von Credits noch nicht verfügbar.",
+       toastPlus:(n)=>`+${n} Credit`,  toastMinus:(n)=>`-${n} Credit`,
+       guideTitle:"Leitfaden",
+       guideQuick:"Schnelle Hinweise",
+       guideAdvice:"Rat",
+       guideAnalysis:"Kurzanalyse",
+       /* VIDEO */
+       videoTitle:"Teilbares Video",
+       videoHelp:"Erstelle ein kurzes Video mit deiner Frage und Antwort, bereit zum Teilen in Social Media.",
+       videoBtn:"🎬 Video erstellen",
+       videoReadyNote:"Video fertig: Lade es herunter und stell es auf TikTok, Instagram oder wo du willst ein.",
+       videoPreparing:"Video wird erzeugt…",
+       videoError:"Video konnte nicht erzeugt werden. Bitte versuche es erneut.",
+       videoNoData:"Es gibt noch keine Antwort, die in ein Video umgewandelt werden kann.",
+       videoShareNotSupported:"Dein Browser kann diese Datei nicht direkt teilen.",
+       videoShareCancelled:"Teilen abgebrochen.",
+       videoOpenTikTok:"📱 TikTok öffnen",
+       videoOpenInsta:"📸 Instagram öffnen",
+       /* TTS */
+       ttsBtn:"🔊 Antwort anhören",
+       ttsBtnStop:"⏹ Stop",
+       ttsUnsupported:"Dein Gerät unterstützt keine Sprachausgabe.",
+       ttsNoAnswer:"Keine Antwort zum Vorlesen.",
+       ttsPlaying:"Audio wird abgespielt…",
+       ttsError:"Fehler bei der Sprachausgabe."
+  }
 };
 const SUP_LANG=['it','en','es','fr','de'];
 
-/* ======== LINGUA & REQUEST INIZIALE ======== */
+/* Titolo card "frase del giorno" per lingua */
+const DAILY_TITLE = {
+  it:"✨ Frase del giorno",
+  en:"✨ Daily nudge",
+  es:"✨ Frase del día",
+  fr:"✨ Phrase du jour",
+  de:"✨ Tagesimpuls"
+};
+
+/* Messaggio "serve 1 credito" per lingua */
+const DAILY_NO_CREDIT = {
+  it:"🎫 Ti serve 1 credito per vedere la frase del giorno.",
+  en:"🎫 You need 1 credit to see today’s message.",
+  es:"🎫 Necesitas 1 crédito para ver la frase del día.",
+  fr:"🎫 Il te faut 1 crédit pour voir la phrase du jour.",
+  de:"🎫 Du brauchst 1 Credit, um die Tagesbotschaft zu sehen."
+};
+
+/* Label meta per slot/personality (usate sopra la frase) */
+function dailyMetaLabel(slot, personality, langCode){
+  const L = (langCode || 'it').slice(0,2);
+  const wtf = (personality === 'wtf');
+  if(L==='en'){
+    if(slot==='morning')   return wtf ? "Morning · What the F" : "Morning · What if";
+    if(slot==='afternoon') return wtf ? "Afternoon check-in · What the F" : "Afternoon check-in · What if";
+    if(slot==='evening')   return wtf ? "Evening · What the F" : "Evening · What if";
+    return wtf ? "Signal · What the F" : "Signal · What if";
+  }
+  if(L==='es'){
+    if(slot==='morning')   return wtf ? "Mañana · What the F" : "Mañana · What if";
+    if(slot==='afternoon') return wtf ? "Tarde · What the F" : "Tarde · What if";
+    if(slot==='evening')   return wtf ? "Noche · What the F" : "Noche · What if";
+  }
+  if(L==='fr'){
+    if(slot==='morning')   return wtf ? "Matin · What the F" : "Matin · What if";
+    if(slot==='afternoon') return wtf ? "Après-midi · What the F" : "Après-midi · What if";
+    if(slot==='evening')   return wtf ? "Soir · What the F" : "Soir · What if";
+  }
+  if(L==='de'){
+    if(slot==='morning')   return wtf ? "Morgen · What the F" : "Morgen · What if";
+    if(slot==='afternoon') return wtf ? "Nachmittag · What the F" : "Nachmittag · What if";
+    if(slot==='evening')   return wtf ? "Abend · What the F" : "Abend · What if";
+  }
+  // default IT
+  if(slot==='morning')   return wtf ? "Mattino · What the F" : "Mattino · What if";
+  if(slot==='afternoon') return wtf ? "Pomeriggio · What the F" : "Pomeriggio · What if";
+  if(slot==='evening')   return wtf ? "Sera · What the F" : "Sera · What if";
+  return wtf ? "Segnale · What the F" : "Segnale · What if";
+}
+
+/* ======== LINGUA ======== */
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
 
-/* override stile se segnale fase 2 (wtf) */
-if (reqEarly && reqEarly.micro && Number(reqEarly.micro.phase || 1) === 2) {
-  style = "wtf";
-  document.documentElement.setAttribute("data-theme","wtf");
+// 🔁 Override stile se la richiesta arriva da un segnale (morning/afternoon/evening)
+if (reqEarly && reqEarly.source === "signal" && reqEarly.micro && reqEarly.micro.phase) {
+  style = reqEarly.micro.phase === 2 ? "wtf" : "whatif";
+
+  document.documentElement.setAttribute(
+    "data-theme",
+    style === "wtf" ? "wtf" : "whatif"
+  );
 }
+
+const IS_SIGNAL = !!(reqEarly && reqEarly.source === "signal" && reqEarly.micro);
 
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
-
 function detectLang(text=''){
   const lower=(text||'').toLowerCase();
   if(/[¿¡]/.test(lower)) return 'es';
@@ -569,26 +786,9 @@ function detectLang(text=''){
   }
   return best;
 }
-
 let lang = SUP_LANG.includes(langFromFourth) ? langFromFourth : detectLang(domandaEarly);
 document.documentElement.lang=lang;
 const t = ()=>I18N[lang]||I18N.it;
-
-/* ==== RICONOSCIMENTO SEGNALI (daily) ==== */
-const IS_SIGNAL = (()=>{
-  try{
-    const params = new URLSearchParams(location.search);
-    const urlSignal = (params.get("signal") || "").toLowerCase();
-    if (urlSignal === "morning" || urlSignal === "afternoon" || urlSignal === "evening") return true;
-    if (reqEarly && reqEarly.source === "signal" && reqEarly.micro) return true;
-    const micro = (reqEarly && reqEarly.micro) || {};
-    const slot = String(micro.slot || micro.time || micro.timeOfDay || "").toLowerCase();
-    if (slot === "morning" || slot === "afternoon" || slot === "evening") return true;
-    return false;
-  }catch{
-    return false;
-  }
-})();
 
 /* ==== Firebase credits (solo lettura) ==== */
 let currentUser = null;
@@ -627,7 +827,7 @@ onAuthStateChanged(auth, async (user)=>{
   updateCreditInfo();
 });
 
-/* 🔻 Scala 1 credito SOLO per segnali fase 1 (What if) */
+/* 🔻 Scala 1 credito SOLO per segnali fase 1 (morning/afternoon/evening WHAT IF) */
 async function ensureSignalCredit(micro = {}) {
   if (IS_ADMIN) return true;
 
@@ -643,15 +843,12 @@ async function ensureSignalCredit(micro = {}) {
   }
 
   try {
-    await bootCredits();
     const ok = await consumeCredit();
     if (!ok) {
-      // niente redirect: mostriamo solo messaggio nella card
+      toast(t().noCredits || "Hai terminato i crediti.");
       try {
-        const bal = await getBalance();
-        currentBalance = Number.isFinite(+bal) ? +bal : 0;
+        location.href = "/store/credit-store.html?lang=" + (lang || "it");
       } catch {}
-      updateCreditInfo();
       return false;
     }
 
@@ -674,11 +871,26 @@ const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
 const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;
 
 /* === ORACLE LINES (solo attesa) === */
-const ORACLE_LINES = { /* … identico al file precedente … */ };
+const ORACLE_LINES = {
+  it: ["Le carte si muovono piano.","La risposta sta cercando la tua attenzione.","L’aria cambia: qualcosa si avvicina.","Non correre: il disegno prende forma.","Occhio: il quadro si accende da solo.","Silenzio un attimo… qualcosa si allinea.","C’è un passo che torna al suo ritmo.","La moneta è a mezz’aria: sta scegliendo il lato.","Una piega nella notte, poi una luce sottile.","Le luci interne si accendono una alla volta.","Ancora un respiro… il filo si tende.","L’indizio che mancava si sta mostrando.","Un colpo di vento, poi tutto si ferma.","Scorri piano: la porta si sta socchiudendo.","Si sente un sì lontano, ma si avvicina.","L’oracolo gira la pagina… quasi."],
+  en: ["The cards are slowly turning.","The answer is looking for your attention.","Air shifts; something draws near.","Don’t rush—shape is forming.","Look: the outline lights itself.","Hold a breath… things align.","There’s a step finding its rhythm again.","A coin hangs mid-air, choosing its side.","A fold in the dark, then a thin light.","Inner lights switch on, one by one.","Another breath… the wire tightens.","The missing hint is stepping forward.","A gust, then stillness.","Scroll slowly: a door is opening a crack.","A distant yes moves closer.","The oracle turns the page… almost."],
+  es: ["Las cartas se mueven despacio.","La respuesta busca tu atención.","El aire cambia; algo se acerca.","No corras: la forma aparece.","Mira: el contorno se enciende solo.","Guarda el aliento… todo se alinea.","Hay un paso que recupera su ritmo.","Una moneda queda en el aire, eligiendo cara.","Un pliegue en la noche, luego una luz fina.","Luces internas, una por una.","Otro respiro… el hilo se tensa.","La pista que faltaba se asoma.","Una ráfaga y luego quietud.","Desliza despacio: la puerta se entorna.","Un sí lejano se acerca.","El oráculo pasa página… casi."],
+  fr: ["Les cartes tournent lentement.","La réponse cherche ton attention.","L’air change : quelque chose s’approche.","Ne te presse pas : la forme vient.","Regarde : le contour s’allume tout seul.","Retiens ton souffle… tout s’aligne.","Un pas retrouve son rythme.","Une pièce reste en suspens, choisissant sa face.","Un pli dans la nuit, puis une lumière fine.","Des lumières intérieures s’allument, une à une.","Encore un souffle… le fil se tend.","L’indice manquant s’avance.","Un souffle, puis l’immobilité.","Fais défiler doucement : une porte s’entrouvre.","Un oui lointain se rapproche.","L’oracle tourne la page… presque."],
+  de: ["Die Karten bewegen sich langsam.","Die Antwort sucht deine Aufmerksamkeit.","Die Luft verändert sich; etwas kommt näher.","Nicht eilen: die Form entsteht.","Schau: die Kontur leuchtet von allein.","Atem anhalten… die Dinge richten sich.","Ein Schritt findet wieder seinen Rhythmus.","Eine Münze hängt in der Luft und sucht ihre Seite.","Eine Falte in der Nacht, dann ein schmales Licht.","Innere Lichter gehen nacheinander an.","Noch ein Atemzug… der Draht spannt sich.","Der fehlende Hinweis tritt hervor.","Ein Windstoß, dann Stille.","Scroll langsam: eine Tür steht einen Spalt offen.","Ein fernes Ja kommt näher.","Das Orakel blättert um… fast."]
+};
 
 /* ==== INTRO (Zoltar-like) prima volta ===== */
 const INTRO_KEY = 'whatif_intro_seen_v2';
-const INTRO = { /* … identico a prima … */ };
+const INTRO = {
+  whatif: {
+    it: {future:"🜂 La lanterna si accende: fai la domanda e il futuro si mette in fila.", past:"🜂 La sabbia si posa: riguardi il passato senza nebbia e tieni solo ciò che serve."},
+    en: {future:"🜂 The lamp glows: ask clearly and the near future lines up.", past:"🜂 The sand settles: you look back without fog and keep only what matters."}
+  },
+  wtf: {
+    it: {future:"🥂 Dillo forte: il domani non aspetta i timidi.", past:"🥂 Chiudi il conto: il passato ha già pagato, tu ordina il prossimo giro."},
+    en: {future:"🥂 Say it loud: tomorrow won’t wait for the shy.", past:"🥂 Tab’s closed: the past already paid—order the next round."}
+  }
+};
 function showIntroOnce(){
   try{
     const seen = LS.getItem(INTRO_KEY)==='1';
@@ -702,13 +914,10 @@ const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct
 const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
 const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
 const motNote=qs('#motNote'), toastEl=qs('#toast');
-
-/* DAILY refs */
-const dailyBox = qs('#dailyBox');
-const dailyTitleEl = qs('#dailyTitle');
-const dailyTextEl = qs('#dailyText');
-const dailyPersonaTag = qs('#dailyPersonaTag');
-const dailyCreditHintEl = qs('#dailyCreditHint');
+const dailyBox = qs('#dailyMessageBox');
+const dailyText = qs('#dailyMessageText');
+const dailyTag = qs('#dailyMessageTag');
+const dailyMeta = qs('#dailyMessageMeta');
 
 /* ==== VIDEO refs ==== */
 const videoBtn = qs('#videoBtn');
@@ -742,7 +951,7 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* risposta: niente macchina da scrivere → testo intero + fade-in */
+/* risposta: NIENTE macchina da scrivere → testo intero + fade-in, nessun saltello */
 function showAnswerWithTyping(text){
   const full = String(text || "");
   if(!answerEl) return;
@@ -756,8 +965,10 @@ function showAnswerWithTyping(text){
     typingTimeoutId = null;
   }
 
+  // eventualmente solo un suono breve all'inizio
   playTypingShort(1800);
 
+  // reset stile e applico fade-in
   answerEl.style.transition = "none";
   answerEl.style.opacity = 0;
   answerEl.style.height = "";
@@ -765,6 +976,7 @@ function showAnswerWithTyping(text){
 
   answerEl.textContent = full;
 
+  // piccolo delay per permettere al browser di applicare lo stile
   requestAnimationFrame(()=>{
     answerEl.style.transition = "opacity .35s ease-out";
     answerEl.style.opacity = 1;
@@ -797,12 +1009,16 @@ function applyUI(q){
   if(openTikTokBtn) openTikTokBtn.textContent = T.videoOpenTikTok || "📱 TikTok";
   if(openInstaBtn) openInstaBtn.textContent = T.videoOpenInsta || "📸 Instagram";
 
-  if(videoNoteEl) videoNoteEl.textContent = '';
+  if(videoNoteEl) videoNoteEl.textContent = "";
 
   const ttsBtn = document.getElementById("readAnswerBtn");
   const ttsStatus = document.getElementById("ttsStatus");
   if(ttsBtn) ttsBtn.textContent = T.ttsBtn || "🔊";
   if(ttsStatus) ttsStatus.textContent = "";
+
+  if(dailyTag){
+    dailyTag.textContent = DAILY_TITLE[lang] || DAILY_TITLE.it;
+  }
 }
 
 /* ==== Probability ==== */
@@ -861,66 +1077,165 @@ function revealEffect(){
   setTimeout(()=> wrap.classList.remove('reveal'), 900);
 }
 
-/* ===== Motivazioni & cache (identico) ===== */
+/* ===== Motivazione demenziale per WTF ===== */
 function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
-function wtfMotivationDemenziale(langCode){ /* … come prima … */ }
-function buildWhatIfMotivationsPretty(domanda, pct, rawFromAI){ /* … come prima … */ }
+function wtfMotivationDemenziale(langCode){
+  const shots = rnd(1,3), spill = rnd(0,2), bruise = rnd(0,3);
+  if(langCode==='en'){
+    return `Pseudo-science says small daily nudges beat grand plans. The committee argued at the bar: ${shots} shots gone, ${spill} glasses spilled, ${bruise} minor bruises; verdict between hiccups: do it, and stop overthinking.`;
+  } else if(langCode==='es'){
+    return `Pseudociencia de barra: los micro-pasos diarios ganan a los planes épicos. El comité debatió en la barra: ${shots} chupitos desaparecidos, ${spill} copas derramadas, ${bruise} pequeños moratones; veredicto entre hipos: hazlo y deja de sobrepensarlo.`;
+  } else if(langCode==='fr'){
+    return `Pseudoscience de comptoir : les micro-pas quotidiens battent les grands plans. Le comité a débattu au bar : ${shots} shots évaporés, ${spill} verres renversés, ${bruise} bleus légers ; verdict zwischen deux hoquets : fais-le, et arrête de trop réfléchir.`;
+  } else if(langCode==='de'){
+    return `Kneipen-Pseudowissenschaft: kleine tägliche Schritte schlagen große Pläne. Das Gremium tagte an der Theke: ${shots} Shots verschwunden, ${spill} Gläser verschüttet, ${bruise} leichte Blessuren; Urteil zwischen Schluckauf: mach’s, und hör auf, alles zu zerdenken.`;
+  }
+  return `Pseudoscienza da bancone: i micro-passi battono i piani epici. La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: fai, e smettila di pensarci troppo.`;
+}
 
+/* ===== NUOVE MOTIVAZIONI WHAT IF (più corte, da AI) ===== */
+function buildWhatIfMotivationsPretty(domanda, pct, rawFromAI){
+  const L = lang;
+  const isPast = (periodo === 'past');
+
+  let prefix = "";
+  if (typeof pct === "number" && isFinite(pct)) {
+    if (L === "it") {
+      prefix = isPast
+        ? `Probabilità ~${pct}%. Poteva andare anche in modo diverso. `
+        : `Probabilità ~${pct}%. Non è destino scritto, ma una strada possibile. `;
+    } else if (L === "en") {
+      prefix = isPast
+        ? `Approx. ${pct}% probability. It could have played out differently. `
+        : `Approx. ${pct}% probability. Not fixed fate, but a realistic path. `;
+    } else if (L === "es") {
+      prefix = isPast
+        ? `Probabilidad ~${pct}%. Podría haber salido distinto. `
+        : `Probabilidad ~${pct}%. No es destino fijo, pero sí una opción real. `;
+    } else if (L === "fr") {
+      prefix = isPast
+        ? `Probabilité ~${pct}%. Ça aurait pu se passer autrement. `
+        : `Probabilité ~${pct}%. Pas un destin figé, mais une piste crédible. `;
+    } else {
+      prefix = isPast
+        ? `Wahrscheinlichkeit ~${pct}%. Es hätte anders laufen können. `
+        : `Wahrscheinlichkeit ~${pct}%. Kein festgeschriebenes Schicksal, aber ein realistischer Weg. `;
+    }
+  }
+
+  let body = String(rawFromAI || "").trim();
+
+  if (!body) {
+    if (L === "it") {
+      body = isPast
+        ? "Hai deciso con le risorse che avevi allora: ora puoi usare quello che hai imparato per le scelte nuove."
+        : "Fai pochi passi chiari e allineati a come ti senti oggi, non a come “dovresti” essere.";
+    } else if (L === "en") {
+      body = isPast
+        ? "You chose with the energy and information you had then; now you can use what you learned for your next moves."
+        : "Take a few clear steps that fit who you are now, not who you think you should be.";
+    } else if (L === "es") {
+      body = isPast
+        ? "Elegiste con la energía y la información de entonces; ahora puedes usar lo aprendido para tus próximos pasos."
+        : "Da pocos pasos claros que encajen con cómo te sientes hoy, no con lo que “deberías” ser.";
+    } else if (L === "fr") {
+      body = isPast
+        ? "Tu as choisi avec les ressources d’alors; maintenant tu peux utiliser ce que tu as appris pour la suite."
+        : "Fais quelques pas clairs alignés avec ce que tu ressens aujourd’hui, pas avec ce que tu “devrais” être.";
+    } else {
+      body = isPast
+        ? "Du hast mit den damaligen Ressourcen entschieden; jetzt kannst du das Gelernte für neue Entscheidungen nutzen."
+        : "Mach ein paar klare Schritte, die zu deinem heutigen Gefühl passen, nicht nur zu Erwartungen von außen.";
+    }
+  }
+
+  body = normalizeOneParagraph(body);
+  let sentences = body.split(/(?<=[.!?…])\s+/).filter(Boolean);
+  if (sentences.length > 3) {
+    sentences = sentences.slice(0, 3);
+  }
+  body = sentences.join(" ");
+
+  return prefix + body;
+}
+
+/* ==== CACHE RISULTATO ==== */
 const RESULT_CACHE_KEY = 'whatif_result_cache_v2';
-function saveResultToCache(obj){ /* … come prima … */ }
-function loadResultFromCache(domanda, clarification){ /* … come prima … */ }
-function applyResultToUI(result){ /* … come prima … */ }
 
-/* ==== DAILY HELPERS ==== */
-function getDailyTitleFallback(){
-  if (lang === "es") return "Frase del día";
-  if (lang === "fr") return "Phrase du jour";
-  if (lang === "de") return "Tagesphrase";
-  if (lang === "en") return "Daily message";
-  return "Frase del giorno";
-}
-function getDailyNeedCreditText(){
-  if (lang === "en") return "🎫 You need 1 credit to see today’s line.";
-  if (lang === "es") return "🎫 Necesitas 1 crédito para ver la frase de hoy.";
-  if (lang === "fr") return "🎫 Il te faut 1 crédit pour voir la phrase du jour.";
-  if (lang === "de") return "🎫 Du brauchst 1 Credit, um die Tagesphrase zu sehen.";
-  return "🎫 Ti serve 1 credito per vedere la frase del giorno.";
-}
-function getDailyCreditUsedText(){
-  if (lang === "en") return "🎫 This daily line used 1 What if credit.";
-  if (lang === "es") return "🎫 Esta frase del día ha usado 1 crédito de What if.";
-  if (lang === "fr") return "🎫 Cette phrase du jour a utilisé 1 crédit What if.";
-  if (lang === "de") return "🎫 Diese Tagesphrase hat 1 What-if-Credit verwendet.";
-  return "🎫 Questa frase ha usato 1 credito What if.";
-}
-function getDailyFreeText(){
-  if (lang === "en") return "🆓 What the F is free: no credits spent.";
-  if (lang === "es") return "🆓 What the F es gratis: ningún crédito gastado.";
-  if (lang === "fr") return "🆓 What the F est gratuit : aucun crédit utilisé.";
-  if (lang === "de") return "🆓 What the F ist gratis: keine Credits verbraucht.";
-  return "🆓 What the F è gratis: nessun credito consumato.";
+function saveResultToCache(obj){
+  try{
+    LS.setItem(RESULT_CACHE_KEY, JSON.stringify(obj));
+  }catch(e){
+    console.warn('cache save error', e);
+  }
 }
 
-/* ==== HIDE AI SECTIONS QUANDO È SEGNALE ==== */
-function hideAiSectionsForSignal(){
-  const pctRow = document.querySelector('.pct-row');
-  if (pctRow) pctRow.style.display = 'none';
-  const introBox = document.getElementById('introBox');
-  if (introBox) introBox.style.display = 'none';
-  const oracleWrap = document.querySelector('.oracle-wrap');
-  if (oracleWrap) oracleWrap.style.display = 'none';
-  if (answerEl) answerEl.style.display = 'none';
-  const lblP = document.getElementById('lblP');
-  if (lblP) lblP.style.display = 'none';
-  const resultBox = document.getElementById('resultBox');
-  if (resultBox) resultBox.style.display = 'none';
-  const lblVideo = document.getElementById('lblVideo');
-  if (lblVideo) lblVideo.style.display = 'none';
-  const videoBoxEl = document.getElementById('videoBox');
-  if (videoBoxEl) videoBoxEl.style.display = 'none';
+function loadResultFromCache(domanda, clarification){
+  try{
+    const raw = LS.getItem(RESULT_CACHE_KEY);
+    if(!raw) return null;
+    const obj = JSON.parse(raw);
+    if(!obj || typeof obj !== 'object') return null;
+    if((obj.domanda||'').trim() !== String(domanda||'').trim()) return null;
+    if((obj.clarification||'').trim() !== String(clarification||'').trim()) return null;
+    if(obj.style !== style) return null;
+    if(obj.periodo !== periodo) return null;
+    if(obj.lang !== lang) return null;
+    return obj;
+  }catch(e){
+    console.warn('cache load error', e);
+    return null;
+  }
 }
 
-/* ==== INIT TOP ==== */
+function applyResultToUI(result){
+  const domanda = result.domanda || LS.getItem('domanda') || '';
+  applyUI(domanda);
+  qView.textContent = domanda || '—';
+
+  const finalAnswer = result.answer || '—';
+  showAnswerWithTyping(finalAnswer);
+
+  const usedPct = (typeof result.pct === 'number' && isFinite(result.pct))
+    ? Math.max(0, Math.min(100, Math.round(result.pct)))
+    : computeProbability(domanda).pct;
+  const pStr = usedPct + "%";
+  topPct.textContent = pStr;
+  bottomPct.textContent = pStr;
+
+  const mode = result.motivationMode || (style === 'wtf' ? 'wtf' : 'whatif');
+
+  if (mode === 'surprise') {
+    motIco.style.display='';
+    chipsWrap.style.display='flex';
+    committeeTitle.textContent = t().votersTitle || 'Comitato';
+
+    const fav = result.chipsFav ?? 0;
+    const con = result.chipsCon ?? 0;
+    const ast = result.chipsAst ?? 0;
+
+    chipFav.textContent = `${t().chipsFav} ${fav}`;
+    chipCon.textContent = `${t().chipsCon} ${con}`;
+    chipAst.textContent = `${t().chipsAst} ${ast}`;
+    motNote.textContent = result.motivationText || '';
+
+  } else if (mode === 'wtf') {
+    motIco.style.display='none';
+    chipsWrap.style.display='none';
+    committeeTitle.textContent = t().scientificTitle;
+    motNote.textContent = result.motivationText || '';
+
+  } else {
+    motIco.style.display='none';
+    chipsWrap.style.display='none';
+    committeeTitle.textContent = t().seriousTitle;
+    motNote.innerHTML = result.motivationText || '';
+  }
+
+  revealEffect();
+}
+
+/* ==== Top init ==== */
 (function initTop(){
   const hasToken=!!LS.getItem('admin_token');
   if(hasToken || prefs.pro===true){
@@ -958,50 +1273,133 @@ function saveCurrentQuestion(){
   toast(t().savedOk);
 }
 
-/* ==== DAILY: gestione segnale ==== */
-async function handleDailySignal(req, domanda){
-  hideAiSectionsForSignal();
+/* ============================
+   🔔 FLOW PER SEGNALI (frasi giornaliere, NO AI)
+   ============================ */
+async function handleSignalFlow(req, domanda, clarification, surprise, micro){
+  const m = micro || {};
+  const slot = String(m.slot || m.timeOfDay || m.time || 'morning').toLowerCase();
+  const phase = Number(m.phase || 1);
+  const mood = m.mood || null;
+  const personality = phase === 2 ? 'wtf' : 'whatif';
 
-  const micro = (req && req.micro) ? req.micro : {};
-  const rawSlot = (micro.slot || micro.time || micro.timeOfDay || "").toLowerCase();
-  const slot = (rawSlot === "afternoon" || rawSlot === "evening") ? rawSlot : "morning";
-  const phase = Number(micro.phase || 1);
-  const personality = phase === 2 ? "wtf" : "whatif";
+  // aggiorna UI base
+  applyUI(domanda);
+  qView.textContent = domanda || '—';
 
-  if (!dailyBox || !dailyTitleEl || !dailyTextEl) return;
-
-  dailyBox.style.display = "block";
-  dailyBox.classList.add("fade-in");
-
-  if (dailyPersonaTag) {
-    dailyPersonaTag.style.display = "inline-flex";
-    dailyPersonaTag.textContent = personality === "wtf" ? "What the F" : "What if";
+  // mostra box frase giornaliera
+  if(dailyBox){
+    dailyBox.style.display = 'block';
+    dailyBox.classList.add('fade-in');
+  }
+  if(dailyMeta){
+    dailyMeta.textContent = dailyMetaLabel(slot, personality, lang);
   }
 
-  if (dailyCreditHintEl) {
-    dailyCreditHintEl.style.display = "none";
-  }
-
-  // fase 1 (What if) → serve credito
-  if (phase === 1) {
-    const ok = await ensureSignalCredit(micro);
-    if (!ok) {
-      dailyTitleEl.textContent = getDailyTitleFallback();
-      dailyTextEl.textContent = getDailyNeedCreditText();
+  // What if (phase 1) → consuma 1 credito, se manca mostra placeholder
+  if(phase === 1){
+    const ok = await ensureSignalCredit(m);
+    if(!ok){
+      if(dailyText){
+        dailyText.textContent = DAILY_NO_CREDIT[lang] || DAILY_NO_CREDIT.it;
+      }
+      // Nascondo completamente l'AI: niente oracolo, niente motivazioni, niente video
+      const oracleWrap = document.querySelector('.oracle-wrap');
+      if(oracleWrap) oracleWrap.style.display = "none";
+      if(answerEl) answerEl.style.display = "none";
+      const ttsRow = document.getElementById('readAnswerBtn')?.parentElement;
+      if(ttsRow) ttsRow.style.display = "none";
+      const pctRow = document.querySelector('.pct-row');
+      if(pctRow) pctRow.style.display = "none";
+      const introBox = document.getElementById('introBox');
+      if(introBox) introBox.style.display = "none";
+      const lblP = document.getElementById('lblP');
+      const resultBoxEl = document.getElementById('resultBox');
+      const lblVideo = document.getElementById('lblVideo');
+      const videoBoxEl = document.getElementById('videoBox');
+      if(lblP) lblP.style.display = "none";
+      if(resultBoxEl) resultBoxEl.style.display = "none";
+      if(lblVideo) lblVideo.style.display = "none";
+      if(videoBoxEl) videoBoxEl.style.display = "none";
+      topPct.textContent = "—";
+      bottomPct.textContent = "—";
       return;
     }
   }
 
-  const msg = getDailyMessage(lang, slot, personality);
-  dailyTitleEl.textContent = msg.title || getDailyTitleFallback();
-  dailyTextEl.textContent = msg.text || "";
-
-  if (dailyCreditHintEl) {
-    dailyCreditHintEl.style.display = "block";
-    dailyCreditHintEl.textContent = (phase === 1)
-      ? getDailyCreditUsedText()
-      : getDailyFreeText();
+  // se siamo qui: o WTF (gratis) o WHAT IF con credito disponibile
+  let phraseText = "";
+  try{
+    const res = typeof getDailyMessage === "function"
+      ? getDailyMessage(lang, slot, personality, mood)
+      : null;
+    if(typeof res === "string"){
+      phraseText = res;
+    }else if(res && typeof res === "object"){
+      phraseText = String(res.text || res.body || "") || "";
+    }
+  }catch(e){
+    console.error("daily message error:", e);
   }
+
+  if(!phraseText){
+    // fallback minimale per sicurezza
+    const L = (lang || "it").slice(0,2);
+    if(slot==="morning"){
+      phraseText = (L==="en")
+        ? (personality==="wtf"
+            ? "Morning ping: the day won’t fix itself. Say one thing you’ll do, even if it’s tiny."
+            : "Start small: pick one real thing you can do today that makes your day 5% better.")
+        : (personality==="wtf"
+            ? "Ping del mattino: la giornata non si sistema da sola. Scegli una cosa minuscola che farai davvero."
+            : "Parti dal concreto: scegli una cosa piccola ma reale che puoi fare oggi per stare un po’ meglio.");
+    }else if(slot==="afternoon"){
+      phraseText = (L==="en")
+        ? (personality==="wtf"
+            ? "Mid-day check: if the plan is collapsing, downgrade it, don’t delete it."
+            : "How’s the day going? Adjust the pace, not your worth. You can still steer the rest of the day.")
+        : (personality==="wtf"
+            ? "Check-in del pomeriggio: se il piano è andato a ramengo, abbassa l’asticella, non te stesso."
+            : "Come sta andando la giornata? Aggiusta il ritmo, non il tuo valore. Puoi ancora pilotare il resto.");
+    }else{
+      phraseText = (L==="en")
+        ? (personality==="wtf"
+            ? "End of day: you survived. That’s already data. Use it, don’t just scroll it away."
+            : "Close the day gently: keep one thing that worked, e park one thing you’ll handle tomorrow.")
+        : (personality==="wtf"
+            ? "Fine giornata: sei ancora qui. Già questo è un dato. Usalo, invece di scrollarlo via."
+            : "Chiudi la giornata senza farti processo: tieni una cosa che ha funzionato e parcheggia una cosa a domani.");
+    }
+  }
+
+  if(dailyText){
+    dailyText.textContent = phraseText;
+  }
+
+  // Nascondi completamente la parte AI (nessuna chiamata a /api/ask, nessun oracolo)
+  stopOracleLoading();
+  const oracleWrap = document.querySelector('.oracle-wrap');
+  if(oracleWrap) oracleWrap.style.display = "none";
+  if(answerEl){
+    answerEl.style.display = "none";
+    answerEl.textContent = "";
+  }
+  const ttsRow = document.getElementById('readAnswerBtn')?.parentElement;
+  if(ttsRow) ttsRow.style.display = "none";
+  const pctRow = document.querySelector('.pct-row');
+  if(pctRow) pctRow.style.display = "none";
+  const introBox = document.getElementById('introBox');
+  if(introBox) introBox.style.display = "none";
+  const lblP = document.getElementById('lblP');
+  const resultBoxEl = document.getElementById('resultBox');
+  const lblVideo = document.getElementById('lblVideo');
+  const videoBoxEl = document.getElementById('videoBox');
+  if(lblP) lblP.style.display = "none";
+  if(resultBoxEl) resultBoxEl.style.display = "none";
+  if(lblVideo) lblVideo.style.display = "none";
+  if(videoBoxEl) videoBoxEl.style.display = "none";
+
+  // Niente cache, niente log, niente AI per i segnali
 }
 
 /* ==== Main flow ==== */
@@ -1010,10 +1408,11 @@ async function startFlow(){
   updateCreditInfo();
 
   const isSignal = IS_SIGNAL;
+  const micro = (req && req.micro) ? req.micro : {};
 
-  // 🔔 Se è un segnale giornaliero → SOLO frase preimpostata, NO AI
-  if (isSignal) {
-    await handleDailySignal(req, domanda);
+  // Flusso frasi giornaliere: NO AI, solo testo statico + crediti
+  if(isSignal){
+    await handleSignalFlow(req, domanda, clarification, surprise, micro);
     return;
   }
 
@@ -1032,18 +1431,16 @@ async function startFlow(){
     if(prefs.pro===true) headers["x-pro"]="1";
     const adminToken=LS.getItem("admin_token"); if(adminToken) headers["x-admin-token"]=adminToken;
 
-    const microPayload = req.micro || {};
-
     const r=await fetch("/api/ask",{
       method:"POST",headers,
       body:JSON.stringify({
-        stage: "answer",
+        stage:"answer",
         domanda,
         clarification: clarification || "",
         lang,
         stile: style,
         periodo,
-        micro: microPayload
+        micro: req.micro || {}
       })
     });
     const data=await r.json().catch(()=>null);
@@ -1140,7 +1537,7 @@ async function startFlow(){
     };
     saveResultToCache(resultForCache);
 
-    /* log su /api/save (come prima) */
+    /* 🔹 LOG DOMANDA+RISPOSTA SU /api/save (non usa crediti OpenAI) */
     try {
       await fetch("/api/save", {
         method: "POST",
@@ -1155,6 +1552,7 @@ async function startFlow(){
       });
     } catch (logErr) {
       console.error("log /api/save failed:", logErr);
+      // non blocca l'utente, è solo logging
     }
 
   }catch(e){
@@ -1164,11 +1562,350 @@ async function startFlow(){
   }
 }
 
-/* ==== VIDEO, SOCIAL, SHARE, SAVE, TTS (identici alla tua versione) ==== */
-/* … qui puoi lasciare invariato tutto il blocco di generazione video,
-   openTikTokBtn/openInstaBtn, shareBtn, againBtn, saveBtn, TTS, ecc.
-   Copialo pari dal tuo file originale: non tocca le frasi giornaliere … */
+/* ==== VIDEO: Canvas + MediaRecorder ==== */
 
+function videoNotAvailable(msg){
+  const T = t();
+  const text = msg || (T.videoError || "Video non disponibile su questo dispositivo.");
+  toast(text);
+}
+
+/* disegna testo a capo */
+function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
+  const words = String(text || "").split(/\s+/);
+  let line = "";
+  let y = startY;
+  for(const w of words){
+    const test = line ? (line + " " + w) : w;
+    if(ctx.measureText(test).width > maxWidth && line){
+      ctx.fillText(line, x, y);
+      y += lineHeight;
+      line = w;
+    }else{
+      line = test;
+    }
+  }
+  if(line){
+    ctx.fillText(line, x, y);
+    y += lineHeight;
+  }
+  return y;
+}
+
+/* stato ultimo video (solo per eventuali usi futuri) */
+let lastVideoBlob = null;
+let lastVideoMime = null;
+
+async function generateVideoClip(){
+  const T = t();
+  const domanda = (localStorage.getItem('domanda') || qView.textContent || '').trim();
+  const answerText = (answerEl.textContent || '').trim();
+  const motivationsRaw = (motNote?.innerText || motNote?.textContent || '').trim();
+
+  if (!domanda || !answerText) {
+    videoNotAvailable(T.videoNoData || "Non c’è ancora una risposta da trasformare in video.");
+    return;
+  }
+
+  if (typeof HTMLCanvasElement === "undefined" ||
+      !HTMLCanvasElement.prototype.captureStream ||
+      typeof MediaRecorder === "undefined") {
+    videoNotAvailable();
+    return;
+  }
+
+  videoBtn.disabled = true;
+  if (videoLoadingEl) {
+    videoLoadingEl.textContent = T.videoPreparing || "Generazione video…";
+    videoLoadingEl.style.display = "inline";
+  }
+  if (videoWrap) videoWrap.style.display = "none";
+  if (videoNoteEl) videoNoteEl.textContent = "";
+
+  const canvas = document.createElement("canvas");
+  const width = 720;
+  const height = 1280;
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+
+  const stream = canvas.captureStream(25);
+
+  const candidates = [
+    "video/mp4;codecs=h264",
+    "video/webm;codecs=vp9",
+    "video/webm;codecs=vp8",
+    "video/webm"
+  ];
+  let mimeType = null;
+  for(const m of candidates){
+    if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) {
+      mimeType = m;
+      break;
+    }
+  }
+  if (!mimeType) {
+    videoNotAvailable();
+    videoBtn.disabled = false;
+    if (videoLoadingEl) videoLoadingEl.style.display = "none";
+    return;
+  }
+
+  const chunks = [];
+  let recorder;
+  try{
+    recorder = new MediaRecorder(stream, { mimeType });
+  }catch(e){
+    console.error(e);
+    videoNotAvailable();
+    videoBtn.disabled = false;
+    if (videoLoadingEl) videoLoadingEl.style.display = "none";
+    return;
+  }
+
+  recorder.ondataavailable = (ev)=>{
+    if (ev.data && ev.data.size > 0) chunks.push(ev.data);
+  };
+
+  recorder.onstop = ()=>{
+    try{
+      const blob = new Blob(chunks, { type: mimeType });
+      lastVideoBlob = blob;
+      lastVideoMime = mimeType;
+      const url = URL.createObjectURL(blob);
+      if (videoPreview) {
+        videoPreview.src = url;
+
+        if (typingSfx){
+          videoPreview.onplay = ()=>{
+            try{
+              typingSfx.currentTime = 0;
+              typingSfx.loop = true;
+              typingSfx.play().catch(()=>{});
+            }catch{}
+          };
+          const stopTyping = ()=>{
+            try{
+              typingSfx.loop = false;
+              typingSfx.pause();
+              typingSfx.currentTime = 0;
+            }catch{}
+          };
+          videoPreview.onpause = stopTyping;
+          videoPreview.onended = stopTyping;
+        }
+      }
+      if (videoDownload) {
+        const ext = mimeType.includes("mp4") ? "mp4" : "webm";
+        videoDownload.href = url;
+        videoDownload.download = `whatf-clip.${ext}`;
+      }
+      if (videoWrap) videoWrap.style.display = "block";
+      if (videoNoteEl) videoNoteEl.textContent = T.videoReadyNote || "";
+    }catch(e){
+      console.error(e);
+      videoNotAvailable();
+    }finally{
+      videoBtn.disabled = false;
+      if (videoLoadingEl) videoLoadingEl.style.display = "none";
+    }
+  };
+
+  const fullAnswer = answerText;
+  const motivationsCleanBase = motivationsRaw || (t().motFallback || "");
+  let motivationText = motivationsCleanBase.replace(/<br\s*\/?>/gi," ").replace(/\s+/g," ").trim();
+  const MAX_MOT_CHARS = 420;
+  if(motivationText.length > MAX_MOT_CHARS){
+    motivationText = motivationText.slice(0, MAX_MOT_CHARS).trim() + "…";
+  }
+
+  const answerLen = fullAnswer.length;
+  const charsPerSecond = 22;
+  let totalDurationMs = Math.round((answerLen / charsPerSecond) * 1000);
+  totalDurationMs = Math.max(12000, Math.min(totalDurationMs, 28000));
+  const extraStillMs = 2000;
+  const start = performance.now();
+  const marginX = 60;
+  const maxWidth = width - marginX * 2;
+
+  const VIDEO_TEXT = {
+    it:{ title:"What?f",
+         subWtf:"⚡ What the F — Oracolo",
+         subWhif:"💡 What if — Oracolo",
+         q:"❓ Q:",
+         a:"✨ A:",
+         mot:"🧠 Esito & motivazioni",
+         footer:"✨ #whatf  ·  scarica e carica sui social" },
+    en:{ title:"What?f",
+         subWtf:"⚡ What the F — Oracle",
+         subWhif:"💡 What if — Oracle",
+         q:"❓ Q:",
+         a:"✨ A:",
+         mot:"🧠 Outcome & motivations",
+         footer:"✨ #whatf  ·  download and upload to social" },
+    es:{ title:"What?f",
+         subWtf:"⚡ What the F — Oráculo",
+         subWhif:"💡 What if — Oráculo",
+         q:"❓ P:",
+         a:"✨ R:",
+         mot:"🧠 Resultado y motivaciones",
+         footer:"✨ #whatf  ·  descarga y súbelo a redes" },
+    fr:{ title:"What?f",
+         subWtf:"⚡ What the F — Oracle",
+         subWhif:"💡 What if — Oracle",
+         q:"❓ Q :",
+         a:"✨ R :",
+         mot:"🧠 Issue & motivations",
+         footer:"✨ #whatf  ·  télécharge et poste sur les réseaux" },
+    de:{ title:"What?f",
+         subWtf:"⚡ What the F — Orakel",
+         subWhif:"💡 What if — Orakel",
+         q:"❓ F:",
+         a:"✨ A:",
+         mot:"🧠 Ergebnis & Begründung",
+         footer:"✨ #whatf  ·  herunterladen und in Social posten" }
+  };
+  const vt = VIDEO_TEXT[lang] || VIDEO_TEXT.it;
+
+  const LABEL_Q = vt.q;
+  const LABEL_A = vt.a;
+  const LABEL_M = vt.mot;
+  const titleText = vt.title;
+  const subText = style==='wtf' ? vt.subWtf : vt.subWhif;
+  const footerText = vt.footer;
+
+  const MOT_START_PROGRESS = 0.55;
+
+  function drawFrame(progress){
+    const grad = ctx.createLinearGradient(0,0,0,height);
+    grad.addColorStop(0,"#04070b");
+    grad.addColorStop(0.5, style==='wtf' ? "#122018" : "#101822");
+    grad.addColorStop(1,"#04070b");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,width,height);
+
+    const radial = ctx.createRadialGradient(width/2, height*0.42, 80, width/2, height*0.42, 420);
+    radial.addColorStop(0,"rgba(255,236,1,.35)");
+    radial.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle = radial;
+    ctx.fillRect(0,0,width,height);
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 44px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillText(titleText, width/2, 90);
+
+    ctx.fillStyle = "#FFEC01";
+    ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillText(subText, width/2, 125);
+
+    const maxScroll = height * 0.38;
+    const scrollOffset = progress * maxScroll;
+    ctx.save();
+    ctx.translate(0, -scrollOffset);
+
+    const cardX = 40;
+    const cardY = 150;
+    const cardW = width - 80;
+    const cardH = 230;
+
+    ctx.save();
+    ctx.beginPath();
+    if (ctx.roundRect){
+      ctx.roundRect(cardX, cardY, cardW, cardH, 26);
+    } else {
+      ctx.rect(cardX, cardY, cardW, cardH);
+    }
+    ctx.fillStyle = "rgba(3,8,14,.92)";
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(255,236,1,.85)";
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#FFEC01";
+    ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillText(LABEL_Q, cardX + 26, cardY + 54);
+
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 32px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    let y = cardY + 96;
+    y = wrapAndDraw(ctx, domanda, cardX + 26, y, cardW - 52, 38);
+
+    y = cardY + cardH + 40;
+    ctx.fillStyle = "#FFEC01";
+    ctx.font = "600 24px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillText(LABEL_A, marginX, y);
+    y += 34;
+
+    const progressAnswer = Math.min(1, progress / MOT_START_PROGRESS);
+    const chars = Math.max(1, Math.floor(fullAnswer.length * progressAnswer));
+    const partial = fullAnswer.slice(0, chars);
+
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "26px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    const afterAnswerY = wrapAndDraw(ctx, partial, marginX, y, maxWidth, 34);
+
+    if (motivationText) {
+      let motProgress = 0;
+      if (progress > MOT_START_PROGRESS) {
+        motProgress = (progress - MOT_START_PROGRESS) / (1 - MOT_START_PROGRESS);
+        if (motProgress > 1) motProgress = 1;
+      }
+      if (motProgress > 0) {
+        let my = afterAnswerY + 30;
+        ctx.fillStyle = "#FFEC01";
+        ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+        ctx.fillText(LABEL_M, marginX, my);
+        my += 30;
+
+        const motChars = Math.max(1, Math.floor(motivationText.length * motProgress));
+        const motPartial = motivationText.slice(0, motChars);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "20px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+        wrapAndDraw(ctx, motPartial, marginX, my, maxWidth, 28);
+      }
+    }
+
+    ctx.restore();
+    const footerExtra = Math.min(scrollOffset * 0.20, 50);
+    ctx.font = "600 18px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,.82)";
+    ctx.textAlign = "center";
+    ctx.fillText(footerText, width/2, height - 70 + footerExtra);
+  }
+
+  recorder.start();
+  function loop(ts){
+    const elapsed = ts - start;
+    const progress = Math.min(1, elapsed / totalDurationMs);
+    drawFrame(progress);
+    if (elapsed < totalDurationMs + extraStillMs) {
+      requestAnimationFrame(loop);
+    } else {
+      recorder.stop();
+    }
+  }
+  requestAnimationFrame(loop);
+}
+
+/* ==== SOCIAL OPEN (solo Android via intent, fallback web) ==== */
+function isAndroid(){
+  return /Android/i.test(navigator.userAgent || "");
+}
+
+function openIntent(androidIntentUrl, webFallbackUrl){
+  if (isAndroid()) {
+    window.location.href = androidIntentUrl;
+  } else if (webFallbackUrl) {
+    window.open(webFallbackUrl, "_blank");
+  } else {
+    videoNotAvailable("Funziona meglio da Android con le app installate.");
+  }
+}
+
+/* ==== Nav / lingua / share / save ==== */
 qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
 qs('#homeBtn').onclick=()=> location.href='index.html';
 qs('#langSelect').onchange=()=>{
@@ -1195,9 +1932,102 @@ qs('#shareBtn').onclick=async()=>{
 };
 qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
 if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
+if(videoBtn){ videoBtn.onclick = generateVideoClip; }
 
-/* … (resto: videoBtn/generateVideoClip, openTikTokBtn, openInstaBtn,
-       TTS block con speechSynthesis, ecc. identici alla versione precedente) … */
+/* pulsanti social Android */
+if(openTikTokBtn){
+  openTikTokBtn.onclick = ()=>{
+    openIntent(
+      "intent://tiktok#Intent;scheme=tiktok;package=com.zhiliaoapp.musically;end",
+      "https://www.tiktok.com/upload"
+    );
+  };
+}
+if(openInstaBtn){
+  openInstaBtn.onclick = ()=>{
+    openIntent(
+      "intent://instagram#Intent;scheme=instagram;package=com.instagram.android;end",
+      "https://www.instagram.com"
+    );
+  };
+}
+
+/* ============================
+   🔊 TEXT-TO-SPEECH RISPOSTA
+   ============================ */
+(function(){
+  const btn = document.getElementById("readAnswerBtn");
+  const answerEl = document.getElementById("answer");
+  const statusEl = document.getElementById("ttsStatus");
+
+  if(!btn || !answerEl || !statusEl) return;
+
+  if(!("speechSynthesis" in window)){
+    btn.disabled = true;
+    statusEl.textContent = t().ttsUnsupported || "";
+    return;
+  }
+
+  let speaking = false;
+  let utterance = null;
+
+  function currentLocale(){
+    const langCode = (document.documentElement.lang || "it").slice(0,2).toLowerCase();
+    const map = {
+      it:"it-IT",
+      en:"en-US",
+      es:"es-ES",
+      fr:"fr-FR",
+      de:"de-DE"
+    };
+    return map[langCode] || "it-IT";
+  }
+
+  function resetUI(){
+    speaking = false;
+    btn.textContent = (t().ttsBtn || "🔊");
+    statusEl.textContent = "";
+  }
+
+  btn.textContent = t().ttsBtn || "🔊";
+
+  btn.addEventListener("click",()=>{
+    const text = answerEl.innerText || answerEl.textContent || "";
+
+    if(!text.trim()){
+      statusEl.textContent = t().ttsNoAnswer || "";
+      return;
+    }
+
+    if(speaking){
+      window.speechSynthesis.cancel();
+      resetUI();
+      return;
+    }
+
+    utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = currentLocale();
+    utterance.rate = 1;
+
+    utterance.onstart = ()=>{
+      speaking = true;
+      btn.textContent = t().ttsBtnStop || "⏹ Stop";
+      statusEl.textContent = t().ttsPlaying || "";
+    };
+
+    utterance.onend = ()=>{
+      resetUI();
+    };
+
+    utterance.onerror = ()=>{
+      speaking = false;
+      btn.textContent = t().ttsBtn || "🔊";
+      statusEl.textContent = t().ttsError || "";
+    };
+
+    window.speechSynthesis.speak(utterance);
+  });
+})();
 
 /* ==== Avvio ==== */
 startFlow();
