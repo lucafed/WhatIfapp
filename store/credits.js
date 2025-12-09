@@ -15,7 +15,7 @@ import {
 } from "../firebase.init.js";
 
 // 🔢 limite base (se il doc non esiste o è invalido)
-const DEFAULT_DAILY_LIMIT = 3;
+const DEFAULT_DAILY_LIMIT = 1;
 
 // YYYY-MM-DD
 const todayISO = () => new Date().toISOString().slice(0, 10);
