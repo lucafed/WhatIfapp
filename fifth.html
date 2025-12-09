@@ -1021,13 +1021,44 @@ function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("â
 
 /* ==== Slot helper per segnali ==== */
 function slotLabelText(){
+  const params = new URLSearchParams(location.search);
   const micro = (reqEarly && reqEarly.micro) ? reqEarly.micro : {};
-  const slot = (micro.slot || "").toLowerCase();
+  
+  // Prova a leggere da:
+  // 1) query string: ?signal=... o ?slot=...
+  // 2) micro.slot / micro.time / micro.timeOfDay salvati in localStorage
+  let slotRaw =
+    params.get("signal") ||
+    params.get("slot")   ||
+    micro.slot           ||
+    micro.time           ||
+    micro.timeOfDay      ||
+    "";
+
+  const slot = String(slotRaw).toLowerCase();
   const T = t();
-  if (slot === "afternoon") return T.dailySubAfternoon || "";
-  if (slot === "evening")   return T.dailySubEvening || "";
+
+  // -> pomeriggio
+  if (
+    slot.includes("afternoon") ||
+    slot.includes("pomeriggio") ||
+    slot.includes("pm")
+  ){
+    return T.dailySubAfternoon || "";
+  }
+
+  // -> sera
+  if (
+    slot.includes("evening") ||
+    slot.includes("sera")    ||
+    slot.includes("night")
+  ){
+    return T.dailySubEvening || "";
+  }
+
+  // default = mattino
   return T.dailySubMorning || "";
-}
+  }
 
 /* ==== Titles/Text ==== */
 function applyUI(q){
