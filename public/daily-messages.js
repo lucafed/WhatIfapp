@@ -1,1801 +1,401 @@
-<!-- FILE: fifth.html (risultato, SOLO LETTURA crediti da Firestore) -->
-<!DOCTYPE html>
-<html lang="it" data-theme="whatif">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>What?f — Risultato</title>
-<meta name="theme-color" content="#0B0B0C"/>
-<style>
-:root{
-  --bg:#0B0B0C; --bg2:#101414; --fg:#FFF; --muted:#A0B2BA;
-  --acc:#1C57A0; --acc2:#FFEC01; --wtf1:#3A6B56; --wtf2:#5A8C75; --ink:#0A0E12;
-  --line: rgba(255,255,255,.12);
-  --panel: rgba(20,28,34,.92);
-  --glow: rgba(255,236,1,.22);
-}
-html[data-theme="wtf"]{ --acc:var(--wtf1); --acc2:var(--wtf2); }
-*{box-sizing:border-box}
-html,body{
-  margin:0;
-  background:
-    radial-gradient(900px 700px at 20% 18%, var(--bg2) 0%, var(--bg) 60%),
-    radial-gradient(600px 480px at 80% 12%, rgba(255,236,1,.06), transparent 60%),
-    radial-gradient(700px 560px at 50% 90%, rgba(28,87,160,.10), transparent 65%);
-  color:var(--fg);
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-  -webkit-font-smoothing:antialiased;
-}
-main{max-width:860px;margin:auto;padding:22px}
-h1{
-  font-size:clamp(22px,5vw,30px);
-  color:var(--acc2);
-  text-align:center;
-  margin:12px 0 6px;
-  text-shadow: 0 0 18px var(--glow);
-}
-.sub{color:var(--muted);text-align:center;margin:0 0 8px}
-.card{
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:18px;
-  backdrop-filter:blur(10px);
-  margin-top:16px;
-  box-shadow: 0 8px 28px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
-}
-.label{color:var(--acc);font-weight:800;margin-bottom:8px}
-.input{
-  background:rgba(255,255,255,.06);
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:10px;
-}
-.story{
-  white-space:normal;
-  line-height:1.68;
-  font-size:18px;
-  letter-spacing:.1px;
-  text-wrap:pretty;
-}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.btn{padding:10px 14px;border:none;border-radius:12px;cursor:pointer;font-weight:800}
-.btn.primary{
-  background:linear-gradient(180deg,var(--acc),var(--acc2));
-  color:var(--ink);
-  box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 28px var(--glow);
-}
-.btn.ghost{
-  background:rgba(255,255,255,.06);
-  border:1px solid var(--line);
-  color:#fff
-}
-.small{font-size:12px;color:#A0B2BA}
-.hr{height:1px;background:rgba(255,255,255,.10);margin:12px 0}
-.badge{
-  display:inline-flex;align-items:center;gap:8px;
-  font-size:12px;color:#eaf3ee;background:rgba(255,255,255,.06);
-  border:1px solid var(--line);border-radius:999px;padding:6px 10px;
-}
-.fade-in{animation:fade .35s ease-out both}
-@keyframes fade{
-  from{opacity:0}
-  to{opacity:1}
-}
-.embit{padding:0 .08em;box-shadow:0 -4px 0 0 rgba(255,255,255,.05) inset;text-shadow:0 0 12px rgba(255,255,255,.08);border-radius:4px}
-.select{background:rgba(255,255,255,.06);border:1px solid var(--line);color:#fff;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer}
+// /public/daily-messages.js
+// Frasi giornaliere preimpostate (NO AI) per What?f
+// Lingue: it, en, es, fr, de
+// Slot: morning | afternoon | evening
+// Personality: whatif | wtf
 
-/* === PERCENT === */
-.pct-row{display:flex;align-items:center;gap:10px;margin:2px 0 8px}
-.pct-label{font-size:13px;color:var(--muted)}
-.top-pct{
-display:inline-flex;align-items:center;justify-content:center;
-font-weight:900;font-size:16px;
-min-width:64px;
-padding:5px 10px;
-background:linear-gradient(180deg,var(--acc),var(--acc2));
-color:var(--ink);border-radius:12px;
-box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
-}
-
-/* === RESULT BOX === */
-.result-box{
-background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-border:1px solid var(--line);
-border-radius:16px;
-padding:16px 14px;
-box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 22px rgba(0,0,0,.28);
-}
-.result-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
-.result-pct{
-display:inline-flex;align-items:center;justify-content:center;
-font-weight:900;font-size:16px;min-width:64px;padding:5px 10px;border-radius:12px;
-background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);
-box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
-}
-.result-title{font-weight:900;font-size:15px;letter-spacing:.2px}
-
-/* === MOTIVO / NOTE === */
-.mot{display:grid;grid-template-columns:auto 1fr;gap:10px;margin-top:10px}
-.mot .ico{font-size:18px;line-height:1.2}
-.mot .name{display:none}
-.mot .note{font-size:15px;line-height:1.6;color:var(--fg);opacity:.92}
-
-/* Chips (usate solo per 'surprise') */
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;opacity:.9}
-.chip{font-size:11px;font-weight:900;padding:3px 7px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)}
-
-/* === INTRO (Zoltar-like) === */
-.intro-box{
-background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
-border:1px dashed rgba(255,255,255,.18);
-border-radius:14px;
-padding:12px 14px;
-margin:8px 0 10px;
-font-size:14.5px; line-height:1.55; color:#E7F2EE;
-box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
-}
-
-/* === VIDEO SECTION === */
-#videoBox{
-margin-top:10px;
-}
-#videoPreview{
-width:100%;
-max-height:420px;
-border-radius:18px;
-display:block;
-box-shadow:0 14px 40px rgba(0,0,0,.6);
-}
-#videoLoading{
-font-size:12px;
-color:var(--muted);
-}
-#videoWrap{
-margin-top:10px;
-}
-#videoDownload{
-text-decoration:none;
-display:inline-flex;
-align-items:center;
-justify-content:center;
-}
-.social-buttons-row{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:6px;
-}
-
-/* Mobile */
-@media (max-width:420px){
-.result-pct,.top-pct{font-size:15px;min-width:56px;padding:4px 8px}
-.result-title{font-size:14px}
-.mot .note{font-size:15.5px;line-height:1.65}
-}
-
-/* === Overlay (store/rewarded) === */
-#overlay{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);z-index:9999}
-#overlay-frame{width:100%;max-width:520px;height:78vh;border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(20,28,34,.95);border:1px solid var(--line);padding:10px 14px;border-radius:12px;font-weight:700;z-index:10000;opacity:0;transition:opacity .2s,transform .2s}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
-
-/* === ORACLE LOADING + REVEAL === */
-.oracle-wrap{position:relative;min-height:28px;margin:4px 0 8px}
-.oracle-line{font-size:14px;opacity:.86;color:#E7F2EE;transition:opacity .25s ease}
-.orb{
-position:absolute; left:-10px; top:-8px; width:26px; height:26px;
-border-radius:50%;
-background:radial-gradient(circle at 30% 30%, rgba(255,236,1,.7), rgba(255,255,1,.0) 60%);
-filter:blur(6px); opacity:.0; transform:scale(.7); pointer-events:none;
-transition:opacity .35s ease, transform .35s ease;
-}
-.reveal .orb{opacity:.8; transform:scale(1)}
-/* niente animazione di spostamento sulla risposta → niente "saltelli" */
-.reveal #answer{animation:none}
-@keyframes shimmer{0%{opacity:.45}50%{opacity:.95}100%{opacity:.45}}
-.loading .oracle-line{animation:shimmer 1.8s ease-in-out infinite}
-</style>
-
-</head>
-<body>
-<main>
-  <div class="topbar">
-    <div class="row">
-      <button class="btn ghost" id="backBtn">←</button>
-      <button class="btn ghost" id="homeBtn">🏠</button>
-    </div>
-    <div class="row" style="gap:8px">
-      <span class="badge" id="styleBadge">🎭 —</span>
-      <span class="badge" id="proBadge" title="" style="display:none">🧪 TEST · ⭐ PRO</span>
-      <select id="langSelect" class="select" aria-label="Language">
-        <option value="it">IT · Italiano</option>
-        <option value="en">EN · English</option>
-        <option value="es">ES · Español</option>
-        <option value="fr">FR · Français</option>
-        <option value="de">DE · Deutsch</option>
-      </select>
-    </div>
-  </div>
-
-  <h1 id="title">Risultato</h1>
-  <p class="sub" id="subtitle">—</p>
-
-  <div class="card">
-    <div class="label" id="lblQ">La tua domanda</div>
-    <div class="input" id="qView" style="min-height:46px"></div>
-  </div>
-
-  <div class="card">
-    <div class="label" id="lblA">Risposta</div>
-
-    <div class="pct-row">
-      <span class="pct-label" id="pctLabel">% probabilità che accada</span>
-      <div id="topPct" class="top-pct" aria-live="polite">—</div>
-    </div>
-
-    <!-- INTRO (solo prima volta per stile) -->
-    <div id="introBox" class="intro-box" style="display:none"></div>
-
-    <!-- SOLO Oracle (niente frasetta lead) -->
-    <div class="oracle-wrap">
-      <div class="orb" aria-hidden="true"></div>
-      <div id="oracleLine" class="oracle-line">—</div>
-    </div>
-    <div id="answer" class="story">⏳ …</div>
-    <!-- 🔊 TTS: Bottone per ascoltare la risposta -->
-    <div class="row" style="margin-top:12px; gap:8px;">
-      <button class="btn ghost" id="readAnswerBtn">🔊 Ascolta la risposta</button>
-      <span id="ttsStatus" class="small" style="opacity:0.9;"></span>
-    </div>
-
-    <div class="hr"></div>
-    <div class="label" id="lblP">Esito & motivazioni</div>
-
-    <div class="result-box" id="resultBox">
-      <div class="result-head">
-        <span class="pct-label" id="pctLabelBottom">% probabilità che accada</span>
-        <div id="bottomPct" class="result-pct">—</div>
-        <span class="result-title" id="committeeTitle">—</span>
-      </div>
-
-      <div class="mot" id="motOne">
-        <div class="ico" id="motIco" aria-hidden="true">—</div>
-        <div>
-          <div class="name" id="motName">—</div>
-          <div class="chips" id="chipsWrap">
-            <span class="chip" id="chipFav">—</span>
-            <span class="chip" id="chipCon">—</span>
-            <span class="chip" id="chipAst">—</span>
-          </div>
-          <div class="note" id="motNote">—</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- SEZIONE VIDEO CONDIVISIBILE -->
-    <div class="hr"></div>
-    <div class="label" id="lblVideo">Video condivisibile</div>
-    <div class="result-box" id="videoBox">
-      <p class="small" id="videoHelp">
-        Crea un breve video con domanda e risposta, pronto da condividere sui social.
-      </p>
-      <div class="row" style="margin-top:6px;">
-        <button class="btn ghost" id="videoBtn">🎬 Crea video</button>
-        <span class="small" id="videoLoading" style="display:none;">Generazione video in corso…</span>
-      </div>
-      <div id="videoWrap" style="display:none;">
-        <video id="videoPreview" controls></video>
-        <div class="row" style="margin-top:8px;justify-content:space-between;flex-wrap:wrap;">
-          <a id="videoDownload" class="btn primary" download="whatf-clip.mp4">⬇️ Scarica & condividi</a>
-        </div>
-        <div class="social-buttons-row">
-          <button id="openTikTokBtn" class="btn ghost small-social">📱 Apri TikTok</button>
-          <button id="openInstaBtn" class="btn ghost small-social">📸 Apri Instagram</button>
-        </div>
-        <span class="small" id="videoNote"></span>
-      </div>
-    </div>
-
-    <div class="hr"></div>
-    <div class="row">
-      <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
-      <button class="btn ghost" id="saveBtn">⭐ Salva</button>
-      <button class="btn ghost" id="againBtn">🔁 Fai un’altra domanda</button>
-    </div>
-    <p class="small" id="metaInfo"></p>
-
-  </div>
-</main>
-<div id="overlay" aria-hidden="true">
-  <iframe id="overlay-frame" src="about:blank" title="modal"></iframe>
-</div>
-<p class="small" id="creditInfo" style="text-align:center;margin:10px 0 24px"></p>
-<div class="toast" id="toast"></div>
-
-<!-- 🔔 audio reveal -->
-<audio id="revealDing" preload="auto">
-  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAA" type="audio/mpeg">
-</audio>
-<!-- 🎵 SFX evocativo (what if) -->
-<audio id="sfxWhatIf" preload="auto">
-  <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAABAAAA" type="audio/mpeg">
-</audio>
-<!-- 🥂 Clink (what the f) -->
-<audio id="sfxWtf" preload="auto">
-  <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
-</audio>
-<!-- ⌨️ typing SFX (metti typing-sfx.mp3 nella stessa cartella di questo file) -->
-<audio id="typingSfx" preload="auto">
-  <source src="typing-sfx.mp3" type="audio/mpeg">
-</audio>
-
-<script type="module">
-/* ==== Firebase Auth + Firestore credits (solo lettura) ==== */
-import { auth } from "./firebase.init.js";
-import {
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-
-import {
-  bootCredits,
-  getBalance,
-  consumeCredit
-} from "./store/credits.js";
-
-/* ==== Base & prefs ==== */
-const LS = localStorage;
-const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-let style = prefs.stile || 'whatif';   // ← diventa let
-const periodo = prefs.periodo || 'future';
-const IS_ADMIN = !!LS.getItem('admin_token');
-document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
-
-/* 🔔 Bootstrap segnali da URL (notifiche → URL tipo ?signal=morning&phase=1&mood=su) */
-(function bootstrapSignalFromUrl() {
-  try {
-    const params = new URLSearchParams(location.search);
-    const slot = (params.get("signal") || "").toLowerCase(); // morning | afternoon | evening
-    if (!slot) return; // niente segnale → flusso normale
-
-    const phase = Number(params.get("phase") || "1"); // 1 = WHAT IF, 2 = WTF
-    const mood  = params.get("mood") || null;        // opzionale (solo pomeriggio)
-
-    function buildSignalQuestion(slot, phase, mood) {
-      if (slot === "morning") {
-        if (phase === 1) {
-          return "Frase del giorno del mattino: un consiglio concreto per impostare la giornata, senza sapere come mi sento.";
-        } else {
-          return "Commento cazzaro del mattino sulla frase del giorno appena ricevuta.";
-        }
-      }
-      if (slot === "afternoon") {
-        let moodText = "umore non specificato";
-        if (mood) {
-          const m = mood.toLowerCase();
-          if (m.includes("su") || m.includes("up")) moodText = "mi sento carico o comunque bene";
-          else if (m.includes("giu") || m.includes("down")) moodText = "mi sento stanco, scarico o un po’ giù";
-          else moodText = "mi sento così così, a metà";
-        }
-        if (phase === 1) {
-          return `Check-in del pomeriggio con umore: ${moodText}.`;
-        } else {
-          return `Commento cazzaro del pomeriggio su questo umore: ${moodText}.`;
-        }
-      }
-      if (slot === "evening") {
-        if (phase === 1) {
-          return "Domanda di chiusura della giornata, per rivedere cosa è successo oggi e come ti ha toccato.";
-        } else {
-          return "Commento cazzaro di fine giornata sulla domanda di chiusura appena fatta.";
-        }
-      }
-      return "Segnale giornaliero senza dettagli.";
+export const DAILY_MESSAGES = {
+  it: {
+    morning: {
+      whatif: [
+        "Oggi trattati come tratteresti un amico: con meno giudizio e più curiosità. Se vuoi, chiedimi da dove partire davvero.",
+        "Prima di riempire la giornata, scegli una sola cosa che se fatta ti farebbe dire: 'Ok, ne è valsa la pena'. Vuoi che la scegliamo insieme?",
+        "Non devi sistemare tutta la vita oggi. Basta un micro passo fatto con intenzione. Se vuoi, chiedimi quale ha più impatto per te.",
+        "Stamattina non serve essere motivato: serve solo un gesto minuscolo nella direzione giusta. Vuoi che lo decidiamo insieme ora?",
+        "Oggi prova a fare spazio a una cosa che ti nutre, non solo a ciò che ti stanca. Se vuoi, chiedimi come incastrarla senza stravolgere tutto."
+      ],
+      wtf: [
+        "Buongiorno campione del 'poi lo faccio'. Hai sentito What if, adesso niente scuse: vuoi davvero provarci o preferisci un altro giro di rimandi?",
+        "What if ti ha dato il consiglio zen… io ti chiedo: lo fai davvero o facciamo finta anche oggi? Dimmi la verità e partiamo da lì.",
+        "Ok, il collega ti ha parlato di micro passi. Traduzione: muovi il culo, ma con gentilezza. Vuoi che ti aiuti a scegliere il primo passo senza drama?",
+        "Hai appena ricevuto la versione adulta del 'su, ce la fai'. Io sono la versione da bar: cosa ti blocca veramente stamattina?",
+        "What if è stato dolce, io meno: vuoi continuare a sopportare tutto così o iniziamo a spostare almeno un mattone oggi?"
+      ]
+    },
+    afternoon: {
+      whatif: [
+        "Come sta andando davvero la giornata? Se ti senti in alto, alza l’asticella; se sei giù, scegliamo insieme una cosa piccola che puoi ancora salvare.",
+        "Metà giornata fatta. Cosa ti ha dato energia e cosa te l’ha succhiata? Se vuoi, raccontamelo e riprogettiamo il resto del pomeriggio.",
+        "Sei a metà film di oggi: vuoi un colpo di scena o andare in modalità sopravvivenza intelligente? Dimmi come ti senti e ne parliamo.",
+        "Pausa check-in: sei più carico, meh, o a pezzi? Scegli l’umore e ti aiuto a non buttare via il resto della giornata.",
+        "Nessuno ti obbliga a finire la giornata come è iniziata. Dimmi come va e vediamo se serve una piccola sterzata."
+      ],
+      wtf: [
+        "Allora: pomeriggio in modalità 'sto spaccando' o 'sto arrancando come un carrello rotto'? Sii onesto, poi insultiamo la giornata insieme.",
+        "Se stai andando alla grande, festeggiamo. Se è un disastro, almeno diamogli un titolo divertente. Vuoi che ti aiuti a rimettere in piedi il resto?",
+        "Metà giornata e ancora vivi: già un successo. Ora scegli: continui in modalità zombie o facciamo un mini piano decente?",
+        "Se oggi è stato un casino, tranquillo: i capolavori nascono dal caos… e dalla caffeina. Vuoi che cerchiamo un senso in questo casino?",
+        "Ok, confessione del pomeriggio: stai scorrendo la vita o la stai vivendo? Raccontami due cose e vediamo di raddrizzare il tiro."
+      ]
+    },
+    evening: {
+      whatif: [
+        "Stasera non devi fare il bilancio perfetto: nota solo cosa ti ha fatto bene e cosa ti ha svuotato. Se vuoi, chiedimi come portarti più del primo e meno del secondo nel domani.",
+        "Oggi ti ha insegnato qualcosa, anche se sembra solo caos. Raccontami cosa è andato bene o male e lo trasformiamo in prossimi passi reali.",
+        "Prima di chiudere la giornata, scegli una cosa da lasciare qui e una da portare avanti. Se vuoi, ti aiuto a capirle meglio.",
+        "Non serve giudicare la giornata: basta ascoltarla. Se me la racconti in due righe, ti aiuto a leggere tra le righe.",
+        "La versione di te di stasera sa qualcosa che quella di stamattina ignorava. Vuoi che mettiamo ordine in quello che è successo?"
+      ],
+      wtf: [
+        "Giornata epica o più 'ma chi me l’ha fatto fare'? Sputa il rospo e vediamo se ridere, piangere o tutte e due.",
+        "Ok, fine giornata: ti meriti un applauso, una pausa o un reset totale? Dimmi come è andata davvero e facciamo il post-partita.",
+        "Se oggi fosse una serie TV, che voto le daresti da 1 a 'cancella la stagione'? Raccontamelo e proviamo a salvare almeno il finale.",
+        "Hai sopravvissuto a oggi, che già non è male. Ora dimmi: dove hai fatto finta di niente e dove hai spaccato davvero?",
+        "Prima di buttarti sul divano in coma, facciamo un check veloce: cosa salvi e cosa butti di oggi? Ti aiuto a non ripetere il peggio domani."
+      ]
     }
+  },
 
-    const domanda = buildSignalQuestion(slot, phase, mood);
+  en: {
+    morning: {
+      whatif: [
+        "This morning, treat yourself like someone you actually care about. If you want, ask me what one kind thing you could do for yourself today.",
+        "You don’t have to fix your whole life before lunch. One clear move is enough. Want help choosing which one actually matters?",
+        "Start the day with one honest question: what do I need, not what do I owe? If you want, we can unpack that together.",
+        "Tiny moves beat perfect plans. If you tell me what’s on your plate, I can help you pick the smallest step with the biggest impact.",
+        "You woke up: il resto è extra. If you want to make this day feel a bit less random, ask me where to put your energy first."
+      ],
+      wtf: [
+        "Good morning, professional overthinker. Heard What if being sweet? Cool. Now, are you actually doing something or just collecting good advice?",
+        "What if gave you the nice version. I’ll give you the bar version: what’s the excuse of the day, and la smettiamo o no?",
+        "You just got a gentle nudge. I’m here for the not-so-gentle one: what’s the thing you’re avoiding already this morning?",
+        "Motivation quote: done. Reality check: pending. Tell me what you’re procrastinating and we trash it together.",
+        "What if said 'small steps'. I say: move your ass, ma con affetto. Want help choosing where to move it first?"
+      ]
+    },
+    afternoon: {
+      whatif: [
+        "Midday check-in: are you more proud, tired, or numb? Tell me the vibe and we’ll adjust the rest of the day around it.",
+        "Half the day is gone. What gave you energy? What drained you? If you want, I’ll help you redesign the next few hours.",
+        "Your day isn’t over yet; the plot can still twist. Tell me how you feel and we’ll decide if you need a push or a soft landing.",
+        "Don’t let one bad moment hijack the whole day. If you want, tell me what happened and we’ll stop it from owning your evening.",
+        "You can still turn a 'meh' day into 'ok, not bad'. Share your current mood and I’ll suggest the next move."
+      ],
+      wtf: [
+        "So, afternoon mode: crushing it or crawling like a shopping cart with one broken wheel? Be honest, then we make fun of it together.",
+        "If today’s a mess, at least let’s make it a funny mess. Tell me what went sideways and we’ll give it a better ending.",
+        "Still alive? Great start. Now, zombie mode or comeback mode? Your call—just don’t lie to me.",
+        "If you’re one email away from screaming, we should probably talk. Want a slightly rude but honest take?",
+        "On a scale from 'I’m a legend' to 'I need a nap forever', where are you? Tell me and we’ll plan the rest of the day."
+      ]
+    },
+    evening: {
+      whatif: [
+        "Tonight, you don’t need a verdict on your life, just a clearer picture of today. Tell me what stood out and we’ll learn from it.",
+        "Think of one moment today that you’d repeat, and one you wouldn’t. If you want, I’ll help you turn that into tomorrow’s plan.",
+        "You made choices today with the energy you had. No blame, just data. Share a bit, and we’ll extract the useful part.",
+        "The day is almost over, but the story it tells can still change how you move tomorrow. Want help decoding it?",
+        "Instead of asking 'was today good or bad', ask: 'what did today show me about me?'. If you want, we’ll read that together."
+      ],
+      wtf: [
+        "End of day: do you want a hug, a drink, or a delete button? Tell me how it went and we’ll pick the mood.",
+        "If today was an episode, rate it from 1 to 'please skip this season'. Then we’ll gossip about it.",
+        "You survived another episode of 'My Life, The Low-Budget Series'. Spill the highlights and disasters, I’m all ears.",
+        "Before you collapse on the couch, do a quick trash vs. treasure: cosa tieni di oggi e cosa butti? Racconta.",
+        "If you could send a voice note to your morning self about today, cosa diresti? Dimmelo e lo sistemiamo insieme."
+      ]
+    }
+  },
 
-    const micro = {
-      src: "signal",
-      slot,
-      time: slot,
-      timeOfDay: slot,
-      phase,
+  es: {
+    morning: {
+      whatif: [
+        "Hoy trátate como tratarías a alguien que quieres: con menos juicio y más curiosidad. Si quieres, pregúntame por dónde empezar de verdad.",
+        "No tienes que arreglar toda tu vida antes del café. Basta un paso claro. Si quieres, te ayudo a elegir el que más pesa.",
+        "Empieza el día con una pregunta honesta: ¿qué necesito yo, no solo qué esperan de mí? Podemos desmenuzarlo juntos.",
+        "Los micro pasos ganan a los planes perfectos. Cuéntame qué tienes por delante y buscamos el gesto más pequeño con más impacto.",
+        "Despertaste: lo demás es bonus. Si quieres que el día se sienta menos caótico, pregúntame dónde poner tu energía primero."
+      ],
+      wtf: [
+        "Buenos días, crack del 'luego lo hago'. Has oído a What if, ahora dime: ¿acción real o seguimos coleccionando buenos consejos?",
+        "What if fue suave. Yo no tanto: ¿cuál es la excusa oficial de hoy y la tiramos a la basura ya o más tarde?",
+        "Ya te han dado la versión zen. Esta es la de bar: ¿qué estás evitando desde que abriste los ojos?",
+        "Frase motivacional: lista. Reality check: pendiente. Cuéntame qué estás posponiendo y lo destripamos juntos.",
+        "What if dijo 'pasos pequeños'. Yo digo: mueve el culo, pero con cariño. ¿Te ayudo a decidir hacia dónde?"
+      ]
+    },
+    afternoon: {
+      whatif: [
+        "Mitad de día: ¿te sientes orgulloso, agotado o en piloto automático? Dime el estado y ajustamos lo que queda.",
+        "La mitad ya se ha ido. ¿Qué te ha dado energía y qué te la ha robado? Si quieres, rediseñamos la tarde.",
+        "Tu día aún puede cambiar de tono. Cuéntame cómo estás y vemos si necesitas empujón o aterrizaje suave.",
+        "No dejes que un mal momento secuestre todo el día. Si quieres, dime qué pasó y lo ponemos en su sitio.",
+        "Todavía puedes convertir un día 'meh' en 'bueno, no estuvo tan mal'. Dime el ánimo y buscamos el siguiente paso."
+      ],
+      wtf: [
+        "Entonces, tarde en modo 'voy volando' o 'soy un carrito del súper cojo'? Sé sincero y nos reímos un poco.",
+        "Si el día es un caos, al menos que sea un caos con buen chisme. Cuéntame qué se torció.",
+        "¿Sigues vivo? Ya es algo. Ahora, ¿modo zombi o remontada épica? Tú eliges, pero sin mentir.",
+        "Si estás a un mail de mandar todo a la mierda, igual va siendo hora de hablar. ¿Quieres mi versión brutalmente honesta?",
+        "En una escala de 'soy una máquina' a 'necesito siesta eterna', ¿dónde andas? Cuéntame y vemos qué hacer con el resto del día."
+      ]
+    },
+    evening: {
+      whatif: [
+        "Esta noche no necesitas un veredicto, solo entender mejor el día. Cuéntame un momento clave y lo traducimos en algo útil.",
+        "Piensa en un momento de hoy que repetirías y uno que no. Si quieres, lo convertimos en plan para mañana.",
+        "Hoy decidiste con la energía que tenías. Sin culpa: solo datos. Compárteme algo y sacamos aprendizaje.",
+        "El día acaba, pero la historia que cuenta puede cambiar tu mañana. ¿Quieres ayuda para leerla distinta?",
+        "En vez de '¿fue un buen día?', prueba con: '¿qué me mostró de mí este día?'. Si quieres, lo miramos juntos."
+      ],
+      wtf: [
+        "Fin de día: ¿te viene mejor abrazo, trago o botón de borrar? Dime cómo fue y ponemos banda sonora.",
+        "Si hoy fuera un capítulo, ¿es de maratón o de relleno? Cuéntame el resumen sin filtros.",
+        "Has sobrevivido a otro episodio de 'mi vida en modo improvisado'. Dame los mejores y peores momentos.",
+        "Antes de fundirte en el sofá, haz inventario: ¿qué salvas y qué tiras de hoy? Te echo una mano a clasificar.",
+        "Si pudieras mandarle un audio a tu yo de esta mañana sobre cómo fue el día, ¿qué le dirías? Dímelo a mí primero."
+      ]
+    }
+  },
+
+  fr: {
+    morning: {
+      whatif: [
+        "Ce matin, traite-toi comme quelqu’un que tu respectes vraiment. Si tu veux, demande-moi par où commencer concrètement.",
+        "Tu n’as pas à remettre toute ta vie en ordre avant midi. Un seul pas clair suffit. On choisit lequel ensemble si tu veux.",
+        "Commence la journée par cette question : de quoi j’ai besoin, moi, là, maintenant ? On peut en tirer un plan simple.",
+        "Les micro-pas battent les grands plans parfaits. Dis-moi ce que tu as devant toi et on trouve le geste le plus léger mais utile.",
+        "Tu t’es réveillé·e, le reste est bonus. Si tu veux que la journée ait un peu plus de sens, on peut décider où poser ton énergie."
+      ],
+      wtf: [
+        "Bonjour à toi, champion·ne du 'je verrai plus tard'. What if t’a parlé gentiment, moi je demande : on fait quoi VRAIMENT aujourd’hui ?",
+        "What if a été doux. Moi, je suis la version comptoir: c’est quoi ton excuse du jour, et on la démonte ou pas ?",
+        "Tu as déjà eu ta dose de sagesse. Maintenant, parlons vrai : qu’est-ce que tu esquives depuis ce matin ?",
+        "Citation motivante: ok. Maintenant, réalité: tu bouges ou tu scrollez ? Raconte-moi.",
+        "What if parle de petits pas; moi je parle de bouger tes fesses, mais avec amour. On choisit vers où, ou tu continues en mode fantôme ?"
+      ]
+    },
+    afternoon: {
+      whatif: [
+        "Milieu de journée: plutôt fier·e, rincé·e, ou en pilote automatique ? Dis-moi et on ajuste la suite.",
+        "La moitié est passée. Qu’est-ce qui t’a donné de l’élan et qu’est-ce qui t’a vidé ? On peut recadrer le reste de l’après-midi.",
+        "Ton épisode du jour n’est pas fini. Tu veux un retournement de situation ou juste un atterrissage doux ?",
+        "Ne laisse pas un moment pourri définir toute ta journée. Si tu veux, raconte et on lui redonne sa vraie taille.",
+        "Tu peux encore transformer un 'bof' en 'finalement ça va'. Donne-moi ton humeur et on trouve le prochain pas."
+      ],
+      wtf: [
+        "Alors, cet aprèm: tu gères ou tu traînes des pieds comme une chaise bancale ? On peut en rire si tu veux.",
+        "Si ta journée est un bazar, au moins faisons-en une bonne histoire. Dis-moi ce qui est parti en vrille.",
+        "Toujours debout ? Pas mal. Maintenant: mode zombie ou petite remontada ? Soyons honnêtes.",
+        "Si tu es à un message de tout envoyer promener, viens vider le sac ici avant. Ça fera moins de dégâts.",
+        "Sur une échelle de 'je suis une machine' à 'je veux hiberner', tu es où ? On adapte la suite en fonction."
+      ]
+    },
+    evening: {
+      whatif: [
+        "Ce soir, pas besoin de te juger: juste comprendre ce que cette journée t’a montré. Tu m’en parles ?",
+        "Choisis un moment d’aujourd’hui que tu referais et un que tu voudrais éviter. On peut ajuster le scénario de demain.",
+        "Tu as fait avec l’énergie et les infos du moment. Maintenant, on regarde ce que tu peux en tirer, sans te casser.",
+        "La journée se termine, mais elle a peut-être laissé un indice utile pour la suite. Tu veux qu’on le cherche ensemble ?",
+        "Plutôt que 'bonne ou mauvaise journée', demande-toi: 'qu’est-ce que j’ai appris sur moi ?'. Si tu veux, on met les mots dessus."
+      ],
+      wtf: [
+        "Fin de journée: tu veux un câlin, un shot ou juste le bouton 'mute' sur tout le monde ? Raconte comment c’était.",
+        "Si aujourd’hui était un épisode, binge-watch ou à zapper ? Résume-moi ça sans filtre.",
+        "Tu as survécu à une nouvelle saison pilote de ta vie. Donne-moi le meilleur fail et le meilleur moment.",
+        "Avant de fusionner avec ton canapé, on trie: on garde quoi d’aujourd’hui, on jette quoi ? Je t’aide à sélectionner.",
+        "Si tu pouvais envoyer un vocal à ton toi du matin pour raconter la journée, tu dirais quoi ? Dis-le ici d’abord."
+      ]
+    }
+  },
+
+  de: {
+    morning: {
+      whatif: [
+        "Behandel dich heute Morgen wie jemanden, der dir wichtig ist: weniger Urteil, mehr Neugier. Wenn du willst, finden wir deinen ersten Schritt.",
+        "Du musst dein ganzes Leben nicht vor dem Mittag richten. Ein klarer Schritt reicht. Ich helfe dir, den wichtigsten zu wählen.",
+        "Frag dich zum Start: Was brauche ICH heute wirklich, nicht nur, was erwartet wird? Wenn du magst, sortieren wir das.",
+        "Minischritte schlagen Perfekt-Pläne. Erzähl mir kurz deinen Tag und wir suchen die kleinste Bewegung mit größtem Effekt.",
+        "Du bist aufgewacht – der Rest ist Bonus. Wenn du willst, geben wir dem Tag ein bisschen mehr Richtung."
+      ],
+      wtf: [
+        "Guten Morgen, Meister·in im Aufschieben. What if war nett – ich nicht: machen wir heute was oder sammeln wir nur wieder Vorsätze?",
+        "Der Kollege war sanft, ich bin Tresen-Logik: Was ist deine Ausrede des Tages und zerlegen wir sie gleich oder später?",
+        "Weisheit hast du schon bekommen. Jetzt kommt Rohversion: Was drückst du seit heute früh weg?",
+        "Motivationsspruch: erledigt. Realität: noch offen. Sag mir, was du aufschiebst, und wir schauen hin.",
+        "What if sagt 'kleine Schritte'. Ich sage: beweg dich – liebevoll, aber ehrlich. Wohin, klären wir gemeinsam."
+      ]
+    },
+    afternoon: {
+      whatif: [
+        "Halber Tag rum: fühlst du dich eher stolz, platt oder taub? Sag’s mir, dann justieren wir den Rest.",
+        "Was hat dir heute Kraft gegeben, was hat sie gezogen? Wenn du willst, bauen wir den Nachmittag danach um.",
+        "Der Tag ist noch nicht gelaufen; die Stimmung kann kippen – im Guten. Erzähl mir kurz, wie es dir geht.",
+        "Lass nicht einen miesen Moment den ganzen Tag definieren. Wenn du willst, packen wir ihn an den richtigen Platz.",
+        "Aus einem 'na ja' kann immer noch ein 'doch ganz okay' werden. Sag mir deine Stimmung und wir planen den nächsten Schritt."
+      ],
+      wtf: [
+        "Und, Nachmittag eher 'ich rocke das' oder 'ich bin der Einkaufswagen mit kaputtem Rad'? Sei ehrlich.",
+        "Wenn dein Tag Chaos ist, machen wir wenigstens eine gute Story draus. Was ist schiefgelaufen?",
+        "Du lebst noch, das ist schon was. Jetzt: Zombie-Modus oder kleine Heldentat? Entscheide dich.",
+        "Wenn du kurz davor bist, alles an die Wand zu fahren, lass erst mal hier Dampf ab. Ich halte aus.",
+        "Skala: von 'Maschine' bis 'Dauerschlaf', wo stehst du? Danach sehen wir, was der Rest des Tages noch kann."
+      ]
+    },
+    evening: {
+      whatif: [
+        "Heute musst du dich nicht verurteilen, nur verstehen, was der Tag dir gezeigt hat. Erzähl mir ein bisschen davon.",
+        "Such dir einen Moment von heute, den du wiederholen würdest, und einen, den du vermeiden willst. Daraus machen wir morgen einen Plan.",
+        "Du hast entschieden mit dem, was du heute hattest. Jetzt können wir sortieren, was du daraus mitnehmen willst.",
+        "Der Tag geht zu Ende, aber die Geschichte dahinter kann dein Morgen ändern. Willst du sie kurz mit mir lesen?",
+        "Statt 'guter' oder 'schlechter' Tag: Was hat er über dich verraten? Wenn du möchtest, fassen wir das in Worte."
+      ],
+      wtf: [
+        "Tagesende: brauchst du eher Applaus, Alkohol oder Airplane-Mode? Erzähl, wie’s wirklich war.",
+        "Wenn heute eine Folge wäre – eher Klassiker oder Füllmaterial? Gib mir die Kurzfassung.",
+        "Du hast eine weitere Episode von 'mein Leben, irgendwie' überlebt. Was waren die absurden Highlights?",
+        "Bevor du ins Sofa versinkst, lass uns kurz sortieren: Was von heute darf mit, was bleibt hier?",
+        "Würdest du deinem Morgens-Ich eine Sprachnachricht über diesen Tag schicken – was wäre drin? Erzähl’s mir zuerst."
+      ]
+    }
+  }
+};
+
+// Normalizza lingua in una delle supportate
+function normalizeLang(lang) {
+  if (!lang) return "it";
+  const lc = String(lang).toLowerCase().slice(0, 2);
+  if (DAILY_MESSAGES[lc]) return lc;
+  return "it";
+}
+
+// Hash semplice per avere una frase stabile per giorno/slot/persona
+function dailyIndex(length, slot, personality) {
+  if (!length || length <= 0) return 0;
+  const d = new Date();
+  const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${slot}-${personality}`;
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash * 31 + key.charCodeAt(i)) | 0;
+  }
+  if (hash < 0) hash = -hash;
+  return hash % length;
+}
+
+// API principale
+// lang: "it" | "en" | "es" | "fr" | "de" (anche "IT", "en-GB"... → normalizzato)
+// slot: "morning" | "afternoon" | "evening"
+// personality: "whatif" | "wtf"
+// mood per il futuro (per pomeriggio): opzionale, al momento non usato
+export function getDailyMessage(
+  lang = "it",
+  slot = "morning",
+  personality = "whatif",
+  mood = null
+) {
+  const normLang = normalizeLang(lang);
+  const normSlot =
+    slot === "afternoon" || slot === "evening" ? slot : "morning";
+  const normPers = personality === "wtf" ? "wtf" : "whatif";
+
+  const byLang = DAILY_MESSAGES[normLang] || DAILY_MESSAGES.it;
+  const bySlot = byLang[normSlot] || byLang.morning;
+  const list = bySlot[normPers] || [];
+
+  if (!Array.isArray(list) || list.length === 0) {
+    return {
+      lang: normLang,
+      slot: normSlot,
+      personality: normPers,
+      title:
+        normLang === "it"
+          ? "Frase del giorno"
+          : normLang === "es"
+          ? "Frase del día"
+          : normLang === "fr"
+          ? "Phrase du jour"
+          : normLang === "de"
+          ? "Tagesphrase"
+          : "Daily message",
+      text:
+        normLang === "it"
+          ? "Oggi niente frase preimpostata, ma puoi comunque farmi una domanda vera."
+          : "No daily line set for today, but you can still ask me a real question."
     };
-    if (mood) micro.mood = mood;
-
-    const req = {
-      source: "signal",
-      domanda,
-      clarification: "",
-      micro
-    };
-
-    LS.setItem("whatif_request", JSON.stringify(req));
-    LS.setItem("domanda", domanda);
-  } catch (e) {
-    console.warn("bootstrapSignalFromUrl error:", e);
-  }
-})();
-
-/* ==== I18N ==== */
-const I18N = {
-  it:{ titleWTF:"⚡ What the F — Risultato", titleWHF:"💡 What if — Risultato",
-       sub:(q)=>`Domanda: “${q}”`, q:"La tua domanda", a:"Risposta",
-       p:"Esito & motivazioni", share:"📤 Condividi / Copia", again:"🔁 Fai un’altra domanda",
-       save:"⭐ Salva", savedOk:"✅ Salvata",
-       copied:"Copiato!", error:"[errore server]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Stile: What the F · 6–9 frasi · paragrafo unico · tono asciutto · modalità: ${p==='past'?'Passato':'Futuro'}.`
-        : `Stile: What if (60% analisi, 40% immagini sobrie) · 8–11 frasi · paragrafo unico · modalità: ${p==='past'?'Passato':'Futuro'}.`,
-       pctLabel:"% probabilità che accada",
-       votersTitle:"Comitato", seriousTitle:"Motivazioni",
-       scientificTitle:"Motivazione (scientifica)",
-       chipsFav:"favorevoli", chipsCon:"contrari", chipsAst:"astenuti",
-       motFallback:"Motivo: benefici concreti a breve, con vincoli gestibili.",
-       credits:(n)=>`💰 Crediti: ${n}`, noCredits:"Hai terminato i crediti.",
-       storeTitle:"Crediti", buy5:"Compra +5 crediti (test)", buy10:"Compra +10 crediti (test)", buy20:"Compra +20 crediti (test)",
-       watchAd:"Guarda pubblicità (+1)", close:"Chiudi",
-       comingSoon:"Prossimamente", buySoonNote:"Acquisto crediti non ancora disponibile.",
-       toastPlus:(n)=>`+${n} credito`, toastMinus:(n)=>`-${n} credito`,
-       guideTitle:"Indicazioni",
-       guideQuick:"Indicazioni rapide",
-       guideAdvice:"Consiglio",
-       guideAnalysis:"Analisi sintetica",
-       /* VIDEO */
-       videoTitle:"Video condivisibile",
-       videoHelp:"Crea un breve video con domanda e risposta, pronto da condividere sui social.",
-       videoBtn:"🎬 Crea video",
-       videoReadyNote:"Video pronto: scaricalo e caricalo su TikTok, Instagram o dove vuoi.",
-       videoPreparing:"Generazione video in corso…",
-       videoError:"Impossibile generare il video. Riprova.",
-       videoNoData:"Non c’è ancora una risposta da trasformare in video.",
-       videoShareNotSupported:"Il tuo browser non supporta la condivisione diretta del file.",
-       videoShareCancelled:"Condivisione annullata.",
-       videoOpenTikTok:"📱 Apri TikTok",
-       videoOpenInsta:"📸 Apri Instagram",
-       /* TTS */
-       ttsBtn:"🔊 Ascolta la risposta",
-       ttsBtnStop:"⏹ Stop",
-       ttsUnsupported:"Il tuo dispositivo non supporta la lettura vocale.",
-       ttsNoAnswer:"Nessuna risposta da leggere.",
-       ttsPlaying:"Riproduzione in corso…",
-       ttsError:"Errore nella sintesi vocale."
-  },
-  en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
-       sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
-       p:"Outcome & motivations", share:"📤 Share / Copy", again:"🔁 Ask another",
-       save:"⭐ Save", savedOk:"✅ Saved",
-       copied:"Copied!", error:"[server error]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Style: What the F · 6–9 sentences · single paragraph · dry tone · mode: ${p==='past'?'Past':'Future'}.`
-        : `Style: What if (60% analysis, 40% images) · 8–11 sentences · single paragraph · mode: ${p==='past'?'Past':'Future'}.`,
-       pctLabel:"% probability it happens",
-       votersTitle:"Committee", seriousTitle:"Motivations", scientificTitle:"Rationale (scientific)",
-       chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained",
-       motFallback:"Reason: short-term, concrete benefits with manageable constraints.",
-       credits:(n)=>`💰 Credits: ${n}`, noCredits:"You ran out of credits.",
-       storeTitle:"Credits", buy5:"Buy +5 credits (test)", buy10:"Buy +10 credits (test)", buy20:"Buy +20 credits (test)",
-       watchAd:"Watch ad (+1)", close:"Close",
-       comingSoon:"Coming soon", buySoonNote:"Credit purchases not available yet.",
-       toastPlus:(n)=>`+${n} credit`,  toastMinus:(n)=>`-${n} credit`,
-       guideTitle:"Guidance",
-       guideQuick:"Quick tips",
-       guideAdvice:"Advice",
-       guideAnalysis:"Concise analysis",
-       /* VIDEO */
-       videoTitle:"Shareable video",
-       videoHelp:"Create a short video with your question and answer, ready to share on social media.",
-       videoBtn:"🎬 Create video",
-       videoReadyNote:"Video ready: download it and upload to TikTok, Instagram or anywhere you like.",
-       videoPreparing:"Generating video…",
-       videoError:"Could not generate the video. Please try again.",
-       videoNoData:"There is no answer yet to turn into a video.",
-       videoShareNotSupported:"Your browser cannot share this file directly.",
-       videoShareCancelled:"Share cancelled.",
-       videoOpenTikTok:"📱 Open TikTok",
-       videoOpenInsta:"📸 Open Instagram",
-       /* TTS */
-       ttsBtn:"🔊 Listen to the answer",
-       ttsBtnStop:"⏹ Stop",
-       ttsUnsupported:"Your device does not support voice reading.",
-       ttsNoAnswer:"No answer to read.",
-       ttsPlaying:"Playing audio…",
-       ttsError:"Speech synthesis error."
-  },
-  es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
-       sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
-       p:"Resultado y motivaciones", share:"📤 Compartir / Copiar", again:"🔁 Hacer otra",
-       save:"⭐ Guardar", savedOk:"✅ Guardada",
-       copied:"¡Copiado!", error:"[error del servidor]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Estilo: What the F · 6–9 frases · un párrafo · tono seco · modo: ${p==='past'?'Pasado':'Futuro'}.`
-        : `Estilo: What if (60% análisis, 40% imágenes) · 8–11 frases · un párrafo · modo: ${p==='past'?'Pasado':'Futuro'}.`,
-       pctLabel:"% probabilidad de que ocurra",
-       votersTitle:"Comité", seriousTitle:"Motivaciones", scientificTitle:"Motivo (científico)",
-       chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",
-       motFallback:"Motivo: beneficios concretos a corto plazo con límites manejables.",
-       credits:(n)=>`💰 Créditos : ${n}`, noCredits:"Se te han acabado los créditos.",
-       storeTitle:"Créditos", buy5:"Comprar +5 créditos (test)", buy10:"Comprar +10 créditos (test)", buy20:"Comprar +20 créditos (test)",
-       watchAd:"Ver anuncio (+1)", close:"Cerrar",
-       comingSoon:"Próximamente", buySoonNote:"La compra de créditos aún no está disponible.",
-       toastPlus:(n)=>`+${n} crédito`,  toastMinus:(n)=>`-${n} crédito`,
-       guideTitle:"Guía",
-       guideQuick:"Indicaciones rápidas",
-       guideAdvice:"Consejo",
-       guideAnalysis:"Analisis sintético",
-       /* VIDEO */
-       videoTitle:"Vídeo compartible",
-       videoHelp:"Crea un vídeo corto con tu pregunta y respuesta, listo para compartir en redes.",
-       videoBtn:"🎬 Crear vídeo",
-       videoReadyNote:"Vídeo listo: descárgalo y súbelo a TikTok, Instagram o donde quieras.",
-       videoPreparing:"Generando vídeo…",
-       videoError:"No se ha podido generar el vídeo. Inténtalo de nuevo.",
-       videoNoData:"Todavía no hay una respuesta para convertir en vídeo.",
-       videoShareNotSupported:"Tu navegador no puede compartir este archivo directamente.",
-       videoShareCancelled:"Compartición cancelada.",
-       videoOpenTikTok:"📱 Abrir TikTok",
-       videoOpenInsta:"📸 Abrir Instagram",
-       /* TTS */
-       ttsBtn:"🔊 Escuchar la respuesta",
-       ttsBtnStop:"⏹ Stop",
-       ttsUnsupported:"Tu dispositivo no soporta la lectura en voz alta.",
-       ttsNoAnswer:"No hay respuesta para leer.",
-       ttsPlaying:"Reproduciendo audio…",
-       ttsError:"Error en la síntesis de voz."
-  },
-  fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
-       sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
-       p:"Issue & motivations", share:"📤 Partager / Copier", again:"🔁 Poser une autre",
-       save:"⭐ Enregistrer", savedOk:"✅ Enregistrée",
-       copied:"Copié !", error:"[erreur serveur]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Style : What the F · 6–9 phrases · un paragraphe · ton sec · mode : ${p==='past'?'Passé':'Futur'}.`
-        : `Style : What if (60 % analyse, 40 % images) · 8–11 phrases · un paragraphe · mode : ${p==='past'?'Passé':'Futur'}.`,
-       pctLabel:"% de probabilité que ça arrive",
-       votersTitle:"Comité", seriousTitle:"Motivations", scientificTitle:"Motivation (scientifique)",
-       chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions",
-       motFallback:"Raison : bénéfices concrets à court terme, contraintes gérables.",
-       credits:(n)=>`💰 Crédits : ${n}`, noCredits:"Crédits épuisés.",
-       storeTitle:"Crédits", buy5:"Acheter +5 crédits (test)", buy10:"Acheter +10 crédits (test)", buy20:"Acheter +20 crédits (test)",
-       watchAd:"Regarder une pub (+1)", close:"Fermer",
-       comingSoon:"Bientôt", buySoonNote:"Achat de crédits pas encore disponible.",
-       toastPlus:(n)=>`+${n} crédit`,  toastMinus:(n)=>`-${n} crédit`,
-       guideTitle:"Conseils",
-       guideQuick:"Conseils rapides",
-       guideAdvice:"Suggestion",
-       guideAnalysis:"Analyse concise",
-       /* VIDEO */
-       videoTitle:"Vidéo partageable",
-       videoHelp:"Crée une courte vidéo avec ta question et la réponse, prête à être partagée sur les réseaux.",
-       videoBtn:"🎬 Créer la vidéo",
-       videoReadyNote:"Vidéo prête : télécharge-la et mets-la sur TikTok, Instagram ou ailleurs.",
-       videoPreparing:"Génération de la vidéo…",
-       videoError:"Impossible de générer le vidéo. Réessaie.",
-       videoNoData:"Il n’y a pas encore de réponse à transformer en vidéo.",
-       videoShareNotSupported:"Ton navigateur ne peut pas partager directement ce fichier.",
-       videoShareCancelled:"Partage annulé.",
-       videoOpenTikTok:"📱 Ouvrir TikTok",
-       videoOpenInsta:"📸 Ouvrir Instagram",
-       /* TTS */
-       ttsBtn:"🔊 Écouter la réponse",
-       ttsBtnStop:"⏹ Stop",
-       ttsUnsupported:"Ton appareil ne supporte pas la lecture vocale.",
-       ttsNoAnswer:"Aucune réponse à lire.",
-       ttsPlaying:"Lecture en cours…",
-       ttsError:"Erreur de synthèse vocale."
-  },
-  de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
-       sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
-       p:"Ergebnis & Motivationen", share:"📤 Teilen / Kopieren", again:"🔁 Neue Frage",
-       save:"⭐ Speichern", savedOk:"✅ Gespeichert",
-       copied:"Kopiert!", error:"[Serverfehler]",
-       styleWTF:"🎭 What the F", styleWHF:"🎭 What if",
-       meta:(st,p)=> st==='wtf'
-        ? `Stil: What the F · 6–9 Sätze · ein Absatz · trockener Ton · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`
-        : `Stil: What if (60 % Analyse, 40 % Bilder) · 8–11 Sätze · ein Absatz · Modus: ${p==='past'?'Vergangenheit':'Zukunft'}.`,
-       pctLabel:"% Wahrscheinlichkeit",
-       votersTitle:"Gremium", seriousTitle:"Begründungen", scientificTitle:"Begründung (wissenschaftlich)",
-       chipsFav:"dafür", chipsCon:"dagegen", chipsAst:"enthalten",
-       motFallback:"Grund: kurzfristiger, greifbarer Nutzen mit beherrschbaren Einschränkungen.",
-       credits:(n)=>`💰 Credits: ${n}`, noCredits:"Credits aufgebraucht.",
-       storeTitle:"Credits", buy5:"+5 Credits kaufen (Test)", buy10:"+10 Credits kaufen (Test)", buy20:"+20 Credits kaufen (Test)",
-       watchAd:"Werbung ansehen (+1)", close:"Schließen",
-       comingSoon:"Bald verfügbar", buySoonNote:"Kauf von Credits noch nicht verfügbar.",
-       toastPlus:(n)=>`+${n} Credit`,  toastMinus:(n)=>`-${n} Credit`,
-       guideTitle:"Leitfaden",
-       guideQuick:"Schnelle Hinweise",
-       guideAdvice:"Rat",
-       guideAnalysis:"Kurzanalyse",
-       /* VIDEO */
-       videoTitle:"Teilbares Video",
-       videoHelp:"Erstelle ein kurzes Video mit deiner Frage und Antwort, bereit zum Teilen in Social Media.",
-       videoBtn:"🎬 Video erstellen",
-       videoReadyNote:"Video fertig: Lade es herunter und stell es auf TikTok, Instagram oder wo du willst ein.",
-       videoPreparing:"Video wird erzeugt…",
-       videoError:"Video konnte nicht erzeugt werden. Bitte versuche es erneut.",
-       videoNoData:"Es gibt noch keine Antwort, die in ein Video umgewandelt werden kann.",
-       videoShareNotSupported:"Dein Browser kann diese Datei nicht direkt teilen.",
-       videoShareCancelled:"Teilen abgebrochen.",
-       videoOpenTikTok:"📱 TikTok öffnen",
-       videoOpenInsta:"📸 Instagram öffnen",
-       /* TTS */
-       ttsBtn:"🔊 Antwort anhören",
-       ttsBtnStop:"⏹ Stop",
-       ttsUnsupported:"Dein Gerät unterstützt keine Sprachausgabe.",
-       ttsNoAnswer:"Keine Antwort zum Vorlesen.",
-       ttsPlaying:"Audio wird abgespielt…",
-       ttsError:"Fehler bei der Sprachausgabe."
-  }
-};
-const SUP_LANG=['it','en','es','fr','de'];
-
-/* ======== LINGUA ======== */
-const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
-
-// 🔁 Override stile se la richiesta arriva da un segnale (morning/afternoon/evening)
-if (reqEarly && reqEarly.source === "signal" && reqEarly.micro && reqEarly.micro.phase) {
-  style = reqEarly.micro.phase === 2 ? "wtf" : "whatif";
-
-  document.documentElement.setAttribute(
-    "data-theme",
-    style === "wtf" ? "wtf" : "whatif"
-  );
-}
-
-const IS_SIGNAL = !!(reqEarly && reqEarly.source === "signal" && reqEarly.micro);
-
-const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
-const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
-function detectLang(text=''){
-  const lower=(text||'').toLowerCase();
-  if(/[¿¡]/.test(lower)) return 'es';
-  const bank={
-    it:[" che "," perché"," se "," quando"," dove"," non "," sono "," vorrei"," posso"," e se"," una settimana"," come"],
-    en:[" what "," if "," the "," and "," you "," are "," will "," would "," can "," should "," could "],
-    es:[" qué"," si "," porque"," cuando"," dónde"," no "," soy "," puedo"," quiero","¿"," semana "],
-    fr:[" quoi"," si "," pourquoi"," quand"," où"," pas "," je "," peux"," si je"," et si"],
-    de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
-  };
-  const score={};
-  for(const L of SUP_LANG){
-    score[L]=0;
-    (bank[L]||[]).forEach(w=>{ if(lower.includes(w)) score[L]++; });
-  }
-  let best='it', max=-1;
-  for(const L of SUP_LANG){
-    if(score[L]>max){
-      max=score[L];
-      best=L;
-    }
-  }
-  if(max<=0){
-    const nav=(navigator.language||'it').slice(0,2).toLowerCase();
-    if(SUP_LANG.includes(nav)) return nav;
-  }
-  return best;
-}
-let lang = SUP_LANG.includes(langFromFourth) ? langFromFourth : detectLang(domandaEarly);
-document.documentElement.lang=lang;
-const t = ()=>I18N[lang]||I18N.it;
-
-/* ==== Firebase credits (solo lettura) ==== */
-let currentUser = null;
-let currentBalance = 0;
-
-function updateCreditInfo(){
-  const creditInfo = document.getElementById('creditInfo');
-  if(!creditInfo) return;
-
-  if (IS_ADMIN) {
-    creditInfo.textContent = "💰 Crediti: ∞ (admin)";
-    return;
   }
 
-  const val = currentUser ? currentBalance : 0;
-  creditInfo.textContent = t().credits(val);
-}
+  const idx = dailyIndex(list.length, normSlot, normPers);
+  const text = list[idx];
 
-onAuthStateChanged(auth, async (user)=>{
-  currentUser = user;
-
-  if (!user || IS_ADMIN) {
-    currentBalance = 0;
-    updateCreditInfo();
-    return;
-  }
-
-  try{
-    await bootCredits();
-    const bal = await getBalance();
-    currentBalance = Number.isFinite(+bal) ? +bal : 0;
-  }catch(e){
-    console.error("credits sync error:", e);
-    currentBalance = 0;
-  }
-  updateCreditInfo();
-});
-
-/* 🔻 Scala 1 credito SOLO per segnali fase 1 (morning/afternoon/evening WHAT IF) */
-async function ensureSignalCredit(micro = {}) {
-  if (IS_ADMIN) return true;
-
-  const phase = Number(micro.phase || 1);
-  if (phase === 2) {
-    // WTF gratis
-    return true;
-  }
-
-  if (!currentUser) {
-    toast("Per usare la frase del giorno devi essere loggato.");
-    return false;
-  }
-
-  try {
-    const ok = await consumeCredit();
-    if (!ok) {
-      toast(t().noCredits || "Hai terminato i crediti.");
-      try {
-        location.href = "/store/credit-store.html?lang=" + (lang || "it");
-      } catch {}
-      return false;
-    }
-
-    try {
-      const bal = await getBalance();
-      currentBalance = Number.isFinite(+bal) ? +bal : 0;
-      updateCreditInfo();
-    } catch {}
-
-    return true;
-  } catch (e) {
-    console.error("ensureSignalCredit error:", e);
-    toast("Errore nei crediti, riprova.");
-    return false;
-  }
-}
-
-/* ==== System prompts (solo UI, placeholder) ==== */
-const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
-const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;
-
-/* === ORACLE LINES (solo attesa) === */
-const ORACLE_LINES = {
-  it: ["Le carte si muovono piano.","La risposta sta cercando la tua attenzione.","L’aria cambia: qualcosa si avvicina.","Non correre: il disegno prende forma.","Occhio: il quadro si accende da solo.","Silenzio un attimo… qualcosa si allinea.","C’è un passo che torna al suo ritmo.","La moneta è a mezz’aria: sta scegliendo il lato.","Una piega nella notte, poi una luce sottile.","Le luci interne si accendono una alla volta.","Ancora un respiro… il filo si tende.","L’indizio che mancava si sta mostrando.","Un colpo di vento, poi tutto si ferma.","Scorri piano: la porta si sta socchiudendo.","Si sente un sì lontano, ma si avvicina.","L’oracolo gira la pagina… quasi."],
-  en: ["The cards are slowly turning.","The answer is looking for your attention.","Air shifts; something draws near.","Don’t rush—shape is forming.","Look: the outline lights itself.","Hold a breath… things align.","There’s a step finding its rhythm again.","A coin hangs mid-air, choosing its side.","A fold in the dark, then a thin light.","Inner lights switch on, one by one.","Another breath… the wire tightens.","The missing hint is stepping forward.","A gust, then stillness.","Scroll slowly: a door is opening a crack.","A distant yes moves closer.","The oracle turns the page… almost."],
-  es: ["Las cartas se mueven despacio.","La respuesta busca tu atención.","El aire cambia; algo se acerca.","No corras: la forma aparece.","Mira: el contorno se enciende solo.","Guarda el aliento… todo se alinea.","Hay un paso que recupera su ritmo.","Una moneda queda en el aire, eligiendo cara.","Un pliegue en la noche, luego una luz fina.","Luces internas, una por una.","Otro respiro… el hilo se tensa.","La pista que faltaba se asoma.","Una ráfaga y luego quietud.","Desliza despacio: la puerta se entorna.","Un sí lejano se acerca.","El oráculo pasa página… casi."],
-  fr: ["Les cartes tournent lentement.","La réponse cherche ton attention.","L’air change : quelque chose s’approche.","Ne te presse pas : la forme vient.","Regarde : le contour s’allume tout seul.","Retiens ton souffle… tout s’aligne.","Un pas retrouve son rythme.","Une pièce reste en suspens, choisissant sa face.","Un pli dans la nuit, puis une lumière fine.","Des lumières intérieures s’allument, une à une.","Encore un souffle… le fil se tend.","L’indice manquant s’avance.","Un souffle, puis l’immobilité.","Fais défiler doucement : une porte s’entrouvre.","Un oui lointain se rapproche.","L’oracle tourne la page… presque."],
-  de: ["Die Karten bewegen sich langsam.","Die Antwort sucht deine Aufmerksamkeit.","Die Luft verändert sich; etwas kommt näher.","Nicht eilen: die Form entsteht.","Schau: die Kontur leuchtet von allein.","Atem anhalten… die Dinge richten sich.","Ein Schritt findet wieder seinen Rhythmus.","Eine Münze hängt in der Luft und sucht ihre Seite.","Eine Falte in der Nacht, dann ein schmales Licht.","Innere Lichter gehen nacheinander an.","Noch ein Atemzug… der Draht spannt sich.","Der fehlende Hinweis tritt hervor.","Ein Windstoß, dann Stille.","Scroll langsam: eine Tür steht einen Spalt offen.","Ein fernes Ja kommt näher.","Das Orakel blättert um… fast."]
-};
-
-/* ==== INTRO (Zoltar-like) prima volta ===== */
-const INTRO_KEY = 'whatif_intro_seen_v2';
-const INTRO = {
-  whatif: {
-    it: {future:"🜂 La lanterna si accende: fai la domanda e il futuro si mette in fila.", past:"🜂 La sabbia si posa: riguardi il passato senza nebbia e tieni solo ciò che serve."},
-    en: {future:"🜂 The lamp glows: ask clearly and the near future lines up.", past:"🜂 The sand settles: you look back without fog and keep only what matters."}
-  },
-  wtf: {
-    it: {future:"🥂 Dillo forte: il domani non aspetta i timidi.", past:"🥂 Chiudi il conto: il passato ha già pagato, tu ordina il prossimo giro."},
-    en: {future:"🥂 Say it loud: tomorrow won’t wait for the shy.", past:"🥂 Tab’s closed: the past already paid—order the next round."}
-  }
-};
-function showIntroOnce(){
-  try{
-    const seen = LS.getItem(INTRO_KEY)==='1';
-    const box = document.getElementById('introBox');
-    if(!box) return;
-    if(seen){ box.style.display='none'; return; }
-    const L = (INTRO[style] && INTRO[style][lang]) ? INTRO[style][lang] : INTRO['whatif']['it'];
-    const line = (periodo==='past') ? L.past : L.future;
-    box.textContent = line;
-    try{ if(style==='wtf') document.getElementById('sfxWtf')?.play().catch(()=>{}); else document.getElementById('sfxWhatIf')?.play().catch(()=>{}); }catch{}
-    LS.setItem(INTRO_KEY,'1');
-  }catch{}
-}
-
-/* ==== UI refs ==== */
-const qs=(s)=>document.querySelector(s);
-const subtitle=qs('#subtitle'), lblQ=qs('#lblQ'), lblA=qs('#lblA'), qView=qs('#qView');
-const answerEl=qs('#answer'), shareBtn=qs('#shareBtn'), againBtn=qs('#againBtn');
-const saveBtn=qs('#saveBtn');
-const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct'), bottomPct=qs('#bottomPct');
-const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
-const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap'];
-const motNote=qs('#motNote'), toastEl=qs('#toast');
-
-/* ==== VIDEO refs ==== */
-const videoBtn = qs('#videoBtn');
-const videoWrap = qs('#videoWrap');
-const videoPreview = qs('#videoPreview');
-const videoDownload = qs('#videoDownload');
-const videoLoadingEl = qs('#videoLoading');
-const videoNoteEl = qs('#videoNote');
-const openTikTokBtn = qs('#openTikTokBtn');
-const openInstaBtn = qs('#openInstaBtn');
-
-/* ==== Audio typing ==== */
-const typingSfx = document.getElementById('typingSfx');
-let typingTimeoutId = null;
-let typingAnswerTimer = null;
-
-/* suono breve */
-function playTypingShort(ms=2200){
-  if(!typingSfx) return;
-  try{
-    typingSfx.loop = false;
-    typingSfx.currentTime = 0;
-    typingSfx.play().catch(()=>{});
-  }catch{}
-  if(typingTimeoutId) clearTimeout(typingTimeoutId);
-  typingTimeoutId = setTimeout(()=>{
-    try{
-      typingSfx.pause();
-      typingSfx.currentTime = 0;
-    }catch{}
-  }, ms);
-}
-
-/* risposta: NIENTE macchina da scrivere → testo intero + fade-in, nessun saltello */
-function showAnswerWithTyping(text){
-  const full = String(text || "");
-  if(!answerEl) return;
-
-  if(typingAnswerTimer){
-    clearInterval(typingAnswerTimer);
-    typingAnswerTimer = null;
-  }
-  if(typingTimeoutId){
-    clearTimeout(typingTimeoutId);
-    typingTimeoutId = null;
-  }
-
-  // eventualmente solo un suono breve all'inizio
-  playTypingShort(1800);
-
-  // reset stile e applico fade-in
-  answerEl.style.transition = "none";
-  answerEl.style.opacity = 0;
-  answerEl.style.height = "";
-  answerEl.style.overflow = "visible";
-
-  answerEl.textContent = full;
-
-  // piccolo delay per permettere al browser di applicare lo stile
-  requestAnimationFrame(()=>{
-    answerEl.style.transition = "opacity .35s ease-out";
-    answerEl.style.opacity = 1;
-  });
-
-  decorateEmBits(answerEl);
-}
-
-/* ==== Toast ==== */
-function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),1800); }
-
-/* ==== Helpers testo ==== */
-function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
-function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
-function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
-
-/* ==== Titles/Text ==== */
-function applyUI(q){
-  const T=t();
-  setText('#title', style==='wtf'?T.titleWTF:T.titleWHF);
-  subtitle.textContent=T.sub(q||'—'); setText('#lblQ', T.q); setText('#lblA', T.a); setText('#lblP', T.p);
-  shareBtn.textContent=T.share; againBtn.textContent=T.again; if(saveBtn) saveBtn.textContent=T.save;
-  styleBadge.textContent=(style==='wtf')?T.styleWTF:T.styleWHF;
-  setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
-
-  setText('#lblVideo', T.videoTitle || 'Video');
-  const vh = qs('#videoHelp'); if(vh) vh.textContent = T.videoHelp || '';
-  if(videoBtn) videoBtn.textContent = T.videoBtn || '🎬 Crea video';
-
-  if(openTikTokBtn) openTikTokBtn.textContent = T.videoOpenTikTok || "📱 TikTok";
-  if(openInstaBtn) openInstaBtn.textContent = T.videoOpenInsta || "📸 Instagram";
-
-  if(videoNoteEl) videoNoteEl.textContent = '';
-
-  const ttsBtn = document.getElementById("readAnswerBtn");
-  const ttsStatus = document.getElementById("ttsStatus");
-  if(ttsBtn) ttsBtn.textContent = T.ttsBtn || "🔊";
-  if(ttsStatus) ttsStatus.textContent = "";
-}
-
-/* ==== Probability ==== */
-function computeProbability(q){
-  const t=(q||'').toLowerCase(); let s=50;
-  if(/\b(7|14|21|30|60|90)\b/.test(t)) s+=12;
-  if(/\b\d+([.,]\d+)?\b/.test(t)) s+=8;
-  if(/budget|€|euro|spesa|max|under|sotto/.test(t)) s+=6;
-  if(/senza|solo|al massimo|minimo|entro|prima delle|ogni|per/.test(t)) s+=8;
-  if(/lancia|apri|impara|scrivi|chiedi|corri|studia|automatizza|testa/.test(t)) s+=6;
-  if(/forse|magari|maybe|quizás/.test(t)) s-=8;
-  if(!/\b\d/.test(t)) s-=6;
-  s += (style==='wtf' ? -4 : +2);
-  return {pct: Math.max(25, Math.min(92, Math.round(s)))}
-}
-
-/* === ORACLE helpers === */
-let oracleDeck = [];
-let oracleTimerId = null;
-function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
-function buildOracleDeck(){
-  const base = (ORACLE_LINES[lang] || ORACLE_LINES.it).slice();
-  const tails = ["", " …", " ⋯", " —", " …"];
-  const deck = [];
-  for(const line of base){
-    const v = Math.random()<0.45 ? (line.replace(/\.$/,"") + tails[Math.floor(Math.random()*tails.length)]) : line;
-    deck.push(v);
-  }
-  return shuffle(deck);
-}
-function nextOracleLine(){
-  if(oracleDeck.length===0) oracleDeck = buildOracleDeck();
-  return oracleDeck.pop();
-}
-function startOracleLoading(){
-  document.body.classList.add('loading');
-  const lineEl = document.getElementById('oracleLine');
-  const tick = ()=>{
-    lineEl.textContent = nextOracleLine();
-    const jitter = 1200 + Math.floor(Math.random()*1000);
-    oracleTimerId = setTimeout(tick, jitter);
-  };
-  tick();
-}
-function stopOracleLoading(){
-  document.body.classList.remove('loading');
-  clearTimeout(oracleTimerId); oracleTimerId=null;
-  const lineEl = document.getElementById('oracleLine');
-  setTimeout(()=>{ if(lineEl) lineEl.textContent = " "; }, 350);
-}
-function revealEffect(){
-  const wrap = document.querySelector('.oracle-wrap');
-  if(!wrap) return;
-  wrap.classList.add('reveal');
-  try{ document.getElementById('revealDing')?.play().catch(()=>{}); }catch{}
-  setTimeout(()=> wrap.classList.remove('reveal'), 900);
-}
-
-/* ===== Motivazione demenziale per WTF ===== */
-function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
-function wtfMotivationDemenziale(langCode){
-  const shots = rnd(1,3), spill = rnd(0,2), bruise = rnd(0,3);
-  if(langCode==='en'){
-    return `Pseudo-science says small daily nudges beat grand plans. The committee argued at the bar: ${shots} shots gone, ${spill} glasses spilled, ${bruise} minor bruises; verdict between hiccups: do it, and stop overthinking.`;
-  } else if(langCode==='es'){
-    return `Pseudociencia de barra: los micro-pasos diarios ganan a los planes épicos. El comité debatió en la barra: ${shots} chupitos desaparecidos, ${spill} copas derramadas, ${bruise} pequeños moratones; veredicto entre hipos: hazlo y deja de sobrepensarlo.`;
-  } else if(langCode==='fr'){
-    return `Pseudoscience de comptoir : les micro-pas quotidiens battent les grands plans. Le comité a débattu au bar : ${shots} shots évaporés, ${spill} verres renversés, ${bruise} bleus légers ; verdict zwischen deux hoquets : fais-le, et arrête de trop réfléchir.`;
-  } else if(langCode==='de'){
-    return `Kneipen-Pseudowissenschaft: kleine tägliche Schritte schlagen große Pläne. Das Gremium tagte an der Theke: ${shots} Shots verschwunden, ${spill} Gläser verschüttet, ${bruise} leichte Blessuren; Urteil zwischen Schluckauf: mach’s, und hör auf, alles zu zerdenken.`;
-  }
-  return `Pseudoscienza da bancone: i micro-passi battono i piani epici. La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: fai, e smettila di pensarci troppo.`;
-}
-
-/* ===== NUOVE MOTIVAZIONI WHAT IF (più corte, da AI) ===== */
-function buildWhatIfMotivationsPretty(domanda, pct, rawFromAI){
-  const L = lang;
-  const isPast = (periodo === 'past');
-
-  let prefix = "";
-  if (typeof pct === "number" && isFinite(pct)) {
-    if (L === "it") {
-      prefix = isPast
-        ? `Probabilità ~${pct}%. Poteva andare anche in modo diverso. `
-        : `Probabilità ~${pct}%. Non è destino scritto, ma una strada possibile. `;
-    } else if (L === "en") {
-      prefix = isPast
-        ? `Approx. ${pct}% probability. It could have played out differently. `
-        : `Approx. ${pct}% probability. Not fixed fate, but a realistic path. `;
-    } else if (L === "es") {
-      prefix = isPast
-        ? `Probabilidad ~${pct}%. Podría haber salido distinto. `
-        : `Probabilidad ~${pct}%. No es destino fijo, pero sí una opción real. `;
-    } else if (L === "fr") {
-      prefix = isPast
-        ? `Probabilité ~${pct}%. Ça aurait pu se passer autrement. `
-        : `Probabilité ~${pct}%. Pas un destin figé, mais une piste crédible. `;
-    } else {
-      prefix = isPast
-        ? `Wahrscheinlichkeit ~${pct}%. Es hätte anders laufen können. `
-        : `Wahrscheinlichkeit ~${pct}%. Kein festgeschriebenes Schicksal, aber ein realistischer Weg. `;
-    }
-  }
-
-  let body = String(rawFromAI || "").trim();
-
-  if (!body) {
-    if (L === "it") {
-      body = isPast
-        ? "Hai deciso con le risorse che avevi allora: ora puoi usare quello che hai imparato per le scelte nuove."
-        : "Fai pochi passi chiari e allineati a come ti senti oggi, non a come “dovresti” essere.";
-    } else if (L === "en") {
-      body = isPast
-        ? "You chose with the energy and information you had then; now you can use what you learned for your next moves."
-        : "Take a few clear steps that fit who you are now, not who you think you should be.";
-    } else if (L === "es") {
-      body = isPast
-        ? "Elegiste con la energía y la información de entonces; ahora puedes usar lo aprendido para tus próximos pasos."
-        : "Da pocos pasos claros que encajen con cómo te sientes hoy, no con lo que “deberías” ser.";
-    } else if (L === "fr") {
-      body = isPast
-        ? "Tu as choisi avec les ressources d’alors; maintenant tu peux utiliser ce que tu as appris pour la suite."
-        : "Fais quelques pas clairs alignés avec ce que tu ressens aujourd’hui, pas avec ce que tu “devrais” être.";
-    } else {
-      body = isPast
-        ? "Du hast mit den damaligen Ressourcen entschieden; jetzt kannst du das Gelernte für neue Entscheidungen nutzen."
-        : "Mach ein paar klare Schritte, die zu deinem heutigen Gefühl passen, nicht nur zu Erwartungen von außen.";
-    }
-  }
-
-  body = normalizeOneParagraph(body);
-  let sentences = body.split(/(?<=[.!?…])\s+/).filter(Boolean);
-  if (sentences.length > 3) {
-    sentences = sentences.slice(0, 3);
-  }
-  body = sentences.join(" ");
-
-  return prefix + body;
-}
-
-/* ==== CACHE RISULTATO ==== */
-const RESULT_CACHE_KEY = 'whatif_result_cache_v2';
-
-function saveResultToCache(obj){
-  try{
-    LS.setItem(RESULT_CACHE_KEY, JSON.stringify(obj));
-  }catch(e){
-    console.warn('cache save error', e);
-  }
-}
-
-function loadResultFromCache(domanda, clarification){
-  try{
-    const raw = LS.getItem(RESULT_CACHE_KEY);
-    if(!raw) return null;
-    const obj = JSON.parse(raw);
-    if(!obj || typeof obj !== 'object') return null;
-    if((obj.domanda||'').trim() !== String(domanda||'').trim()) return null;
-    if((obj.clarification||'').trim() !== String(clarification||'').trim()) return null;
-    if(obj.style !== style) return null;
-    if(obj.periodo !== periodo) return null;
-    if(obj.lang !== lang) return null;
-    return obj;
-  }catch(e){
-    console.warn('cache load error', e);
-    return null;
-  }
-}
-
-function applyResultToUI(result){
-  const domanda = result.domanda || LS.getItem('domanda') || '';
-  applyUI(domanda);
-  qView.textContent = domanda || '—';
-
-  const finalAnswer = result.answer || '—';
-  showAnswerWithTyping(finalAnswer);
-
-  const usedPct = (typeof result.pct === 'number' && isFinite(result.pct))
-    ? Math.max(0, Math.min(100, Math.round(result.pct)))
-    : computeProbability(domanda).pct;
-  const pStr = usedPct + "%";
-  topPct.textContent = pStr;
-  bottomPct.textContent = pStr;
-
-  const mode = result.motivationMode || (style === 'wtf' ? 'wtf' : 'whatif');
-
-  if (mode === 'surprise') {
-    motIco.style.display='';
-    chipsWrap.style.display='flex';
-    committeeTitle.textContent = t().votersTitle || 'Comitato';
-
-    const fav = result.chipsFav ?? 0;
-    const con = result.chipsCon ?? 0;
-    const ast = result.chipsAst ?? 0;
-
-    chipFav.textContent = `${t().chipsFav} ${fav}`;
-    chipCon.textContent = `${t().chipsCon} ${con}`;
-    chipAst.textContent = `${t().chipsAst} ${ast}`;
-    motNote.textContent = result.motivationText || '';
-
-  } else if (mode === 'wtf') {
-    motIco.style.display='none';
-    chipsWrap.style.display='none';
-    committeeTitle.textContent = t().scientificTitle;
-    motNote.textContent = result.motivationText || '';
-
+  let title;
+  if (normLang === "it") {
+    if (normSlot === "morning" && normPers === "whatif")
+      title = "☀️ Frase del mattino · What if";
+    else if (normSlot === "morning")
+      title = "☀️ Commento del mattino · What the F";
+    else if (normSlot === "afternoon" && normPers === "whatif")
+      title = "🌤 Check-in del pomeriggio · What if";
+    else if (normSlot === "afternoon")
+      title = "🌤 Commento del pomeriggio · What the F";
+    else if (normSlot === "evening" && normPers === "whatif")
+      title = "🌙 Chiusura di giornata · What if";
+    else title = "🌙 Commento di fine giornata · What the F";
+  } else if (normLang === "en") {
+    if (normSlot === "morning" && normPers === "whatif")
+      title = "☀️ Morning line · What if";
+    else if (normSlot === "morning")
+      title = "☀️ Morning roast · What the F";
+    else if (normSlot === "afternoon" && normPers === "whatif")
+      title = "🌤 Afternoon check-in · What if";
+    else if (normSlot === "afternoon")
+      title = "🌤 Afternoon take · What the F";
+    else if (normSlot === "evening" && normPers === "whatif")
+      title = "🌙 Evening reflection · What if";
+    else title = "🌙 Late-night comment · What the F";
+  } else if (normLang === "es") {
+    if (normSlot === "morning" && normPers === "whatif")
+      title = "☀️ Frase de la mañana · What if";
+    else if (normSlot === "morning")
+      title = "☀️ Comentario de mañana · What the F";
+    else if (normSlot === "afternoon" && normPers === "whatif")
+      title = "🌤 Check-in de tarde · What if";
+    else if (normSlot === "afternoon")
+      title = "🌤 Comentario de tarde · What the F";
+    else if (normSlot === "evening" && normPers === "whatif")
+      title = "🌙 Cierre del día · What if";
+    else title = "🌙 Comentario nocturno · What the F";
+  } else if (normLang === "fr") {
+    if (normSlot === "morning" && normPers === "whatif")
+      title = "☀️ Phrase du matin · What if";
+    else if (normSlot === "morning")
+      title = "☀️ Commentaire du matin · What the F";
+    else if (normSlot === "afternoon" && normPers === "whatif")
+      title = "🌤 Check-in de l’après-midi · What if";
+    else if (normSlot === "afternoon")
+      title = "🌤 Commentaire d’après-midi · What the F";
+    else if (normSlot === "evening" && normPers === "whatif")
+      title = "🌙 Bilan du soir · What if";
+    else title = "🌙 Commentaire du soir · What the F";
   } else {
-    motIco.style.display='none';
-    chipsWrap.style.display='none';
-    committeeTitle.textContent = t().seriousTitle;
-    motNote.innerHTML = result.motivationText || '';
+    // de
+    if (normSlot === "morning" && normPers === "whatif")
+      title = "☀️ Morgen-Impulse · What if";
+    else if (normSlot === "morning")
+      title = "☀️ Morgen-Kommentar · What the F";
+    else if (normSlot === "afternoon" && normPers === "whatif")
+      title = "🌤 Nachmittags-Check-in · What if";
+    else if (normSlot === "afternoon")
+      title = "🌤 Nachmittags-Kommentar · What the F";
+    else if (normSlot === "evening" && normPers === "whatif")
+      title = "🌙 Tagesabschluss · What if";
+    else title = "🌙 Abend-Kommentar · What the F";
   }
 
-  revealEffect();
-}
-
-/* ==== Top init ==== */
-(function initTop(){
-  const hasToken=!!LS.getItem('admin_token');
-  if(hasToken || prefs.pro===true){
-    const el=qs('#proBadge'); el.style.display='inline-flex';
-    el.textContent='🧪 TEST · ⭐ PRO';
-    el.title = {en:'Test mode active',es:'Modo de prueba activo',fr:'Mode test actif',de:'Testmodus aktiv'}[lang] || 'Modalità test attiva';
-  }
-  qs('#langSelect').value=lang;
-})();
-
-/* ==== Question & UI load ==== */
-function applyQuestion(){
-  const req=JSON.parse(LS.getItem('whatif_request')||'{}');
-  const domanda=req.domanda || LS.getItem('domanda') || '';
-  const clarification = req.clarification || req.answer || '';
-  applyUI(domanda);
-  qView.textContent = domanda || '—';
-  const surprise = (new URLSearchParams(location.search)).get('src')==='surprise'
-    || req?.surprise===true || req?.micro?.surprise===true
-    || LS.getItem('surprise_mode')==='1';
-  return {req, domanda, clarification, surprise};
-}
-
-/* ==== Salvataggio domanda ==== */
-function saveCurrentQuestion(){
-  const domanda = (LS.getItem('domanda') || '').trim();
-  if(!domanda) return;
-  let arr=[];
-  try{ arr = JSON.parse(LS.getItem('next_prompts')||'[]'); if(!Array.isArray(arr)) arr=[]; }catch{ arr=[]; }
-  if(arr[0] && (arr[0].q||'') === domanda){ toast(t().savedOk); return; }
-  arr.unshift({ q: domanda, ts: Date.now() });
-  if(arr.length>50) arr = arr.slice(0,50);
-  LS.setItem('next_prompts', JSON.stringify(arr));
-  LS.setItem('whatif_wallet_sync', String(Date.now()));
-  toast(t().savedOk);
-}
-
-/* ==== Main flow ==== */
-async function startFlow(){
-  const {req, domanda, clarification, surprise} = applyQuestion();
-  updateCreditInfo();
-
-  const isSignal = !!(req && req.source === "signal");
-  const micro = (req && req.micro) ? req.micro : {};
-  const phase = Number(micro.phase || 1);
-
-  const cached = loadResultFromCache(domanda, clarification);
-  if (cached) {
-    showIntroOnce();
-    applyResultToUI(cached);
-    return;
-  }
-
-  showIntroOnce();
-  startOracleLoading();
-
-  // Se è un segnale WHAT IF (fase 1) e NON è in cache → scala 1 credito
-  if (isSignal && phase === 1) {
-    const okCredit = await ensureSignalCredit(micro);
-    if (!okCredit) {
-      stopOracleLoading();
-      answerEl.textContent = t().noCredits || "Hai terminato i crediti.";
-      return;
-    }
-  }
-
-  try{
-    const headers={"Content-Type":"application/json"};
-    if(prefs.pro===true) headers["x-pro"]="1";
-    const adminToken=LS.getItem("admin_token"); if(adminToken) headers["x-admin-token"]=adminToken;
-
-    const microPayload = req.micro || {};
-    if (isSignal) microPayload.src = "signal";
-
-    const r=await fetch("/api/ask",{
-      method:"POST",headers,
-      body:JSON.stringify({
-        stage: isSignal ? "signal" : "answer",
-        domanda,
-        clarification: clarification || "",
-        lang,
-        stile: style,
-        periodo,
-        micro: microPayload
-      })
-    });
-    const data=await r.json().catch(()=>null);
-    if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
-
-    let answerText=normalizeOneParagraph((data.answer||"").trim());
-    const maxSent=(style==='wtf')?9:11;
-    let parts=answerText.split(/(?<=[.!?…])\s+/);
-    if(parts.length>maxSent) parts=parts.slice(0,maxSent);
-    answerText=parts.join(" ").trim();
-    if(!/[.!?…]$/.test(answerText)) answerText+='.';
-    showAnswerWithTyping(answerText);
-
-    stopOracleLoading();
-    revealEffect();
-
-    const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
-    const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
-    const pStr = usedPct + "%";
-    topPct.textContent = pStr;
-    bottomPct.textContent = pStr;
-
-    let motivazioneUsata = "";
-    let motivationMode = (style === 'wtf' ? 'wtf' : 'whatif');
-    let motivationTextForCache = "";
-    let chipsFavNum, chipsConNum, chipsAstNum;
-
-    const surpriseMode = surprise || (req?.micro && req.micro.surprise);
-
-    if (surpriseMode) {
-      motIco.style.display=''; chipsWrap.style.display='flex';
-      committeeTitle.textContent=t().votersTitle||'Comitato';
-      const rdm=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-      chipsFavNum = rdm(120,1200);
-      chipsConNum = rdm(0,900);
-      chipsAstNum = rdm(0,400);
-      chipFav.textContent=`${t().chipsFav} ${chipsFavNum}`;
-      chipCon.textContent=`${t().chipsCon} ${chipsConNum}`;
-      chipAst.textContent=`${t().chipsAst} ${chipsAstNum}`;
-      const removed = rdm(1,5);
-      const bruised = rdm(0,3);
-      const note =
-        (lang==='en')?`Brief tussle at vote: ${removed} removed; ${bruised} bruised.`
-       :(lang==='es')?`Pequeño lío en la votación: ${removed} expulsados; ${bruised} contusos.`
-       :(lang==='fr')?`Petit grabuge au vote : ${removed} évacués ; ${bruised} contusionnés.`
-       :(lang==='de')?`Kurzes Gerangel bei der Abstimmung: ${removed} entfernt; ${bruised} leicht verletzt.`
-       :`Breve parapiglia al voto: ${removed} allontanati; ${bruised} contusi.`;
-      motNote.textContent = note;
-      motivazioneUsata = note;
-      motivationMode = 'surprise';
-      motivationTextForCache = note;
-
-    } else if (style === 'wtf') {
-      motIco.style.display='none';
-      chipsWrap.style.display='none';
-      committeeTitle.textContent = t().scientificTitle;
-      const sci = (data.scientific && String(data.scientific).trim())
-        ? data.scientific
-        : wtfMotivationDemenziale(lang);
-      motNote.textContent = sci;
-      motivazioneUsata = sci;
-      motivationMode = 'wtf';
-      motivationTextForCache = sci;
-
-    } else {
-      motIco.style.display='none';
-      chipsWrap.style.display='none';
-      committeeTitle.textContent = t().seriousTitle;
-      const html = buildWhatIfMotivationsPretty(domanda, usedPct, data.motivation);
-      motNote.innerHTML = html;
-      motivazioneUsata = html.replace(/<br\s*\/?>/gi," | ");
-      motivationMode = 'whatif';
-      motivationTextForCache = html;
-    }
-
-    const hist=JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, clarification, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise:surpriseMode, pct:usedPct, motivazione:motivazioneUsata });
-    LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-
-    const resultForCache = {
-      domanda,
-      clarification: clarification || "",
-      style,
-      periodo,
-      lang,
-      surprise: !!surpriseMode,
-      answer: answerText,
-      pct: usedPct,
-      motivationMode,
-      motivationText: motivationTextForCache,
-      chipsFav: (motivationMode === 'surprise') ? chipsFavNum : undefined,
-      chipsCon: (motivationMode === 'surprise') ? chipsConNum : undefined,
-      chipsAst: (motivationMode === 'surprise') ? chipsAstNum : undefined
-    };
-    saveResultToCache(resultForCache);
-
-    /* 🔹 LOG DOMANDA+RISPOSTA SU /api/save (non usa crediti OpenAI) */
-    try {
-      await fetch("/api/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          domanda,
-          answer: answerText,
-          stile: style,
-          periodo,
-          lang
-        })
-      });
-    } catch (logErr) {
-      console.error("log /api/save failed:", logErr);
-      // non blocca l'utente, è solo logging
-    }
-
-  }catch(e){
-    console.error(e);
-    stopOracleLoading();
-    answerEl.textContent=t().error;
-  }
-}
-
-/* ==== VIDEO: Canvas + MediaRecorder ==== */
-
-function videoNotAvailable(msg){
-  const T = t();
-  const text = msg || (T.videoError || "Video non disponibile su questo dispositivo.");
-  toast(text);
-}
-
-/* disegna testo a capo */
-function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
-  const words = String(text || "").split(/\s+/);
-  let line = "";
-  let y = startY;
-  for(const w of words){
-    const test = line ? (line + " " + w) : w;
-    if(ctx.measureText(test).width > maxWidth && line){
-      ctx.fillText(line, x, y);
-      y += lineHeight;
-      line = w;
-    }else{
-      line = test;
-    }
-  }
-  if(line){
-    ctx.fillText(line, x, y);
-    y += lineHeight;
-  }
-  return y;
-}
-
-/* stato ultimo video (solo per eventuali usi futuri) */
-let lastVideoBlob = null;
-let lastVideoMime = null;
-
-async function generateVideoClip(){
-  const T = t();
-  const domanda = (localStorage.getItem('domanda') || qView.textContent || '').trim();
-  const answerText = (answerEl.textContent || '').trim();
-  const motivationsRaw = (motNote?.innerText || motNote?.textContent || '').trim();
-
-  if (!domanda || !answerText) {
-    videoNotAvailable(T.videoNoData || "Non c’è ancora una risposta da trasformare in video.");
-    return;
-  }
-
-  if (typeof HTMLCanvasElement === "undefined" ||
-      !HTMLCanvasElement.prototype.captureStream ||
-      typeof MediaRecorder === "undefined") {
-    videoNotAvailable();
-    return;
-  }
-
-  videoBtn.disabled = true;
-  if (videoLoadingEl) {
-    videoLoadingEl.textContent = T.videoPreparing || "Generazione video…";
-    videoLoadingEl.style.display = "inline";
-  }
-  if (videoWrap) videoWrap.style.display = "none";
-  if (videoNoteEl) videoNoteEl.textContent = "";
-
-  const canvas = document.createElement("canvas");
-  const width = 720;
-  const height = 1280;
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-
-  const stream = canvas.captureStream(25);
-
-  const candidates = [
-    "video/mp4;codecs=h264",
-    "video/webm;codecs=vp9",
-    "video/webm;codecs=vp8",
-    "video/webm"
-  ];
-  let mimeType = null;
-  for(const m of candidates){
-    if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) {
-      mimeType = m;
-      break;
-    }
-  }
-  if (!mimeType) {
-    videoNotAvailable();
-    videoBtn.disabled = false;
-    if (videoLoadingEl) videoLoadingEl.style.display = "none";
-    return;
-  }
-
-  const chunks = [];
-  let recorder;
-  try{
-    recorder = new MediaRecorder(stream, { mimeType });
-  }catch(e){
-    console.error(e);
-    videoNotAvailable();
-    videoBtn.disabled = false;
-    if (videoLoadingEl) videoLoadingEl.style.display = "none";
-    return;
-  }
-
-  recorder.ondataavailable = (ev)=>{
-    if (ev.data && ev.data.size > 0) chunks.push(ev.data);
-  };
-
-  recorder.onstop = ()=>{
-    try{
-      const blob = new Blob(chunks, { type: mimeType });
-      lastVideoBlob = blob;
-      lastVideoMime = mimeType;
-      const url = URL.createObjectURL(blob);
-      if (videoPreview) {
-        videoPreview.src = url;
-
-        if (typingSfx){
-          videoPreview.onplay = ()=>{
-            try{
-              typingSfx.currentTime = 0;
-              typingSfx.loop = true;
-              typingSfx.play().catch(()=>{});
-            }catch{}
-          };
-          const stopTyping = ()=>{
-            try{
-              typingSfx.loop = false;
-              typingSfx.pause();
-              typingSfx.currentTime = 0;
-            }catch{}
-          };
-          videoPreview.onpause = stopTyping;
-          videoPreview.onended = stopTyping;
-        }
-      }
-      if (videoDownload) {
-        const ext = mimeType.includes("mp4") ? "mp4" : "webm";
-        videoDownload.href = url;
-        videoDownload.download = `whatf-clip.${ext}`;
-      }
-      if (videoWrap) videoWrap.style.display = "block";
-      if (videoNoteEl) videoNoteEl.textContent = T.videoReadyNote || "";
-    }catch(e){
-      console.error(e);
-      videoNotAvailable();
-    }finally{
-      videoBtn.disabled = false;
-      if (videoLoadingEl) videoLoadingEl.style.display = "none";
-    }
-  };
-
-  const fullAnswer = answerText;
-  const motivationsCleanBase = motivationsRaw || (t().motFallback || "");
-  let motivationText = motivationsCleanBase.replace(/<br\s*\/?>/gi," ").replace(/\s+/g," ").trim();
-  const MAX_MOT_CHARS = 420;
-  if(motivationText.length > MAX_MOT_CHARS){
-    motivationText = motivationText.slice(0, MAX_MOT_CHARS).trim() + "…";
-  }
-
-  const answerLen = fullAnswer.length;
-  const charsPerSecond = 22;
-  let totalDurationMs = Math.round((answerLen / charsPerSecond) * 1000);
-  totalDurationMs = Math.max(12000, Math.min(totalDurationMs, 28000));
-  const extraStillMs = 2000;
-  const start = performance.now();
-  const marginX = 60;
-  const maxWidth = width - marginX * 2;
-
-  const VIDEO_TEXT = {
-    it:{ title:"What?f",
-         subWtf:"⚡ What the F — Oracolo",
-         subWhif:"💡 What if — Oracolo",
-         q:"❓ Q:",
-         a:"✨ A:",
-         mot:"🧠 Esito & motivazioni",
-         footer:"✨ #whatf  ·  scarica e carica sui social" },
-    en:{ title:"What?f",
-         subWtf:"⚡ What the F — Oracle",
-         subWhif:"💡 What if — Oracle",
-         q:"❓ Q:",
-         a:"✨ A:",
-         mot:"🧠 Outcome & motivations",
-         footer:"✨ #whatf  ·  download and upload to social" },
-    es:{ title:"What?f",
-         subWtf:"⚡ What the F — Oráculo",
-         subWhif:"💡 What if — Oráculo",
-         q:"❓ P:",
-         a:"✨ R:",
-         mot:"🧠 Resultado y motivaciones",
-         footer:"✨ #whatf  ·  descarga y súbelo a redes" },
-    fr:{ title:"What?f",
-         subWtf:"⚡ What the F — Oracle",
-         subWhif:"💡 What if — Oracle",
-         q:"❓ Q :",
-         a:"✨ R :",
-         mot:"🧠 Issue & motivations",
-         footer:"✨ #whatf  ·  télécharge et poste sur les réseaux" },
-    de:{ title:"What?f",
-         subWtf:"⚡ What the F — Orakel",
-         subWhif:"💡 What if — Orakel",
-         q:"❓ F:",
-         a:"✨ A:",
-         mot:"🧠 Ergebnis & Begründung",
-         footer:"✨ #whatf  ·  herunterladen und in Social posten" }
-  };
-  const vt = VIDEO_TEXT[lang] || VIDEO_TEXT.it;
-
-  const LABEL_Q = vt.q;
-  const LABEL_A = vt.a;
-  const LABEL_M = vt.mot;
-  const titleText = vt.title;
-  const subText = style==='wtf' ? vt.subWtf : vt.subWhif;
-  const footerText = vt.footer;
-
-  const MOT_START_PROGRESS = 0.55;
-
-  function drawFrame(progress){
-    const grad = ctx.createLinearGradient(0,0,0,height);
-    grad.addColorStop(0,"#04070b");
-    grad.addColorStop(0.5, style==='wtf' ? "#122018" : "#101822");
-    grad.addColorStop(1,"#04070b");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0,0,width,height);
-
-    const radial = ctx.createRadialGradient(width/2, height*0.42, 80, width/2, height*0.42, 420);
-    radial.addColorStop(0,"rgba(255,236,1,.35)");
-    radial.addColorStop(1,"rgba(0,0,0,0)");
-    ctx.fillStyle = radial;
-    ctx.fillRect(0,0,width,height);
-
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 44px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillText(titleText, width/2, 90);
-
-    ctx.fillStyle = "#FFEC01";
-    ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillText(subText, width/2, 125);
-
-    const maxScroll = height * 0.38;
-    const scrollOffset = progress * maxScroll;
-    ctx.save();
-    ctx.translate(0, -scrollOffset);
-
-    const cardX = 40;
-    const cardY = 150;
-    const cardW = width - 80;
-    const cardH = 230;
-
-    ctx.save();
-    ctx.beginPath();
-    if (ctx.roundRect){
-      ctx.roundRect(cardX, cardY, cardW, cardH, 26);
-    } else {
-      ctx.rect(cardX, cardY, cardW, cardH);
-    }
-    ctx.fillStyle = "rgba(3,8,14,.92)";
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "rgba(255,236,1,.85)";
-    ctx.stroke();
-    ctx.restore();
-
-    ctx.textAlign = "left";
-    ctx.fillStyle = "#FFEC01";
-    ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillText(LABEL_Q, cardX + 26, cardY + 54);
-
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 32px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    let y = cardY + 96;
-    y = wrapAndDraw(ctx, domanda, cardX + 26, y, cardW - 52, 38);
-
-    y = cardY + cardH + 40;
-    ctx.fillStyle = "#FFEC01";
-    ctx.font = "600 24px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillText(LABEL_A, marginX, y);
-    y += 34;
-
-    const progressAnswer = Math.min(1, progress / MOT_START_PROGRESS);
-    const chars = Math.max(1, Math.floor(fullAnswer.length * progressAnswer));
-    const partial = fullAnswer.slice(0, chars);
-
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "26px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    const afterAnswerY = wrapAndDraw(ctx, partial, marginX, y, maxWidth, 34);
-
-    if (motivationText) {
-      let motProgress = 0;
-      if (progress > MOT_START_PROGRESS) {
-        motProgress = (progress - MOT_START_PROGRESS) / (1 - MOT_START_PROGRESS);
-        if (motProgress > 1) motProgress = 1;
-      }
-      if (motProgress > 0) {
-        let my = afterAnswerY + 30;
-        ctx.fillStyle = "#FFEC01";
-        ctx.font = "600 22px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-        ctx.fillText(LABEL_M, marginX, my);
-        my += 30;
-
-        const motChars = Math.max(1, Math.floor(motivationText.length * motProgress));
-        const motPartial = motivationText.slice(0, motChars);
-        ctx.fillStyle = "#FFFFFF";
-        ctx.font = "20px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-        wrapAndDraw(ctx, motPartial, marginX, my, maxWidth, 28);
-      }
-    }
-
-    ctx.restore();
-    const footerExtra = Math.min(scrollOffset * 0.20, 50);
-    ctx.font = "600 18px system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-    ctx.fillStyle = "rgba(255,255,255,.82)";
-    ctx.textAlign = "center";
-    ctx.fillText(footerText, width/2, height - 70 + footerExtra);
-  }
-
-  recorder.start();
-  function loop(ts){
-    const elapsed = ts - start;
-    const progress = Math.min(1, elapsed / totalDurationMs);
-    drawFrame(progress);
-    if (elapsed < totalDurationMs + extraStillMs) {
-      requestAnimationFrame(loop);
-    } else {
-      recorder.stop();
-    }
-  }
-  requestAnimationFrame(loop);
-}
-
-/* ==== SOCIAL OPEN (solo Android via intent, fallback web) ==== */
-function isAndroid(){
-  return /Android/i.test(navigator.userAgent || "");
-}
-
-function openIntent(androidIntentUrl, webFallbackUrl){
-  if (isAndroid()) {
-    window.location.href = androidIntentUrl;
-  } else if (webFallbackUrl) {
-    window.open(webFallbackUrl, "_blank");
-  } else {
-    videoNotAvailable("Funziona meglio da Android con le app installate.");
-  }
-}
-
-/* ==== Nav / lingua / share / save ==== */
-qs('#backBtn').onclick=()=> history.length > 1 ? history.back() : location.replace('index.html');
-qs('#homeBtn').onclick=()=> location.href='index.html';
-qs('#langSelect').onchange=()=>{
-  const v=qs('#langSelect').value;
-  LS.setItem('lang',v);
-  LS.setItem('lang_manual','1');
-  document.documentElement.lang=v;
-  lang=v;
-  applyUI(LS.getItem('domanda')||'');
-  updateCreditInfo();
-  oracleDeck = [];
-};
-
-qs('#shareBtn').onclick=async()=>{
-  const T=t();
-  const full=`What?f — ${style==='wtf'?(T.styleWTF):(T.styleWHF)}\n(${periodo})\n\nQ: ${LS.getItem('domanda')}\n\n${qs('#answer').textContent}`;
-  try{
-    if(navigator.share){ await navigator.share({title:"What?f",text:full}); }
-    else{
-      await navigator.clipboard.writeText(full);
-      const b=qs('#shareBtn'); b.textContent=T.copied; setTimeout(()=>b.textContent=T.share,1200);
-    }
-  }catch{}
-};
-qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
-if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
-if(videoBtn){ videoBtn.onclick = generateVideoClip; }
-
-/* pulsanti social Android */
-if(openTikTokBtn){
-  openTikTokBtn.onclick = ()=>{
-    openIntent(
-      "intent://tiktok#Intent;scheme=tiktok;package=com.zhiliaoapp.musically;end",
-      "https://www.tiktok.com/upload"
-    );
+  return {
+    lang: normLang,
+    slot: normSlot,
+    personality: normPers,
+    title,
+    text
   };
 }
-if(openInstaBtn){
-  openInstaBtn.onclick = ()=>{
-    openIntent(
-      "intent://instagram#Intent;scheme=instagram;package=com.instagram.android;end",
-      "https://www.instagram.com"
-    );
-  };
-}
-
-/* ============================
-   🔊 TEXT-TO-SPEECH RISPOSTA
-   ============================ */
-(function(){
-  const btn = document.getElementById("readAnswerBtn");
-  const answerEl = document.getElementById("answer");
-  const statusEl = document.getElementById("ttsStatus");
-
-  if(!btn || !answerEl || !statusEl) return;
-
-  if(!("speechSynthesis" in window)){
-    btn.disabled = true;
-    statusEl.textContent = t().ttsUnsupported || "";
-    return;
-  }
-
-  let speaking = false;
-  let utterance = null;
-
-  function currentLocale(){
-    const langCode = (document.documentElement.lang || "it").slice(0,2).toLowerCase();
-    const map = {
-      it:"it-IT",
-      en:"en-US",
-      es:"es-ES",
-      fr:"fr-FR",
-      de:"de-DE"
-    };
-    return map[langCode] || "it-IT";
-  }
-
-  function resetUI(){
-    speaking = false;
-    btn.textContent = (t().ttsBtn || "🔊");
-    statusEl.textContent = "";
-  }
-
-  btn.textContent = t().ttsBtn || "🔊";
-
-  btn.addEventListener("click",()=>{
-    const text = answerEl.innerText || answerEl.textContent || "";
-
-    if(!text.trim()){
-      statusEl.textContent = t().ttsNoAnswer || "";
-      return;
-    }
-
-    if(speaking){
-      window.speechSynthesis.cancel();
-      resetUI();
-      return;
-    }
-
-    utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = currentLocale();
-    utterance.rate = 1;
-
-    utterance.onstart = ()=>{
-      speaking = true;
-      btn.textContent = t().ttsBtnStop || "⏹ Stop";
-      statusEl.textContent = t().ttsPlaying || "";
-    };
-
-    utterance.onend = ()=>{
-      resetUI();
-    };
-
-    utterance.onerror = ()=>{
-      speaking = false;
-      btn.textContent = t().ttsBtn || "🔊";
-      statusEl.textContent = t().ttsError || "";
-    };
-
-    window.speechSynthesis.speak(utterance);
-  });
-})();
-
-/* ==== Avvio ==== */
-startFlow();
-</script>
-</body>
-</html>
