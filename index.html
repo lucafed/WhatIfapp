@@ -38,7 +38,7 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;    
       overflow-x:hidden;    
     }    
-    @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}    
+    @keyframes bgShift{0%{background-position:0% 30%}100%{background-position=100% 70%}}    
     @media (prefers-reduced-motion:no-preference){    
       body{animation:bgShift 18s ease-in-out infinite alternate}    
     }    
@@ -140,63 +140,49 @@
       display:none;max-width:680px;margin:0 auto;white-space:pre-wrap;    
     }
 
-    /* 🔬 Pulsanti test segnali */
-    .sig-btn{
-      appearance:none;
+    /* 🔔 Daily Voices */
+    .daily-voices-card{
+      max-width:520px;
+      margin:18px auto 6px;
+      padding:18px 16px 20px;
+      border-radius:20px;
+      background:linear-gradient(
+        180deg,
+        rgba(255,255,255,0.06),
+        rgba(255,255,255,0.02)
+      );
       border:1px solid var(--card-border);
-      background:#141c22;
-      color:#E6F2F5;
-      border-radius:10px;
-      padding:6px 8px;
-      font-size:11px;
-      font-weight:700;
-      width:100%;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+      backdrop-filter:blur(10px);
       text-align:left;
-      cursor:pointer;
     }
-    .sig-btn:active{
-      transform:translateY(1px);
-    }
-    .sig-section-title{
-      margin-top:6px;
-      margin-bottom:2px;
-      font-size:11px;
-      font-weight:800;
+    .daily-voices-card h3{
+      margin:0 0 6px;
+      font-size:14px;
+      letter-spacing:.4px;
       opacity:.9;
     }
-
-    /* card notifiche */
-    #notifications-cta{
-      max-width:720px;
-      background:var(--card);
-      border-radius:16px;
-      border:1px solid var(--card-border);
-      padding:14px 16px 12px;
-      text-align:left;
-      box-shadow:0 10px 26px var(--shadow);
+    .daily-voices-card .voice{
+      padding:12px 14px;
+      border-radius:14px;
+      margin-bottom:12px;
     }
-    #notifications-cta h2{
-      margin:0 0 6px;
-      font-size:16px;
+    .daily-voices-card .voice.whatif{
+      background:rgba(28,87,160,.18);
     }
-    #notifications-cta .sub{
-      margin:0 0 4px;
-      font-size:13px;
-      color:var(--muted);
+    .daily-voices-card .voice.wtf{
+      background:rgba(58,107,86,.22);
     }
-    #notifications-cta ul{
-      margin:4px 0 6px;
-      padding-left:18px;
+    .daily-voices-card p{
+      margin:0;
+      line-height:1.5;
+      font-size:15px;
+    }
+    .daily-note{
+      margin:12px 0 0;
       font-size:12px;
       color:var(--muted);
-    }
-    #notifications-cta li{
-      margin-bottom:2px;
-    }
-    #notifyBtn{
-      margin-top:6px;
-      width:100%;
-      max-width:260px;
+      text-align:center;
     }
   </style>  
 </head>
@@ -229,6 +215,35 @@
       <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.    
     </p>    
 
+    <!-- 🔔 Daily Voices Card -->
+    <section class="daily-voices-card" id="dailyVoices">
+      <div class="voice whatif">
+        <h3>What if</h3>
+        <p>
+          Tre piccoli spunti al giorno per rimettere a fuoco le cose.
+        </p>
+      </div>
+
+      <div class="voice wtf">
+        <h3>What the F</h3>
+        <p>
+          Tranquillo.<br>
+          Il collega qui te ne spara tre al giorno.<br>
+          Roba utile, eh.<br><br>
+          Poi vedi tu se continuare a far finta di niente.
+        </p>
+      </div>
+
+      <button class="cta" id="enableDailyVoices">
+        Attiva le frasi giornaliere
+      </button>
+
+      <p class="daily-note">
+        Mattino, pomeriggio e sera.  
+        Due voci. Una sola scelta: ignorarle… o no.
+      </p>
+    </section>
+
     <div class="group" id="periodGroup">    
       <button class="chip" data-key="periodo" data-val="past"   data-i18n="past">Passato</button>    
       <button class="chip" data-key="periodo" data-val="future" data-i18n="future">Futuro</button>    
@@ -238,30 +253,6 @@
       <button class="chip" data-key="stile" data-val="whatif" data-i18n="whatif">What if</button>    
       <button class="chip" data-key="stile" data-val="wtf"    data-i18n="wtf">What the F</button>    
     </div>    
-
-    <!-- 🔔 CTA NOTIFICHE GIORNALIERE -->
-    <section class="card" id="notifications-cta">
-      <h2>Vuoi davvero giocare con What?f ogni giorno?</h2>
-      <p class="sub">
-        Se attivi le notifiche ti mando io il “la”:
-      </p>
-      <ul class="small">
-        <li>🌅 Al mattino: una frase per impostare la giornata.</li>
-        <li>🌗 A metà giornata: un check-in sull’umore (quando vorrai).</li>
-        <li>🌙 La sera: una domanda per chiudere la giornata.</li>
-      </ul>
-      <p class="small">
-        Le notifiche sono <b>gratuite</b>.<br/>
-        I crediti ti servono solo se vuoi trasformare quelle frasi in vere domande all’oracolo.
-      </p>
-
-      <button class="cta" id="notifyBtn">
-        🔔 Attiva le notifiche giornaliere
-      </button>
-      <p class="small" style="opacity:.8;margin-top:6px;">
-        Niente spam: 1–3 notifiche al giorno, puoi disattivarle quando vuoi dalle impostazioni del telefono.
-      </p>
-    </section>
 
     <!-- CTA + Auth -->    
     <button id="primaryCta" class="cta">Entra con Google</button>
@@ -282,72 +273,6 @@
       <a class="info-btn" href="about.html" id="aboutLink"><span data-i18n="info">Info</span></a>    
     </div>    
   </footer>    
-
-  <!-- 🔔 Toggle e pannello test segnali (ora sempre visibile) -->
-  <button
-    id="signalTestToggle"
-    style="
-      position:fixed;
-      bottom:70px;
-      right:14px;
-      z-index:60;
-      border-radius:999px;
-      border:1px solid var(--card-border);
-      background:#141c22;
-      color:var(--fg);
-      padding:6px 10px;
-      font-size:11px;
-      font-weight:700;
-      opacity:.9;
-    "
-  >
-    ⏱ Frase del giorno (test)
-  </button>
-
-  <div
-    id="signalTestPanel"
-    style="
-      position:fixed;
-      bottom:118px;
-      right:14px;
-      z-index:59;
-      display:none;
-      max-width:260px;
-      background:var(--card);
-      border:1px solid var(--card-border);
-      border-radius:14px;
-      padding:10px 10px 8px;
-      box-shadow:0 10px 26px var(--shadow);
-      font-size:12px;
-      text-align:left;
-    "
-  >
-    <div style="font-weight:800;margin-bottom:4px;">Frasi del giorno (test)</div>
-
-    <div class="sig-section-title">☀️ Mattina</div>
-    <button class="sig-btn" data-signal="morning" data-phase="1" data-mood="ok">
-      What if · mattina (ok)
-    </button>
-    <button class="sig-btn" data-signal="morning" data-phase="2" data-mood="ok">
-      What the F · mattina (ok)
-    </button>
-
-    <div class="sig-section-title">🌤 Pomeriggio</div>
-    <button class="sig-btn" data-signal="afternoon" data-phase="1" data-mood="meh">
-      What if · pomeriggio (meh)
-    </button>
-    <button class="sig-btn" data-signal="afternoon" data-phase="2" data-mood="meh">
-      What the F · pomeriggio (meh)
-    </button>
-
-    <div class="sig-section-title">🌙 Sera</div>
-    <button class="sig-btn" data-signal="evening" data-phase="1" data-mood="tired">
-      What if · sera (tired)
-    </button>
-    <button class="sig-btn" data-signal="evening" data-phase="2" data-mood="wired">
-      What the F · sera (wired)
-    </button>
-  </div>
 
   <div id="debug"></div>    
 
@@ -816,192 +741,97 @@
     logoutBtn.onclick = async ()=>{ await signOut(auth); };
   </script>    
 
-<script>
-  (function(){
-    const title  = document.getElementById('appTitle');
-    const pastBtn = document.querySelector('button[data-val="past"]');
-    if(!title || !pastBtn) return;
-    let tapTitle=0, tapPast=0, stage=0, timer=null;
-    function reset(){
-      tapTitle=0; tapPast=0; stage=0;
-      if(timer) clearTimeout(timer); timer=null;
-      pastBtn.classList.remove("unlocking");
-    }
-    function flash(){
-      const f=document.createElement("div");
-      f.style.position="fixed";f.style.inset="0";
-      f.style.background="rgba(255,255,255,0.05)";
-      f.style.backdropFilter="blur(2px)";
-      f.style.transition="opacity .6s";f.style.opacity="1";
-      f.style.zIndex="9999";
-      document.body.appendChild(f);
-      setTimeout(()=>f.style.opacity="0",150);
-      setTimeout(()=>f.remove(),800);
-    }
-
-    // 🔐 Verifica il PIN con /api/admin-token
-    async function success(){
-      reset();
-      const pin = prompt("PIN amministratore:");
-      if (!pin) return;
-
-      try {
-        const resp = await fetch("/api/admin-token", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "admin-secret": pin
-          },
-          body: JSON.stringify({ pin }),
-          credentials: "include"
-        });
-
-        const data = await resp.json().catch(() => ({}));
-
-        if (!resp.ok || !data.ok) {
-          alert("PIN errato");
-          return;
-        }
-
-        try {
-          localStorage.setItem("admin_token", data.token);
-        } catch (e) {}
-
-        location.href = "admin.html";
-      } catch (e) {
-        console.error("Errore login admin", e);
-        alert("Errore durante la verifica del PIN. Controlla la connessione e riprova.");
-      }
-    }
-
-    title.addEventListener('click', ()=>{
-      if(++tapTitle>=3){
-        stage=1; tapTitle=0; flash();
-        pastBtn.classList.add("unlocking");
-        setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);
-      }
-      if(timer) clearTimeout(timer);
-      timer=setTimeout(reset,2000);
-    });
-    pastBtn.addEventListener('click', ()=>{
-      if(stage!==1) return;
-      if(++tapPast>=5) success();
-      if(timer) clearTimeout(timer);
-      timer=setTimeout(reset,2500);
-    });
-  })();
-
-  if("serviceWorker" in navigator){    
-    window.addEventListener("load", ()=>{    
-      navigator.serviceWorker.register("/sw.js").catch(()=>{});    
-    });    
-  }
-
-  // 🔔 Pannello test segnali: SEMPRE visibile, scrive whatif_request e va su fifth.html
-  (function(){
-    try{
-      const toggle = document.getElementById('signalTestToggle');
-      const panel  = document.getElementById('signalTestPanel');
-      if(!toggle || !panel) return;
-
-      // sempre visibile
-      toggle.style.display = 'inline-flex';
-
-      toggle.addEventListener('click', ()=>{
-        const open = panel.style.display === 'block';
-        panel.style.display = open ? 'none' : 'block';
-      });
-
-      panel.addEventListener('click', (e)=>{
-        const btn = e.target.closest('.sig-btn');
-        if(!btn) return;
-
-        const slot  = btn.dataset.signal || 'morning';      // "morning" | "afternoon" | "evening"
-        const phase = parseInt(btn.dataset.phase || '1', 10) || 1;
-        const mood  = btn.dataset.mood || 'default';
-
-        const L = (window.getCurrentLang && window.getCurrentLang()) || 'it';
-        const moodsLang = (window.MOODS && window.MOODS[L]) || (window.MOODS && window.MOODS.it) || {};
-        const slotObj = moodsLang[slot] || {};
-        const entry = slotObj[mood] || slotObj.default || null;
-
-        let domanda = entry && entry.q;
-        let clarification = entry && entry.clarification;
-        if(!domanda){
-          domanda = (L === 'en')
-            ? "Give me a short, realistic daily scenario to reset my day."
-            : "Dammi uno scenario giornaliero sintetico e realistico per rimettere in carreggiata la giornata.";
-        }
-        clarification = clarification || "";
-
-        // prefs stile/periodo
-        let prefsRaw = localStorage.getItem('whatif_prefs') || '{}';
-        let prefs;
-        try{ prefs = JSON.parse(prefsRaw) || {}; }catch{ prefs = {}; }
-
-        let stile = prefs.stile || (phase === 2 ? 'wtf' : 'whatif');
-        let periodo = prefs.periodo || 'future';
-
-        prefs.stile = stile;
-        prefs.periodo = periodo;
-        localStorage.setItem('whatif_prefs', JSON.stringify(prefs));
-
-        try{
-          localStorage.setItem('domanda', domanda);
-          const req = {
-            source: "signal",
-            domanda,
-            clarification,
-            lang: L,
-            stile,
-            periodo,
-            micro: {
-              // 👇 questi campi sono quelli che /api/ask.js legge per i segnali
-              src: "signal",
-              slot: slot,        // usato da normSignalSlot(...)
-              time: slot,
-              timeOfDay: slot,
-              signal: slot,      // extra, non dà fastidio
-
-              phase,
-              mood,
-              ts: Date.now()
-            }
-          };
-          localStorage.setItem('whatif_request', JSON.stringify(req));
-        }catch(err){
-          console.warn("cannot save signal request", err);
-        }
-
-        location.href = "fifth.html";
-      });
-    }catch(e){
-      console.warn('signal test panel error', e);
-    }
-  })();
-      </script>
-
-  <!-- 🔔 LOGICA BOTTONE NOTIFICHE (solo UX, salva preferenza) -->
   <script>
     (function(){
-      const btn = document.getElementById('notifyBtn');
-      if(!btn) return;
-
-      const already = localStorage.getItem('whatif_notify_enabled') === '1';
-      if(already){
-        btn.textContent = "✅ Notifiche attive";
-        btn.disabled = true;
+      const title  = document.getElementById('appTitle');
+      const pastBtn = document.querySelector('button[data-val="past"]');
+      if(!title || !pastBtn) return;
+      let tapTitle=0, tapPast=0, stage=0, timer=null;
+      function reset(){
+        tapTitle=0; tapPast=0; stage=0;
+        if(timer) clearTimeout(timer); timer=null;
+        pastBtn.classList.remove("unlocking");
+      }
+      function flash(){
+        const f=document.createElement("div");
+        f.style.position="fixed";f.style.inset="0";
+        f.style.background="rgba(255,255,255,0.05)";
+        f.style.backdropFilter="blur(2px)";
+        f.style.transition="opacity .6s";f.style.opacity="1";
+        f.style.zIndex="9999";
+        document.body.appendChild(f);
+        setTimeout(()=>f.style.opacity="0",150);
+        setTimeout(()=>f.remove(),800);
       }
 
+      // 🔐 Verifica il PIN con /api/admin-token
+      async function success(){
+        reset();
+        const pin = prompt("PIN amministratore:");
+        if (!pin) return;
+
+        try {
+          const resp = await fetch("/api/admin-token", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "admin-secret": pin
+            },
+            body: JSON.stringify({ pin }),
+            credentials: "include"
+          });
+
+          const data = await resp.json().catch(() => ({}));
+
+          if (!resp.ok || !data.ok) {
+            alert("PIN errato");
+            return;
+          }
+
+          try {
+            localStorage.setItem("admin_token", data.token);
+          } catch (e) {}
+
+          location.href = "admin.html";
+        } catch (e) {
+          console.error("Errore login admin", e);
+          alert("Errore durante la verifica del PIN. Controlla la connessione e riprova.");
+        }
+      }
+
+      title.addEventListener('click', ()=>{
+        if(++tapTitle>=3){
+          stage=1; tapTitle=0; flash();
+          pastBtn.classList.add("unlocking");
+          setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);
+        }
+        if(timer) clearTimeout(timer);
+        timer=setTimeout(reset,2000);
+      });
+      pastBtn.addEventListener('click', ()=>{
+        if(stage!==1) return;
+        if(++tapPast>=5) success();
+        if(timer) clearTimeout(timer);
+        timer=setTimeout(reset,2500);
+      });
+    })();
+
+    if("serviceWorker" in navigator){    
+      window.addEventListener("load", ()=>{    
+        navigator.serviceWorker.register("/sw.js").catch(()=>{});    
+      });    
+    }
+
+    // 🔔 CTA frasi giornaliere → avvia flusso domanda (per ora)
+    (function(){
+      const btn = document.getElementById('enableDailyVoices');
+      if(!btn) return;
       btn.addEventListener('click', ()=>{
-        try{
-          localStorage.setItem('whatif_notify_enabled','1');
-        }catch(e){}
-        btn.textContent = "✅ Notifiche attive";
-        btn.disabled = true;
+        // in futuro qui collegheremo le vere notifiche push
+        // per ora: porta l’utente nel flusso naturale dell’app
+        location.href = "fourth.html?from=daily";
       });
     })();
   </script>
-
 </body>
 </html>
