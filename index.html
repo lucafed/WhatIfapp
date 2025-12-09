@@ -896,6 +896,15 @@
             Notification.requestPermission().catch(()=>{});
           }
         }catch{}
+
+        // 👉 aggancio vero alla registrazione FCM
+        try{
+          if (window.handleDailySignalsAccept) {
+            window.handleDailySignalsAccept();
+          }
+        }catch(e){
+          console.warn("handleDailySignalsAccept error", e);
+        }
       });
       btnNo.addEventListener('click', ()=>{
         setChoice('rejected');
@@ -1240,6 +1249,85 @@
       console.warn('signal test panel error', e);
     }
   })();
-      </script>
+  </script>
+
+  <!-- 🔔 Firebase Messaging: richiesta token + registrazione al backend -->
+  <script type="module">
+    import { messaging, getToken, onMessage } from "./firebase.init.js";
+
+    // 🔑 chiave pubblica FCM (VAPID) che mi hai mandato
+    const VAPID_KEY = "BEoMbKJz69nMPuZJnyqvWoL97ff6sEttr_pc1qiEaFbh2COR7dmHGMa7RmFLPip_gMXQJzVN7fx297mSdZDc1Ac";
+
+    async function registerFcmToken() {
+      try {
+        if (!("Notification" in window)) {
+          console.warn("Notification API non supportata");
+          return;
+        }
+
+        // Se non è ancora stato dato il permesso, chiedilo
+        if (Notification.permission === "default") {
+          const perm = await Notification.requestPermission();
+          if (perm !== "granted") {
+            console.warn("Permesso notifiche negato");
+            return;
+          }
+        } else if (Notification.permission !== "granted") {
+          console.warn("Permesso notifiche non concesso:", Notification.permission);
+          return;
+        }
+
+        // Chiede il token FCM
+        const token = await getToken(messaging, {
+          vapidKey: VAPID_KEY,
+        });
+
+        if (!token) {
+          console.warn("Nessun token FCM ricevuto");
+          return;
+        }
+
+        console.log("✅ FCM token:", token);
+
+        // Manda il token al backend (cloud function / api)
+        try {
+          await fetch("/api/push/register", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({
+              token,
+              // Puoi aggiungere info utente se servono lato server
+              ts: Date.now(),
+            }),
+          });
+          console.log("✅ Token registrato su /api/push/register");
+        } catch (e) {
+          console.error("Errore nel registrare il token al backend:", e);
+        }
+      } catch (e) {
+        console.error("Errore durante registerFcmToken:", e);
+      }
+    }
+
+    // 👉 chiamata dal banner quando l'utente clicca "Attiva le frasi del giorno"
+    window.handleDailySignalsAccept = registerFcmToken;
+
+    // Se ha già accettato in passato, prova a registrare il token al load
+    try {
+      const choice = localStorage.getItem("dailySignalsChoice");
+      if (choice === "accepted") {
+        registerFcmToken().catch(()=>{});
+      }
+    } catch {}
+
+    // Messaggi ricevuti mentre la pagina è aperta (foreground)
+    onMessage(messaging, (payload) => {
+      console.log("[FCM] Messaggio in foreground:", payload);
+      // Per ora solo log. In futuro possiamo mostrare un toast in pagina.
+    });
+  </script>
 </body>
-    </html>
+</html>
