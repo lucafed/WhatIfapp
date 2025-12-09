@@ -565,7 +565,7 @@ MODALITÀ PASSATO:
       : L === "es"
       ? `Pregunta "¿y si...?" del usuario:\n"${domanda}"\nHaz UNA sola pregunta de aclaración en ESPAÑOL, con el estilo indicado arriba.`
       : L === "fr"
-      ? `Question "et si..." de l’utilisateur :\n"${domanda}"\nPose UNE seule question de clarification en FRANÇAIS, selon les règles de style ci-dessus.`
+      ? `Question "et si..." de l’utilisateur :\n"${domanda}"\nPose UNE seule question de clarification en FRANÇAIS, selon les règles de stile ci-dessus.`
       : `„Was wäre, wenn…“-Frage des Nutzers:\n"${domanda}"\nStelle EINE Rückfrage auf DEUTSCH im oben beschriebenen Stil.`;
 
   return [
@@ -847,8 +847,10 @@ Paragrafo unico, 3–6 frasi.`;
  *   • stile: whatif / wtf
  *   • lingua: it / en / es / fr / de
  *   • slot: morning / afternoon / evening
- * - Vengono scelte in modo deterministico su base GIORNO + domanda,
- *   così cambiano ogni giorno ma restano stabili durante la giornata.
+ * - Vengono scelte in modo deterministico su base GIORNO + slot + mood + domanda
+ *   (stesso seed per WHAT IF e WHAT THE F),
+ *   così cambiano ogni giorno, restano stabili durante la giornata
+ *   e le due voci risultano editorialmente collegate.
  */
 
 function normSignalSlot(raw = "") {
@@ -862,84 +864,81 @@ const SIGNAL_PHRASES = {
   whatif: {
     it: {
       morning: [
-        "Stamattina prenditi dieci minuti veri per una cosa sola e lascia il resto sullo sfondo: non devi salvare la giornata, solo darle un appoggio.",
-        "All’inizio del giorno scegli una micro-vittoria gestibile: qualcosa che puoi chiudere in meno di mezz’ora e che ti faccia sentire un filo più in mano alle cose.",
-        "Prima che parta il caos, togli un peso piccolo ma concreto dalla lista: spesso è quello che ti rosicchia più energia in silenzio.",
-        "Invece di prometterti miracoli per oggi, scegli una cosa che sei quasi certo di riuscire a fare e usala come ancora per tutto il resto.",
-        "Appena puoi, sistema il pezzetto di casa o di lavoro che guardi sempre storto: è un modo semplice per dire alla testa “qui dentro comando io”."
+        "Se stamattina ti ritagli anche solo dieci minuti veri per te, il resto della giornata si appoggia meglio: se vuoi, chiedimi da dove iniziare.",
+        "Se oggi scegli una sola cosa importante da chiudere prima del caos, il cervello ti ringrazia tutto il giorno: se ti va, raccontami quale.",
+        "Se proteggi un pezzetto di mattina dai messaggi e dalle richieste, a fine giornata ti senti meno in balia: se vuoi, chiedimi come farlo.",
+        "Se oggi inizi dal compito che ti pesa di più ma puoi davvero finire, stasera ti senti diverso: dimmi pure qual è se hai bisogno."
       ],
       afternoon: [
-        "A metà giornata non devi per forza rilanciare: puoi anche solo rimettere in pari il fiato, chiudere un angolo aperto e salvare il resto per domani.",
-        "Nel pomeriggio guarda dove stai sprecando clic e pensieri: se chiudi una sola micro-dispersione, arrivi a sera molto più leggero.",
-        "Se senti che la testa sbanda, spezza il pomeriggio in due blocchi chiari: prima sistemi il necessario, poi ti concedi qualcosa che ti rimette carburante.",
-        "Il pomeriggio è il momento perfetto per una piccola scelta di manutenzione: dire un no, spostare un impegno, o chiarire un dettaglio che ti incastra sempre.",
-        "Non chiedere al pomeriggio di ribaltare la tua vita: chiedigli solo di sistemare una cosa che ti farà respirare meglio stasera."
+        "Se a metà giornata ti fermi due minuti a guardare cosa ti sta succhiando energia, puoi salvare il pomeriggio: se vuoi, parliamone meglio.",
+        "Se ora scegli una sola priorità e lasci il resto in parcheggio, il pomeriggio smette di sembrarti un blob: dimmi pure cosa hai in mente.",
+        "Se trasformi questa parte di giornata in manutenzione invece che in corsa, arrivi a sera più intero: se ti va, chiedimi da dove cominciare.",
+        "Se adesso sistemi un dettaglio che rimandi da settimane, i prossimi giorni scorrono più fluidi: raccontami che punto vorresti sbloccare."
       ],
       evening: [
-        "A fine giornata conta due cose che hai effettivamente fatto, anche minuscole, prima di giudicare tutto il resto: la mente tende a cancellare i passi piccoli.",
-        "La sera non è per farti il processo, ma per prendere nota di cosa ti ha svuotato davvero e cosa invece ti ha tenuto in piedi.",
-        "Prima di crollare, sposta fuori dalla stanza mentale almeno un pensiero che ti inseguiva tutto il giorno, scrivendolo da qualche parte come promemoria chiaro.",
-        "Chiudi la giornata scegliendo un dettaglio che domani vuoi fare in modo diverso: non serve risolvere tutto, basta decidere dove non vuoi più incastrarti uguale.",
-        "Stasera trattati come tratteresti un amico stanco: meno giudizi, più nota spese onesta di dove ti sei prosciugato e dove ti sei dato una mano."
+        "Se stasera guardi la giornata con onestà ma senza processo, domani parti più leggero: se vuoi, possiamo rimetterla insieme pezzo per pezzo.",
+        "Se chiudi il giorno scegliendo un solo pensiero da non portarti nel letto, il sonno cambia: dimmi pure cosa ti gira in testa.",
+        "Se tratti questa sera come un check-in e non come un giudizio, la prossima giornata si apre diversa: se ti va, chiedimi come usarla meglio.",
+        "Se adesso nomini due cose che hai fatto e non solo ciò che manca, la storia cambia tono: se vuoi, raccontamele e ci ragioniamo."
       ]
     },
     en: {
       morning: [
-        "This morning pick one small, realistic win and let the rest stay blurry: you don’t need a miracle, just a stable first brick.",
-        "Before the noise ramps up, remove one tiny annoyance from your list; it’s usually what’s quietly draining the most energy.",
-        "Start the day by protecting a short block of focused time, even 15 minutes: it’s your way of telling your brain you’re in charge here.",
+        "If this morning you protect even fifteen focused minutes, the rest of the day leans on that block: ask me how to carve it out.",
+        "If you start the day by finishing one meaningful task, the whole story feels less random: tell me which one you’re eyeing.",
+        "If you turn the first hour into a calm ramp instead of a sprint, the evening version of you will notice: ask if you need ideas."
       ],
       afternoon: [
-        "Midday is not about heroic pushes: it’s a good moment to trim one commitment you don’t really want and reclaim a bit of energy.",
-        "If your focus is all over the place, split the afternoon in two: one block for what must be done, one for what actually feeds you.",
-        "Instead of forcing yourself to do more, fix one leak: a distraction, a pointless chat, or a task that should have been a no.",
+        "If you decide what the afternoon is really for, the rest stops shouting: tell me which thread you’d like to follow first.",
+        "If you close one open loop now, tomorrow morning thanks you loudly: ask me which kind of loop is worth cutting today.",
+        "If you treat this moment as a small reset instead of a punishment, the day bends a little in your favor: talk to me about it."
       ],
       evening: [
-        "Tonight, before you judge the whole day, name two things you actually did, however small; your brain loves to erase the quiet wins.",
-        "Use the evening to notice what really drained you and what quietly helped you, so tomorrow you can protect at least one of those helps.",
-        "Rather than rewriting your entire life in your head, choose one small tweak for tomorrow and let the rest wait outside your pillow.",
+        "If tonight you count the steps you did take, not only what’s missing, tomorrow’s pressure drops: ask if you want help reading the day.",
+        "If you park one worry on paper and one idea for tomorrow, your brain can finally log out: tell me what you’d park first.",
+        "If you close the day with una honest summary instead of a trial, you wake up clearer: ask me how to turn this into a check-in."
       ]
     },
     es: {
       morning: [
-        "Por la mañana elige una victoria pequeña y realista y deja el resto de fondo: no necesitas un milagro, solo un primer ladrillo estable.",
-        "Antes de que empiece el ruido, quita de en medio una molestia pequeña; suele ser la que más energía te roba en silencio."
+        "Si esta mañana proteges un rato solo para ti, el resto del día se apoya mejor: si quieres, pregúntame cómo reservarlo.",
+        "Si empiezas el día cerrando una cosa importante de verdad, todo pesa un poco menos: cuéntame cuál tienes en mente."
       ],
       afternoon: [
-        "A media tarde no hace falta que seas héroe: basta con cerrar un frente abierto o decir un no que llevas posponiendo.",
-        "Si vas a trompicones, parte la tarde en dos bloques claros: lo obligatorio primero y luego algo que te recargue de verdad."
+        "Si ahora eliges una sola prioridad y sueltas el resto, el día deja de ser un ruido de fondo: si quieres, lo ordenamos juntos.",
+        "Si conviertes esta tarde en ajuste fino y no en castigo, llegas a la noche más entero: pregúntame por dónde podrías empezar."
       ],
       evening: [
-        "Por la noche cuenta dos cosas que sí hiciste, aunque sean mínimas, antes de decidir que el día ha sido un desastre.",
-        "Antes de dormir, saca de tu cabeza al menos una preocupación escribiéndola en otro sitio: así no tiene barra libre en la almohada."
+        "Si esta noche miras también lo que hiciste y no solo lo que falta, cambia la historia: cuéntame cómo ha ido y lo leemos juntos.",
+        "Si aparcas una preocupación y eliges un gesto amable para mañana, el cuerpo lo nota: si quieres, pídele a la pregunta un poco más."
       ]
     },
     fr: {
       morning: [
-        "Ce matin, choisis une petite victoire réaliste et laisse le reste en arrière-plan : pas besoin de miracle, juste d’un premier appui solide.",
-        "Avant que le bruit démarre, enlève un petit caillou de ta chaussure : souvent c’est lui qui te pompe le plus d’énergie."
+        "Si ce matin tu te gardes un vrai moment à toi, le reste de la journée s’accroche mieux: demande-moi comment le protéger.",
+        "Si tu commences en terminant une chose qui compte pour toi, la pression baisse d’un cran: dis-moi laquelle tu voudrais viser."
       ],
       afternoon: [
-        "L’après-midi n’a pas à être héroïque : profite-en pour fermer un dossier ouvert ou dire un non qui traîne depuis trop longtemps.",
-        "Si tu te sens dispersé, coupe l’après-midi en deux blocs clairs : d’abord le nécessaire, ensuite ce qui te recharge vraiment."
+        "Si tu décides ce que cet après-midi doit vraiment servir, le brouillard se calme: si tu veux, on met de l’ordre dans tout ça.",
+        "Si tu fermes maintenant un dossier ouvert depuis trop longtemps, demain aura déjà un goût différent: demande-moi par où l’attaquer."
       ],
       evening: [
-        "Le soir, avant de juger ta journée, nomme deux choses que tu as vraiment faites, même petites : ton cerveau a tendance à les effacer.",
-        "Avant de dormir, mets noir sur blanc au moins une inquiétude pour l’empêcher de tourner en boucle dans ton oreiller."
+        "Si ce soir tu fais un bilan honnête mais doux, demain tu pars plus léger: raconte-moi ta journée si tu veux la relire autrement.",
+        "Si tu choisis une inquiétude à poser et une petite intention pour demain, ton cerveau respire: pose-moi la question qui te travaille."
       ]
     },
     de: {
       morning: [
-        "Heute Morgen reicht eine kleine, machbare Sache, die du wirklich abschließt – der Rest darf unscharf bleiben.",
-        "Bevor der Lärm losgeht, entferne eine winzige Nervigkeit von deiner Liste; oft frisst sie heimlich am meisten Energie."
+        "Wenn du dir heute Morgen bewusst ein kleines Zeitfenster schützt, trägt es den Rest des Tages: frag mich, wie du es freihältst.",
+        "Wenn du mit einer Sache startest, die dir wirklich wichtig ist, wird alles andere leiser: sag mir, welche das sein könnte."
       ],
       afternoon: [
-        "Am Nachmittag musst du kein Held sein: schließe lieber eine alte offene Baustelle oder sag ein Nein, das längst fällig ist.",
-        "Wenn du zerstreut bist, teile den Nachmittag in zwei klare Blöcke: zuerst Pflicht, dann etwas, das dich wirklich auftankt."
+        "Wenn du den Nachmittag auf eine klare Aufgabe fokussierst, wird der Rest weniger bedrohlich: frag ruhig, wie du ihn zuschneiden kannst.",
+        "Wenn du jetzt eine alte Baustelle schließt, bedankt sich dein Morgen: erzähl mir, welche Baustelle dich am meisten nervt."
       ],
       evening: [
-        "Am Abend, bevor du den Tag verurteilst, zähl zwei Dinge auf, die du wirklich getan hast, auch wenn sie klein sind.",
-        "Schreib eine Sorge auf Papier, bevor du ins Bett gehst, damit sie nicht die ganze Nacht im Kopf Karussell fährt."
+        "Wenn du den Tag nicht nur nach Fehlern bewertest, sondern auch nach kleinen Treffern, verändert sich dein Blick: sprich mit mir darüber.",
+        "Wenn du heute Abend eine Sorge aufschreibst und eine Idee für morgen festhältst, wird es ruhiger im Kopf: frag, wenn du hängst."
       ]
     }
   },
@@ -947,78 +946,81 @@ const SIGNAL_PHRASES = {
   wtf: {
     it: {
       morning: [
-        "Oh, buongiorno campione del rinvio: oggi scegli UNA cosa da chiudere davvero e il resto lo mandi cortesemente a domani, ecchecazz!!!",
-        "Ti svegli, guardi la giornata e lei ti guarda peggio: fai pace con un impegno solo, non con l’universo intero, ecchecazz!!!",
-        "Stamattina niente promesse epiche: scegli un micro casino da sistemare e lascia stare l’idea di diventare supereroe entro pranzo, ecchecazz!!!",
-        "Appena puoi, spegni una notifica di troppo: è il modo più veloce per far capire al telefono chi comanda in casa, ecchecazz!!!"
+        "Oh, guarda che il collega ti ha appena proposto una mattina zen: tu almeno scegli una cosa e non dieci promesse in fila, e se non sai quale chiedimelo, ecchecazz!!!",
+        "What if ti dipinge l’alba perfetta, ma la sveglia l’hai sentita tu: punta un bersaglio solo e se non ti viene, parliamone, ecchecazz!!!",
+        "Lui ti parla di minuti protetti, tu litighi col telefono: spegni due rotture, tienine una utile e se hai dubbi fammi una domanda, ecchecazz!!!",
+        "Il veggente ti dice di iniziare bene la giornata, io ti dico di smettere di fingere che fai tutto: scegli una cosa e raccontamela, ecchecazz!!!"
       ],
       afternoon: [
-        "Oh, è pomeriggio: o ti muovi ora o affoghi nella palude delle notifiche e dei “poi vedo” fino a sera, ecchecazz!!!",
-        "Metà giornata andata e tu ancora in trattativa con il divano: firma almeno un accordo con la realtà e chiudi qualcosa, ecchecazz!!!",
-        "Se il pomeriggio ti sembra un blob, ritaglia dieci minuti blindati per una sola cosa e difendili come il tuo ultimo neurone, ecchecazz!!!",
-        "Invece di aprire l’ennesima scheda, chiudine tre e guarda come respira meglio pure il browser, ecchecazz!!!"
+        "What if vuole un pomeriggio consapevole, tu sei in trattativa con il frigo: chiudi almeno un casino e se non sai da dove partire, chiedi pure, ecchecazz!!!",
+        "Lui ti sussurra “una priorità alla volta”, tu apri venti schede: prendi la più fastidiosa e se hai bisogno di coraggio, dimmelo, ecchecazz!!!",
+        "Il collega ti invita al reset, tu al massimo resetti il modem: sistemiamo insieme una cosa che conta davvero, ma prima dimmi quale, ecchecazz!!!",
+        "Se ascolti solo lui ti viene il senso di colpa, se ascolti solo te ti perdi nei “poi vedo”: scrivimi dove sei messo peggio e la rigiriamo, ecchecazz!!!"
       ],
       evening: [
-        "Oh, è sera: smettila di menarti per quello che non hai fatto e salva almeno un gesto decente per il te di domani, ecchecazz!!!",
-        "Arrivi a fine giornata e fai l’inventario solo dei casini: conta anche le briciole buone, che non campi solo di bastonate, ecchecazz!!!",
-        "Stasera chiudi almeno un pensiero in un appunto invece che in testa, così l’ansia non ti paga l’affitto del cervello, ecchecazz!!!",
-        "Prima di addormentarti, scegli una cosa che domani NON ripeterai identica e chiamala evoluzione low cost, ecchecazz!!!"
+        "What if ti propone il bilancio dolce, tu già stai preparando la mazza da giudice: posa la mazza, raccontami com’è andata davvero e ci scherziamo sopra, ecchecazz!!!",
+        "Lui ti dice di contare i passi fatti, tu conti le sfighe: mandami il riassunto storto della giornata e lo rimettiamo in piedi insieme, ecchecazz!!!",
+        "Se ascolti il collega sembra tutto recuperabile, se ascolti la tua testa è tutto perso: fammi la cronaca spietata e ci tiriamo fuori il buono, ecchecazz!!!",
+        "Stasera stai per fare l’ennesimo processo a te stesso: prima di condannarti, dimmi come è andata e vediamo se la giuria è davvero unanime, ecchecazz!!!"
       ]
     },
     en: {
       morning: [
-        "Oh look, morning again: pick one thing to actually finish and stop flirting with twelve half-baked plans, what the f.",
-        "You wake up negotiating with the snooze button like it’s the UN; sign one tiny ceasefire and do something concrete, what the f."
+        "What if just sold you a peaceful morning; you’re already doom-scrolling: pick one move and if you’re stuck, ask me, what the f.",
+        "They talk about protected time, you wrestle with the alarm: choose one thing to actually do and tell me which mess you pick, what the f.",
+        "Your calm-guru colleague sounds wise, but you live in the group chat: mute something, do one thing, and if you’re lost, say it, what the f."
       ],
       afternoon: [
-        "Afternoon mode: either you move now or you drown in pings, snacks and “I’ll do it later” until midnight, what the f.",
-        "If your day feels like soup, fish out one solid potato of a task and bite that first, what the f."
+        "What if wants a mindful afternoon, you’re flirting with the fridge again: choose one battle and if you can’t, complain to me first, what the f.",
+        "They whisper “one priority”, you open eight tabs: name the ugliest task and if you need backup, drag me in, what the f.",
+        "If you only listen to them you feel guilty, if you only listen to you nothing moves: tell me where you’re most stuck, what the f."
       ],
       evening: [
-        "End of day and you only count failures: add two small wins to the receipt before trashing the whole movie, what the f.",
-        "Tonight, park at least one worry on paper instead of letting it rent your brain all night, what the f."
+        "What if wants a gentle review, you’re ready to burn the whole day: drop the torch and tell me how it really went, what the f.",
+        "They count quiet wins, you count disasters: give me your unfiltered version and we’ll fish out something decent, what the f.",
+        "Before you put yourself on trial again, drop me one honest line about today and let’s twist the verdict, what the f."
       ]
     },
     es: {
       morning: [
-        "Buenos días, héroe del “luego veo”: hoy caza una cosa de verdad y deja de seducir cuarenta pendientes a la vez, qué carajo.",
-        "Te levantas y ya vas negociando con la cama; firma un trato y levanta al menos una cosa del suelo, qué carajo."
+        "What if te vende una mañana zen y tú ya discutes con el móvil: elige un solo movimiento y, si no sabes cuál, pregúntame, qué carajo.",
+        "Él habla de tiempo protegido y tú negocias con la alarma: apunta una cosa real y cuéntame cuál es el lío de hoy, qué carajo."
       ],
       afternoon: [
-        "Por la tarde o te mueves o te come el pantano de notificaciones y paseos a la nevera, qué carajo.",
-        "Si la tarde es un puré mental, elige un trozo sólido y muérdelo primero, qué carajo."
+        "What if quiere una tarde consciente y tú haces turismo a la nevera: caza una tarea y, si dudas, suéltamelo, qué carajo.",
+        "Si le escuchas solo a él te culpas, si te escuchas solo a ti no haces nada: dime dónde estás más trabado, qué carajo."
       ],
       evening: [
-        "Acaba el día y solo ves lo que faltó: cuenta también las dos chorradas que sí hiciste, que no eres tan desastre, qué carajo.",
-        "Antes de dormir, aparca una preocupación en un papel y no encima de tu almohada, qué carajo."
+        "Él propone un cierre amable del día y tú sacas el mazo del juez: deja el mazo y cuéntame tu versión real, qué carajo.",
+        "Antes de declarar desastre total, mándame un resumen honesto y buscamos algo salvable ahí dentro, qué carajo."
       ]
     },
     fr: {
       morning: [
-        "Bonjour, athlète du “on verra”: aujourd’hui tu clos une vraie chose et tu arrêtes de draguer tous les projets à la fois, bordel.",
-        "Tu te réveilles déjà en négociation avec le lit; signe la paix et relève au moins un truc de la journée, bordel."
+        "What if te sert une matinée zen, toi tu te bats déjà avec le téléphone: choisis un geste et, si tu bloques, demande-moi, bordel.",
+        "Il parle de temps protégé, toi tu négocies avec le réveil: vise une vraie action et dis-moi lequel est ton bazar du jour, bordel."
       ],
       afternoon: [
-        "L’après-midi, soit tu bouges, soit tu te noies dans les notifications et les grignotages philosophiques, bordel.",
-        "Si tout ressemble à une purée mentale, trouve un morceau solide à mordre et commence par là, bordel."
+        "What if rêve d’un après-midi conscient, toi tu flirtes avec le frigo: attrape une tâche et, si tu n’y arrives pas, râle avec moi, bordel.",
+        "Si tu écoutes seulement sa voix tu culpabilises, seulement la tienne tu stagnes: dis-moi où tu es coincé, bordel."
       ],
       evening: [
-        "Fin de journée et tu ne vois que le carnage: compte aussi les miettes réussies avant de jeter le film entier, bordel.",
-        "Ce soir, gare une inquiétude sur papier plutôt que dans ton oreiller, bordel."
+        "Lui veut un bilan doux, toi tu prépares déjà le procès: pose le marteau et raconte-moi ta vraie version, bordel.",
+        "Avant d’étiqueter la journée en fiasco, balance-moi un résumé honnête et on voit ce qu’on peut sauver, bordel."
       ]
     },
     de: {
       morning: [
-        "Guten Morgen, Meister des “später”: heute machst du eine Sache wirklich fertig und hörst auf, zehn Baustellen gleichzeitig anzustarren, verdammt nochmal.",
-        "Du verhandelst schon mit dem Wecker wie im Bundestag; triff eine Mini-Entscheidung und komm in Gang, verdammt nochmal."
+        "What if verkauft dir einen heiligen Morgen, du hängst schon am Handy: such dir einen Schritt raus und frag mich, wenn du hängst, verdammt nochmal.",
+        "Er redet von geschützter Zeit, du verhandelst mit dem Wecker: nimm dir eine echte Sache vor und sag mir, welche Baustelle dran ist, verdammt nochmal."
       ],
       afternoon: [
-        "Nachmittag: entweder du bewegst dich jetzt oder du ersäufst in Pings, Snacks und “mach ich später”, verdammt nochmal.",
-        "Wenn der Tag wie Brei wirkt, such dir ein festes Stück und beiß zuerst da rein, verdammt nochmal."
+        "What if will einen bewussten Nachmittag, du führst Daueraffäre mit dem Kühlschrank: schnapp dir eine Aufgabe und jammer notfalls bei mir, verdammt nochmal.",
+        "Wenn du nur auf ihn hörst, fühlst du dich schuldig, nur auf dich – bleibst du stehen: sag mir, wo es am meisten klemmt, verdammt nochmal."
       ],
       evening: [
-        "Am Abend siehst du nur, was gefehlt hat: zähl auch zwei kleine Treffer, bevor du den ganzen Tag in den Müll wirfst, verdammt nochmal.",
-        "Bevor du schlafen gehst, park eine Sorge auf Papier statt im Kopfkino, verdammt nochmal."
+        "Er will einen zarten Tagesabschluss, du bereitest das Urteil vor: leg den Hammer hin und erzähl mir, wie es wirklich war, verdammt nochmal.",
+        "Bevor du den Tag komplett einstampfst, gib mir eine ehrliche Kurzfassung und wir suchen den kleinsten Lichtblick, verdammt nochmal."
       ]
     }
   }
@@ -1040,7 +1042,9 @@ function pickSignalPhrase({ stile, lang, slot, mood, domanda }) {
   }
 
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  const seedBase = `${styleKey}|${L}|${slotKey}|${mood || ""}|${today}|${domanda || ""}`;
+
+  // 🔁 Seed condiviso tra WHAT IF e WHAT THE F
+  const seedBase = `${L}|${slotKey}|${mood || ""}|${today}|${domanda || ""}`;
   const seed = hashStr(seedBase);
 
   const idx = list.length ? seed % list.length : 0;
@@ -1186,7 +1190,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
       cons.push("si el plazo es difuso, se irá moviendo hacia adelante");
     }
     if (action) {
-      pros.push("tienes una palanca concreta para avanzar cada día");
+      pros.push("tienes una palanca concreta para avanzar cada dia");
     }
     if (riskHedging) {
       pros.push("puedes limitar el riesgo con pocas reglas sencillas");
@@ -1698,4 +1702,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-                                                                     }
+    }
