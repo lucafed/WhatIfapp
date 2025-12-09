@@ -744,8 +744,13 @@
     })();
   </script>    
 
-  <!-- 🔔 Logica banner frasi del giorno -->
-  <script>
+  <!-- 🔔 Logica banner frasi del giorno + FCM -->
+  <script type="module">
+    import { messaging, getToken } from "./firebase.init.js";
+
+    // 🔑 TUA CHIAVE VAPID PUBBLICA (Web Push) DA FIREBASE
+    const VAPID_KEY = "BEoMbKJz69nMPuZJnyqvWoL97ff6sEttr_pc1qiEaFbh2COR7dmHGMa7RmFLPip_gMXQJzVN7fx297mSdZDc1Ac";
+
     (function(){
       const overlay = document.getElementById('dailySignalsOverlay');
       const banner  = document.getElementById('dailySignalsBanner');
@@ -883,29 +888,55 @@
       }
       window.dailySignalsRefreshToggleLabel = refreshToggleLabel;
 
+      // 👉 ottiene token FCM dopo il permesso
+      async function ensureFcmToken(){
+        if(!("Notification" in window)) return;
+
+        let permission = Notification.permission;
+        if(permission === "default"){
+          try{
+            permission = await Notification.requestPermission();
+          }catch(e){
+            console.warn("Notification.requestPermission error", e);
+            return;
+          }
+        }
+
+        if(permission !== "granted"){
+          console.log("Notifiche browser non permesse, salto FCM.");
+          return;
+        }
+
+        try{
+          const token = await getToken(messaging, { vapidKey: VAPID_KEY });
+          if(token){
+            console.log("✅ FCM token per frasi del giorno:", token);
+            try{
+              localStorage.setItem("dailySignalsFcmToken", token);
+            }catch{}
+          }else{
+            console.warn("Nessun token FCM restituito.");
+          }
+        }catch(err){
+          console.warn("Impossibile ottenere FCM token:", err);
+        }
+      }
+
       // scelta utente
-      btnOk.addEventListener('click', ()=>{
+      btnOk.addEventListener('click', async ()=>{
         setChoice('accepted');
         setLastPromptToday();
         closeBanner();
         if(window.dailySignalsRefreshToggleLabel) window.dailySignalsRefreshToggleLabel();
 
-        // tentativo (opzionale) di richiesta notifiche browser
+        // 🔔 prova ad attivare le notifiche + ottenere token FCM
         try{
-          if("Notification" in window && Notification.permission === "default"){
-            Notification.requestPermission().catch(()=>{});
-          }
-        }catch{}
-
-        // 👉 aggancio vero alla registrazione FCM
-        try{
-          if (window.handleDailySignalsAccept) {
-            window.handleDailySignalsAccept();
-          }
+          await ensureFcmToken();
         }catch(e){
-          console.warn("handleDailySignalsAccept error", e);
+          console.warn("Errore ensureFcmToken", e);
         }
       });
+
       btnNo.addEventListener('click', ()=>{
         setChoice('rejected');
         setLastPromptToday();
@@ -1086,7 +1117,7 @@
     logoutBtn.onclick = async ()=>{ await signOut(auth); };
   </script>    
 
-<script>
+  <script>
   (function(){
     const title  = document.getElementById('appTitle');
     const pastBtn = document.querySelector('button[data-val="past"]');
@@ -1163,7 +1194,10 @@
 
   if("serviceWorker" in navigator){    
     window.addEventListener("load", ()=>{    
+      // PWA SW
       navigator.serviceWorker.register("/sw.js").catch(()=>{});    
+      // 🔔 SW per Firebase Messaging
+      navigator.serviceWorker.register("/firebase-messaging-sw.js").catch(()=>{});    
     });    
   }
 
@@ -1249,85 +1283,6 @@
       console.warn('signal test panel error', e);
     }
   })();
-  </script>
-
-  <!-- 🔔 Firebase Messaging: richiesta token + registrazione al backend -->
-  <script type="module">
-    import { messaging, getToken, onMessage } from "./firebase.init.js";
-
-    // 🔑 chiave pubblica FCM (VAPID) che mi hai mandato
-    const VAPID_KEY = "BEoMbKJz69nMPuZJnyqvWoL97ff6sEttr_pc1qiEaFbh2COR7dmHGMa7RmFLPip_gMXQJzVN7fx297mSdZDc1Ac";
-
-    async function registerFcmToken() {
-      try {
-        if (!("Notification" in window)) {
-          console.warn("Notification API non supportata");
-          return;
-        }
-
-        // Se non è ancora stato dato il permesso, chiedilo
-        if (Notification.permission === "default") {
-          const perm = await Notification.requestPermission();
-          if (perm !== "granted") {
-            console.warn("Permesso notifiche negato");
-            return;
-          }
-        } else if (Notification.permission !== "granted") {
-          console.warn("Permesso notifiche non concesso:", Notification.permission);
-          return;
-        }
-
-        // Chiede il token FCM
-        const token = await getToken(messaging, {
-          vapidKey: VAPID_KEY,
-        });
-
-        if (!token) {
-          console.warn("Nessun token FCM ricevuto");
-          return;
-        }
-
-        console.log("✅ FCM token:", token);
-
-        // Manda il token al backend (cloud function / api)
-        try {
-          await fetch("/api/push/register", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({
-              token,
-              // Puoi aggiungere info utente se servono lato server
-              ts: Date.now(),
-            }),
-          });
-          console.log("✅ Token registrato su /api/push/register");
-        } catch (e) {
-          console.error("Errore nel registrare il token al backend:", e);
-        }
-      } catch (e) {
-        console.error("Errore durante registerFcmToken:", e);
-      }
-    }
-
-    // 👉 chiamata dal banner quando l'utente clicca "Attiva le frasi del giorno"
-    window.handleDailySignalsAccept = registerFcmToken;
-
-    // Se ha già accettato in passato, prova a registrare il token al load
-    try {
-      const choice = localStorage.getItem("dailySignalsChoice");
-      if (choice === "accepted") {
-        registerFcmToken().catch(()=>{});
-      }
-    } catch {}
-
-    // Messaggi ricevuti mentre la pagina è aperta (foreground)
-    onMessage(messaging, (payload) => {
-      console.log("[FCM] Messaggio in foreground:", payload);
-      // Per ora solo log. In futuro possiamo mostrare un toast in pagina.
-    });
   </script>
 </body>
 </html>
