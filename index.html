@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="it">    
 <head>    
   <meta charset="utf-8" />    
@@ -890,9 +891,13 @@
         closeBanner();
         if(window.dailySignalsRefreshToggleLabel) window.dailySignalsRefreshToggleLabel();
 
-        // 👉 qui: chiediamo davvero il permesso + token FCM (se definito)
-        if (window.requestDailyFcmToken) {
-          window.requestDailyFcmToken();
+        // 👉 Richiesta notifiche + salvataggio token (se disponibile la funzione globale)
+        try{
+          if (typeof window.requestDailySignalsPush === "function") {
+            window.requestDailySignalsPush();
+          }
+        }catch(e){
+          console.warn("Errore richiesta push:", e);
         }
       });
       btnNo.addEventListener('click', ()=>{
@@ -935,6 +940,81 @@
       // inizializza label footer alla prima apertura
       refreshToggleLabel();
     })();
+  </script>
+
+  <!-- 🔔 Inizializzazione notifiche push / FCM -->
+  <script type="module">
+    import { messaging, getToken, onMessage } from "./firebase.init.js";
+
+    const VAPID_KEY = "BEoMbKJz69nMPuZJnyqvWoL97ff6sEttr_pc1qiEaFbh2COR7dmHGMa7RmFLPip_gMXQJzVN7fx297mSdZDc1Ac";
+
+    async function saveFcmTokenToBackend(token) {
+      try {
+        await fetch("/api/save-fcm-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ token }),
+        });
+      } catch (e) {
+        console.warn("❗ Impossibile inviare il token FCM al backend:", e);
+      }
+    }
+
+    async function requestDailySignalsPush() {
+      try {
+        if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+          console.warn("Push non supportato dal browser");
+          return;
+        }
+
+        // 1) Permesso notifiche
+        let permission = Notification.permission;
+        if (permission === "default") {
+          permission = await Notification.requestPermission();
+        }
+        if (permission !== "granted") {
+          console.warn("Permesso notifiche non concesso");
+          return;
+        }
+
+        // 2) Registrazione service worker FCM (se non già pronto)
+        let reg;
+        try {
+          reg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+        } catch (e) {
+          reg = await navigator.serviceWorker.ready;
+        }
+
+        // 3) Ottieni token FCM
+        const token = await getToken(messaging, {
+          vapidKey: VAPID_KEY,
+          serviceWorkerRegistration: reg,
+        });
+
+        if (!token) {
+          console.warn("Nessun token FCM ottenuto");
+          return;
+        }
+
+        // 4) Salva in localStorage e invia al backend
+        try {
+          localStorage.setItem("fcm_token", token);
+        } catch {}
+        await saveFcmTokenToBackend(token);
+
+      } catch (e) {
+        console.warn("Errore nella richiesta push:", e);
+      }
+    }
+
+    // Esporto sul window per il banner
+    window.requestDailySignalsPush = requestDailySignalsPush;
+
+    // Listener messaggi in foreground (debug)
+    onMessage(messaging, (payload) => {
+      console.log("📩 Messaggio FCM in foreground:", payload);
+    });
   </script>
 
   <!-- 🔐 Firebase Auth -->    
@@ -1239,64 +1319,5 @@
     }
   })();
   </script>
-
-  <!-- 🔔 Script notifiche FCM: richiesta token alla scelta "Attiva le frasi del giorno" -->
-  <script type="module">
-    import { messaging, getToken } from "./firebase.init.js";
-
-    // 🔑 Chiave pubblica VAPID (da Firebase console → Cloud Messaging → Web push)
-    const VAPID_KEY = "BEoMbKJz69nMPuZJnyqvWoL97ff6sEttr_pc1qiEaFbh2COR7dmHGMa7RmFLPip_gMXQJzVN7fx297mSdZDc1Ac";
-
-    async function requestDailyFcmToken() {
-      try {
-        if (!("Notification" in window)) {
-          alert("Il tuo browser non supporta le notifiche push.");
-          return;
-        }
-
-        // Se l'utente ha già detto NO a livello di browser
-        if (Notification.permission === "denied") {
-          alert("Hai disattivato le notifiche per questo sito nelle impostazioni di Android.");
-          return;
-        }
-
-        // Se è "default", chiediamo il permesso
-        if (Notification.permission === "default") {
-          const perm = await Notification.requestPermission();
-          if (perm !== "granted") {
-            // Ha detto no / chiuso il popup
-            return;
-          }
-        }
-
-        // A questo punto il permesso è "granted"
-        const token = await getToken(messaging, {
-          vapidKey: VAPID_KEY,
-        });
-
-        if (!token) {
-          console.warn("Nessun token FCM ottenuto");
-          alert("Non sono riuscito ad attivare le notifiche, riprova più tardi.");
-          return;
-        }
-
-        // Per ora lo salviamo in localStorage; in uno step successivo lo manderemo al server/Firestore
-        try {
-          localStorage.setItem("dailySignalsFcmToken", token);
-        } catch {}
-
-        // Piccolo feedback visibile anche da mobile
-        alert("Notifiche attivate (token creato).");
-      } catch (err) {
-        console.error("Errore richiesta token FCM:", err);
-        // opzionale: alert leggero
-        // alert("Errore durante l'attivazione delle notifiche.");
-      }
-    }
-
-    // lo esponiamo per lo script del banner
-    window.requestDailyFcmToken = requestDailyFcmToken;
-  </script>
-
 </body>
 </html>
