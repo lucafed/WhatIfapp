@@ -758,164 +758,169 @@
     logoutBtn.onclick = async ()=>{ await signOut(auth); };
   </script>    
 
-  <!-- Easter egg admin + SW + pannello test segnali -->    
-  <script>
-    (function(){
-      const title  = document.getElementById('appTitle');
-      const pastBtn = document.querySelector('button[data-val="past"]');
-      if(!title || !pastBtn) return;
-      let tapTitle=0, tapPast=0, stage=0, timer=null;
-      function reset(){
-        tapTitle=0; tapPast=0; stage=0;
-        if(timer) clearTimeout(timer); timer=null;
-        pastBtn.classList.remove("unlocking");
-      }
-      function flash(){
-        const f=document.createElement("div");
-        f.style.position="fixed";f.style.inset="0";
-        f.style.background="rgba(255,255,255,0.05)";
-        f.style.backdropFilter="blur(2px)";
-        f.style.transition="opacity .6s";f.style.opacity="1";
-        f.style.zIndex="9999";
-        document.body.appendChild(f);
-        setTimeout(()=>f.style.opacity="0",150);
-        setTimeout(()=>f.remove(),800);
-      }
-
-      // 🔐 Verifica il PIN con /api/admin-token
-      async function success(){
-        reset();
-        const pin = prompt("PIN amministratore:");
-        if (!pin) return;
-
-        try {
-          const resp = await fetch("/api/admin-token", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "admin-secret": pin
-            },
-            body: JSON.stringify({ pin }),
-            credentials: "include"
-          });
-
-          const data = await resp.json().catch(() => ({}));
-
-          if (!resp.ok || !data.ok) {
-            alert("PIN errato");
-            return;
-          }
-
-          try {
-            localStorage.setItem("admin_token", data.token);
-          } catch (e) {}
-
-          location.href = "admin.html";
-        } catch (e) {
-          console.error("Errore login admin", e);
-          alert("Errore durante la verifica del PIN. Controlla la connessione e riprova.");
-        }
-      }
-
-      title.addEventListener('click', ()=>{
-        if(++tapTitle>=3){
-          stage=1; tapTitle=0; flash();
-          pastBtn.classList.add("unlocking");
-          setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);
-        }
-        if(timer) clearTimeout(timer);
-        timer=setTimeout(reset,2000);
-      });
-      pastBtn.addEventListener('click', ()=>{
-        if(stage!==1) return;
-        if(++tapPast>=5) success();
-        if(timer) clearTimeout(timer);
-        timer=setTimeout(reset,2500);
-      });
-    })();
-
-    if("serviceWorker" in navigator){    
-      window.addEventListener("load", ()=>{    
-        navigator.serviceWorker.register("/sw.js").catch(()=>{});    
-      });    
+<script>
+  (function(){
+    const title  = document.getElementById('appTitle');
+    const pastBtn = document.querySelector('button[data-val="past"]');
+    if(!title || !pastBtn) return;
+    let tapTitle=0, tapPast=0, stage=0, timer=null;
+    function reset(){
+      tapTitle=0; tapPast=0; stage=0;
+      if(timer) clearTimeout(timer); timer=null;
+      pastBtn.classList.remove("unlocking");
+    }
+    function flash(){
+      const f=document.createElement("div");
+      f.style.position="fixed";f.style.inset="0";
+      f.style.background="rgba(255,255,255,0.05)";
+      f.style.backdropFilter="blur(2px)";
+      f.style.transition="opacity .6s";f.style.opacity="1";
+      f.style.zIndex="9999";
+      document.body.appendChild(f);
+      setTimeout(()=>f.style.opacity="0",150);
+      setTimeout(()=>f.remove(),800);
     }
 
-    // 🔔 Pannello test segnali: SEMPRE visibile, scrive whatif_request e va su fifth.html
-    (function(){
-      try{
-        const toggle = document.getElementById('signalTestToggle');
-        const panel  = document.getElementById('signalTestPanel');
-        if(!toggle || !panel) return;
+    // 🔐 Verifica il PIN con /api/admin-token
+    async function success(){
+      reset();
+      const pin = prompt("PIN amministratore:");
+      if (!pin) return;
 
-        // sempre visibile
-        toggle.style.display = 'inline-flex';
-
-        toggle.addEventListener('click', ()=>{
-          const open = panel.style.display === 'block';
-          panel.style.display = open ? 'none' : 'block';
+      try {
+        const resp = await fetch("/api/admin-token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "admin-secret": pin
+          },
+          body: JSON.stringify({ pin }),
+          credentials: "include"
         });
 
-        panel.addEventListener('click', (e)=>{
-          const btn = e.target.closest('.sig-btn');
-          if(!btn) return;
+        const data = await resp.json().catch(() => ({}));
 
-          const slot  = btn.dataset.signal || 'morning';
-          const phase = parseInt(btn.dataset.phase || '1', 10) || 1;
-          const mood  = btn.dataset.mood || 'default';
+        if (!resp.ok || !data.ok) {
+          alert("PIN errato");
+          return;
+        }
 
-          const L = (window.getCurrentLang && window.getCurrentLang()) || 'it';
-          const moodsLang = (window.MOODS && window.MOODS[L]) || (window.MOODS && window.MOODS.it) || {};
-          const slotObj = moodsLang[slot] || {};
-          const entry = slotObj[mood] || slotObj.default || null;
+        try {
+          localStorage.setItem("admin_token", data.token);
+        } catch (e) {}
 
-          let domanda = entry && entry.q;
-          let clarification = entry && entry.clarification;
-          if(!domanda){
-            domanda = (L === 'en')
-              ? "Give me a short, realistic daily scenario to reset my day."
-              : "Dammi uno scenario giornaliero sintetico e realistico per rimettere in carreggiata la giornata.";
-          }
-          clarification = clarification || "";
-
-          // prefs stile/periodo
-          let prefsRaw = localStorage.getItem('whatif_prefs') || '{}';
-          let prefs;
-          try{ prefs = JSON.parse(prefsRaw) || {}; }catch{ prefs = {}; }
-
-          let stile = prefs.stile || (phase === 2 ? 'wtf' : 'whatif');
-          let periodo = prefs.periodo || 'future';
-
-          prefs.stile = stile;
-          prefs.periodo = periodo;
-          localStorage.setItem('whatif_prefs', JSON.stringify(prefs));
-
-          try{
-            localStorage.setItem('domanda', domanda);
-            const req = {
-              source: "signal",
-              domanda,
-              clarification,
-              lang: L,
-              stile,
-              periodo,
-              micro: {
-                signal: slot,
-                phase,
-                mood,
-                ts: Date.now()
-              }
-            };
-            localStorage.setItem('whatif_request', JSON.stringify(req));
-          }catch(err){
-            console.warn("cannot save signal request", err);
-          }
-
-          location.href = "fifth.html";
-        });
-      }catch(e){
-        console.warn('signal test panel error', e);
+        location.href = "admin.html";
+      } catch (e) {
+        console.error("Errore login admin", e);
+        alert("Errore durante la verifica del PIN. Controlla la connessione e riprova.");
       }
-    })();
-  </script>  
+    }
+
+    title.addEventListener('click', ()=>{
+      if(++tapTitle>=3){
+        stage=1; tapTitle=0; flash();
+        pastBtn.classList.add("unlocking");
+        setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);
+      }
+      if(timer) clearTimeout(timer);
+      timer=setTimeout(reset,2000);
+    });
+    pastBtn.addEventListener('click', ()=>{
+      if(stage!==1) return;
+      if(++tapPast>=5) success();
+      if(timer) clearTimeout(timer);
+      timer=setTimeout(reset,2500);
+    });
+  })();
+
+  if("serviceWorker" in navigator){    
+    window.addEventListener("load", ()=>{    
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});    
+    });    
+  }
+
+  // 🔔 Pannello test segnali: SEMPRE visibile, scrive whatif_request e va su fifth.html
+  (function(){
+    try{
+      const toggle = document.getElementById('signalTestToggle');
+      const panel  = document.getElementById('signalTestPanel');
+      if(!toggle || !panel) return;
+
+      // sempre visibile
+      toggle.style.display = 'inline-flex';
+
+      toggle.addEventListener('click', ()=>{
+        const open = panel.style.display === 'block';
+        panel.style.display = open ? 'none' : 'block';
+      });
+
+      panel.addEventListener('click', (e)=>{
+        const btn = e.target.closest('.sig-btn');
+        if(!btn) return;
+
+        const slot  = btn.dataset.signal || 'morning';      // "morning" | "afternoon" | "evening"
+        const phase = parseInt(btn.dataset.phase || '1', 10) || 1;
+        const mood  = btn.dataset.mood || 'default';
+
+        const L = (window.getCurrentLang && window.getCurrentLang()) || 'it';
+        const moodsLang = (window.MOODS && window.MOODS[L]) || (window.MOODS && window.MOODS.it) || {};
+        const slotObj = moodsLang[slot] || {};
+        const entry = slotObj[mood] || slotObj.default || null;
+
+        let domanda = entry && entry.q;
+        let clarification = entry && entry.clarification;
+        if(!domanda){
+          domanda = (L === 'en')
+            ? "Give me a short, realistic daily scenario to reset my day."
+            : "Dammi uno scenario giornaliero sintetico e realistico per rimettere in carreggiata la giornata.";
+        }
+        clarification = clarification || "";
+
+        // prefs stile/periodo
+        let prefsRaw = localStorage.getItem('whatif_prefs') || '{}';
+        let prefs;
+        try{ prefs = JSON.parse(prefsRaw) || {}; }catch{ prefs = {}; }
+
+        let stile = prefs.stile || (phase === 2 ? 'wtf' : 'whatif');
+        let periodo = prefs.periodo || 'future';
+
+        prefs.stile = stile;
+        prefs.periodo = periodo;
+        localStorage.setItem('whatif_prefs', JSON.stringify(prefs));
+
+        try{
+          localStorage.setItem('domanda', domanda);
+          const req = {
+            source: "signal",
+            domanda,
+            clarification,
+            lang: L,
+            stile,
+            periodo,
+            micro: {
+              // 👇 questi campi sono quelli che /api/ask.js legge per i segnali
+              src: "signal",
+              slot: slot,        // usato da normSignalSlot(...)
+              time: slot,
+              timeOfDay: slot,
+              signal: slot,      // extra, non dà fastidio
+
+              phase,
+              mood,
+              ts: Date.now()
+            }
+          };
+          localStorage.setItem('whatif_request', JSON.stringify(req));
+        }catch(err){
+          console.warn("cannot save signal request", err);
+        }
+
+        location.href = "fifth.html";
+      });
+    }catch(e){
+      console.warn('signal test panel error', e);
+    }
+  })();
+      </script>
 </body>
 </html>
