@@ -340,24 +340,84 @@ import {
 
 import {
   bootCredits,
-  getBalance
+  getBalance,
+  consumeCredit
 } from "./store/credits.js";
-
-/* 🔹 Frasi giornaliere NO-AI */
-import { getDailyMessage } from "./daily-messages.js";
 
 /* ==== Base & prefs ==== */
 const LS = localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-let style = prefs.stile || 'whatif';
+let style = prefs.stile || 'whatif';   // ← diventa let
 const periodo = prefs.periodo || 'future';
 const IS_ADMIN = !!LS.getItem('admin_token');
-
-/* richiesta salvata (da fourth o da segnale) */
-const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
-const IS_SIGNAL = !!(reqEarly && reqEarly.source === "signal");
-
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
+
+/* 🔔 Bootstrap segnali da URL (notifiche → URL tipo ?signal=morning&phase=1&mood=su) */
+(function bootstrapSignalFromUrl() {
+  try {
+    const params = new URLSearchParams(location.search);
+    const slot = (params.get("signal") || "").toLowerCase(); // morning | afternoon | evening
+    if (!slot) return; // niente segnale → flusso normale
+
+    const phase = Number(params.get("phase") || "1"); // 1 = WHAT IF, 2 = WTF
+    const mood  = params.get("mood") || null;        // opzionale (solo pomeriggio)
+
+    function buildSignalQuestion(slot, phase, mood) {
+      if (slot === "morning") {
+        if (phase === 1) {
+          return "Frase del giorno del mattino: un consiglio concreto per impostare la giornata, senza sapere come mi sento.";
+        } else {
+          return "Commento cazzaro del mattino sulla frase del giorno appena ricevuta.";
+        }
+      }
+      if (slot === "afternoon") {
+        let moodText = "umore non specificato";
+        if (mood) {
+          const m = mood.toLowerCase();
+          if (m.includes("su") || m.includes("up")) moodText = "mi sento carico o comunque bene";
+          else if (m.includes("giu") || m.includes("down")) moodText = "mi sento stanco, scarico o un po’ giù";
+          else moodText = "mi sento così così, a metà";
+        }
+        if (phase === 1) {
+          return `Check-in del pomeriggio con umore: ${moodText}.`;
+        } else {
+          return `Commento cazzaro del pomeriggio su questo umore: ${moodText}.`;
+        }
+      }
+      if (slot === "evening") {
+        if (phase === 1) {
+          return "Domanda di chiusura della giornata, per rivedere cosa è successo oggi e come ti ha toccato.";
+        } else {
+          return "Commento cazzaro di fine giornata sulla domanda di chiusura appena fatta.";
+        }
+      }
+      return "Segnale giornaliero senza dettagli.";
+    }
+
+    const domanda = buildSignalQuestion(slot, phase, mood);
+
+    const micro = {
+      src: "signal",
+      slot,
+      time: slot,
+      timeOfDay: slot,
+      phase,
+    };
+    if (mood) micro.mood = mood;
+
+    const req = {
+      source: "signal",
+      domanda,
+      clarification: "",
+      micro
+    };
+
+    LS.setItem("whatif_request", JSON.stringify(req));
+    LS.setItem("domanda", domanda);
+  } catch (e) {
+    console.warn("bootstrapSignalFromUrl error:", e);
+  }
+})();
 
 /* ==== I18N ==== */
 const I18N = {
@@ -576,23 +636,25 @@ const I18N = {
 const SUP_LANG=['it','en','es','fr','de'];
 
 /* ======== LINGUA ======== */
-// reqEarly è già letto sopra
+const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
 
-// override stile da segnale (morning/afternoon/evening)
-if (IS_SIGNAL && reqEarly.micro && reqEarly.micro.phase) {
+// 🔁 Override stile se la richiesta arriva da un segnale (morning/afternoon/evening)
+if (reqEarly && reqEarly.source === "signal" && reqEarly.micro && reqEarly.micro.phase) {
   style = reqEarly.micro.phase === 2 ? "wtf" : "whatif";
+
   document.documentElement.setAttribute(
     "data-theme",
     style === "wtf" ? "wtf" : "whatif"
   );
 }
 
+const IS_SIGNAL = !!(reqEarly && reqEarly.source === "signal" && reqEarly.micro);
+
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
-
 function detectLang(text=''){
-  const t=(text||'').toLowerCase();
-  if(/[¿¡]/.test(t)) return 'es';
+  const lower=(text||'').toLowerCase();
+  if(/[¿¡]/.test(lower)) return 'es';
   const bank={
     it:[" che "," perché"," se "," quando"," dove"," non "," sono "," vorrei"," posso"," e se"," una settimana"," come"],
     en:[" what "," if "," the "," and "," you "," are "," will "," would "," can "," should "," could "],
@@ -600,9 +662,22 @@ function detectLang(text=''){
     fr:[" quoi"," si "," pourquoi"," quand"," où"," pas "," je "," peux"," si je"," et si"],
     de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
   };
-  const score={}; for(const L of SUP_LANG){ score[L]=0; (bank[L]||[]).forEach(w=>{ if(t.includes(w)) score[L]++; }); }
-  let best='it', max=-1; for(const L of SUP_LANG){ if(score[L]>max){ max=score[L]; best=L; } }
-  if(max<=0){ const nav=(navigator.language||'it').slice(0,2).toLowerCase(); if(SUP_LANG.includes(nav)) return nav; }
+  const score={};
+  for(const L of SUP_LANG){
+    score[L]=0;
+    (bank[L]||[]).forEach(w=>{ if(lower.includes(w)) score[L]++; });
+  }
+  let best='it', max=-1;
+  for(const L of SUP_LANG){
+    if(score[L]>max){
+      max=score[L];
+      best=L;
+    }
+  }
+  if(max<=0){
+    const nav=(navigator.language||'it').slice(0,2).toLowerCase();
+    if(SUP_LANG.includes(nav)) return nav;
+  }
   return best;
 }
 let lang = SUP_LANG.includes(langFromFourth) ? langFromFourth : detectLang(domandaEarly);
@@ -645,6 +720,45 @@ onAuthStateChanged(auth, async (user)=>{
   }
   updateCreditInfo();
 });
+
+/* 🔻 Scala 1 credito SOLO per segnali fase 1 (morning/afternoon/evening WHAT IF) */
+async function ensureSignalCredit(micro = {}) {
+  if (IS_ADMIN) return true;
+
+  const phase = Number(micro.phase || 1);
+  if (phase === 2) {
+    // WTF gratis
+    return true;
+  }
+
+  if (!currentUser) {
+    toast("Per usare la frase del giorno devi essere loggato.");
+    return false;
+  }
+
+  try {
+    const ok = await consumeCredit();
+    if (!ok) {
+      toast(t().noCredits || "Hai terminato i crediti.");
+      try {
+        location.href = "/store/credit-store.html?lang=" + (lang || "it");
+      } catch {}
+      return false;
+    }
+
+    try {
+      const bal = await getBalance();
+      currentBalance = Number.isFinite(+bal) ? +bal : 0;
+      updateCreditInfo();
+    } catch {}
+
+    return true;
+  } catch (e) {
+    console.error("ensureSignalCredit error:", e);
+    toast("Errore nei crediti, riprova.");
+    return false;
+  }
+}
 
 /* ==== System prompts (solo UI, placeholder) ==== */
 const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
@@ -908,7 +1022,7 @@ function buildWhatIfMotivationsPretty(domanda, pct, rawFromAI){
         : "Take a few clear steps that fit who you are now, not who you think you should be.";
     } else if (L === "es") {
       body = isPast
-        ? "Elegiste con la energía y la información de entonces; ahora puedes usar lo aprendido untuk próximos pasos."
+        ? "Elegiste con la energía y la información de entonces; ahora puedes usar lo aprendido para tus próximos pasos."
         : "Da pocos pasos claros que encajen con cómo te sientes hoy, no con lo que “deberías” ser.";
     } else if (L === "fr") {
       body = isPast
@@ -944,7 +1058,6 @@ function saveResultToCache(obj){
 
 function loadResultFromCache(domanda, clarification){
   try{
-    if (IS_SIGNAL) return null;  // niente cache per i segnali giornalieri
     const raw = LS.getItem(RESULT_CACHE_KEY);
     if(!raw) return null;
     const obj = JSON.parse(raw);
@@ -972,7 +1085,7 @@ function applyResultToUI(result){
   const usedPct = (typeof result.pct === 'number' && isFinite(result.pct))
     ? Math.max(0, Math.min(100, Math.round(result.pct)))
     : computeProbability(domanda).pct;
-  const pStr = usedPct != null ? (usedPct + "%") : "—";
+  const pStr = usedPct + "%";
   topPct.textContent = pStr;
   bottomPct.textContent = pStr;
 
@@ -1021,7 +1134,7 @@ function applyResultToUI(result){
 
 /* ==== Question & UI load ==== */
 function applyQuestion(){
-  const req=reqEarly || {};
+  const req=JSON.parse(LS.getItem('whatif_request')||'{}');
   const domanda=req.domanda || LS.getItem('domanda') || '';
   const clarification = req.clarification || req.answer || '';
   applyUI(domanda);
@@ -1046,81 +1159,14 @@ function saveCurrentQuestion(){
   toast(t().savedOk);
 }
 
-/* 🔹 Flusso FRASI DEL GIORNO (NO AI) */
-function startSignalFlow(ctx){
-  const {req, domanda, clarification, surprise} = ctx || applyQuestion();
-
-  updateCreditInfo();
-  showIntroOnce();
-  stopOracleLoading();
-
-  const micro = (req && req.micro) || {};
-  const slot = micro.slot || "morning";     // morning | afternoon | evening
-  const personality = style === "wtf" ? "wtf" : "whatif";
-
-  let msg=null;
-  try{
-    msg = getDailyMessage(lang, slot, personality, micro.mood || null);
-  }catch(e){
-    console.error("daily message error:", e);
-  }
-
-  const title = msg?.title || "";
-  const text = msg?.text || "";
-
-  if(subtitle && title) subtitle.textContent = title;
-
-  topPct.textContent = "—";
-  bottomPct.textContent = "—";
-
-  showAnswerWithTyping(text || "—");
-
-  motIco.style.display='none';
-  chipsWrap.style.display='none';
-  committeeTitle.textContent = title || (t().guideTitle || "Indicazioni");
-  motNote.textContent = text || "";
-
-  revealEffect();
-
-  const hist=JSON.parse(LS.getItem('cronologia')||'[]');
-  hist.push({
-    domanda,
-    clarification,
-    risposta:text || "—",
-    stile:style,
-    periodo,
-    ts:Date.now(),
-    surprise:false,
-    pct:null,
-    motivazione:text || ""
-  });
-  LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
-
-  const resultForCache = {
-    domanda,
-    clarification:clarification || "",
-    style,
-    periodo,
-    lang,
-    surprise:!!(surprise || micro.surprise),
-    answer:text || "—",
-    pct:null,
-    motivationMode:"whatif",
-    motivationText:text || ""
-  };
-  saveResultToCache(resultForCache);
-}
-
 /* ==== Main flow ==== */
 async function startFlow(){
   const {req, domanda, clarification, surprise} = applyQuestion();
   updateCreditInfo();
 
-  // se arriva da segnale → frasi preimpostate NO AI
-  if (IS_SIGNAL) {
-    startSignalFlow({req, domanda, clarification, surprise});
-    return;
-  }
+  const isSignal = !!(req && req.source === "signal");
+  const micro = (req && req.micro) ? req.micro : {};
+  const phase = Number(micro.phase || 1);
 
   const cached = loadResultFromCache(domanda, clarification);
   if (cached) {
@@ -1132,21 +1178,34 @@ async function startFlow(){
   showIntroOnce();
   startOracleLoading();
 
+  // Se è un segnale WHAT IF (fase 1) e NON è in cache → scala 1 credito
+  if (isSignal && phase === 1) {
+    const okCredit = await ensureSignalCredit(micro);
+    if (!okCredit) {
+      stopOracleLoading();
+      answerEl.textContent = t().noCredits || "Hai terminato i crediti.";
+      return;
+    }
+  }
+
   try{
     const headers={"Content-Type":"application/json"};
     if(prefs.pro===true) headers["x-pro"]="1";
     const adminToken=LS.getItem("admin_token"); if(adminToken) headers["x-admin-token"]=adminToken;
 
+    const microPayload = req.micro || {};
+    if (isSignal) microPayload.src = "signal";
+
     const r=await fetch("/api/ask",{
       method:"POST",headers,
       body:JSON.stringify({
-        stage:"answer",
+        stage: isSignal ? "signal" : "answer",
         domanda,
         clarification: clarification || "",
         lang,
         stile: style,
         periodo,
-        micro:req.micro||{}
+        micro: microPayload
       })
     });
     const data=await r.json().catch(()=>null);
