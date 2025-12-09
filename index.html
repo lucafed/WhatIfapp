@@ -38,7 +38,7 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;    
       overflow-x:hidden;    
     }    
-    @keyframes bgShift{0%{background-position:0% 30%}100%{background-position=100% 70%}}    
+    @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}    
     @media (prefers-reduced-motion:no-preference){    
       body{animation:bgShift 18s ease-in-out infinite alternate}    
     }    
@@ -140,49 +140,117 @@
       display:none;max-width:680px;margin:0 auto;white-space:pre-wrap;    
     }
 
-    /* 🔔 Daily Voices */
-    .daily-voices-card{
-      max-width:520px;
-      margin:18px auto 6px;
-      padding:18px 16px 20px;
-      border-radius:20px;
-      background:linear-gradient(
-        180deg,
-        rgba(255,255,255,0.06),
-        rgba(255,255,255,0.02)
-      );
+    /* 🔬 Pulsanti test segnali */
+    .sig-btn{
+      appearance:none;
       border:1px solid var(--card-border);
-      box-shadow:0 10px 30px rgba(0,0,0,.35);
-      backdrop-filter:blur(10px);
+      background:#141c22;
+      color:#E6F2F5;
+      border-radius:10px;
+      padding:6px 8px;
+      font-size:11px;
+      font-weight:700;
+      width:100%;
       text-align:left;
+      cursor:pointer;
     }
-    .daily-voices-card h3{
-      margin:0 0 6px;
-      font-size:14px;
-      letter-spacing:.4px;
+    .sig-btn:active{
+      transform:translateY(1px);
+    }
+    .sig-section-title{
+      margin-top:6px;
+      margin-bottom:2px;
+      font-size:11px;
+      font-weight:800;
       opacity:.9;
     }
-    .daily-voices-card .voice{
-      padding:12px 14px;
-      border-radius:14px;
-      margin-bottom:12px;
+
+    /* 🔔 Banner frasi del giorno */
+    .daily-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.58);
+      backdrop-filter:blur(3px);
+      z-index:80;
+      display:none;
     }
-    .daily-voices-card .voice.whatif{
-      background:rgba(28,87,160,.18);
+    .daily-banner{
+      position:fixed;
+      left:50%;
+      bottom:18px;
+      transform:translateX(-50%);
+      max-width:520px;
+      width:calc(100% - 32px);
+      background:var(--card);
+      border:1px solid var(--card-border);
+      border-radius:18px;
+      padding:12px 14px 12px;
+      box-shadow:0 14px 40px var(--shadow);
+      z-index:81;
+      display:none;
+      text-align:left;
+      font-size:13px;
     }
-    .daily-voices-card .voice.wtf{
-      background:rgba(58,107,86,.22);
+    .daily-banner-header{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:6px;
     }
-    .daily-voices-card p{
-      margin:0;
-      line-height:1.5;
-      font-size:15px;
+    .daily-icon{
+      font-size:20px;
+      margin-top:2px;
     }
-    .daily-note{
-      margin:12px 0 0;
-      font-size:12px;
+    .daily-texts{
+      flex:1;
+      min-width:0;
+    }
+    .daily-title{
+      font-weight:800;
+      font-size:14px;
+      margin-bottom:3px;
+    }
+    .daily-line-whatif{
+      font-size:13px;
       color:var(--muted);
-      text-align:center;
+      margin-bottom:4px;
+    }
+    .daily-line-wtf{
+      font-size:13px;
+      color:#F8F2C4;
+    }
+    .daily-actions{
+      margin-top:8px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .daily-actions button{
+      border-radius:999px;
+      border:1px solid var(--card-border);
+      padding:7px 12px;
+      font-size:12px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    #dailySignalsAccept{
+      background:linear-gradient(180deg,var(--accent),var(--accent2));
+      color:var(--ink);
+      box-shadow:0 0 14px rgba(0,0,0,.35);
+      border:none;
+    }
+    #dailySignalsReject{
+      background:#141c22;
+      color:var(--fg);
+    }
+
+    body.daily-blocking .daily-overlay{
+      display:block;
+    }
+    body.daily-blocking .daily-banner{
+      bottom:auto;
+      top:50%;
+      transform:translate(-50%,-50%);
     }
   </style>  
 </head>
@@ -215,35 +283,6 @@
       <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.    
     </p>    
 
-    <!-- 🔔 Daily Voices Card -->
-    <section class="daily-voices-card" id="dailyVoices">
-      <div class="voice whatif">
-        <h3>What if</h3>
-        <p>
-          Tre piccoli spunti al giorno per rimettere a fuoco le cose.
-        </p>
-      </div>
-
-      <div class="voice wtf">
-        <h3>What the F</h3>
-        <p>
-          Tranquillo.<br>
-          Il collega qui te ne spara tre al giorno.<br>
-          Roba utile, eh.<br><br>
-          Poi vedi tu se continuare a far finta di niente.
-        </p>
-      </div>
-
-      <button class="cta" id="enableDailyVoices">
-        Attiva le frasi giornaliere
-      </button>
-
-      <p class="daily-note">
-        Mattino, pomeriggio e sera.  
-        Due voci. Una sola scelta: ignorarle… o no.
-      </p>
-    </section>
-
     <div class="group" id="periodGroup">    
       <button class="chip" data-key="periodo" data-val="past"   data-i18n="past">Passato</button>    
       <button class="chip" data-key="periodo" data-val="future" data-i18n="future">Futuro</button>    
@@ -271,8 +310,106 @@
       <a href="delete-account.html" data-i18n="delete" style="color:#FF4D4D;font-weight:700;">Elimina il tuo account</a>    
       <span class="sep">·</span>    
       <a class="info-btn" href="about.html" id="aboutLink"><span data-i18n="info">Info</span></a>    
+      <span class="sep">·</span>
+      <!-- Toggle frasi del giorno -->
+      <button id="dailySignalsToggle" type="button" class="info-btn">
+        🔔 Frasi del giorno
+      </button>
     </div>    
   </footer>    
+
+  <!-- 🔔 Banner frasi del giorno -->
+  <div id="dailySignalsOverlay" class="daily-overlay"></div>
+  <div id="dailySignalsBanner" class="daily-banner">
+    <div class="daily-banner-header">
+      <div class="daily-icon">🧭</div>
+      <div class="daily-texts">
+        <div class="daily-title" id="dailySignalsTitle">
+          Vuoi le 3 frasi al giorno?
+        </div>
+        <div class="daily-line-whatif" id="dailyLineWhatIf">
+          What if ogni giorno ti manda 3 frasi corte cucite sul tuo umore, per farti alzare la testa dalle notifiche e guardare le cose che contano davvero.
+        </div>
+        <div class="daily-line-wtf" id="dailyLineWtf">
+          What the F: “Apposto. Il collega qua ti spara tre frasi al giorno a tema esistenziale. Io ti direi di lasciarle disattivate… ma poi con chi mi diverto?”
+        </div>
+      </div>
+    </div>
+    <div class="daily-actions">
+      <button id="dailySignalsAccept" type="button">
+        🔔 Attiva le frasi del giorno
+      </button>
+      <button id="dailySignalsReject" type="button">
+        Non ora
+      </button>
+    </div>
+  </div>
+
+  <!-- 🔔 Toggle e pannello test segnali (sempre visibile) -->
+  <button
+    id="signalTestToggle"
+    style="
+      position:fixed;
+      bottom:70px;
+      right:14px;
+      z-index:60;
+      border-radius:999px;
+      border:1px solid var(--card-border);
+      background:#141c22;
+      color:var(--fg);
+      padding:6px 10px;
+      font-size:11px;
+      font-weight:700;
+      opacity:.9;
+    "
+  >
+    ⏱ Frase del giorno (test)
+  </button>
+
+  <div
+    id="signalTestPanel"
+    style="
+      position:fixed;
+      bottom:118px;
+      right:14px;
+      z-index:59;
+      display:none;
+      max-width:260px;
+      background:var(--card);
+      border:1px solid var(--card-border);
+      border-radius:14px;
+      padding:10px 10px 8px;
+      box-shadow:0 10px 26px var(--shadow);
+      font-size:12px;
+      text-align:left;
+    "
+  >
+    <div style="font-weight:800;margin-bottom:4px;">Frasi del giorno (test)</div>
+
+    <div class="sig-section-title">☀️ Mattina</div>
+    <button class="sig-btn" data-signal="morning" data-phase="1" data-mood="ok">
+      What if · mattina (ok)
+    </button>
+    <button class="sig-btn" data-signal="morning" data-phase="2" data-mood="ok">
+      What the F · mattina (ok)
+    </button>
+
+    <div class="sig-section-title">🌤 Pomeriggio</div>
+    <button class="sig-btn" data-signal="afternoon" data-phase="1" data-mood="meh">
+      What if · pomeriggio (meh)
+    </button>
+    <button class="sig-btn" data-signal="afternoon" data-phase="2" data-mood="meh">
+      What the F · pomeriggio (meh)
+    </button>
+
+    <div class="sig-section-title">🌙 Sera</div>
+    <button class="sig-btn" data-signal="evening" data-phase="1" data-mood="tired">
+      What if · sera (tired)
+    </button>
+    <button class="sig-btn" data-signal="evening" data-phase="2" data-mood="wired">
+      What the F · sera (wired)
+    </button>
+  </div>
 
   <div id="debug"></div>    
 
@@ -540,6 +677,10 @@
         .forEach(b => b.classList.toggle('active', b.dataset.lang === L));    
 
       if(window.updatePrimaryCta) window.updatePrimaryCta();    
+
+      // aggiorna testo banner frasi del giorno se necessario
+      if(window.dailySignalsApplyText) window.dailySignalsApplyText();
+      if(window.dailySignalsRefreshToggleLabel) window.dailySignalsRefreshToggleLabel();
     }    
 
     if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());    
@@ -602,6 +743,201 @@
       });    
     })();
   </script>    
+
+  <!-- 🔔 Logica banner frasi del giorno -->
+  <script>
+    (function(){
+      const overlay = document.getElementById('dailySignalsOverlay');
+      const banner  = document.getElementById('dailySignalsBanner');
+      const titleEl = document.getElementById('dailySignalsTitle');
+      const lineWI  = document.getElementById('dailyLineWhatIf');
+      const lineWTF = document.getElementById('dailyLineWtf');
+      const btnOk   = document.getElementById('dailySignalsAccept');
+      const btnNo   = document.getElementById('dailySignalsReject');
+      const toggleBtn = document.getElementById('dailySignalsToggle');
+
+      if(!banner || !titleEl || !lineWI || !lineWTF || !btnOk || !btnNo) return;
+
+      const LS = window.localStorage;
+
+      const TEXT = {
+        it: {
+          title: "Vuoi le 3 frasi al giorno?",
+          whatif: "What if ogni giorno ti manda 3 frasi corte cucite sul tuo umore, per farti alzare la testa dalle notifiche e guardare le cose che contano davvero.",
+          wtf: "What the F: “Apposto. Il collega qua ti spara tre frasi al giorno a tema esistenziale. Io ti direi di lasciarle disattivate… ma poi con chi mi diverto?”",
+          btnOn: "🔔 Attiva le frasi del giorno",
+          btnOff: "Non ora",
+          toggleOn: "🔔 Frasi del giorno attive",
+          toggleOff: "🔕 Frasi del giorno disattivate"
+        },
+        en: {
+          title: "Want 3 nudges a day?",
+          whatif: "What if sends you 3 short check-ins a day tuned to your mood, to lift your eyes from notifications and back to what actually matters.",
+          wtf: "What the F: “Perfect. The colleague here will spam you with three existential lines a day. I’d say keep them off… but then who do I mess with?”",
+          btnOn: "🔔 Turn on daily phrases",
+          btnOff: "Not now",
+          toggleOn: "🔔 Daily phrases on",
+          toggleOff: "🔕 Daily phrases off"
+        },
+        es: {
+          title: "¿Quieres 3 frases al día?",
+          whatif: "What if te envía cada día 3 frases cortas ajustadas a tu ánimo, para sacarte un segundo de las notificaciones y mirar lo que importa.",
+          wtf: "What the F: “Perfecto. El colega de aquí te dispara tres frases existenciales al día. Yo te diría que las dejes apagadas… pero entonces ¿con quién me divierto?”",
+          btnOn: "🔔 Activar frases del día",
+          btnOff: "Ahora no",
+          toggleOn: "🔔 Frases del día activas",
+          toggleOff: "🔕 Frases del día desactivadas"
+        },
+        fr: {
+          title: "3 phrases par jour, ça te tente ?",
+          whatif: "What if t’envoie chaque jour 3 phrases courtes calées sur ton humeur, pour te décrocher une seconde des notifs et regarder ce qui compte.",
+          wtf: "What the F : « Parfait. Le collègue ici va te balancer trois lignes existentielles par jour. Je te dirais de les laisser coupées… mais après, je me marre avec qui ? »",
+          btnOn: "🔔 Activer les phrases du jour",
+          btnOff: "Pas maintenant",
+          toggleOn: "🔔 Phrases du jour actives",
+          toggleOff: "🔕 Phrases du jour désactivées"
+        },
+        de: {
+          title: "Lust auf 3 Sätze am Tag?",
+          whatif: "What if schickt dir jeden Tag 3 kurze Sätze passend zu deiner Stimmung, damit du kurz aus den Notifications auftauchst und auf das Wichtige schaust.",
+          wtf: "What the F: „Na super. Der Kollege hier ballert dir drei existentielle Sprüche pro Tag raus. Ich würde sagen: lass sie aus… aber mit wem hab ich dann Spaß?“",
+          btnOn: "🔔 Tägliche Sätze aktivieren",
+          btnOff: "Nicht jetzt",
+          toggleOn: "🔔 Tägliche Sätze: an",
+          toggleOff: "🔕 Tägliche Sätze: aus"
+        }
+      };
+
+      function lang(){
+        return (window.getCurrentLang && window.getCurrentLang()) || 'it';
+      }
+      function t(){
+        return TEXT[lang()] || TEXT.it;
+      }
+
+      function getChoice(){
+        try{
+          return LS.getItem('dailySignalsChoice') || null;
+        }catch{ return null; }
+      }
+      function setChoice(v){
+        try{
+          if(v===null) LS.removeItem('dailySignalsChoice');
+          else LS.setItem('dailySignalsChoice', v);
+        }catch{}
+      }
+      function setLastPromptToday(){
+        try{
+          const today = new Date().toISOString().slice(0,10);
+          LS.setItem('dailySignalsLastPrompt', today);
+        }catch{}
+      }
+      function shouldShowGentle(){
+        const choice = getChoice();
+        if(choice === 'accepted') return false;
+        try{
+          const last = LS.getItem('dailySignalsLastPrompt') || '';
+          const today = new Date().toISOString().slice(0,10);
+          return last !== today;
+        }catch{ return false; }
+      }
+
+      function applyText(){
+        const TT = t();
+        titleEl.textContent = TT.title;
+        lineWI.textContent  = TT.whatif;
+        lineWTF.textContent = TT.wtf;
+        btnOk.textContent   = TT.btnOn;
+        btnNo.textContent   = TT.btnOff;
+      }
+      window.dailySignalsApplyText = applyText;
+
+      function openBlocking(){
+        applyText();
+        document.body.classList.add('daily-blocking');
+        if(overlay) overlay.style.display = 'block';
+        banner.style.display = 'block';
+      }
+      function openGentle(){
+        applyText();
+        document.body.classList.remove('daily-blocking');
+        if(overlay) overlay.style.display = 'none';
+        banner.style.display = 'block';
+      }
+      function closeBanner(){
+        document.body.classList.remove('daily-blocking');
+        if(overlay) overlay.style.display = 'none';
+        banner.style.display = 'none';
+      }
+
+      // etichetta bottone footer
+      function refreshToggleLabel(){
+        if(!toggleBtn) return;
+        const choice = getChoice();
+        const TT = t();
+        if(choice === 'accepted'){
+          toggleBtn.textContent = TT.toggleOn;
+        }else{
+          toggleBtn.textContent = TT.toggleOff;
+        }
+      }
+      window.dailySignalsRefreshToggleLabel = refreshToggleLabel;
+
+      // scelta utente
+      btnOk.addEventListener('click', ()=>{
+        setChoice('accepted');
+        setLastPromptToday();
+        closeBanner();
+        if(window.dailySignalsRefreshToggleLabel) window.dailySignalsRefreshToggleLabel();
+
+        // tentativo (opzionale) di richiesta notifiche browser
+        try{
+          if("Notification" in window && Notification.permission === "default"){
+            Notification.requestPermission().catch(()=>{});
+          }
+        }catch{}
+      });
+      btnNo.addEventListener('click', ()=>{
+        setChoice('rejected');
+        setLastPromptToday();
+        closeBanner();
+        if(window.dailySignalsRefreshToggleLabel) window.dailySignalsRefreshToggleLabel();
+      });
+
+      // footer: attiva/disattiva manualmente
+      if(toggleBtn){
+        toggleBtn.addEventListener('click', ()=>{
+          const choice = getChoice();
+          if(choice === 'accepted'){
+            // disattiva
+            setChoice('rejected');
+            setLastPromptToday();
+            refreshToggleLabel();
+          }else{
+            // mostra banner in modalità gentile
+            openGentle();
+          }
+        });
+      }
+
+      // export helper (se volessimo usarlo altrove)
+      window.needsDailyChoice = function(){
+        return !getChoice();
+      };
+
+      // primo load: se nessuna scelta → blocco
+      if(!getChoice()){
+        openBlocking();
+        setLastPromptToday();
+      }else if(shouldShowGentle()){
+        openGentle();
+        setLastPromptToday();
+      }
+
+      // inizializza label footer alla prima apertura
+      refreshToggleLabel();
+    })();
+  </script>
 
   <!-- 🔐 Firebase Auth -->    
   <script type="module">
@@ -741,97 +1077,169 @@
     logoutBtn.onclick = async ()=>{ await signOut(auth); };
   </script>    
 
-  <script>
-    (function(){
-      const title  = document.getElementById('appTitle');
-      const pastBtn = document.querySelector('button[data-val="past"]');
-      if(!title || !pastBtn) return;
-      let tapTitle=0, tapPast=0, stage=0, timer=null;
-      function reset(){
-        tapTitle=0; tapPast=0; stage=0;
-        if(timer) clearTimeout(timer); timer=null;
-        pastBtn.classList.remove("unlocking");
-      }
-      function flash(){
-        const f=document.createElement("div");
-        f.style.position="fixed";f.style.inset="0";
-        f.style.background="rgba(255,255,255,0.05)";
-        f.style.backdropFilter="blur(2px)";
-        f.style.transition="opacity .6s";f.style.opacity="1";
-        f.style.zIndex="9999";
-        document.body.appendChild(f);
-        setTimeout(()=>f.style.opacity="0",150);
-        setTimeout(()=>f.remove(),800);
-      }
-
-      // 🔐 Verifica il PIN con /api/admin-token
-      async function success(){
-        reset();
-        const pin = prompt("PIN amministratore:");
-        if (!pin) return;
-
-        try {
-          const resp = await fetch("/api/admin-token", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "admin-secret": pin
-            },
-            body: JSON.stringify({ pin }),
-            credentials: "include"
-          });
-
-          const data = await resp.json().catch(() => ({}));
-
-          if (!resp.ok || !data.ok) {
-            alert("PIN errato");
-            return;
-          }
-
-          try {
-            localStorage.setItem("admin_token", data.token);
-          } catch (e) {}
-
-          location.href = "admin.html";
-        } catch (e) {
-          console.error("Errore login admin", e);
-          alert("Errore durante la verifica del PIN. Controlla la connessione e riprova.");
-        }
-      }
-
-      title.addEventListener('click', ()=>{
-        if(++tapTitle>=3){
-          stage=1; tapTitle=0; flash();
-          pastBtn.classList.add("unlocking");
-          setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);
-        }
-        if(timer) clearTimeout(timer);
-        timer=setTimeout(reset,2000);
-      });
-      pastBtn.addEventListener('click', ()=>{
-        if(stage!==1) return;
-        if(++tapPast>=5) success();
-        if(timer) clearTimeout(timer);
-        timer=setTimeout(reset,2500);
-      });
-    })();
-
-    if("serviceWorker" in navigator){    
-      window.addEventListener("load", ()=>{    
-        navigator.serviceWorker.register("/sw.js").catch(()=>{});    
-      });    
+<script>
+  (function(){
+    const title  = document.getElementById('appTitle');
+    const pastBtn = document.querySelector('button[data-val="past"]');
+    if(!title || !pastBtn) return;
+    let tapTitle=0, tapPast=0, stage=0, timer=null;
+    function reset(){
+      tapTitle=0; tapPast=0; stage=0;
+      if(timer) clearTimeout(timer); timer=null;
+      pastBtn.classList.remove("unlocking");
+    }
+    function flash(){
+      const f=document.createElement("div");
+      f.style.position="fixed";f.style.inset="0";
+      f.style.background="rgba(255,255,255,0.05)";
+      f.style.backdropFilter="blur(2px)";
+      f.style.transition="opacity .6s";f.style.opacity="1";
+      f.style.zIndex="9999";
+      document.body.appendChild(f);
+      setTimeout(()=>f.style.opacity="0",150);
+      setTimeout(()=>f.remove(),800);
     }
 
-    // 🔔 CTA frasi giornaliere → avvia flusso domanda (per ora)
-    (function(){
-      const btn = document.getElementById('enableDailyVoices');
-      if(!btn) return;
-      btn.addEventListener('click', ()=>{
-        // in futuro qui collegheremo le vere notifiche push
-        // per ora: porta l’utente nel flusso naturale dell’app
-        location.href = "fourth.html?from=daily";
+    // 🔐 Verifica il PIN con /api/admin-token
+    async function success(){
+      reset();
+      const pin = prompt("PIN amministratore:");
+      if (!pin) return;
+
+      try {
+        const resp = await fetch("/api/admin-token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "admin-secret": pin
+          },
+          body: JSON.stringify({ pin }),
+          credentials: "include"
+        });
+
+        const data = await resp.json().catch(() => ({}));
+
+        if (!resp.ok || !data.ok) {
+          alert("PIN errato");
+          return;
+        }
+
+        try {
+          localStorage.setItem("admin_token", data.token);
+        } catch (e) {}
+
+        location.href = "admin.html";
+      } catch (e) {
+        console.error("Errore login admin", e);
+        alert("Errore durante la verifica del PIN. Controlla la connessione e riprova.");
+      }
+    }
+
+    title.addEventListener('click', ()=>{
+      if(++tapTitle>=3){
+        stage=1; tapTitle=0; flash();
+        pastBtn.classList.add("unlocking");
+        setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);
+      }
+      if(timer) clearTimeout(timer);
+      timer=setTimeout(reset,2000);
+    });
+    pastBtn.addEventListener('click', ()=>{
+      if(stage!==1) return;
+      if(++tapPast>=5) success();
+      if(timer) clearTimeout(timer);
+      timer=setTimeout(reset,2500);
+    });
+  })();
+
+  if("serviceWorker" in navigator){    
+    window.addEventListener("load", ()=>{    
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});    
+    });    
+  }
+
+  // 🔔 Pannello test segnali: SEMPRE visibile, scrive whatif_request e va su fifth.html
+  (function(){
+    try{
+      const toggle = document.getElementById('signalTestToggle');
+      const panel  = document.getElementById('signalTestPanel');
+      if(!toggle || !panel) return;
+
+      // sempre visibile
+      toggle.style.display = 'inline-flex';
+
+      toggle.addEventListener('click', ()=>{
+        const open = panel.style.display === 'block';
+        panel.style.display = open ? 'none' : 'block';
       });
-    })();
-  </script>
+
+      panel.addEventListener('click', (e)=>{
+        const btn = e.target.closest('.sig-btn');
+        if(!btn) return;
+
+        const slot  = btn.dataset.signal || 'morning';      // "morning" | "afternoon" | "evening"
+        const phase = parseInt(btn.dataset.phase || '1', 10) || 1;
+        const mood  = btn.dataset.mood || 'default';
+
+        const L = (window.getCurrentLang && window.getCurrentLang()) || 'it';
+        const moodsLang = (window.MOODS && window.MOODS[L]) || (window.MOODS && window.MOODS.it) || {};
+        const slotObj = moodsLang[slot] || {};
+        const entry = slotObj[mood] || slotObj.default || null;
+
+        let domanda = entry && entry.q;
+        let clarification = entry && entry.clarification;
+        if(!domanda){
+          domanda = (L === 'en')
+            ? "Give me a short, realistic daily scenario to reset my day."
+            : "Dammi uno scenario giornaliero sintetico e realistico per rimettere in carreggiata la giornata.";
+        }
+        clarification = clarification || "";
+
+        // prefs stile/periodo
+        let prefsRaw = localStorage.getItem('whatif_prefs') || '{}';
+        let prefs;
+        try{ prefs = JSON.parse(prefsRaw) || {}; }catch{ prefs = {}; }
+
+        let stile = prefs.stile || (phase === 2 ? 'wtf' : 'whatif');
+        let periodo = prefs.periodo || 'future';
+
+        prefs.stile = stile;
+        prefs.periodo = periodo;
+        localStorage.setItem('whatif_prefs', JSON.stringify(prefs));
+
+        try{
+          localStorage.setItem('domanda', domanda);
+          const req = {
+            source: "signal",
+            domanda,
+            clarification,
+            lang: L,
+            stile,
+            periodo,
+            micro: {
+              // 👇 questi campi sono quelli che /api/ask.js legge per i segnali
+              src: "signal",
+              slot: slot,        // usato da normSignalSlot(...)
+              time: slot,
+              timeOfDay: slot,
+              signal: slot,      // extra, non dà fastidio
+
+              phase,
+              mood,
+              ts: Date.now()
+            }
+          };
+          localStorage.setItem('whatif_request', JSON.stringify(req));
+        }catch(err){
+          console.warn("cannot save signal request", err);
+        }
+
+        location.href = "fifth.html";
+      });
+    }catch(e){
+      console.warn('signal test panel error', e);
+    }
+  })();
+      </script>
 </body>
-</html>
+    </html>
