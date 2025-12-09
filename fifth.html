@@ -1361,15 +1361,16 @@ async function startFlow(){
   const micro = (req && req.micro) ? req.micro : {};
   const phase = Number(micro.phase || 1);
 
-  const cached = loadResultFromCache(domanda, clarification);
-  if (cached) {
-    showIntroOnce();
-    applyResultToUI(cached);
-    return;
-  }
+// ❌ niente cache per i segnali (frase del giorno)
+const cached = isSignal ? null : loadResultFromCache(domanda, clarification);
+if (cached) {
+  showIntroOnce();
+  applyResultToUI(cached);
+  return;
+}
 
   showIntroOnce();
-  if (!IS_SIGNAL) startOracleLoading();
+  if (!isSIGNAL) startOracleLoading();
 
   // Se è un segnale WHAT IF (fase 1) e NON è in cache → scala 1 credito
   if (isSignal && phase === 1) {
