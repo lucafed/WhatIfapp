@@ -1,6 +1,7 @@
 // FILE: firebase.init.js
 // Inizializzazione unica di Firebase (Auth + Firestore) via CDN
 // + re-export di TUTTE le funzioni Firestore usate in /store/credits.js
+// + Firebase Messaging (notifiche)
 
 // Import SDK modulari (stessa versione ovunque!)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -20,6 +21,13 @@ import {
   serverTimestamp,
   updateDoc,
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+// 🔔 FIREBASE MESSAGING (NOTIFICHE PUSH)
+import {
+  getMessaging,
+  getToken,
+  onMessage,
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging.js";
 
 // ⚡ CONFIG (la tua, identica a prima)
 const firebaseConfig = {
@@ -43,7 +51,10 @@ setPersistence(auth, browserLocalPersistence).catch((err) => {
 // 🔥 FIRESTORE DB
 const db = getFirestore(app);
 
-// 👉 Esporto TUTTO ciò che usano fourth/fifth/admin/credits
+// 🔔 MESSAGING (notifiche)
+const messaging = getMessaging(app);
+
+// 👉 Esporto TUTTO ciò che usano fourth / fifth / admin / credits
 export {
   app,
   auth,
@@ -54,4 +65,8 @@ export {
   runTransaction,
   serverTimestamp,
   updateDoc,
+  // notifiche
+  messaging,
+  getToken,
+  onMessage,
 };
