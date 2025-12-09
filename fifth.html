@@ -1,4 +1,4 @@
-<!-- FILE: fifth.html (risultato + modalità FRASE DEL GIORNO con crediti) -->
+<!-- FILE: fifth.html (risultato, SOLO LETTURA crediti da Firestore) -->
 <!DOCTYPE html>
 <html lang="it" data-theme="whatif">
 <head>
@@ -174,39 +174,10 @@ justify-content:center;
 .mot .note{font-size:15.5px;line-height:1.65}
 }
 
-/* === SIGNAL MODE (frase del giorno) === */
-#signalCtaBox{margin-top:14px;}
-#signalHint{max-width:640px;}
-body.signal-mode #lblQ,
-body.signal-mode #qView,
-body.signal-mode .pct-row,
-body.signal-mode #introBox,
-body.signal-mode #lblP,
-body.signal-mode #resultBox,
-body.signal-mode #lblVideo,
-body.signal-mode #videoBox,
-body.signal-mode #shareBtn,
-body.signal-mode #saveBtn,
-body.signal-mode #againBtn,
-body.signal-mode #metaInfo,
-body.signal-mode .oracle-wrap,
-body.signal-mode #ttsRow{
-  display:none !important;
-}
-body.signal-mode #answer{
-  text-align:left;
-}
-body.signal-mode #signalCtaBox{
-  display:flex !important;
-}
-body.signal-mode #signalHint{
-  display:block !important;
-}
-
 /* === Overlay (store/rewarded) === */
 #overlay{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);z-index:9999}
 #overlay-frame{width:100%;max-width:520px;height:78vh;border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(20,28,34,.95);border:1px solid var(--line);padding:10px 14px;border-radius:12px;font-weight:700;z-index:10000;opacity:0;transition:opacity .2s,transform .2s}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
 
@@ -273,18 +244,11 @@ transition:opacity .35s ease, transform .35s ease;
       <div id="oracleLine" class="oracle-line">—</div>
     </div>
     <div id="answer" class="story">⏳ …</div>
-
     <!-- 🔊 TTS: Bottone per ascoltare la risposta -->
-    <div class="row" id="ttsRow" style="margin-top:12px; gap:8px;">
+    <div class="row" style="margin-top:12px; gap:8px;">
       <button class="btn ghost" id="readAnswerBtn">🔊 Ascolta la risposta</button>
       <span id="ttsStatus" class="small" style="opacity:0.9;"></span>
     </div>
-
-    <!-- 🌞 Modalità FRASE DEL GIORNO: CTA sotto la frase -->
-    <div class="row" id="signalCtaBox" style="margin-top:14px;display:none;">
-      <button class="btn primary" id="signalAskBtn">💬 Chiedi o rispondi a questa</button>
-    </div>
-    <p class="small" id="signalHint" style="margin-top:6px;display:none;"></p>
 
     <div class="hr"></div>
     <div class="label" id="lblP">Esito & motivazioni</div>
@@ -335,7 +299,7 @@ transition:opacity .35s ease, transform .35s ease;
     </div>
 
     <div class="hr"></div>
-    <div class="row" id="bottomActions">
+    <div class="row">
       <button class="btn primary" id="shareBtn">📤 Condividi / Copia</button>
       <button class="btn ghost" id="saveBtn">⭐ Salva</button>
       <button class="btn ghost" id="againBtn">🔁 Fai un’altra domanda</button>
@@ -347,7 +311,10 @@ transition:opacity .35s ease, transform .35s ease;
 <div id="overlay" aria-hidden="true">
   <iframe id="overlay-frame" src="about:blank" title="modal"></iframe>
 </div>
+
+<!-- 🔴 QUI comparirà anche il bottone "Acquista crediti" quando il saldo è 0 -->
 <p class="small" id="creditInfo" style="text-align:center;margin:10px 0 24px"></p>
+
 <div class="toast" id="toast"></div>
 
 <!-- 🔔 audio reveal -->
@@ -383,7 +350,7 @@ import {
 /* ==== Base & prefs ==== */
 const LS = localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-let style = prefs.stile || 'whatif';   // ← diventa let
+let style = prefs.stile || 'whatif';
 const periodo = prefs.periodo || 'future';
 const IS_ADMIN = !!LS.getItem('admin_token');
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
@@ -392,11 +359,11 @@ document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'w
 (function bootstrapSignalFromUrl() {
   try {
     const params = new URLSearchParams(location.search);
-    const slot = (params.get("signal") || "").toLowerCase(); // morning | afternoon | evening
-    if (!slot) return; // niente segnale → flusso normale
+    const slot = (params.get("signal") || "").toLowerCase();
+    if (!slot) return;
 
-    const phase = Number(params.get("phase") || "1"); // 1 = WHAT IF, 2 = WTF
-    const mood  = params.get("mood") || null;        // opzionale (solo pomeriggio)
+    const phase = Number(params.get("phase") || "1");
+    const mood  = params.get("mood") || null;
 
     function buildSignalQuestion(slot, phase, mood) {
       if (slot === "morning") {
@@ -471,7 +438,9 @@ const I18N = {
        scientificTitle:"Motivazione (scientifica)",
        chipsFav:"favorevoli", chipsCon:"contrari", chipsAst:"astenuti",
        motFallback:"Motivo: benefici concreti a breve, con vincoli gestibili.",
-       credits:(n)=>`💰 Crediti: ${n}`, noCredits:"Hai terminato i crediti.",
+       credits:(n)=>`💰 Crediti: ${n}`, 
+       noCredits:"Hai terminato i crediti.",
+       buyCredits:"Acquista crediti",
        storeTitle:"Crediti", buy5:"Compra +5 crediti (test)", buy10:"Compra +10 crediti (test)", buy20:"Compra +20 crediti (test)",
        watchAd:"Guarda pubblicità (+1)", close:"Chiudi",
        comingSoon:"Prossimamente", buySoonNote:"Acquisto crediti non ancora disponibile.",
@@ -480,7 +449,6 @@ const I18N = {
        guideQuick:"Indicazioni rapide",
        guideAdvice:"Consiglio",
        guideAnalysis:"Analisi sintetica",
-       /* VIDEO */
        videoTitle:"Video condivisibile",
        videoHelp:"Crea un breve video con domanda e risposta, pronto da condividere sui social.",
        videoBtn:"🎬 Crea video",
@@ -492,28 +460,12 @@ const I18N = {
        videoShareCancelled:"Condivisione annullata.",
        videoOpenTikTok:"📱 Apri TikTok",
        videoOpenInsta:"📸 Apri Instagram",
-       /* TTS */
        ttsBtn:"🔊 Ascolta la risposta",
        ttsBtnStop:"⏹ Stop",
        ttsUnsupported:"Il tuo dispositivo non supporta la lettura vocale.",
        ttsNoAnswer:"Nessuna risposta da leggere.",
        ttsPlaying:"Riproduzione in corso…",
-       ttsError:"Errore nella sintesi vocale.",
-       /* DAILY (frase del giorno) */
-       dailyTitleWTF:"⚡ What the F — Oggi",
-       dailyTitleWHF:"💡 What if — Oggi",
-       dailySubMorning:"Segnale del mattino",
-       dailySubAfternoon:"Segnale del pomeriggio",
-       dailySubEvening:"Segnale della sera",
-       dailyCta:"💬 Chiedi o rispondi a questa",
-       dailyHintWHF:"Se questa frase ti punge un po’, trasformala in domanda o raccontami cosa ti ha smosso.",
-       dailyHintWTF:"Se ti ha fatto sorridere o arrabbiare, giramela in una domanda o raccontami cosa ti ha punto.",
-       loginRequiredDaily:"Per usare la frase del giorno devi essere loggato.",
-       noCreditsShort:"Hai terminato i crediti di oggi.",
-       goStore:"🛒 Vai allo store crediti",
-       creditShort:(n)=>`💰 Crediti rimasti oggi: ${n}`,
-       creditInfiniteShort:"💰 Crediti: ∞ (admin)",
-       creditError:"Errore nei crediti, riprova."
+       ttsError:"Errore nella sintesi vocale."
   },
   en:{ titleWTF:"⚡ What the F — Result", titleWHF:"💡 What if — Result",
        sub:(q)=>`Question: “${q}”`, q:"Your question", a:"Answer",
@@ -528,16 +480,17 @@ const I18N = {
        votersTitle:"Committee", seriousTitle:"Motivations", scientificTitle:"Rationale (scientific)",
        chipsFav:"in favour", chipsCon:"against", chipsAst:"abstained",
        motFallback:"Reason: short-term, concrete benefits with manageable constraints.",
-       credits:(n)=>`💰 Credits: ${n}`, noCredits:"You ran out of credits.",
+       credits:(n)=>`💰 Credits: ${n}`, 
+       noCredits:"You ran out of credits.",
+       buyCredits:"Buy credits",
        storeTitle:"Credits", buy5:"Buy +5 credits (test)", buy10:"Buy +10 credits (test)", buy20:"Buy +20 credits (test)",
        watchAd:"Watch ad (+1)", close:"Close",
        comingSoon:"Coming soon", buySoonNote:"Credit purchases not available yet.",
-       toastPlus:(n)=>`+${n} credit`,  toastMinus:(n)=>`-${n} credit`,
+       toastPlus:(n)=>`+${n} credit`, toastMinus:(n)=>`-${n} credit`,
        guideTitle:"Guidance",
        guideQuick:"Quick tips",
        guideAdvice:"Advice",
        guideAnalysis:"Concise analysis",
-       /* VIDEO */
        videoTitle:"Shareable video",
        videoHelp:"Create a short video with your question and answer, ready to share on social media.",
        videoBtn:"🎬 Create video",
@@ -549,28 +502,12 @@ const I18N = {
        videoShareCancelled:"Share cancelled.",
        videoOpenTikTok:"📱 Open TikTok",
        videoOpenInsta:"📸 Open Instagram",
-       /* TTS */
        ttsBtn:"🔊 Listen to the answer",
        ttsBtnStop:"⏹ Stop",
        ttsUnsupported:"Your device does not support voice reading.",
        ttsNoAnswer:"No answer to read.",
        ttsPlaying:"Playing audio…",
-       ttsError:"Speech synthesis error.",
-       /* DAILY */
-       dailyTitleWTF:"⚡ What the F — Today",
-       dailyTitleWHF:"💡 What if — Today",
-       dailySubMorning:"Morning signal",
-       dailySubAfternoon:"Afternoon signal",
-       dailySubEvening:"Evening signal",
-       dailyCta:"💬 Ask or answer this",
-       dailyHintWHF:"If something in here stings a bit, turn it into a question or tell me what moved in you.",
-       dailyHintWTF:"If it made you laugh or swear, throw it back as a question or tell me what it poked.",
-       loginRequiredDaily:"You need to be logged in to read today’s message.",
-       noCreditsShort:"You’ve used all your messages for today.",
-       goStore:"🛒 Open credit store",
-       creditShort:(n)=>`💰 Messages left today: ${n}`,
-       creditInfiniteShort:"💰 Messages today: ∞ (admin)",
-       creditError:"Credit error, please try again."
+       ttsError:"Speech synthesis error."
   },
   es:{ titleWTF:"⚡ What the F — Resultado", titleWHF:"💡 What if — Resultado",
        sub:(q)=>`Pregunta: “${q}”`, q:"Tu pregunta", a:"Respuesta",
@@ -585,16 +522,17 @@ const I18N = {
        votersTitle:"Comité", seriousTitle:"Motivaciones", scientificTitle:"Motivo (científico)",
        chipsFav:"a favor", chipsCon:"en contra", chipsAst:"abstenciones",
        motFallback:"Motivo: beneficios concretos a corto plazo con límites manejables.",
-       credits:(n)=>`💰 Créditos : ${n}`, noCredits:"Se te han acabado los créditos.",
+       credits:(n)=>`💰 Créditos: ${n}`, 
+       noCredits:"Se te han acabado los créditos.",
+       buyCredits:"Comprar créditos",
        storeTitle:"Créditos", buy5:"Comprar +5 créditos (test)", buy10:"Comprar +10 créditos (test)", buy20:"Comprar +20 créditos (test)",
        watchAd:"Ver anuncio (+1)", close:"Cerrar",
        comingSoon:"Próximamente", buySoonNote:"La compra de créditos aún no está disponible.",
-       toastPlus:(n)=>`+${n} crédito`,  toastMinus:(n)=>`-${n} crédito`,
+       toastPlus:(n)=>`+${n} crédito`, toastMinus:(n)=>`-${n} crédito`,
        guideTitle:"Guía",
        guideQuick:"Indicaciones rápidas",
        guideAdvice:"Consejo",
        guideAnalysis:"Analisis sintético",
-       /* VIDEO */
        videoTitle:"Vídeo compartible",
        videoHelp:"Crea un vídeo corto con tu pregunta y respuesta, listo para compartir en redes.",
        videoBtn:"🎬 Crear vídeo",
@@ -606,28 +544,12 @@ const I18N = {
        videoShareCancelled:"Compartición cancelada.",
        videoOpenTikTok:"📱 Abrir TikTok",
        videoOpenInsta:"📸 Abrir Instagram",
-       /* TTS */
        ttsBtn:"🔊 Escuchar la respuesta",
        ttsBtnStop:"⏹ Stop",
        ttsUnsupported:"Tu dispositivo no soporta la lectura en voz alta.",
        ttsNoAnswer:"No hay respuesta para leer.",
        ttsPlaying:"Reproduciendo audio…",
-       ttsError:"Error en la síntesis de voz.",
-       /* DAILY */
-       dailyTitleWTF:"⚡ What the F — Hoy",
-       dailyTitleWHF:"💡 What if — Hoy",
-       dailySubMorning:"Señal de la mañana",
-       dailySubAfternoon:"Señal de la tarde",
-       dailySubEvening:"Señal de la noche",
-       dailyCta:"💬 Pregunta o responde a esto",
-       dailyHintWHF:"Si esto te toca un poco, conviértelo en pregunta o cuéntame qué se ha movido.",
-       dailyHintWTF:"Si te ha hecho reír o enfadar, lánzalo como pregunta o dime qué te ha pinchado.",
-       loginRequiredDaily:"Debes iniciar sesión para leer la frase del día.",
-       noCreditsShort:"Has usado todos los mensajes de hoy.",
-       goStore:"🛒 Abrir tienda de créditos",
-       creditShort:(n)=>`💰 Mensajes restantes hoy: ${n}`,
-       creditInfiniteShort:"💰 Mensajes hoy: ∞ (admin)",
-       creditError:"Error en los créditos, inténtalo de nuevo."
+       ttsError:"Error en la síntesis de voz."
   },
   fr:{ titleWTF:"⚡ What the F — Résultat", titleWHF:"💡 What if — Résultat",
        sub:(q)=>`Question : « ${q} »`, q:"Ta question", a:"Réponse",
@@ -642,16 +564,17 @@ const I18N = {
        votersTitle:"Comité", seriousTitle:"Motivations", scientificTitle:"Motivation (scientifique)",
        chipsFav:"pour", chipsCon:"contre", chipsAst:"abstentions",
        motFallback:"Raison : bénéfices concrets à court terme, contraintes gérables.",
-       credits:(n)=>`💰 Crédits : ${n}`, noCredits:"Crédits épuisés.",
+       credits:(n)=>`💰 Crédits : ${n}`, 
+       noCredits:"Crédits épuisés.",
+       buyCredits:"Acheter des crédits",
        storeTitle:"Crédits", buy5:"Acheter +5 crédits (test)", buy10:"Acheter +10 crédits (test)", buy20:"Acheter +20 crédits (test)",
        watchAd:"Regarder une pub (+1)", close:"Fermer",
        comingSoon:"Bientôt", buySoonNote:"Achat de crédits pas encore disponible.",
-       toastPlus:(n)=>`+${n} crédit`,  toastMinus:(n)=>`-${n} crédit`,
+       toastPlus:(n)=>`+${n} crédit`, toastMinus:(n)=>`-${n} crédit`,
        guideTitle:"Conseils",
        guideQuick:"Conseils rapides",
        guideAdvice:"Suggestion",
        guideAnalysis:"Analyse concise",
-       /* VIDEO */
        videoTitle:"Vidéo partageable",
        videoHelp:"Crée une courte vidéo avec ta question et la réponse, prête à être partagée sur les réseaux.",
        videoBtn:"🎬 Créer la vidéo",
@@ -663,28 +586,12 @@ const I18N = {
        videoShareCancelled:"Partage annulé.",
        videoOpenTikTok:"📱 Ouvrir TikTok",
        videoOpenInsta:"📸 Ouvrir Instagram",
-       /* TTS */
        ttsBtn:"🔊 Écouter la réponse",
        ttsBtnStop:"⏹ Stop",
        ttsUnsupported:"Ton appareil ne supporte pas la lecture vocale.",
        ttsNoAnswer:"Aucune réponse à lire.",
        ttsPlaying:"Lecture en cours…",
-       ttsError:"Erreur de synthèse vocale.",
-       /* DAILY */
-       dailyTitleWTF:"⚡ What the F — Aujourd’hui",
-       dailyTitleWHF:"💡 What if — Aujourd’hui",
-       dailySubMorning:"Signal du matin",
-       dailySubAfternoon:"Signal de l’après-midi",
-       dailySubEvening:"Signal du soir",
-       dailyCta:"💬 Poser une question / répondre",
-       dailyHintWHF:"Si quelque chose te pique un peu, transforme-le en question ou raconte-moi ce que ça remue.",
-       dailyHintWTF:"Si ça t’a fait rire ou râler, renvoie-le en question ou dis-moi ce que ça a touché.",
-       loginRequiredDaily:"Tu dois être connecté pour lire la phrase du jour.",
-       noCreditsShort:"Tu as utilisé tous les messages d’aujourd’hui.",
-       goStore:"🛒 Ouvrir la boutique de crédits",
-       creditShort:(n)=>`💰 Messages restants aujourd’hui : ${n}`,
-       creditInfiniteShort:"💰 Messages aujourd’hui : ∞ (admin)",
-       creditError:"Erreur de crédits, réessaie."
+       ttsError:"Erreur de synthèse vocale."
   },
   de:{ titleWTF:"⚡ What the F — Ergebnis", titleWHF:"💡 What if — Ergebnis",
        sub:(q)=>`Frage: „${q}“`, q:"Deine Frage", a:"Antwort",
@@ -699,16 +606,17 @@ const I18N = {
        votersTitle:"Gremium", seriousTitle:"Begründungen", scientificTitle:"Begründung (wissenschaftlich)",
        chipsFav:"dafür", chipsCon:"dagegen", chipsAst:"enthalten",
        motFallback:"Grund: kurzfristiger, greifbarer Nutzen mit beherrschbaren Einschränkungen.",
-       credits:(n)=>`💰 Credits: ${n}`, noCredits:"Credits aufgebraucht.",
+       credits:(n)=>`💰 Credits: ${n}`, 
+       noCredits:"Credits aufgebraucht.",
+       buyCredits:"Credits kaufen",
        storeTitle:"Credits", buy5:"+5 Credits kaufen (Test)", buy10:"+10 Credits kaufen (Test)", buy20:"+20 Credits kaufen (Test)",
        watchAd:"Werbung ansehen (+1)", close:"Schließen",
        comingSoon:"Bald verfügbar", buySoonNote:"Kauf von Credits noch nicht verfügbar.",
-       toastPlus:(n)=>`+${n} Credit`,  toastMinus:(n)=>`-${n} Credit`,
+       toastPlus:(n)=>`+${n} Credit`, toastMinus:(n)=>`-${n} Credit`,
        guideTitle:"Leitfaden",
        guideQuick:"Schnelle Hinweise",
        guideAdvice:"Rat",
        guideAnalysis:"Kurzanalyse",
-       /* VIDEO */
        videoTitle:"Teilbares Video",
        videoHelp:"Erstelle ein kurzes Video mit deiner Frage und Antwort, bereit zum Teilen in Social Media.",
        videoBtn:"🎬 Video erstellen",
@@ -720,47 +628,28 @@ const I18N = {
        videoShareCancelled:"Teilen abgebrochen.",
        videoOpenTikTok:"📱 TikTok öffnen",
        videoOpenInsta:"📸 Instagram öffnen",
-       /* TTS */
        ttsBtn:"🔊 Antwort anhören",
        ttsBtnStop:"⏹ Stop",
        ttsUnsupported:"Dein Gerät unterstützt keine Sprachausgabe.",
        ttsNoAnswer:"Keine Antwort zum Vorlesen.",
        ttsPlaying:"Audio wird abgespielt…",
-       ttsError:"Fehler bei der Sprachausgabe.",
-       /* DAILY */
-       dailyTitleWTF:"⚡ What the F — Heute",
-       dailyTitleWHF:"💡 What if — Heute",
-       dailySubMorning:"Signal am Morgen",
-       dailySubAfternoon:"Signal am Nachmittag",
-       dailySubEvening:"Signal am Abend",
-       dailyCta:"💬 Frag oder antworte darauf",
-       dailyHintWHF:"Wenn dich etwas daran trifft, mach eine Frage daraus oder erzähl, was sich bewegt hat.",
-       dailyHintWTF:"Wenn du lachen oder fluchen musstest, wirf es als Frage zurück oder sag, was es getroffen hat.",
-       loginRequiredDaily:"Du musst eingeloggt sein, um den Tagessatz zu lesen.",
-       noCreditsShort:"Du hast deine Nachrichten für heute aufgebraucht.",
-       goStore:"🛒 Credit-Store öffnen",
-       creditShort:(n)=>`💰 Nachrichten heute übrig: ${n}`,
-       creditInfiniteShort:"💰 Nachrichten heute: ∞ (admin)",
-       creditError:"Fehler bei den Credits, versuch es erneut."
+       ttsError:"Fehler bei der Sprachausgabe."
   }
 };
 const SUP_LANG=['it','en','es','fr','de'];
 
 /* ======== LINGUA ======== */
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
-const IS_SIGNAL = !!(reqEarly && reqEarly.source === "signal" && reqEarly.micro);
 
-/* 🔁 Override stile se la richiesta arriva da un segnale (morning/afternoon/evening) */
-if (IS_SIGNAL && reqEarly.micro && reqEarly.micro.phase) {
+if (reqEarly && reqEarly.source === "signal" && reqEarly.micro && reqEarly.micro.phase) {
   style = reqEarly.micro.phase === 2 ? "wtf" : "whatif";
   document.documentElement.setAttribute(
     "data-theme",
     style === "wtf" ? "wtf" : "whatif"
   );
 }
-if (IS_SIGNAL) {
-  document.body.classList.add("signal-mode");
-}
+
+const IS_SIGNAL = !!(reqEarly && reqEarly.source === "signal" && reqEarly.micro);
 
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
@@ -771,7 +660,7 @@ function detectLang(text=''){
     it:[" che "," perché"," se "," quando"," dove"," non "," sono "," vorrei"," posso"," e se"," una settimana"," come"],
     en:[" what "," if "," the "," and "," you "," are "," will "," would "," can "," should "," could "],
     es:[" qué"," si "," porque"," cuando"," dónde"," no "," soy "," puedo"," quiero","¿"," semana "],
-    fr:[" quoi"," si "," pourquoi"," quand"," où"," pas "," je "," peux"," si je"],
+    fr:[" quoi"," si "," pourquoi"," quand"," où"," pas "," je "," peux"," si je"," et si"],
     de:[" was"," wenn"," warum"," wann"," wo"," nicht"," ich"," kann"," möchte"," würde"," und wenn"]
   };
   const score={};
@@ -800,38 +689,43 @@ const t = ()=>I18N[lang]||I18N.it;
 let currentUser = null;
 let currentBalance = 0;
 
+/* 🔄 AGGIORNATO: mostra bottone "Acquista crediti" quando balance = 0 */
 function updateCreditInfo(){
   const creditInfo = document.getElementById('creditInfo');
   if(!creditInfo) return;
 
+  const T = t();
+
   if (IS_ADMIN) {
-    creditInfo.textContent = IS_SIGNAL
-      ? (t().creditInfiniteShort || t().credits(Infinity))
-      : "💰 Crediti: ∞ (admin)";
+    creditInfo.textContent = "💰 Crediti: ∞ (admin)";
     return;
   }
 
   const val = currentUser ? currentBalance : 0;
-  if (IS_SIGNAL && typeof t().creditShort === "function") {
-    creditInfo.textContent = t().creditShort(val);
+
+  if (val > 0) {
+    creditInfo.innerHTML = T.credits(val);
   } else {
-    creditInfo.textContent = t().credits(val);
+    const label = T.buyCredits || "Acquista crediti";
+    creditInfo.innerHTML = `
+      ${T.credits(0)}<br>
+      <button id="buyCreditsBtn" class="btn primary" style="margin-top:8px;">
+        ${label}
+      </button>
+    `;
+    const btn = document.getElementById('buyCreditsBtn');
+    if (btn) {
+      btn.addEventListener('click', ()=>{
+        try{
+          location.href = "/store/credit-store.html?lang=" + (lang || "it");
+        }catch{}
+      });
+    }
   }
 }
 
 onAuthStateChanged(auth, async (user)=>{
   currentUser = user;
-
-  if (!user && !IS_ADMIN) {
-    // Per la frase del giorno vogliamo che sia loggato
-    if (IS_SIGNAL) {
-      toast(t().loginRequiredDaily || t().noCredits || "");
-      try{
-        location.href = "index.html";
-      }catch{}
-      return;
-    }
-  }
 
   if (!user || IS_ADMIN) {
     currentBalance = 0;
@@ -850,9 +744,8 @@ onAuthStateChanged(auth, async (user)=>{
   updateCreditInfo();
 });
 
-/* 🔻 Scala 1 credito SOLO per segnali fase 1 (morning/afternoon/evening WHAT IF) */
+/* 🔻 AGGIORNATO: niente controllo "devi essere loggato" qui, perché in fifth sei già loggato */
 async function ensureSignalCredit(micro = {}) {
-  if (!IS_SIGNAL) return true;
   if (IS_ADMIN) return true;
 
   const phase = Number(micro.phase || 1);
@@ -861,18 +754,13 @@ async function ensureSignalCredit(micro = {}) {
     return true;
   }
 
-  if (!currentUser) {
-    toast(t().loginRequiredDaily || t().noCredits || "");
-    return false;
-  }
-
   try {
     const ok = await consumeCredit();
     if (!ok) {
-      toast(t().noCreditsShort || t().noCredits || "Hai terminato i crediti.");
-      try {
-        location.href = "/store/credit-store.html?lang=" + (lang || "it");
-      } catch {}
+      // niente crediti → settiamo balance 0, aggiorniamo UI e mostriamo messaggio
+      currentBalance = 0;
+      updateCreditInfo();
+      toast(t().noCredits || "Hai terminato i crediti.");
       return false;
     }
 
@@ -885,7 +773,7 @@ async function ensureSignalCredit(micro = {}) {
     return true;
   } catch (e) {
     console.error("ensureSignalCredit error:", e);
-    toast(t().creditError || "Errore nei crediti, riprova.");
+    toast("Errore nei crediti, riprova.");
     return false;
   }
 }
@@ -920,10 +808,7 @@ function showIntroOnce(){
     const seen = LS.getItem(INTRO_KEY)==='1';
     const box = document.getElementById('introBox');
     if(!box) return;
-    if(seen || IS_SIGNAL){ // in modalità frase del giorno niente intro Zoltar
-      box.style.display='none';
-      return;
-    }
+    if(seen){ box.style.display='none'; return; }
     const L = (INTRO[style] && INTRO[style][lang]) ? INTRO[style][lang] : INTRO['whatif']['it'];
     const line = (periodo==='past') ? L.past : L.future;
     box.textContent = line;
@@ -941,9 +826,6 @@ const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct
 const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
 const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
 const motNote=qs('#motNote'), toastEl=qs('#toast');
-const signalCtaBox = qs('#signalCtaBox');
-const signalAskBtn = qs('#signalAskBtn');
-const signalHint = qs('#signalHint');
 
 /* ==== VIDEO refs ==== */
 const videoBtn = qs('#videoBtn');
@@ -960,7 +842,6 @@ const typingSfx = document.getElementById('typingSfx');
 let typingTimeoutId = null;
 let typingAnswerTimer = null;
 
-/* suono breve */
 function playTypingShort(ms=2200){
   if(!typingSfx) return;
   try{
@@ -977,7 +858,6 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* risposta: NIENTE macchina da scrivere → testo intero + fade-in, nessun saltello */
 function showAnswerWithTyping(text){
   const full = String(text || "");
   if(!answerEl) return;
@@ -991,10 +871,8 @@ function showAnswerWithTyping(text){
     typingTimeoutId = null;
   }
 
-  // eventualmente solo un suono breve all'inizio
   playTypingShort(1800);
 
-  // reset stile e applico fade-in
   answerEl.style.transition = "none";
   answerEl.style.opacity = 0;
   answerEl.style.height = "";
@@ -1002,7 +880,6 @@ function showAnswerWithTyping(text){
 
   answerEl.textContent = full;
 
-  // piccolo delay per permettere al browser di applicare lo stile
   requestAnimationFrame(()=>{
     answerEl.style.transition = "opacity .35s ease-out";
     answerEl.style.opacity = 1;
@@ -1019,98 +896,28 @@ function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
 function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
 
-/* ==== Slot helper per segnali ==== */
-function slotLabelText(){
-  const params = new URLSearchParams(location.search);
-  const micro = (reqEarly && reqEarly.micro) ? reqEarly.micro : {};
-  
-  // Prova a leggere da:
-  // 1) query string: ?signal=... o ?slot=...
-  // 2) micro.slot / micro.time / micro.timeOfDay salvati in localStorage
-  let slotRaw =
-    params.get("signal") ||
-    params.get("slot")   ||
-    micro.slot           ||
-    micro.time           ||
-    micro.timeOfDay      ||
-    "";
-
-  const slot = String(slotRaw).toLowerCase();
-  const T = t();
-
-  // -> pomeriggio
-  if (
-    slot.includes("afternoon") ||
-    slot.includes("pomeriggio") ||
-    slot.includes("pm")
-  ){
-    return T.dailySubAfternoon || "";
-  }
-
-  // -> sera
-  if (
-    slot.includes("evening") ||
-    slot.includes("sera")    ||
-    slot.includes("night")
-  ){
-    return T.dailySubEvening || "";
-  }
-
-  // default = mattino
-  return T.dailySubMorning || "";
-  }
-
 /* ==== Titles/Text ==== */
 function applyUI(q){
   const T=t();
-  if (IS_SIGNAL) {
-    // modalità frase del giorno
-    setText('#title', style==='wtf'?T.dailyTitleWTF:T.dailyTitleWHF);
-    subtitle.textContent = slotLabelText() || "—";
-  } else {
-    setText('#title', style==='wtf'?T.titleWTF:T.titleWHF);
-    subtitle.textContent=T.sub(q||'—');
-  }
-
-  setText('#lblQ', T.q);
-  setText('#lblA', T.a);
-  setText('#lblP', T.p);
-  shareBtn.textContent=T.share;
-  againBtn.textContent=T.again;
-  if(saveBtn) saveBtn.textContent=T.save;
+  setText('#title', style==='wtf'?T.titleWTF:T.titleWHF);
+  subtitle.textContent=T.sub(q||'—'); setText('#lblQ', T.q); setText('#lblA', T.a); setText('#lblP', T.p);
+  shareBtn.textContent=T.share; againBtn.textContent=T.again; if(saveBtn) saveBtn.textContent=T.save;
   styleBadge.textContent=(style==='wtf')?T.styleWTF:T.styleWHF;
-  setText('#pctLabel', T.pctLabel);
-  if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel;
-  setText('#metaInfo', T.meta(style,periodo));
+  setText('#pctLabel', T.pctLabel); if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel; setText('#metaInfo', T.meta(style,periodo));
 
-  // video
   setText('#lblVideo', T.videoTitle || 'Video');
   const vh = qs('#videoHelp'); if(vh) vh.textContent = T.videoHelp || '';
   if(videoBtn) videoBtn.textContent = T.videoBtn || '🎬 Crea video';
+
   if(openTikTokBtn) openTikTokBtn.textContent = T.videoOpenTikTok || "📱 TikTok";
   if(openInstaBtn) openInstaBtn.textContent = T.videoOpenInsta || "📸 Instagram";
+
   if(videoNoteEl) videoNoteEl.textContent = '';
 
-  // TTS
   const ttsBtn = document.getElementById("readAnswerBtn");
   const ttsStatus = document.getElementById("ttsStatus");
   if(ttsBtn) ttsBtn.textContent = T.ttsBtn || "🔊";
   if(ttsStatus) ttsStatus.textContent = "";
-
-  // CTA frase del giorno
-  if (signalCtaBox && signalHint && signalAskBtn) {
-    if (IS_SIGNAL) {
-      signalCtaBox.style.display = "flex";
-      signalHint.style.display = "block";
-      signalAskBtn.textContent = T.dailyCta || "💬";
-      signalHint.textContent = style === "wtf"
-        ? (T.dailyHintWTF || "")
-        : (T.dailyHintWHF || "");
-    } else {
-      signalCtaBox.style.display = "none";
-      signalHint.style.display = "none";
-    }
-  }
 }
 
 /* ==== Probability ==== */
@@ -1146,7 +953,6 @@ function nextOracleLine(){
   return oracleDeck.pop();
 }
 function startOracleLoading(){
-  if (IS_SIGNAL) return; // niente oracle animato per frase del giorno
   document.body.classList.add('loading');
   const lineEl = document.getElementById('oracleLine');
   const tick = ()=>{
@@ -1163,7 +969,6 @@ function stopOracleLoading(){
   setTimeout(()=>{ if(lineEl) lineEl.textContent = " "; }, 350);
 }
 function revealEffect(){
-  if (IS_SIGNAL) return;
   const wrap = document.querySelector('.oracle-wrap');
   if(!wrap) return;
   wrap.classList.add('reveal');
@@ -1187,7 +992,7 @@ function wtfMotivationDemenziale(langCode){
   return `Pseudoscienza da bancone: i micro-passi battono i piani epici. La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: fai, e smettila di pensarci troppo.`;
 }
 
-/* ===== NUOVE MOTIVAZIONI WHAT IF (più corte, da AI) ===== */
+/* ===== NUOVE MOTIVAZIONI WHAT IF ===== */
 function buildWhatIfMotivationsPretty(domanda, pct, rawFromAI){
   const L = lang;
   const isPast = (periodo === 'past');
@@ -1284,14 +1089,8 @@ function loadResultFromCache(domanda, clarification){
 
 function applyResultToUI(result){
   const domanda = result.domanda || LS.getItem('domanda') || '';
-
-  if (IS_SIGNAL) {
-    applyUI(""); // usa header daily
-    qView.textContent = "—";
-  } else {
-    applyUI(domanda);
-    qView.textContent = domanda || '—';
-  }
+  applyUI(domanda);
+  qView.textContent = domanda || '—';
 
   const finalAnswer = result.answer || '—';
   showAnswerWithTyping(finalAnswer);
@@ -1351,15 +1150,8 @@ function applyQuestion(){
   const req=JSON.parse(LS.getItem('whatif_request')||'{}');
   const domanda=req.domanda || LS.getItem('domanda') || '';
   const clarification = req.clarification || req.answer || '';
-
-  if (IS_SIGNAL) {
-    applyUI(""); // header daily
-    qView.textContent = "—";
-  } else {
-    applyUI(domanda);
-    qView.textContent = domanda || '—';
-  }
-
+  applyUI(domanda);
+  qView.textContent = domanda || '—';
   const surprise = (new URLSearchParams(location.search)).get('src')==='surprise'
     || req?.surprise===true || req?.micro?.surprise===true
     || LS.getItem('surprise_mode')==='1';
@@ -1397,15 +1189,13 @@ async function startFlow(){
   }
 
   showIntroOnce();
-  if (!IS_SIGNAL) startOracleLoading();
+  startOracleLoading();
 
-  // Se è un segnale WHAT IF (fase 1) e NON è in cache → scala 1 credito
   if (isSignal && phase === 1) {
     const okCredit = await ensureSignalCredit(micro);
     if (!okCredit) {
       stopOracleLoading();
-      answerEl.textContent = t().noCreditsShort || t().noCredits || "Hai terminato i crediti.";
-      if (signalCtaBox) signalCtaBox.style.display = "none";
+      answerEl.textContent = t().noCredits || "Hai terminato i crediti.";
       return;
     }
   }
@@ -1524,7 +1314,6 @@ async function startFlow(){
     };
     saveResultToCache(resultForCache);
 
-    /* 🔹 LOG DOMANDA+RISPOSTA SU /api/save (non usa crediti OpenAI) */
     try {
       await fetch("/api/save", {
         method: "POST",
@@ -1539,7 +1328,6 @@ async function startFlow(){
       });
     } catch (logErr) {
       console.error("log /api/save failed:", logErr);
-      // non blocca l'utente, è solo logging
     }
 
   }catch(e){
@@ -1557,7 +1345,6 @@ function videoNotAvailable(msg){
   toast(text);
 }
 
-/* disegna testo a capo */
 function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
   const words = String(text || "").split(/\s+/);
   let line = "";
@@ -1579,7 +1366,6 @@ function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
   return y;
 }
 
-/* stato ultimo video (solo per eventuali usi futuri) */
 let lastVideoBlob = null;
 let lastVideoMime = null;
 
@@ -1877,7 +1663,7 @@ async function generateVideoClip(){
   requestAnimationFrame(loop);
 }
 
-/* ==== SOCIAL OPEN (solo Android via intent, fallback web) ==== */
+/* ==== SOCIAL OPEN ==== */
 function isAndroid(){
   return /Android/i.test(navigator.userAgent || "");
 }
@@ -1901,12 +1687,7 @@ qs('#langSelect').onchange=()=>{
   LS.setItem('lang_manual','1');
   document.documentElement.lang=v;
   lang=v;
-
-  if (IS_SIGNAL) {
-    applyUI("");
-  } else {
-    applyUI(LS.getItem('domanda')||'');
-  }
+  applyUI(LS.getItem('domanda')||'');
   updateCreditInfo();
   oracleDeck = [];
 };
@@ -1926,16 +1707,6 @@ qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
 if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }
 if(videoBtn){ videoBtn.onclick = generateVideoClip; }
 
-/* CTA frase del giorno → fourth.html?from=daily */
-if (signalAskBtn) {
-  signalAskBtn.onclick = ()=>{
-    const url = new URL('fourth.html', location.origin);
-    url.searchParams.set('from','daily');
-    location.href = url.toString();
-  };
-}
-
-/* pulsanti social Android */
 if(openTikTokBtn){
   openTikTokBtn.onclick = ()=>{
     openIntent(
@@ -1953,9 +1724,7 @@ if(openInstaBtn){
   };
 }
 
-/* ============================
-   🔊 TEXT-TO-SPEECH RISPOSTA
-   ============================ */
+/* ==== TTS ==== */
 (function(){
   const btn = document.getElementById("readAnswerBtn");
   const answerEl = document.getElementById("answer");
