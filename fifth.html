@@ -869,9 +869,12 @@ async function ensureSignalCredit(micro = {}) {
   try {
     const ok = await consumeCredit();
     if (!ok) {
+      // niente redirect automatico: lo gestiamo in startFlow con CTA "Compra crediti"
       toast(t().noCreditsShort || t().noCredits || "Hai terminato i crediti.");
       try {
-        location.href = "/store/credit-store.html?lang=" + (lang || "it");
+        const bal = await getBalance();
+        currentBalance = Number.isFinite(+bal) ? +bal : 0;
+        updateCreditInfo();
       } catch {}
       return false;
     }
@@ -1372,9 +1375,23 @@ async function startFlow(){
   if (isSignal && phase === 1) {
     const okCredit = await ensureSignalCredit(micro);
     if (!okCredit) {
+      // Nessun credito → messaggio + CTA "Compra crediti"
       stopOracleLoading();
       answerEl.textContent = t().noCreditsShort || t().noCredits || "Hai terminato i crediti.";
-      if (signalCtaBox) signalCtaBox.style.display = "none";
+      if (signalCtaBox && signalAskBtn) {
+        signalCtaBox.style.display = "flex";
+        signalAskBtn.textContent = t().goStore || "🛒 Vai allo store crediti";
+        signalAskBtn.onclick = () => {
+          try {
+            location.href = "/store/credit-store.html?lang=" + (lang || "it");
+          } catch {
+            location.href = "/store/credit-store.html";
+          }
+        };
+      }
+      if (signalHint) {
+        signalHint.style.display = "none";
+      }
       return;
     }
   }
@@ -1999,8 +2016,32 @@ if(openInstaBtn){
   });
 })();
 
+/* ============================
+   🔒 BARRIERA AUTH PRIMA DI STARTFLOW
+   ============================ */
+async function waitForAuthReady(){
+  if (IS_ADMIN) return true;
+
+  // Se è già pronto, usiamo quello
+  if (auth.currentUser) {
+    currentUser = auth.currentUser;
+    return true;
+  }
+
+  return new Promise((resolve)=>{
+    const unsub = onAuthStateChanged(auth, (u)=>{
+      currentUser = u || null;
+      unsub();
+      resolve(true);
+    });
+  });
+}
+
 /* ==== Avvio ==== */
-startFlow();
+(async ()=>{
+  await waitForAuthReady();
+  startFlow();
+})();
 </script>
 </body>
 </html>
