@@ -10,6 +10,7 @@
     "@upstash/redis": "^1.28.3",
     "@upstash/ratelimit": "^0.4.4",
     "openai": "^4.58.0",
-    "stripe": "^16.5.0"
+    "stripe": "^16.5.0",
+    "firebase-admin": "^12.0.0"
   }
 }
