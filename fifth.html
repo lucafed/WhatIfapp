@@ -89,31 +89,75 @@ h1{
 .pct-row{display:flex;align-items:center;gap:10px;margin:2px 0 8px}
 .pct-label{font-size:13px;color:var(--muted)}
 .top-pct{
-display:inline-flex;align-items:center;justify-content:center;
-font-weight:900;font-size:16px;
-min-width:64px;
-padding:5px 10px;
-background:linear-gradient(180deg,var(--acc),var(--acc2));
-color:var(--ink);border-radius:12px;
-box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:16px;
+  min-width:64px;
+  padding:5px 10px;
+  background:linear-gradient(180deg,var(--acc),var(--acc2));
+  color:var(--ink);border-radius:12px;
+  box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
 }
 
 /* === RESULT BOX === */
 .result-box{
-background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-border:1px solid var(--line);
-border-radius:16px;
-padding:16px 14px;
-box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 22px rgba(0,0,0,.28);
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px 14px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 22px rgba(0,0,0,.28);
 }
 .result-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
 .result-pct{
-display:inline-flex;align-items:center;justify-content:center;
-font-weight:900;font-size:16px;min-width:64px;padding:5px 10px;border-radius:12px;
-background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);
-box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
+  display:inline-flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:16px;min-width:64px;padding:5px 10px;border-radius:12px;
+  background:linear-gradient(180deg,var(--acc),var(--acc2));color:var(--ink);
+  box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
 }
 .result-title{font-weight:900;font-size:15px;letter-spacing:.2px}
+
+/* === DAILY MESSAGE BOX === */
+.daily-glow{
+  position:relative;
+  background:linear-gradient(145deg, rgba(255,236,1,.12), rgba(255,255,255,.02));
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.06),
+    0 10px 30px rgba(0,0,0,.45),
+    0 0 32px rgba(255,236,1,.28);
+}
+.daily-kicker{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.18em;
+  color:var(--muted);
+  margin-bottom:4px;
+}
+.daily-title-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:6px;
+}
+.daily-pill{
+  font-size:11px;
+  padding:4px 9px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(0,0,0,.25);
+  color:var(--acc2);
+  white-space:nowrap;
+}
+.daily-text{
+  font-size:15px;
+  line-height:1.6;
+}
+.daily-hint{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:6px;
+}
 
 /* === MOTIVO / NOTE === */
 .mot{display:grid;grid-template-columns:auto 1fr;gap:10px;margin-top:10px}
@@ -127,82 +171,38 @@ box-shadow:0 6px 16px rgba(0,0,0,.28), 0 0 18px rgba(255,255,1,.18);
 
 /* === INTRO (Zoltar-like) === */
 .intro-box{
-background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
-border:1px dashed rgba(255,255,255,.18);
-border-radius:14px;
-padding:12px 14px;
-margin:8px 0 10px;
-font-size:14.5px; line-height:1.55; color:#E7F2EE;
-box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
-}
-
-/* === DAILY MESSAGE BOX (Frase del giorno) === */
-.daily-box{
-  display:none;
-  margin:8px 0 10px;
+  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
+  border:1px dashed rgba(255,255,255,.18);
   border-radius:14px;
-  padding:10px 12px;
-  background:
-    radial-gradient(600px 380px at 10% 0%, rgba(255,236,1,.15), transparent 60%),
-    linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.12));
-  border:1px solid rgba(255,255,255,.24);
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,.10),
-    0 10px 30px rgba(0,0,0,.60),
-    0 0 22px var(--glow);
-}
-.daily-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-  margin-bottom:4px;
-}
-.daily-tag{
-  font-size:12px;
-  font-weight:800;
-  padding:4px 9px;
-  border-radius:999px;
-  background:rgba(0,0,0,.36);
-  border:1px solid rgba(255,255,255,.35);
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-}
-.daily-meta{
-  font-size:11px;
-  opacity:.82;
-  color:var(--muted);
-}
-.daily-text{
-  font-size:15px;
-  line-height:1.6;
-  color:#F7FAFF;
+  padding:12px 14px;
+  margin:8px 0 10px;
+  font-size:14.5px; line-height:1.55; color:#E7F2EE;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
 }
 
 /* === VIDEO SECTION === */
 #videoBox{
-margin-top:10px;
+  margin-top:10px;
 }
 #videoPreview{
-width:100%;
-max-height:420px;
-border-radius:18px;
-display:block;
-box-shadow:0 14px 40px rgba(0,0,0,.6);
+  width:100%;
+  max-height:420px;
+  border-radius:18px;
+  display:block;
+  box-shadow:0 14px 40px rgba(0,0,0,.6);
 }
 #videoLoading{
-font-size:12px;
-color:var(--muted);
+  font-size:12px;
+  color:var(--muted);
 }
 #videoWrap{
-margin-top:10px;
+  margin-top:10px;
 }
 #videoDownload{
-text-decoration:none;
-display:inline-flex;
-align-items:center;
-justify-content:center;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
 }
 .social-buttons-row{
   display:flex;
@@ -213,9 +213,9 @@ justify-content:center;
 
 /* Mobile */
 @media (max-width:420px){
-.result-pct,.top-pct{font-size:15px;min-width:56px;padding:4px 8px}
-.result-title{font-size:14px}
-.mot .note{font-size:15.5px;line-height:1.65}
+  .result-pct,.top-pct{font-size:15px;min-width:56px;padding:4px 8px}
+  .result-title{font-size:14px}
+  .mot .note{font-size:15.5px;line-height:1.65}
 }
 
 /* === Overlay (store/rewarded) === */
@@ -229,11 +229,11 @@ justify-content:center;
 .oracle-wrap{position:relative;min-height:28px;margin:4px 0 8px}
 .oracle-line{font-size:14px;opacity:.86;color:#E7F2EE;transition:opacity .25s ease}
 .orb{
-position:absolute; left:-10px; top:-8px; width:26px; height:26px;
-border-radius:50%;
-background:radial-gradient(circle at 30% 30%, rgba(255,236,1,.7), rgba(255,255,1,.0) 60%);
-filter:blur(6px); opacity:.0; transform:scale(.7); pointer-events:none;
-transition:opacity .35s ease, transform .35s ease;
+  position:absolute; left:-10px; top:-8px; width:26px; height:26px;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, rgba(255,236,1,.7), rgba(255,255,1,.0) 60%);
+  filter:blur(6px); opacity:.0; transform:scale(.7); pointer-events:none;
+  transition:opacity .35s ease, transform .35s ease;
 }
 .reveal .orb{opacity:.8; transform:scale(1)}
 /* niente animazione di spostamento sulla risposta → niente "saltelli" */
@@ -274,6 +274,17 @@ transition:opacity .35s ease, transform .35s ease;
   <div class="card">
     <div class="label" id="lblA">Risposta</div>
 
+    <!-- DAILY MESSAGE (segnali giornalieri, NO AI) -->
+    <div id="dailyMessageBox" class="result-box daily-glow" style="display:none; margin-bottom:12px;">
+      <div class="daily-kicker" id="dailyKicker">Frase del giorno</div>
+      <div class="daily-title-row">
+        <div class="result-title" id="dailyMessageTitle">—</div>
+        <span class="daily-pill" id="dailyPersonalityTag" style="display:none;">What if</span>
+      </div>
+      <div class="daily-text" id="dailyMessageText">—</div>
+      <p class="daily-hint" id="dailyCreditHint" style="display:none;"></p>
+    </div>
+
     <div class="pct-row">
       <span class="pct-label" id="pctLabel">% probabilità che accada</span>
       <div id="topPct" class="top-pct" aria-live="polite">—</div>
@@ -281,15 +292,6 @@ transition:opacity .35s ease, transform .35s ease;
 
     <!-- INTRO (solo prima volta per stile) -->
     <div id="introBox" class="intro-box" style="display:none"></div>
-
-    <!-- FRASE GIORNALIERA (segnali mattina/pomeriggio/sera) -->
-    <div id="dailyMessageBox" class="daily-box">
-      <div class="daily-head">
-        <span id="dailyMessageTag" class="daily-tag">✨ Frase del giorno</span>
-        <span id="dailyMessageMeta" class="daily-meta"></span>
-      </div>
-      <div id="dailyMessageText" class="daily-text"></div>
-    </div>
 
     <!-- SOLO Oracle (niente frasetta lead) -->
     <div class="oracle-wrap">
@@ -373,11 +375,11 @@ transition:opacity .35s ease, transform .35s ease;
 </audio>
 <!-- 🎵 SFX evocativo (what if) -->
 <audio id="sfxWhatIf" preload="auto">
-  <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAABAAAA" type="audio/mpeg">
+  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAABAAAA" type="audio/mpeg">
 </audio>
 <!-- 🥂 Clink (what the f) -->
 <audio id="sfxWtf" preload="auto">
-  <source src="data:audio/mp3;base64>//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
+  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAACAAAA" type="audio/mpeg">
 </audio>
 <!-- ⌨️ typing SFX (metti typing-sfx.mp3 nella stessa cartella di questo file) -->
 <audio id="typingSfx" preload="auto">
@@ -397,13 +399,12 @@ import {
   consumeCredit
 } from "./store/credits.js";
 
-/* 🔤 Frasi giornaliere (file statico, NO AI) */
 import { getDailyMessage } from "./daily-messages.js";
 
 /* ==== Base & prefs ==== */
 const LS = localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-let style = prefs.stile || 'whatif';   // ← diventa let
+let style = prefs.stile || 'whatif';   // ← let
 const periodo = prefs.periodo || 'future';
 const IS_ADMIN = !!LS.getItem('admin_token');
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
@@ -620,7 +621,7 @@ const I18N = {
        credits:(n)=>`💰 Crédits : ${n}`, noCredits:"Crédits épuisés.",
        storeTitle:"Crédits", buy5:"Acheter +5 crédits (test)", buy10:"Acheter +10 crédits (test)", buy20:"Acheter +20 crédits (test)",
        watchAd:"Regarder une pub (+1)", close:"Fermer",
-       comingSoon:"Bientôt", buySoonNote:"Achat de crédits pas encore disponible.",
+       comingSoon:"Bientôt", buySoonNote:"Achat de crédits pas encore disponibile.",
        toastPlus:(n)=>`+${n} crédit`,  toastMinus:(n)=>`-${n} crédit`,
        guideTitle:"Conseils",
        guideQuick:"Conseils rapides",
@@ -691,56 +692,6 @@ const I18N = {
 };
 const SUP_LANG=['it','en','es','fr','de'];
 
-/* Titolo card "frase del giorno" per lingua */
-const DAILY_TITLE = {
-  it:"✨ Frase del giorno",
-  en:"✨ Daily nudge",
-  es:"✨ Frase del día",
-  fr:"✨ Phrase du jour",
-  de:"✨ Tagesimpuls"
-};
-
-/* Messaggio "serve 1 credito" per lingua */
-const DAILY_NO_CREDIT = {
-  it:"🎫 Ti serve 1 credito per vedere la frase del giorno.",
-  en:"🎫 You need 1 credit to see today’s message.",
-  es:"🎫 Necesitas 1 crédito para ver la frase del día.",
-  fr:"🎫 Il te faut 1 crédit pour voir la phrase du jour.",
-  de:"🎫 Du brauchst 1 Credit, um die Tagesbotschaft zu sehen."
-};
-
-/* Label meta per slot/personality (usate sopra la frase) */
-function dailyMetaLabel(slot, personality, langCode){
-  const L = (langCode || 'it').slice(0,2);
-  const wtf = (personality === 'wtf');
-  if(L==='en'){
-    if(slot==='morning')   return wtf ? "Morning · What the F" : "Morning · What if";
-    if(slot==='afternoon') return wtf ? "Afternoon check-in · What the F" : "Afternoon check-in · What if";
-    if(slot==='evening')   return wtf ? "Evening · What the F" : "Evening · What if";
-    return wtf ? "Signal · What the F" : "Signal · What if";
-  }
-  if(L==='es'){
-    if(slot==='morning')   return wtf ? "Mañana · What the F" : "Mañana · What if";
-    if(slot==='afternoon') return wtf ? "Tarde · What the F" : "Tarde · What if";
-    if(slot==='evening')   return wtf ? "Noche · What the F" : "Noche · What if";
-  }
-  if(L==='fr'){
-    if(slot==='morning')   return wtf ? "Matin · What the F" : "Matin · What if";
-    if(slot==='afternoon') return wtf ? "Après-midi · What the F" : "Après-midi · What if";
-    if(slot==='evening')   return wtf ? "Soir · What the F" : "Soir · What if";
-  }
-  if(L==='de'){
-    if(slot==='morning')   return wtf ? "Morgen · What the F" : "Morgen · What if";
-    if(slot==='afternoon') return wtf ? "Nachmittag · What the F" : "Nachmittag · What if";
-    if(slot==='evening')   return wtf ? "Abend · What the F" : "Abend · What if";
-  }
-  // default IT
-  if(slot==='morning')   return wtf ? "Mattino · What the F" : "Mattino · What if";
-  if(slot==='afternoon') return wtf ? "Pomeriggio · What the F" : "Pomeriggio · What if";
-  if(slot==='evening')   return wtf ? "Sera · What the F" : "Sera · What if";
-  return wtf ? "Segnale · What the F" : "Segnale · What if";
-}
-
 /* ======== LINGUA ======== */
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
 
@@ -753,8 +704,6 @@ if (reqEarly && reqEarly.source === "signal" && reqEarly.micro && reqEarly.micro
     style === "wtf" ? "wtf" : "whatif"
   );
 }
-
-const IS_SIGNAL = !!(reqEarly && reqEarly.source === "signal" && reqEarly.micro);
 
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
@@ -803,7 +752,7 @@ function updateCreditInfo(){
     return;
   }
 
-  const val = currentUser ? currentBalance : 0;
+  const val = (auth.currentUser || currentUser) ? currentBalance : 0;
   creditInfo.textContent = t().credits(val);
 }
 
@@ -827,8 +776,8 @@ onAuthStateChanged(auth, async (user)=>{
   updateCreditInfo();
 });
 
-/* 🔻 Scala 1 credito SOLO per segnali fase 1 (morning/afternoon/evening WHAT IF) */
-async function ensureSignalCredit(micro = {}) {
+/* 🔻 Scala 1 credito SOLO per segnali fase 1 (WHAT IF) */
+async function ensureSignalCredit(micro = {}, opts = {}) {
   if (IS_ADMIN) return true;
 
   const phase = Number(micro.phase || 1);
@@ -837,18 +786,24 @@ async function ensureSignalCredit(micro = {}) {
     return true;
   }
 
-  if (!currentUser) {
-    toast("Per usare la frase del giorno devi essere loggato.");
+  const user = auth.currentUser || currentUser;
+  if (!user) {
+    if (!opts.forDailySignal) {
+      toast("Per usare la frase del giorno devi essere loggato.");
+    }
     return false;
   }
 
   try {
     const ok = await consumeCredit();
     if (!ok) {
-      toast(t().noCredits || "Hai terminato i crediti.");
-      try {
-        location.href = "/store/credit-store.html?lang=" + (lang || "it");
-      } catch {}
+      const msg = t().noCredits || "Hai terminato i crediti.";
+      if (!opts.forDailySignal) {
+        toast(msg);
+        try {
+          location.href = "/store/credit-store.html?lang=" + (lang || "it");
+        } catch {}
+      }
       return false;
     }
 
@@ -861,7 +816,7 @@ async function ensureSignalCredit(micro = {}) {
     return true;
   } catch (e) {
     console.error("ensureSignalCredit error:", e);
-    toast("Errore nei crediti, riprova.");
+    if (!opts.forDailySignal) toast("Errore nei crediti, riprova.");
     return false;
   }
 }
@@ -914,10 +869,14 @@ const metaInfo=qs('#metaInfo'), styleBadge=qs('#styleBadge'), topPct=qs('#topPct
 const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committeeTitle=qs('#committeeTitle');
 const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
 const motNote=qs('#motNote'), toastEl=qs('#toast');
+
+/* DAILY MESSAGE refs */
 const dailyBox = qs('#dailyMessageBox');
-const dailyText = qs('#dailyMessageText');
-const dailyTag = qs('#dailyMessageTag');
-const dailyMeta = qs('#dailyMessageMeta');
+const dailyTitleEl = qs('#dailyMessageTitle');
+const dailyTextEl = qs('#dailyMessageText');
+const dailyCreditHintEl = qs('#dailyCreditHint');
+const dailyKickerEl = qs('#dailyKicker');
+const dailyPersonaTag = qs('#dailyPersonalityTag');
 
 /* ==== VIDEO refs ==== */
 const videoBtn = qs('#videoBtn');
@@ -965,10 +924,8 @@ function showAnswerWithTyping(text){
     typingTimeoutId = null;
   }
 
-  // eventualmente solo un suono breve all'inizio
   playTypingShort(1800);
 
-  // reset stile e applico fade-in
   answerEl.style.transition = "none";
   answerEl.style.opacity = 0;
   answerEl.style.height = "";
@@ -976,7 +933,6 @@ function showAnswerWithTyping(text){
 
   answerEl.textContent = full;
 
-  // piccolo delay per permettere al browser di applicare lo stile
   requestAnimationFrame(()=>{
     answerEl.style.transition = "opacity .35s ease-out";
     answerEl.style.opacity = 1;
@@ -992,6 +948,36 @@ function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.class
 function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
 function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
+
+/* ==== DAILY text helpers ==== */
+function getDailyNeedCreditText(){
+  if (lang === "it") return "🎫 Ti serve 1 credito per vedere la frase del giorno.";
+  if (lang === "es") return "🎫 Necesitas 1 crédito para ver la frase del día.";
+  if (lang === "fr") return "🎫 Il te faut 1 crédit pour voir la phrase du jour.";
+  if (lang === "de") return "🎫 Du brauchst 1 Credit, um den Tagesimpuls zu sehen.";
+  return "🎫 You need 1 credit to see today’s daily message.";
+}
+function getDailyCreditUsedText(){
+  if (lang === "it") return "Questa frase ha usato 1 credito What if.";
+  if (lang === "es") return "Esta frase ha usado 1 crédito de What if.";
+  if (lang === "fr") return "Cette phrase a utilisé 1 crédit What if.";
+  if (lang === "de") return "Dieser Tagesimpuls hat 1 What if-Credit verbraucht.";
+  return "This daily line used 1 What if credit.";
+}
+function getDailyFreeText(){
+  if (lang === "it") return "Risposta di What the F · gratis, senza usare crediti.";
+  if (lang === "es") return "Respuesta de What the F · gratis, sin usar créditos.";
+  if (lang === "fr") return "Réponse de What the F · gratuite, sans crédit.";
+  if (lang === "de") return "Antwort von What the F · kostenlos, ohne Credits.";
+  return "What the F reply · free, no credits used.";
+}
+function getDailyTitleFallback(){
+  if (lang === "it") return "Frase del giorno";
+  if (lang === "es") return "Frase del día";
+  if (lang === "fr") return "Phrase du jour";
+  if (lang === "de") return "Tagesimpuls";
+  return "Daily line";
+}
 
 /* ==== Titles/Text ==== */
 function applyUI(q){
@@ -1009,15 +995,22 @@ function applyUI(q){
   if(openTikTokBtn) openTikTokBtn.textContent = T.videoOpenTikTok || "📱 TikTok";
   if(openInstaBtn) openInstaBtn.textContent = T.videoOpenInsta || "📸 Instagram";
 
-  if(videoNoteEl) videoNoteEl.textContent = "";
+  if(videoNoteEl) videoNoteEl.textContent = '';
 
   const ttsBtn = document.getElementById("readAnswerBtn");
   const ttsStatus = document.getElementById("ttsStatus");
   if(ttsBtn) ttsBtn.textContent = T.ttsBtn || "🔊";
   if(ttsStatus) ttsStatus.textContent = "";
 
-  if(dailyTag){
-    dailyTag.textContent = DAILY_TITLE[lang] || DAILY_TITLE.it;
+  if (dailyKickerEl) {
+    const map = {
+      it: "Frase del giorno",
+      en: "Daily line",
+      es: "Frase del día",
+      fr: "Phrase du jour",
+      de: "Tagesimpuls"
+    };
+    dailyKickerEl.textContent = map[lang] || "Daily line";
   }
 }
 
@@ -1033,6 +1026,40 @@ function computeProbability(q){
   if(!/\b\d/.test(t)) s-=6;
   s += (style==='wtf' ? -4 : +2);
   return {pct: Math.max(25, Math.min(92, Math.round(s)))}
+}
+
+/* 🎨 COLORA % in rosso / giallo / verde */
+function updatePctUI(rawPct){
+  let usedPct = (typeof rawPct === 'number' && isFinite(rawPct))
+    ? Math.max(0, Math.min(100, Math.round(rawPct)))
+    : null;
+
+  if (usedPct == null) {
+    const domanda = LS.getItem('domanda') || '';
+    usedPct = computeProbability(domanda).pct;
+  }
+
+  const pStr = usedPct + "%";
+  if (topPct) topPct.textContent = pStr;
+  if (bottomPct) bottomPct.textContent = pStr;
+
+  let bg = "linear-gradient(180deg,var(--acc),var(--acc2))";
+  if (usedPct <= 40) {
+    bg = "linear-gradient(180deg,#b3261e,#ff6f61)";     /* rosso */
+  } else if (usedPct < 70) {
+    bg = "linear-gradient(180deg,#c68400,#ffd54f)";     /* giallo / arancio */
+  } else {
+    bg = "linear-gradient(180deg,#1b5e20,#66bb6a)";     /* verde */
+  }
+
+  if (topPct){
+    topPct.style.background = bg;
+    topPct.style.color = "#0A0E12";
+  }
+  if (bottomPct){
+    bottomPct.style.background = bg;
+    bottomPct.style.color = "#0A0E12";
+  }
 }
 
 /* === ORACLE helpers === */
@@ -1196,12 +1223,7 @@ function applyResultToUI(result){
   const finalAnswer = result.answer || '—';
   showAnswerWithTyping(finalAnswer);
 
-  const usedPct = (typeof result.pct === 'number' && isFinite(result.pct))
-    ? Math.max(0, Math.min(100, Math.round(result.pct)))
-    : computeProbability(domanda).pct;
-  const pStr = usedPct + "%";
-  topPct.textContent = pStr;
-  bottomPct.textContent = pStr;
+  updatePctUI(result.pct);
 
   const mode = result.motivationMode || (style === 'wtf' ? 'wtf' : 'whatif');
 
@@ -1273,133 +1295,67 @@ function saveCurrentQuestion(){
   toast(t().savedOk);
 }
 
-/* ============================
-   🔔 FLOW PER SEGNALI (frasi giornaliere, NO AI)
-   ============================ */
-async function handleSignalFlow(req, domanda, clarification, surprise, micro){
-  const m = micro || {};
-  const slot = String(m.slot || m.timeOfDay || m.time || 'morning').toLowerCase();
-  const phase = Number(m.phase || 1);
-  const mood = m.mood || null;
-  const personality = phase === 2 ? 'wtf' : 'whatif';
+/* ==== SIGNAL: nascondi parti AI e mostra daily ==== */
+function hideAiSectionsForSignal(){
+  const pctRow = document.querySelector('.pct-row');
+  if (pctRow) pctRow.style.display = 'none';
+  const introBox = document.getElementById('introBox');
+  if (introBox) introBox.style.display = 'none';
+  const oracleWrap = document.querySelector('.oracle-wrap');
+  if (oracleWrap) oracleWrap.style.display = 'none';
+  if (answerEl) answerEl.style.display = 'none';
+  const lblP = document.getElementById('lblP');
+  if (lblP) lblP.style.display = 'none';
+  const resultBox = document.getElementById('resultBox');
+  if (resultBox) resultBox.style.display = 'none';
+  const lblVideo = document.getElementById('lblVideo');
+  if (lblVideo) lblVideo.style.display = 'none';
+  const videoBoxEl = document.getElementById('videoBox');
+  if (videoBoxEl) videoBoxEl.style.display = 'none';
+}
 
-  // aggiorna UI base
-  applyUI(domanda);
-  qView.textContent = domanda || '—';
+async function handleDailySignal(req, domanda){
+  hideAiSectionsForSignal();
 
-  // mostra box frase giornaliera
-  if(dailyBox){
-    dailyBox.style.display = 'block';
-    dailyBox.classList.add('fade-in');
+  if (!dailyBox || !dailyTitleEl || !dailyTextEl) return;
+
+  const micro = req && req.micro ? req.micro : {};
+  const slotRaw = (micro.slot || micro.time || micro.timeOfDay || "").toLowerCase();
+  const slot = (slotRaw === "afternoon" || slotRaw === "evening") ? slotRaw : "morning";
+  const phase = Number(micro.phase || 1);
+  const personality = phase === 2 ? "wtf" : "whatif";
+
+  dailyBox.style.display = "block";
+  dailyBox.classList.add("fade-in");
+
+  if (dailyPersonaTag) {
+    dailyPersonaTag.style.display = "inline-flex";
+    dailyPersonaTag.textContent = personality === "wtf" ? "What the F" : "What if";
   }
-  if(dailyMeta){
-    dailyMeta.textContent = dailyMetaLabel(slot, personality, lang);
-  }
 
-  // What if (phase 1) → consuma 1 credito, se manca mostra placeholder
-  if(phase === 1){
-    const ok = await ensureSignalCredit(m);
-    if(!ok){
-      if(dailyText){
-        dailyText.textContent = DAILY_NO_CREDIT[lang] || DAILY_NO_CREDIT.it;
-      }
-      // Nascondo completamente l'AI: niente oracolo, niente motivazioni, niente video
-      const oracleWrap = document.querySelector('.oracle-wrap');
-      if(oracleWrap) oracleWrap.style.display = "none";
-      if(answerEl) answerEl.style.display = "none";
-      const ttsRow = document.getElementById('readAnswerBtn')?.parentElement;
-      if(ttsRow) ttsRow.style.display = "none";
-      const pctRow = document.querySelector('.pct-row');
-      if(pctRow) pctRow.style.display = "none";
-      const introBox = document.getElementById('introBox');
-      if(introBox) introBox.style.display = "none";
-      const lblP = document.getElementById('lblP');
-      const resultBoxEl = document.getElementById('resultBox');
-      const lblVideo = document.getElementById('lblVideo');
-      const videoBoxEl = document.getElementById('videoBox');
-      if(lblP) lblP.style.display = "none";
-      if(resultBoxEl) resultBoxEl.style.display = "none";
-      if(lblVideo) lblVideo.style.display = "none";
-      if(videoBoxEl) videoBoxEl.style.display = "none";
-      topPct.textContent = "—";
-      bottomPct.textContent = "—";
+  if (phase === 1) {
+    const ok = await ensureSignalCredit(micro, { forDailySignal: true });
+    if (!ok) {
+      dailyTitleEl.textContent = getDailyTitleFallback();
+      dailyTextEl.textContent = getDailyNeedCreditText();
+      if (dailyCreditHintEl) dailyCreditHintEl.style.display = "none";
       return;
     }
   }
 
-  // se siamo qui: o WTF (gratis) o WHAT IF con credito disponibile
-  let phraseText = "";
-  try{
-    const res = typeof getDailyMessage === "function"
-      ? getDailyMessage(lang, slot, personality, mood)
-      : null;
-    if(typeof res === "string"){
-      phraseText = res;
-    }else if(res && typeof res === "object"){
-      phraseText = String(res.text || res.body || "") || "";
-    }
-  }catch(e){
-    console.error("daily message error:", e);
-  }
+  const msg = getDailyMessage(lang, slot, personality);
+  dailyTitleEl.textContent = msg.title || getDailyTitleFallback();
+  dailyTextEl.textContent = msg.text || "";
 
-  if(!phraseText){
-    // fallback minimale per sicurezza
-    const L = (lang || "it").slice(0,2);
-    if(slot==="morning"){
-      phraseText = (L==="en")
-        ? (personality==="wtf"
-            ? "Morning ping: the day won’t fix itself. Say one thing you’ll do, even if it’s tiny."
-            : "Start small: pick one real thing you can do today that makes your day 5% better.")
-        : (personality==="wtf"
-            ? "Ping del mattino: la giornata non si sistema da sola. Scegli una cosa minuscola che farai davvero."
-            : "Parti dal concreto: scegli una cosa piccola ma reale che puoi fare oggi per stare un po’ meglio.");
-    }else if(slot==="afternoon"){
-      phraseText = (L==="en")
-        ? (personality==="wtf"
-            ? "Mid-day check: if the plan is collapsing, downgrade it, don’t delete it."
-            : "How’s the day going? Adjust the pace, not your worth. You can still steer the rest of the day.")
-        : (personality==="wtf"
-            ? "Check-in del pomeriggio: se il piano è andato a ramengo, abbassa l’asticella, non te stesso."
-            : "Come sta andando la giornata? Aggiusta il ritmo, non il tuo valore. Puoi ancora pilotare il resto.");
-    }else{
-      phraseText = (L==="en")
-        ? (personality==="wtf"
-            ? "End of day: you survived. That’s already data. Use it, don’t just scroll it away."
-            : "Close the day gently: keep one thing that worked, e park one thing you’ll handle tomorrow.")
-        : (personality==="wtf"
-            ? "Fine giornata: sei ancora qui. Già questo è un dato. Usalo, invece di scrollarlo via."
-            : "Chiudi la giornata senza farti processo: tieni una cosa che ha funzionato e parcheggia una cosa a domani.");
+  if (dailyCreditHintEl) {
+    if (phase === 1) {
+      dailyCreditHintEl.textContent = getDailyCreditUsedText();
+      dailyCreditHintEl.style.display = "block";
+    } else {
+      dailyCreditHintEl.textContent = getDailyFreeText();
+      dailyCreditHintEl.style.display = "block";
     }
   }
-
-  if(dailyText){
-    dailyText.textContent = phraseText;
-  }
-
-  // Nascondi completamente la parte AI (nessuna chiamata a /api/ask, nessun oracolo)
-  stopOracleLoading();
-  const oracleWrap = document.querySelector('.oracle-wrap');
-  if(oracleWrap) oracleWrap.style.display = "none";
-  if(answerEl){
-    answerEl.style.display = "none";
-    answerEl.textContent = "";
-  }
-  const ttsRow = document.getElementById('readAnswerBtn')?.parentElement;
-  if(ttsRow) ttsRow.style.display = "none";
-  const pctRow = document.querySelector('.pct-row');
-  if(pctRow) pctRow.style.display = "none";
-  const introBox = document.getElementById('introBox');
-  if(introBox) introBox.style.display = "none";
-  const lblP = document.getElementById('lblP');
-  const resultBoxEl = document.getElementById('resultBox');
-  const lblVideo = document.getElementById('lblVideo');
-  const videoBoxEl = document.getElementById('videoBox');
-  if(lblP) lblP.style.display = "none";
-  if(resultBoxEl) resultBoxEl.style.display = "none";
-  if(lblVideo) lblVideo.style.display = "none";
-  if(videoBoxEl) videoBoxEl.style.display = "none";
-
-  // Niente cache, niente log, niente AI per i segnali
 }
 
 /* ==== Main flow ==== */
@@ -1407,14 +1363,15 @@ async function startFlow(){
   const {req, domanda, clarification, surprise} = applyQuestion();
   updateCreditInfo();
 
-  const isSignal = IS_SIGNAL;
-  const micro = (req && req.micro) ? req.micro : {};
+  const isSignal = !!(req && req.source === "signal");
 
-  // Flusso frasi giornaliere: NO AI, solo testo statico + crediti
-  if(isSignal){
-    await handleSignalFlow(req, domanda, clarification, surprise, micro);
+  if (isSignal) {
+    // Nessuna AI: solo frasi giornaliere preimpostate
+    await handleDailySignal(req, domanda);
     return;
   }
+
+  const micro = (req && req.micro) ? req.micro : {};
 
   const cached = loadResultFromCache(domanda, clarification);
   if (cached) {
@@ -1431,16 +1388,18 @@ async function startFlow(){
     if(prefs.pro===true) headers["x-pro"]="1";
     const adminToken=LS.getItem("admin_token"); if(adminToken) headers["x-admin-token"]=adminToken;
 
+    const microPayload = req.micro || {};
+
     const r=await fetch("/api/ask",{
       method:"POST",headers,
       body:JSON.stringify({
-        stage:"answer",
+        stage: "answer",
         domanda,
         clarification: clarification || "",
         lang,
         stile: style,
         periodo,
-        micro: req.micro || {}
+        micro: microPayload
       })
     });
     const data=await r.json().catch(()=>null);
@@ -1458,10 +1417,7 @@ async function startFlow(){
     revealEffect();
 
     const apiPct = (data && Number.isFinite(+data.pct)) ? Math.max(0, Math.min(100, Math.round(+data.pct))) : null;
-    const usedPct = (apiPct!=null) ? apiPct : computeProbability(domanda).pct;
-    const pStr = usedPct + "%";
-    topPct.textContent = pStr;
-    bottomPct.textContent = pStr;
+    updatePctUI(apiPct);
 
     let motivazioneUsata = "";
     let motivationMode = (style === 'wtf' ? 'wtf' : 'whatif');
@@ -1509,7 +1465,7 @@ async function startFlow(){
       motIco.style.display='none';
       chipsWrap.style.display='none';
       committeeTitle.textContent = t().seriousTitle;
-      const html = buildWhatIfMotivationsPretty(domanda, usedPct, data.motivation);
+      const html = buildWhatIfMotivationsPretty(domanda, apiPct ?? computeProbability(domanda).pct, data.motivation);
       motNote.innerHTML = html;
       motivazioneUsata = html.replace(/<br\s*\/?>/gi," | ");
       motivationMode = 'whatif';
@@ -1517,7 +1473,8 @@ async function startFlow(){
     }
 
     const hist=JSON.parse(LS.getItem('cronologia')||'[]');
-    hist.push({ domanda, clarification, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise:surpriseMode, pct:usedPct, motivazione:motivazioneUsata });
+    const usedPctForHist = apiPct ?? computeProbability(domanda).pct;
+    hist.push({ domanda, clarification, risposta:answerText, stile:style, periodo, ts:Date.now(), surprise:surpriseMode, pct:usedPctForHist, motivazione:motivazioneUsata });
     LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
 
     const resultForCache = {
@@ -1528,7 +1485,7 @@ async function startFlow(){
       lang,
       surprise: !!surpriseMode,
       answer: answerText,
-      pct: usedPct,
+      pct: usedPctForHist,
       motivationMode,
       motivationText: motivationTextForCache,
       chipsFav: (motivationMode === 'surprise') ? chipsFavNum : undefined,
@@ -1552,7 +1509,6 @@ async function startFlow(){
       });
     } catch (logErr) {
       console.error("log /api/save failed:", logErr);
-      // non blocca l'utente, è solo logging
     }
 
   }catch(e){
