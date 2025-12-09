@@ -1,4 +1,4 @@
-<!-- FILE: fifth.html (risultato, SOLO LETTURA crediti da Firestore + DAILY SIGNAL) -->
+<!-- FILE: fifth.html (risultato, SOLO LETTURA crediti da Firestore) -->
 <!DOCTYPE html>
 <html lang="it" data-theme="whatif">
 <head>
@@ -167,50 +167,6 @@ justify-content:center;
   margin-top:6px;
 }
 
-/* === DAILY MESSAGE BOX === */
-.daily-glow{
-  position:relative;
-  background:linear-gradient(145deg, rgba(255,236,1,.12), rgba(255,255,255,.02));
-  border-radius:16px;
-  border:1px solid rgba(255,255,255,.18);
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,.06),
-    0 10px 30px rgba(0,0,0,.45),
-    0 0 32px rgba(255,236,1,.28);
-}
-.daily-kicker{
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.18em;
-  color:var(--muted);
-  margin-bottom:4px;
-}
-.daily-title-row{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:6px;
-}
-.daily-pill{
-  font-size:11px;
-  padding:4px 9px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.18);
-  background:rgba(0,0,0,.25);
-  color:var(--acc2);
-  white-space:nowrap;
-}
-.daily-text{
-  font-size:15px;
-  line-height:1.6;
-}
-.daily-hint{
-  font-size:11px;
-  color:var(--muted);
-  margin-top:6px;
-}
-
 /* Mobile */
 @media (max-width:420px){
 .result-pct,.top-pct{font-size:15px;min-width:56px;padding:4px 8px}
@@ -273,17 +229,6 @@ transition:opacity .35s ease, transform .35s ease;
 
   <div class="card">
     <div class="label" id="lblA">Risposta</div>
-
-    <!-- DAILY MESSAGE (segnali giornalieri, NO AI) -->
-    <div id="dailyMessageBox" class="result-box daily-glow" style="display:none; margin-bottom:12px;">
-      <div class="daily-kicker" id="dailyKicker">Frase del giorno</div>
-      <div class="daily-title-row">
-        <div class="result-title" id="dailyMessageTitle">—</div>
-        <span class="daily-pill" id="dailyPersonalityTag" style="display:none;">What if</span>
-      </div>
-      <div class="daily-text" id="dailyMessageText">—</div>
-      <p class="daily-hint" id="dailyCreditHint" style="display:none;"></p>
-    </div>
 
     <div class="pct-row">
       <span class="pct-label" id="pctLabel">% probabilità che accada</span>
@@ -395,86 +340,19 @@ import {
 
 import {
   bootCredits,
-  getBalance,
-  consumeCredit
+  getBalance
 } from "./store/credits.js";
 
+/* 🔔 Frasi giornaliere (NO AI) */
 import { getDailyMessage } from "./daily-messages.js";
 
 /* ==== Base & prefs ==== */
 const LS = localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-let style = prefs.stile || 'whatif';
+let style = prefs.stile || 'whatif';   // ← diventa let
 const periodo = prefs.periodo || 'future';
 const IS_ADMIN = !!LS.getItem('admin_token');
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
-
-/* 🔔 Bootstrap segnali da URL (notifiche → URL tipo ?signal=morning&phase=1&mood=su) */
-(function bootstrapSignalFromUrl() {
-  try {
-    const params = new URLSearchParams(location.search);
-    const slot = (params.get("signal") || "").toLowerCase(); // morning | afternoon | evening
-    if (!slot) return; // niente segnale → flusso normale
-
-    const phase = Number(params.get("phase") || "1"); // 1 = WHAT IF, 2 = WTF
-    const mood  = params.get("mood") || null;        // opzionale (solo pomeriggio)
-
-    function buildSignalQuestion(slot, phase, mood) {
-      if (slot === "morning") {
-        if (phase === 1) {
-          return "Frase del giorno del mattino: un consiglio concreto per impostare la giornata, senza sapere come mi sento.";
-        } else {
-          return "Commento cazzaro del mattino sulla frase del giorno appena ricevuta.";
-        }
-      }
-      if (slot === "afternoon") {
-        let moodText = "umore non specificato";
-        if (mood) {
-          const m = mood.toLowerCase();
-          if (m.includes("su") || m.includes("up")) moodText = "mi sento carico o comunque bene";
-          else if (m.includes("giu") || m.includes("down")) moodText = "mi sento stanco, scarico o un po’ giù";
-          else moodText = "mi sento così così, a metà";
-        }
-        if (phase === 1) {
-          return `Check-in del pomeriggio con umore: ${moodText}.`;
-        } else {
-          return `Commento cazzaro del pomeriggio su questo umore: ${moodText}.`;
-        }
-      }
-      if (slot === "evening") {
-        if (phase === 1) {
-          return "Domanda di chiusura della giornata, per rivedere cosa è successo oggi e come ti ha toccato.";
-        } else {
-          return "Commento cazzaro di fine giornata sulla domanda di chiusura appena fatta.";
-        }
-      }
-      return "Segnale giornaliero senza dettagli.";
-    }
-
-    const domanda = buildSignalQuestion(slot, phase, mood);
-
-    const micro = {
-      src: "signal",
-      slot,
-      time: slot,
-      timeOfDay: slot,
-      phase,
-    };
-    if (mood) micro.mood = mood;
-
-    const req = {
-      source: "signal",
-      domanda,
-      clarification: "",
-      micro
-    };
-
-    LS.setItem("whatif_request", JSON.stringify(req));
-    LS.setItem("domanda", domanda);
-  } catch (e) {
-    console.warn("bootstrapSignalFromUrl error:", e);
-  }
-})();
 
 /* ==== I18N ==== */
 const I18N = {
@@ -695,8 +573,10 @@ const SUP_LANG=['it','en','es','fr','de'];
 /* ======== LINGUA ======== */
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
 
+// 🔁 Override stile se la richiesta arriva da un segnale (morning/afternoon/evening)
 if (reqEarly && reqEarly.source === "signal" && reqEarly.micro && reqEarly.micro.phase) {
   style = reqEarly.micro.phase === 2 ? "wtf" : "whatif";
+
   document.documentElement.setAttribute(
     "data-theme",
     style === "wtf" ? "wtf" : "whatif"
@@ -737,7 +617,7 @@ function updateCreditInfo(){
     return;
   }
 
-  const val = (auth.currentUser || currentUser) ? currentBalance : 0;
+  const val = currentUser ? currentBalance : 0;
   creditInfo.textContent = t().credits(val);
 }
 
@@ -760,71 +640,6 @@ onAuthStateChanged(auth, async (user)=>{
   }
   updateCreditInfo();
 });
-
-/* ==== helper chiave giornaliera per segnali ==== */
-function dailySignalKey(slotRaw) {
-  const d = new Date();
-  const day = d.getDate().toString().padStart(2,"0");
-  const month = (d.getMonth()+1).toString().padStart(2,"0");
-  const slot = (slotRaw === "afternoon" || slotRaw === "evening") ? slotRaw : "morning";
-  return `daily_${d.getFullYear()}-${month}-${day}_${slot}_whatif_ok`;
-}
-
-/* 🔻 Scala 1 credito SOLO per segnali fase 1 (WHAT IF). Se non hai crediti → redirect store */
-async function ensureSignalCredit(micro = {}, opts = {}) {
-  if (IS_ADMIN) return true;
-
-  const phase = Number(micro.phase || 1);
-  if (phase === 2) {
-    // WTF gratis, non scala crediti
-    return true;
-  }
-
-  const user = auth.currentUser || currentUser;
-  if (!user) {
-    if (!opts.forDailySignal) {
-      toast("Per usare la frase del giorno devi essere loggato.");
-    }
-    try{
-      location.href = "/store/credit-store.html?lang=" + (lang || "it");
-    }catch{}
-    return false;
-  }
-
-  try {
-    const ok = await consumeCredit();
-    if (!ok) {
-      const msg = t().noCredits || "Hai terminato i crediti.";
-      if (!opts.forDailySignal) {
-        toast(msg);
-      }
-      try{
-        location.href = "/store/credit-store.html?lang=" + (lang || "it");
-      }catch{}
-      return false;
-    }
-
-    try {
-      const bal = await getBalance();
-      currentBalance = Number.isFinite(+bal) ? +bal : 0;
-      updateCreditInfo();
-    } catch {}
-
-    // Segno che la frase WHAT IF per questo slot/giorno è stata sbloccata
-    const slotRaw = (micro.slot || micro.time || micro.timeOfDay || "morning").toLowerCase();
-    const key = dailySignalKey(slotRaw);
-    LS.setItem(key, "1");
-
-    return true;
-  } catch (e) {
-    console.error("ensureSignalCredit error:", e);
-    if (!opts.forDailySignal) toast("Errore nei crediti, riprova.");
-    try{
-      location.href = "/store/credit-store.html?lang=" + (lang || "it");
-    }catch{}
-    return false;
-  }
-}
 
 /* ==== System prompts (solo UI, placeholder) ==== */
 const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
@@ -875,14 +690,6 @@ const pctLabelTop=qs('#pctLabel'), pctLabelBottom=qs('#pctLabelBottom'), committ
 const motIco=qs('#motIco'), chipFav=qs('#chipFav'), chipCon=qs('#chipCon'), chipAst=qs('#chipAst'), chipsWrap=qs('#chipsWrap');
 const motNote=qs('#motNote'), toastEl=qs('#toast');
 
-/* DAILY refs */
-const dailyBox = qs('#dailyMessageBox');
-const dailyTitleEl = qs('#dailyMessageTitle');
-const dailyTextEl = qs('#dailyMessageText');
-const dailyCreditHintEl = qs('#dailyCreditHint');
-const dailyKickerEl = qs('#dailyKicker');
-const dailyPersonaTag = qs('#dailyPersonalityTag');
-
 /* ==== VIDEO refs ==== */
 const videoBtn = qs('#videoBtn');
 const videoWrap = qs('#videoWrap');
@@ -929,8 +736,10 @@ function showAnswerWithTyping(text){
     typingTimeoutId = null;
   }
 
+  // eventualmente solo un suono breve all'inizio
   playTypingShort(1800);
 
+  // reset stile e applico fade-in
   answerEl.style.transition = "none";
   answerEl.style.opacity = 0;
   answerEl.style.height = "";
@@ -938,6 +747,7 @@ function showAnswerWithTyping(text){
 
   answerEl.textContent = full;
 
+  // piccolo delay per permettere al browser di applicare lo stile
   requestAnimationFrame(()=>{
     answerEl.style.transition = "opacity .35s ease-out";
     answerEl.style.opacity = 1;
@@ -953,43 +763,6 @@ function toast(msg){ if(!toastEl) return; toastEl.textContent=msg; toastEl.class
 function setText(sel,txt){ const el=qs(sel); if(el) el.textContent=txt }
 function normalizeOneParagraph(s=""){ return String(s).replace(/\s*\n+\s*/g," ").replace(/\s{2,}/g," ").replace(/\s+([.,;:!?])/g,"$1").trim() }
 function decorateEmBits(el){ const raw=el.textContent; if(!raw||!raw.includes("—")) return; const parts=raw.split("—"); let html=""; for(let i=0;i<parts.length;i++){ const seg=parts[i].replace(/</g,"&lt;").replace(/>/g,"&gt;"); html += (i%2? `<span class="embit">— ${seg} </span>` : (i===0?seg:`—${seg}`)); } el.innerHTML=html }
-
-/* ==== DAILY text helpers ==== */
-function getDailyNeedCreditText(){
-  if (lang === "it") return "🎫 Ti serve 1 credito per vedere la frase del giorno (What if).";
-  if (lang === "es") return "🎫 Necesitas 1 crédito para ver la frase del día (What if).";
-  if (lang === "fr") return "🎫 Il te faut 1 crédit pour voir la phrase du jour (What if).";
-  if (lang === "de") return "🎫 Du brauchst 1 Credit, um den Tagesimpuls (What if) zu sehen.";
-  return "🎫 You need 1 credit to see today’s What if daily line.";
-}
-function getDailyCreditUsedText(){
-  if (lang === "it") return "Questa frase ha usato 1 credito What if.";
-  if (lang === "es") return "Esta frase ha usado 1 crédito de What if.";
-  if (lang === "fr") return "Cette phrase a utilisé 1 crédit What if.";
-  if (lang === "de") return "Dieser Tagesimpuls hat 1 What if-Credit verbraucht.";
-  return "This daily line used 1 What if credit.";
-}
-function getDailyFreeText(){
-  if (lang === "it") return "Risposta di What the F · gratis, senza usare crediti.";
-  if (lang === "es") return "Respuesta de What the F · gratis, sin usar créditos.";
-  if (lang === "fr") return "Réponse de What the F · gratuite, sans crédit.";
-  if (lang === "de") return "Antwort von What the F · kostenlos, ohne Credits.";
-  return "What the F reply · free, no credits used.";
-}
-function getDailyTitleFallback(){
-  if (lang === "it") return "Frase del giorno";
-  if (lang === "es") return "Frase del día";
-  if (lang === "fr") return "Phrase du jour";
-  if (lang === "de") return "Tagesimpuls";
-  return "Daily line";
-}
-function getDailyWtfBlockedText(){
-  if (lang === "it") return "Per sbloccare il commento di What the F di oggi devi prima usare la frase What if (che usa 1 credito). Apri prima la notifica What if di oggi.";
-  if (lang === "es") return "Para desbloquear el comentario de What the F de hoy, primero tienes que usar la frase de What if (que gasta 1 crédito). Abre antes la notificación de What if.";
-  if (lang === "fr") return "Pour débloquer le commentaire What the F d’aujourd’hui, il faut d’abord utiliser la phrase What if (1 crédit). Ouvre d’abord la notif What if du jour.";
-  if (lang === "de") return "Um den What the F-Kommentar von heute zu sehen, musst du zuerst den What if-Satz nutzen (1 Credit). Öffne zuerst die heutige What if-Benachrichtigung.";
-  return "To unlock today’s What the F comment, you first need to use the What if daily line (uses 1 credit). Open the What if notification first.";
-}
 
 /* ==== Titles/Text ==== */
 function applyUI(q){
@@ -1013,17 +786,6 @@ function applyUI(q){
   const ttsStatus = document.getElementById("ttsStatus");
   if(ttsBtn) ttsBtn.textContent = T.ttsBtn || "🔊";
   if(ttsStatus) ttsStatus.textContent = "";
-
-  if (dailyKickerEl) {
-    const map = {
-      it: "Frase del giorno",
-      en: "Daily line",
-      es: "Frase del día",
-      fr: "Phrase du jour",
-      de: "Tagesimpuls"
-    };
-    dailyKickerEl.textContent = map[lang] || "Daily line";
-  }
 }
 
 /* ==== Probability ==== */
@@ -1278,97 +1040,78 @@ function saveCurrentQuestion(){
   toast(t().savedOk);
 }
 
-/* ==== SIGNAL: nascondi parti AI e mostra daily ==== */
-function hideAiSectionsForSignal(){
-  const pctRow = document.querySelector('.pct-row');
-  if (pctRow) pctRow.style.display = 'none';
-  const introBox = document.getElementById('introBox');
-  if (introBox) introBox.style.display = 'none';
-  const oracleWrap = document.querySelector('.oracle-wrap');
-  if (oracleWrap) oracleWrap.style.display = 'none';
-  if (answerEl) answerEl.style.display = 'none';
-  const lblP = document.getElementById('lblP');
-  if (lblP) lblP.style.display = 'none';
-  const resultBox = document.getElementById('resultBox');
-  if (resultBox) resultBox.style.display = 'none';
-  const lblVideo = document.getElementById('lblVideo');
-  if (lblVideo) lblVideo.style.display = 'none';
-  const videoBoxEl = document.getElementById('videoBox');
-  if (videoBoxEl) videoBoxEl.style.display = 'none';
-}
-
-/* ==== handle daily signal (What if / What the F) ==== */
-async function handleDailySignal(req, domanda){
-  hideAiSectionsForSignal();
-
-  if (!dailyBox || !dailyTitleEl || !dailyTextEl) return;
-
-  const micro = req && req.micro ? req.micro : {};
-  const slotRaw = (micro.slot || micro.time || micro.timeOfDay || "").toLowerCase();
-  const slot = (slotRaw === "afternoon" || slotRaw === "evening") ? slotRaw : "morning";
-  const phase = Number(micro.phase || 1);
-  const personality = phase === 2 ? "wtf" : "whatif";
-
-  dailyBox.style.display = "block";
-  dailyBox.classList.add("fade-in");
-
-  if (dailyPersonaTag) {
-    dailyPersonaTag.style.display = "inline-flex";
-    dailyPersonaTag.textContent = personality === "wtf" ? "What the F" : "What if";
-  }
-
-  // Phase 2 (What the F) bloccata se non ha visto la fase 1 (What if) con credito
-  if (phase === 2) {
-    const key = dailySignalKey(slot);
-    const okFlag = LS.getItem(key) === "1";
-    if (!okFlag) {
-      dailyTitleEl.textContent = getDailyTitleFallback();
-      dailyTextEl.textContent = getDailyWtfBlockedText();
-      if (dailyCreditHintEl) {
-        dailyCreditHintEl.textContent = "";
-        dailyCreditHintEl.style.display = "none";
-      }
-      return;
-    }
-  }
-
-  // Phase 1: serve credito
-  if (phase === 1) {
-    const ok = await ensureSignalCredit(micro, { forDailySignal: true });
-    if (!ok) {
-      dailyTitleEl.textContent = getDailyTitleFallback();
-      dailyTextEl.textContent = getDailyNeedCreditText();
-      if (dailyCreditHintEl) dailyCreditHintEl.style.display = "none";
-      return;
-    }
-  }
-
-  const msg = getDailyMessage(lang, slot, personality);
-  dailyTitleEl.textContent = msg.title || getDailyTitleFallback();
-  dailyTextEl.textContent = msg.text || "";
-
-  if (dailyCreditHintEl) {
-    if (phase === 1) {
-      dailyCreditHintEl.textContent = getDailyCreditUsedText();
-      dailyCreditHintEl.style.display = "block";
-    } else {
-      dailyCreditHintEl.textContent = getDailyFreeText();
-      dailyCreditHintEl.style.display = "block";
-    }
-  }
-}
-
-/* ==== Main flow ==== */
+/* ==== Main flow (con segnale giornaliero) ==== */
 async function startFlow(){
   const {req, domanda, clarification, surprise} = applyQuestion();
   updateCreditInfo();
 
-  const isSignal = !!(req && req.source === "signal");
+  const isSignal = req && req.source === "signal";
+  const micro    = (req && req.micro) ? req.micro : {};
 
-  if (isSignal) {
-    await handleDailySignal(req, domanda);
+  /* ===== RAMO SEGNALE: usa daily-messages.js, NO AI ===== */
+  if (isSignal && typeof getDailyMessage === "function") {
+    const persona = micro.phase === 2 ? "wtf" : "whatif";
+    const slot =
+      (micro.slot || micro.timeOfDay || micro.time || "morning").toLowerCase();
+
+    const dm = getDailyMessage(lang, slot, persona);
+
+    style = persona === "wtf" ? "wtf" : "whatif";
+    document.documentElement.setAttribute(
+      "data-theme",
+      style === "wtf" ? "wtf" : "whatif"
+    );
+
+    applyUI("");  // nessuna domanda, solo frase
+    qView.textContent = "";
+
+    showIntroOnce();
+
+    const lblA = document.getElementById("lblA");
+    const sub  = document.getElementById("subtitle");
+    if (dm.title && lblA) lblA.textContent = dm.title;
+    if (dm.title && sub)  sub.textContent  = dm.title;
+
+    const msg = dm.text || t().videoNoData || "Oggi niente frase preimpostata, ma puoi comunque farmi una domanda vera.";
+    playTypingShort();
+    answerEl.textContent = msg;
+    decorateEmBits(answerEl);
+
+    // nascondo percentuali e motivazioni
+    const pctTopLbl = document.getElementById("pctLabel");
+    const pctTop    = document.getElementById("topPct");
+    const pctBotLbl = document.getElementById("pctLabelBottom");
+    const pctBot    = document.getElementById("bottomPct");
+    const commTitle = document.getElementById("committeeTitle");
+
+    if (pctTopLbl) pctTopLbl.style.display = "none";
+    if (pctTop)    pctTop.style.display    = "none";
+    if (pctBotLbl) pctBotLbl.style.display = "none";
+    if (pctBot)    pctBot.style.display    = "none";
+    if (commTitle) commTitle.textContent   = "";
+
+    motIco.style.display   = "none";
+    chipsWrap.style.display= "none";
+    motNote.textContent    = "";
+
+    saveResultToCache({
+      domanda: "",
+      clarification: "",
+      style,
+      periodo,
+      lang,
+      surprise: false,
+      answer: msg,
+      pct: null,
+      motivationMode: "whatif",
+      motivationText: ""
+    });
+
+    revealEffect();
     return;
   }
+
+  /* ===== RAMO NORMALE: chiama /api/ask ===== */
 
   const cached = loadResultFromCache(domanda, clarification);
   if (cached) {
@@ -1491,6 +1234,7 @@ async function startFlow(){
     };
     saveResultToCache(resultForCache);
 
+    /* 🔹 LOG DOMANDA+RISPOSTA SU /api/save (non usa crediti OpenAI) */
     try {
       await fetch("/api/save", {
         method: "POST",
@@ -1505,6 +1249,7 @@ async function startFlow(){
       });
     } catch (logErr) {
       console.error("log /api/save failed:", logErr);
+      // non blocca l'utente, è solo logging
     }
 
   }catch(e){
@@ -1920,6 +1665,7 @@ if(openInstaBtn){
     return;
   }
 
+<|diff_marker|> ADD A1000
   let speaking = false;
   let utterance = null;
 
@@ -1940,6 +1686,7 @@ if(openInstaBtn){
     btn.textContent = (t().ttsBtn || "🔊");
     statusEl.textContent = "";
   }
+<|diff_marker|> ADD A1020
 
   btn.textContent = t().ttsBtn || "🔊";
 
@@ -1961,6 +1708,7 @@ if(openInstaBtn){
     utterance.lang = currentLocale();
     utterance.rate = 1;
 
+<|diff_marker|> ADD A1040
     utterance.onstart = ()=>{
       speaking = true;
       btn.textContent = t().ttsBtnStop || "⏹ Stop";
