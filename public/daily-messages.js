@@ -343,15 +343,20 @@ import {
   getBalance
 } from "./store/credits.js";
 
-/* 🔔 Frasi giornaliere (NO AI) */
+/* 🔹 Frasi giornaliere NO-AI */
 import { getDailyMessage } from "./daily-messages.js";
 
 /* ==== Base & prefs ==== */
 const LS = localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-let style = prefs.stile || 'whatif';   // ← diventa let
+let style = prefs.stile || 'whatif';
 const periodo = prefs.periodo || 'future';
 const IS_ADMIN = !!LS.getItem('admin_token');
+
+/* richiesta salvata (da fourth o da segnale) */
+const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
+const IS_SIGNAL = !!(reqEarly && reqEarly.source === "signal");
+
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 
 /* ==== I18N ==== */
@@ -571,12 +576,11 @@ const I18N = {
 const SUP_LANG=['it','en','es','fr','de'];
 
 /* ======== LINGUA ======== */
-const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
+// reqEarly è già letto sopra
 
-// 🔁 Override stile se la richiesta arriva da un segnale (morning/afternoon/evening)
-if (reqEarly && reqEarly.source === "signal" && reqEarly.micro && reqEarly.micro.phase) {
+// override stile da segnale (morning/afternoon/evening)
+if (IS_SIGNAL && reqEarly.micro && reqEarly.micro.phase) {
   style = reqEarly.micro.phase === 2 ? "wtf" : "whatif";
-
   document.documentElement.setAttribute(
     "data-theme",
     style === "wtf" ? "wtf" : "whatif"
@@ -585,6 +589,7 @@ if (reqEarly && reqEarly.source === "signal" && reqEarly.micro && reqEarly.micro
 
 const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
 const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
+
 function detectLang(text=''){
   const t=(text||'').toLowerCase();
   if(/[¿¡]/.test(t)) return 'es';
@@ -939,6 +944,7 @@ function saveResultToCache(obj){
 
 function loadResultFromCache(domanda, clarification){
   try{
+    if (IS_SIGNAL) return null;  // niente cache per i segnali giornalieri
     const raw = LS.getItem(RESULT_CACHE_KEY);
     if(!raw) return null;
     const obj = JSON.parse(raw);
@@ -966,7 +972,7 @@ function applyResultToUI(result){
   const usedPct = (typeof result.pct === 'number' && isFinite(result.pct))
     ? Math.max(0, Math.min(100, Math.round(result.pct)))
     : computeProbability(domanda).pct;
-  const pStr = usedPct + "%";
+  const pStr = usedPct != null ? (usedPct + "%") : "—";
   topPct.textContent = pStr;
   bottomPct.textContent = pStr;
 
@@ -1015,7 +1021,7 @@ function applyResultToUI(result){
 
 /* ==== Question & UI load ==== */
 function applyQuestion(){
-  const req=JSON.parse(LS.getItem('whatif_request')||'{}');
+  const req=reqEarly || {};
   const domanda=req.domanda || LS.getItem('domanda') || '';
   const clarification = req.clarification || req.answer || '';
   applyUI(domanda);
@@ -1040,78 +1046,81 @@ function saveCurrentQuestion(){
   toast(t().savedOk);
 }
 
-/* ==== Main flow (con segnale giornaliero) ==== */
+/* 🔹 Flusso FRASI DEL GIORNO (NO AI) */
+function startSignalFlow(ctx){
+  const {req, domanda, clarification, surprise} = ctx || applyQuestion();
+
+  updateCreditInfo();
+  showIntroOnce();
+  stopOracleLoading();
+
+  const micro = (req && req.micro) || {};
+  const slot = micro.slot || "morning";     // morning | afternoon | evening
+  const personality = style === "wtf" ? "wtf" : "whatif";
+
+  let msg=null;
+  try{
+    msg = getDailyMessage(lang, slot, personality, micro.mood || null);
+  }catch(e){
+    console.error("daily message error:", e);
+  }
+
+  const title = msg?.title || "";
+  const text = msg?.text || "";
+
+  if(subtitle && title) subtitle.textContent = title;
+
+  topPct.textContent = "—";
+  bottomPct.textContent = "—";
+
+  showAnswerWithTyping(text || "—");
+
+  motIco.style.display='none';
+  chipsWrap.style.display='none';
+  committeeTitle.textContent = title || (t().guideTitle || "Indicazioni");
+  motNote.textContent = text || "";
+
+  revealEffect();
+
+  const hist=JSON.parse(LS.getItem('cronologia')||'[]');
+  hist.push({
+    domanda,
+    clarification,
+    risposta:text || "—",
+    stile:style,
+    periodo,
+    ts:Date.now(),
+    surprise:false,
+    pct:null,
+    motivazione:text || ""
+  });
+  LS.setItem('cronologia', JSON.stringify(hist.slice(-50)));
+
+  const resultForCache = {
+    domanda,
+    clarification:clarification || "",
+    style,
+    periodo,
+    lang,
+    surprise:!!(surprise || micro.surprise),
+    answer:text || "—",
+    pct:null,
+    motivationMode:"whatif",
+    motivationText:text || ""
+  };
+  saveResultToCache(resultForCache);
+}
+
+/* ==== Main flow ==== */
 async function startFlow(){
   const {req, domanda, clarification, surprise} = applyQuestion();
   updateCreditInfo();
 
-  const isSignal = req && req.source === "signal";
-  const micro    = (req && req.micro) ? req.micro : {};
-
-  /* ===== RAMO SEGNALE: usa daily-messages.js, NO AI ===== */
-  if (isSignal && typeof getDailyMessage === "function") {
-    const persona = micro.phase === 2 ? "wtf" : "whatif";
-    const slot =
-      (micro.slot || micro.timeOfDay || micro.time || "morning").toLowerCase();
-
-    const dm = getDailyMessage(lang, slot, persona);
-
-    style = persona === "wtf" ? "wtf" : "whatif";
-    document.documentElement.setAttribute(
-      "data-theme",
-      style === "wtf" ? "wtf" : "whatif"
-    );
-
-    applyUI("");  // nessuna domanda, solo frase
-    qView.textContent = "";
-
-    showIntroOnce();
-
-    const lblA = document.getElementById("lblA");
-    const sub  = document.getElementById("subtitle");
-    if (dm.title && lblA) lblA.textContent = dm.title;
-    if (dm.title && sub)  sub.textContent  = dm.title;
-
-    const msg = dm.text || t().videoNoData || "Oggi niente frase preimpostata, ma puoi comunque farmi una domanda vera.";
-    playTypingShort();
-    answerEl.textContent = msg;
-    decorateEmBits(answerEl);
-
-    // nascondo percentuali e motivazioni
-    const pctTopLbl = document.getElementById("pctLabel");
-    const pctTop    = document.getElementById("topPct");
-    const pctBotLbl = document.getElementById("pctLabelBottom");
-    const pctBot    = document.getElementById("bottomPct");
-    const commTitle = document.getElementById("committeeTitle");
-
-    if (pctTopLbl) pctTopLbl.style.display = "none";
-    if (pctTop)    pctTop.style.display    = "none";
-    if (pctBotLbl) pctBotLbl.style.display = "none";
-    if (pctBot)    pctBot.style.display    = "none";
-    if (commTitle) commTitle.textContent   = "";
-
-    motIco.style.display   = "none";
-    chipsWrap.style.display= "none";
-    motNote.textContent    = "";
-
-    saveResultToCache({
-      domanda: "",
-      clarification: "",
-      style,
-      periodo,
-      lang,
-      surprise: false,
-      answer: msg,
-      pct: null,
-      motivationMode: "whatif",
-      motivationText: ""
-    });
-
-    revealEffect();
+  // se arriva da segnale → frasi preimpostate NO AI
+  if (IS_SIGNAL) {
+    startSignalFlow({req, domanda, clarification, surprise});
     return;
   }
-
-  /* ===== RAMO NORMALE: chiama /api/ask ===== */
 
   const cached = loadResultFromCache(domanda, clarification);
   if (cached) {
@@ -1665,7 +1674,6 @@ if(openInstaBtn){
     return;
   }
 
-<|diff_marker|> ADD A1000
   let speaking = false;
   let utterance = null;
 
@@ -1686,7 +1694,6 @@ if(openInstaBtn){
     btn.textContent = (t().ttsBtn || "🔊");
     statusEl.textContent = "";
   }
-<|diff_marker|> ADD A1020
 
   btn.textContent = t().ttsBtn || "🔊";
 
@@ -1708,7 +1715,6 @@ if(openInstaBtn){
     utterance.lang = currentLocale();
     utterance.rate = 1;
 
-<|diff_marker|> ADD A1040
     utterance.onstart = ()=>{
       speaking = true;
       btn.textContent = t().ttsBtnStop || "⏹ Stop";
