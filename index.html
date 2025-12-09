@@ -891,15 +891,16 @@
         closeBanner();
         if(window.dailySignalsRefreshToggleLabel) window.dailySignalsRefreshToggleLabel();
 
-        // 👉 Richiesta notifiche + salvataggio token (se disponibile la funzione globale)
+        // 👉 aggancia il flusso FCM
         try{
-          if (typeof window.requestDailySignalsPush === "function") {
-            window.requestDailySignalsPush();
+          if (window.enableDailyPush) {
+            window.enableDailyPush();
           }
         }catch(e){
-          console.warn("Errore richiesta push:", e);
+          console.warn("enableDailyPush error", e);
         }
       });
+
       btnNo.addEventListener('click', ()=>{
         setChoice('rejected');
         setLastPromptToday();
@@ -940,81 +941,6 @@
       // inizializza label footer alla prima apertura
       refreshToggleLabel();
     })();
-  </script>
-
-  <!-- 🔔 Inizializzazione notifiche push / FCM -->
-  <script type="module">
-    import { messaging, getToken, onMessage } from "./firebase.init.js";
-
-    const VAPID_KEY = "BEoMbKJz69nMPuZJnyqvWoL97ff6sEttr_pc1qiEaFbh2COR7dmHGMa7RmFLPip_gMXQJzVN7fx297mSdZDc1Ac";
-
-    async function saveFcmTokenToBackend(token) {
-      try {
-        await fetch("/api/save-fcm-token", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ token }),
-        });
-      } catch (e) {
-        console.warn("❗ Impossibile inviare il token FCM al backend:", e);
-      }
-    }
-
-    async function requestDailySignalsPush() {
-      try {
-        if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-          console.warn("Push non supportato dal browser");
-          return;
-        }
-
-        // 1) Permesso notifiche
-        let permission = Notification.permission;
-        if (permission === "default") {
-          permission = await Notification.requestPermission();
-        }
-        if (permission !== "granted") {
-          console.warn("Permesso notifiche non concesso");
-          return;
-        }
-
-        // 2) Registrazione service worker FCM (se non già pronto)
-        let reg;
-        try {
-          reg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-        } catch (e) {
-          reg = await navigator.serviceWorker.ready;
-        }
-
-        // 3) Ottieni token FCM
-        const token = await getToken(messaging, {
-          vapidKey: VAPID_KEY,
-          serviceWorkerRegistration: reg,
-        });
-
-        if (!token) {
-          console.warn("Nessun token FCM ottenuto");
-          return;
-        }
-
-        // 4) Salva in localStorage e invia al backend
-        try {
-          localStorage.setItem("fcm_token", token);
-        } catch {}
-        await saveFcmTokenToBackend(token);
-
-      } catch (e) {
-        console.warn("Errore nella richiesta push:", e);
-      }
-    }
-
-    // Esporto sul window per il banner
-    window.requestDailySignalsPush = requestDailySignalsPush;
-
-    // Listener messaggi in foreground (debug)
-    onMessage(messaging, (payload) => {
-      console.log("📩 Messaggio FCM in foreground:", payload);
-    });
   </script>
 
   <!-- 🔐 Firebase Auth -->    
@@ -1154,6 +1080,78 @@
 
     logoutBtn.onclick = async ()=>{ await signOut(auth); };
   </script>    
+
+  <!-- 🔔 Setup FCM: richiede token e lo salva via /api/save-fcm-token -->
+  <script type="module">
+    import { auth, messaging, getToken } from "./firebase.init.js";
+
+    const VAPID_KEY = "BEoMbKJz69nMPuZJnyqvWoL97ff6sEttr_pc1qiEaFbh2COR7dmHGMa7RmFLPip_gMXQJzVN7fx297mSdZDc1Ac";
+
+    async function enableDailyPush() {
+      try {
+        if (!("Notification" in window)) {
+          console.log("🔕 Notification API non disponibile");
+          return;
+        }
+
+        let permission = Notification.permission;
+        if (permission === "default") {
+          permission = await Notification.requestPermission();
+        }
+
+        if (permission !== "granted") {
+          console.log("🔕 Notifiche NON autorizzate dall'utente");
+          return;
+        }
+
+        console.log("🔔 Notifiche autorizzate, prendo token FCM…");
+
+        let fcmToken;
+        try {
+          fcmToken = await getToken(messaging, {
+            vapidKey: VAPID_KEY,
+          });
+        } catch (e) {
+          console.error("Errore getToken FCM:", e);
+          return;
+        }
+
+        if (!fcmToken) {
+          console.warn("Nessun token FCM ottenuto");
+          return;
+        }
+
+        console.log("✅ Token FCM:", fcmToken);
+
+        let uid = null;
+        try {
+          uid = auth.currentUser ? auth.currentUser.uid : null;
+        } catch {}
+
+        const resp = await fetch("/api/save-fcm-token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            token: fcmToken,
+            uid,
+          }),
+        });
+
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || !data.ok) {
+          console.error("Errore salvataggio token FCM:", data);
+        } else {
+          console.log("💾 Token FCM salvato su Firestore");
+        }
+      } catch (err) {
+        console.error("enableDailyPush fatal error:", err);
+      }
+    }
+
+    window.enableDailyPush = enableDailyPush;
+  </script>
 
   <script>
   (function(){
