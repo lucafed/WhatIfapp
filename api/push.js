@@ -1,57 +1,55 @@
 // FILE: api/push.js
 // Invia una notifica "frase del giorno" a tutti gli ultimi token salvati
-// ⚠️ Data-only: niente campo `notification` → nessuna doppia notifica
+// Usa i parametri di query ?slot=morning|afternoon|evening & phase=1|2
+// E apre fifth.html con ?signal=...&phase=...&src=daily_push
 
 import admin from "../firebase-admin-server.js";
 
 const db = admin.firestore();
 
-// Base URL della webapp (puoi cambiarlo se usi un dominio diverso)
-const APP_BASE_URL =
-  process.env.APP_BASE_URL || "https://what-ifapp.vercel.app";
-
-/**
- * Costruisce l'URL che deve aprirsi quando l'utente tappa la notifica.
- * Esempi:
- *  - /fifth.html?signal=morning&phase=1
- *  - /fifth.html?signal=evening&phase=2&mood=giu
- */
-function buildClickUrl(slot, phase, mood) {
-  const params = new URLSearchParams();
-  params.set("signal", slot);
-  params.set("phase", String(phase));
-  if (mood) params.set("mood", String(mood));
-  return `${APP_BASE_URL}/fifth.html?${params.toString()}`;
+// Normalizza slot e phase
+function normalizeSlot(raw) {
+  const val = String(raw || "").toLowerCase();
+  if (val === "afternoon") return "afternoon";
+  if (val === "evening") return "evening";
+  return "morning";
 }
 
-/**
- * Piccolo helper per titolo e testo della notifica
- */
-function buildText(slot, phase) {
-  slot = slot || "morning";
+function normalizePhase(raw) {
+  return String(raw) === "2" ? 2 : 1; // 1 = What if, 2 = What the F
+}
 
-  // default IT per ora (tanto il contenuto vero lo genera fifth)
-  let title = "What?f · frase del giorno";
-  let body =
-    phase === 2
-      ? "What the F ha qualcosa da ridire su oggi…"
-      : "What if ha una frase per iniziare o rimettere a fuoco la giornata.";
-
-  if (slot === "afternoon") {
-    title = "What?f · check-in del pomeriggio";
-    body =
-      phase === 2
-        ? "What the F commenta il tuo pomeriggio."
-        : "Come sta andando? Tocca per il check-in con What if.";
-  } else if (slot === "evening") {
-    title = "What?f · chiusura giornata";
-    body =
-      phase === 2
-        ? "What the F chiude il giro e dice la sua sulla tua giornata."
-        : "Tocca per chiudere la giornata con What if e rimettere ordine.";
+// Testi diversi per mattino / pomeriggio / sera e per voce
+function buildNotificationBody(slot, phase) {
+  // slot: morning | afternoon | evening
+  // phase: 1 (What if) | 2 (WTF)
+  if (slot === "morning" && phase === 1) {
+    // What if mattino
+    return "Buongiorno: metti a fuoco una cosa che conta oggi e falla succedere. Vuoi chiedere o rispondere?";
+  }
+  if (slot === "evening" && phase === 2) {
+    // What the F sera
+    return "Giornata finita (più o meno): dimmi com’è andata davvero o chiedi qualcosa, così non te la porti a letto.";
+  }
+  if (slot === "afternoon" && phase === 1) {
+    return "Pomeriggio a metà: com’è l’umore ora? Se vuoi, chiedi o racconta cosa sta andando storto o sorprendentemente bene.";
+  }
+  if (slot === "afternoon" && phase === 2) {
+    return "Metà giornata, metà pazienza: sfogati o chiedi qualcosa, prima che ti ritrovi a urlare al muro.";
   }
 
-  return { title, body };
+  // fallback generico
+  if (phase === 1) {
+    return "Frase del giorno di What if: un passo concreto oggi, non domani. Vuoi chiedere o rispondere adesso?";
+  }
+  return "Commento cazzaro di What the F sulla tua giornata. Vuoi dirgli la tua o fargli una domanda?";
+}
+
+// Titolo diverso per le due voci
+function buildNotificationTitle(phase) {
+  return phase === 1
+    ? "What if · frase del giorno"
+    : "What the F · frase del giorno";
 }
 
 export default async function handler(req, res) {
@@ -60,21 +58,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 🔹 Leggiamo dallo querystring:
-    //   /api/push?slot=morning&phase=1
-    const slotRaw = (req.query.slot || "morning").toString().toLowerCase();
-    const phase = Number(req.query.phase || "1");
-    const mood = req.query.mood ? String(req.query.mood) : undefined;
+    // 🧩 Leggiamo slot e phase dalla query
+    const { slot: rawSlot, phase: rawPhase } = req.query || {};
+    const slot = normalizeSlot(rawSlot);
+    const phase = normalizePhase(rawPhase);
 
-    // Normalizza slot
-    const ALLOWED_SLOTS = ["morning", "afternoon", "evening"];
-    const slot = ALLOWED_SLOTS.includes(slotRaw) ? slotRaw : "morning";
-    const safePhase = phase === 2 ? 2 : 1; // solo 1 o 2
+    // 🔗 Link completo che deve APRIRSI al tap
+    const CLICK_LINK = `https://what-ifapp.vercel.app/fifth.html?signal=${slot}&phase=${phase}&src=daily_push`;
 
-    const clickLink = buildClickUrl(slot, safePhase, mood);
-    const { title, body } = buildText(slot, safePhase);
-
-    // Recuperiamo gli ultimi token
     const snap = await db
       .collection("fcm_tokens")
       .orderBy("createdAt", "desc")
@@ -87,29 +78,30 @@ export default async function handler(req, res) {
 
     const tokens = snap.docs.map((d) => d.id);
 
-    // 🔔 Messaggio DATA-ONLY
+    const title = buildNotificationTitle(phase);
+    const body = buildNotificationBody(slot, phase);
+
+    // ✅ QUI usiamo SIA `notification` SIA `data` SIA `webpush.fcmOptions.link`
     const message = {
-      data: {
-        // Questi li usiamo nel client / service worker se serve
+      notification: {
         title,
         body,
-
-        // ci teniamo traccia del tipo di segnale
-        src: "signal",
-        slot, // morning | afternoon | evening
-        phase: String(safePhase), // "1" | "2"
-        mood: mood || "",
-
-        // per compatibilità con alcuni browser / SW
-        click_action: clickLink
+      },
+      data: {
+        // per il client / fifth.html se un domani vuoi leggerli
+        src: "daily_push",
+        signal: slot,           // morning | afternoon | evening
+        phase: String(phase),   // "1" o "2"
+        url: CLICK_LINK,
+        click_action: CLICK_LINK
       },
       webpush: {
         fcmOptions: {
-          // per sicurezza: link usato da FCM lato browser
-          link: clickLink
-        }
+          // link aperto dal browser al tap
+          link: CLICK_LINK,
+        },
       },
-      tokens
+      tokens,
     };
 
     const resp = await admin.messaging().sendEachForMulticast(message);
@@ -117,10 +109,10 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       slot,
-      phase: safePhase,
-      mood: mood || null,
+      phase,
       sent: resp.successCount,
-      failed: resp.failureCount
+      failed: resp.failureCount,
+      click: CLICK_LINK,
     });
   } catch (err) {
     console.error("push error", err);
