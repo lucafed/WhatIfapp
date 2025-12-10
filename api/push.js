@@ -1,28 +1,15 @@
 // FILE: api/push.js
-// Invia notifiche FCM ai token salvati in Firestore.
-// Uso base per test:
-//   https://what-ifapp.vercel.app/api/push?type=test
+// Invia una notifica (giornaliera / di test) a tutti gli ultimi token salvati
 
 import admin from "../firebase-admin-server.js";
 
 const db = admin.firestore();
 
-// URL della tua web app (RELEASE)
-const APP_URL = "https://what-ifapp.vercel.app/";
-
-// messaggi predefiniti in base al tipo
-const PRESETS = {
-  test: {
-    title: "What?f · frase del giorno",
-    body: "Funziona! Questa è una notifica di test 🔔",
-  },
-  // qui in futuro possiamo aggiungere:
-//  morning: { ... },
-//  afternoon: { ... },
-//  evening: { ... },
-};
+// URL da aprire quando l’utente tocca la notifica
+const CLICK_LINK = "https://what-ifapp.vercel.app/";
 
 export default async function handler(req, res) {
+  // Se il cron di Vercel usa GET, lasciamo GET
   if (req.method !== "GET") {
     return res
       .status(405)
@@ -30,19 +17,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    // tipo di notifica: ?type=test (default)
-    const type = (req.query.type || "test").toString();
-    const slot = (req.query.slot || "").toString();
-
-    const preset = PRESETS[type] || PRESETS.test;
-    const title = preset.title;
-    const body = preset.body;
-
-    // prendo gli ultimi 100 token salvati
+    // Prendiamo gli ultimi token registrati
     const snap = await db
       .collection("fcm_tokens")
       .orderBy("createdAt", "desc")
-      .limit(100)
+      .limit(500) // puoi abbassare se vuoi
       .get();
 
     if (snap.empty) {
@@ -53,17 +32,35 @@ export default async function handler(req, res) {
 
     const tokens = snap.docs.map((d) => d.id);
 
+    // 👇 Testo della notifica (poi lo cambieremo con quelle “vere”)
+    const title = "What?f · frase del giorno";
+    const body  = "Hey, c’è una nuova frase del giorno che ti aspetta 🔔";
+
     const message = {
-      notification: { title, body },
-      tokens,
-      data: {
-        type,
-        slot,
-        // URL dove aprire l'app quando l'utente tocca la notifica
-        // se vuoi mandare direttamente alla pagina risultato:
-        // click_action: APP_URL + "fifth.html",
-        click_action: APP_URL,
+      notification: {
+        title,
+        body,
       },
+
+      // 👇 Importante per il click su WEB
+      webpush: {
+        fcmOptions: {
+          // URL che il browser deve aprire quando tocchi la notifica
+          link: CLICK_LINK,
+        },
+        notification: {
+          icon: "/icon-192.png",
+          badge: "/icon-192.png",
+        },
+      },
+
+      // 👇 Dati extra, usati anche dal service worker (notificationclick)
+      data: {
+        click_action: CLICK_LINK,
+        type: "daily_phrase",
+      },
+
+      tokens,
     };
 
     const resp = await admin.messaging().sendEachForMulticast(message);
@@ -74,7 +71,7 @@ export default async function handler(req, res) {
       failed: resp.failureCount,
     });
   } catch (err) {
-    console.error("push error", err);
+    console.error("push.js error", err);
     return res
       .status(500)
       .json({ ok: false, error: "server_error" });
