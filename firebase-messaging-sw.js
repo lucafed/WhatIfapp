@@ -16,7 +16,7 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Messaggi in background → mostriamo una notifica “normale”
+// 🔔 Mostra notifica quando arriva in background
 messaging.onBackgroundMessage((payload) => {
   console.log("[firebase-messaging-sw.js] Messaggio in background:", payload);
 
@@ -28,25 +28,22 @@ messaging.onBackgroundMessage((payload) => {
     (payload.notification && payload.notification.body) ||
     "Hai un nuovo messaggio da What?f";
 
-  // click_action passato dal server (api/push.js)
-  const clickAction =
-    (payload.data && payload.data.click_action) ||
-    "https://what-ifapp.vercel.app/?src=daily_push";
-
+  // NON mi fido di click_action del payload, uso sempre il nostro URL
   const notificationOptions = {
     body: notificationBody,
     icon: "/icon-192.png",
     badge: "/icon-72.png",
     data: {
-      click_action: clickAction,
-      ...payload.data,
+      // URL di destinazione fisso per le daily
+      click_action: "https://what-ifapp.vercel.app/?src=daily_push",
+      ...(payload.data || {}),
     },
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// Click sulla notifica
+// 🔁 Click sulla notifica
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
@@ -56,20 +53,19 @@ self.addEventListener("notificationclick", (event) => {
 
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-      // Se esiste già una finestra di What?f → la NAVIGO verso targetUrl e poi la metto in focus
-      if (clientList.length > 0) {
-        const client = clientList[0];
-        // usa navigate per cambiare pagina nella stessa scheda
-        if ("navigate" in client) {
-          return client.navigate(targetUrl).then(() => client.focus());
-        } else {
-          // fallback: focus + nuova finestra
+      // Cerco una finestra già aperta della tua app
+      for (const client of clientList) {
+        if (client.url.startsWith("https://what-ifapp.vercel.app")) {
+          // Navigo quella finestra all'URL target e la porto in focus
+          if ("navigate" in client) {
+            return client.navigate(targetUrl).then(() => client.focus());
+          }
           client.focus();
-          return clients.openWindow(targetUrl);
+          return;
         }
       }
 
-      // Nessuna finestra aperta → apro una nuova scheda/finestra su targetUrl
+      // Nessuna finestra aperta → apro una nuova
       if (clients.openWindow) {
         return clients.openWindow(targetUrl);
       }
