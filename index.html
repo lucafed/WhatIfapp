@@ -1318,5 +1318,74 @@
       registerDailyFCM(false);
     });
   </script>
+  <!-- 🔔 Quando arrivo da una notifica daily_push → costruisco la richiesta e vado su fifth.html -->
+  <script>
+    (function () {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const src = params.get("src");
+        if (src !== "daily_push") return;
+
+        // lingua corrente
+        const L = (window.getCurrentLang && window.getCurrentLang()) || "it";
+
+        // uso la frase "morning.default" della lingua come base
+        const moodsLang = (window.MOODS && window.MOODS[L]) || (window.MOODS && window.MOODS.it) || {};
+        const slotObj   = moodsLang.morning || {};
+        const entry     = slotObj.default || slotObj.ok || null;
+
+        let domanda = entry && entry.q;
+        let clarification = entry && entry.clarification;
+
+        if (!domanda) {
+          domanda = (L === "en")
+            ? "Give me a short, realistic daily scenario to reset my day."
+            : "Dammi uno scenario giornaliero sintetico e realistico per rimettere in carreggiata la giornata.";
+        }
+        clarification = clarification || "";
+
+        // preferenze stile / periodo dell'utente
+        let prefs = {};
+        try {
+          prefs = JSON.parse(localStorage.getItem("whatif_prefs") || "{}") || {};
+        } catch { prefs = {}; }
+
+        const stile   = prefs.stile   || "whatif";
+        const periodo = prefs.periodo || "future";
+
+        const req = {
+          source: "daily_push",
+          domanda,
+          clarification,
+          lang: L,
+          stile,
+          periodo,
+          micro: {
+            src: "daily_push",
+            slot: "morning",
+            time: "morning",
+            timeOfDay: "morning",
+            signal: "daily_push",
+            phase: stile === "wtf" ? 2 : 1,
+            mood: "default",
+            ts: Date.now()
+          }
+        };
+
+        try {
+          localStorage.setItem("whatif_request", JSON.stringify(req));
+        } catch (e) {
+          console.warn("cannot save daily_push request", e);
+        }
+
+        // vai direttamente alla pagina del risultato
+        window.location.replace("fifth.html");
+      } catch (e) {
+        console.warn("daily_push redirect error", e);
+      }
+    })();
+  </script>
+</body>
+</html>
 </body>
 </html>
