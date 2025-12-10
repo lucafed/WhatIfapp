@@ -1,24 +1,18 @@
-// FILE: /sw.js
+// FILE: /sw.js  (e anche /firebase-messaging-sw.js)
 // Service Worker per What?f
-// - Niente cache / fetch → niente rischi di pagina nera
-// - Gestione notifiche FCM data-only
-// - Click sulla notifica → apre la PWA con l'URL giusto
+// - niente cache/fetch (evita schermate nere)
+// - gestisce notifiche FCM data-only
+// - click apre sempre la PWA sull'URL giusto
 
-// 🔹 Attiva subito la nuova versione
 self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// 🔹 Prende il controllo di tutte le pagine aperte
 self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-// ✅ NIENTE fetch handler → lasciamo gestire tutto a Chrome
-// (se mettiamo cache e sbagliamo qualcosa, tornano le schermate nere)
-
-
-// 🔔 PUSH: notifiche mostrate da questo SW (messaggio data-only da FCM)
+// 🔔 PUSH: le notifiche le mostra questo SW
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -34,21 +28,18 @@ self.addEventListener("push", (event) => {
     data.body ||
     "La tua frase di oggi è pronta 🔔";
 
-  // URL da aprire quando l’utente tappa la notifica
-  // priorità: click_action (pieno) → url (relativo) → fallback
-  let url = data.click_action || data.url || "/?src=daily_push";
+  // URL da aprire quando tocchi la notifica
+  let url = data.click_action || data.url || "/fifth.html?src=daily_push";
 
-  // se è relativo, lo trasformiamo in assoluto rispetto all’origin
   try {
     url = new URL(url, self.location.origin).toString();
   } catch (e) {
-    url = self.location.origin + "/?src=daily_push";
+    url = self.location.origin + "/fifth.html?src=daily_push";
   }
 
   const options = {
     body,
-    // niente /public: le icone stanno già alla root nel deploy
-    icon: "/icon-192.png",
+    icon: "/icon-192.png",   // icona PWA (non /public/)
     badge: "/icon-192.png",
     data: {
       url,
@@ -64,17 +55,13 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const data = event.notification.data || {};
-  let targetUrl = data.url || data.click_action || "/?src=daily_push";
+  let targetUrl = data.url || data.click_action || "/fifth.html?src=daily_push";
 
-  // normalizza l'URL (anche se è relativo)
   try {
     targetUrl = new URL(targetUrl, self.location.origin).toString();
   } catch (e) {
-    targetUrl = self.location.origin + "/?src=daily_push";
+    targetUrl = self.location.origin + "/fifth.html?src=daily_push";
   }
 
-  // Apriamo sempre una nuova finestra/scheda sull'URL della notifica
-  event.waitUntil(
-    self.clients.openWindow(targetUrl)
-  );
+  event.waitUntil(self.clients.openWindow(targetUrl));
 });
