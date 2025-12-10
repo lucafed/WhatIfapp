@@ -920,12 +920,12 @@
         });
       }
 
-      // export helper (se volessimo usarlo altrove)
+      // export helper
       window.needsDailyChoice = function(){
         return !getChoice();
       };
 
-      // primo load: se nessuna scelta → blocco
+      // primo load
       if(!getChoice()){
         openBlocking();
         setLastPromptToday();
@@ -1217,13 +1217,11 @@
             stile,
             periodo,
             micro: {
-              // 👇 questi campi sono quelli che /api/ask.js legge per i segnali
               src: "signal",
-              slot: slot,        // usato da normSignalSlot(...)
+              slot: slot,
               time: slot,
               timeOfDay: slot,
-              signal: slot,      // extra, non dà fastidio
-
+              signal: slot,
               phase,
               mood,
               ts: Date.now()
@@ -1242,51 +1240,6 @@
   })();
   </script>
 
-  <!-- 🔔 FCM: registra token e manda a /api/save-fcm-token -->
-  <script type="module">
-    import { messaging, getToken, auth } from "./firebase.init.js";
-
-    const VAPID_KEY = "BEoMbKJz69nMPuZJnyqvWoL97ff6sEttr_pc1qiEaFbh2COR7dmHGMa7RmFLPip_gMXQJzVN7fx297mSdZDc1Ac";
-
-    async function registerDailyFCM(force = false){
-      try{
-        if(!("Notification" in window)) return;
-
-        const choice = localStorage.getItem("dailySignalsChoice");
-        if(!force && choice !== "accepted") return;
-
-        let perm = Notification.permission;
-        if(perm === "default"){
-          perm = await Notification.requestPermission();
-        }
-        if(perm !== "granted") return;
-
-        const token = await getToken(messaging, { vapidKey: VAPID_KEY });
-        if(!token) return;
-
-        let uid = null;
-        try{ uid = auth.currentUser?.uid || null; }catch{}
-
-        await fetch("/api/save-fcm-token",{
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ token, uid })
-        });
-
-        console.log("✅ FCM token salvato:", token.slice(0,10)+"…");
-      }catch(e){
-        console.error("❌ registerDailyFCM error", e);
-      }
-    }
-
-    // usato dal banner quando l’utente accetta
-    window.registerDailyFCM = () => registerDailyFCM(true);
-
-    // se l’utente aveva già accettato in passato, prova a registrare in automatico
-    window.addEventListener("load", ()=>{
-      registerDailyFCM(false);
-    });
-  </script>
   <!-- 🔔 FCM: registra token e manda a /api/save-fcm-token -->
   <script type="module">
     import { messaging, getToken, auth } from "./firebase.init.js";
