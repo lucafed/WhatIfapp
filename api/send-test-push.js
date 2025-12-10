@@ -1,5 +1,5 @@
 // FILE: api/send-test-push.js
-// Invia una notifica di test a tutti gli ultimi token salvati
+// Invia una notifica di test SOLO all'ultimo token salvato
 
 import admin from "../firebase-admin-server.js";
 
@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     const snap = await db
       .collection("fcm_tokens")
       .orderBy("createdAt", "desc")
-      .limit(20)
+      .limit(1)             // 👈 PRENDI SOLO L’ULTIMO TOKEN
       .get();
 
     if (snap.empty) {
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
         .json({ ok: false, error: "no_tokens" });
     }
 
-    const tokens = snap.docs.map((d) => d.id);
+    const tokens = snap.docs.map((d) => d.id); // qui ci sarà solo 1 elemento
 
     const message = {
       notification: {
