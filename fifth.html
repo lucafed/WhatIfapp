@@ -748,8 +748,13 @@ const SUP_LANG=['it','en','es','fr','de'];
 
 /* ======== LINGUA ======== */
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
-const IS_SIGNAL = !!(reqEarly && reqEarly.source === "signal" && reqEarly.micro);
-
+// È un "segnale" sia se arriva dai bottoni-test (source: "signal")
+// sia se arriva da una notifica giornaliera (source: "daily_push")
+const IS_SIGNAL = !!(
+  reqEarly &&
+  (reqEarly.source === "signal" || reqEarly.source === "daily_push") &&
+  reqEarly.micro
+);
 /* 🔁 Override stile se la richiesta arriva da un segnale (morning/afternoon/evening) */
 if (IS_SIGNAL && reqEarly.micro && reqEarly.micro.phase) {
   style = reqEarly.micro.phase === 2 ? "wtf" : "whatif";
