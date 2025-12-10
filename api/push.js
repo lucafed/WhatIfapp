@@ -1,5 +1,6 @@
 // FILE: api/push.js
-// Invia una notifica di "frase del giorno" a tutti gli ultimi token salvati
+// Invia una notifica "frase del giorno" a tutti gli ultimi token salvati
+// ⚠️ Data-only: niente campo `notification` → niente doppia notifica
 
 import admin from "../firebase-admin-server.js";
 
@@ -26,23 +27,29 @@ export default async function handler(req, res) {
 
     const tokens = snap.docs.map((d) => d.id);
 
+    // 🔔 Messaggio DATA-ONLY
     const message = {
-      notification: {
-        title: "What?f · frase del giorno",
-        body: "Funziona! Questa è una notifica di test 🔔",
-      },
-      // 👇 qui salviamo il link dentro i dati della notifica
       data: {
-        click_action: CLICK_LINK,
+        // Questi li usiamo nel service worker / app se vogliamo
+        title: "What?f · frase del giorno",
+        body: "La tua frase di oggi è pronta 🔔",
+
+        // per capire in index.html da dove arrivi
         src: "daily_push",
+
+        // URL “logico” interno (lo usi se ti serve nel client)
+        url: "/?src=daily_push",
+
+        // per compatibilità con alcuni browser / SW
+        click_action: CLICK_LINK
       },
       webpush: {
         fcmOptions: {
-          // 👇 per sicurezza, anche qui
-          link: CLICK_LINK,
-        },
+          // per sicurezza: link usato da FCM lato browser
+          link: CLICK_LINK
+        }
       },
-      tokens,
+      tokens
     };
 
     const resp = await admin.messaging().sendEachForMulticast(message);
@@ -50,7 +57,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       sent: resp.successCount,
-      failed: resp.failureCount,
+      failed: resp.failureCount
     });
   } catch (err) {
     console.error("push error", err);
