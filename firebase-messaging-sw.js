@@ -1,8 +1,8 @@
-// FILE: firebase-messaging-sw.js
-// Service Worker unico per What?f
-// - niente cache
-// - gestisce le push FCM (data-only)
-// - click notifica → apre la PWA / pagina giusta
+// FILE: /sw.js  (e anche /firebase-messaging-sw.js)
+// Service Worker per What?f
+// - niente cache/fetch (evita schermate nere)
+// - gestisce notifiche FCM data-only
+// - click apre sempre la PWA sull'URL giusto
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -12,7 +12,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-// PUSH da FCM (data-only)
+// 🔔 PUSH: le notifiche le mostra questo SW
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -28,20 +28,18 @@ self.addEventListener("push", (event) => {
     data.body ||
     "La tua frase di oggi è pronta 🔔";
 
-  // URL da aprire al tap
-  let url = data.click_action || data.url || "/?src=daily_push";
+  // URL da aprire quando tocchi la notifica
+  let url = data.click_action || data.url || "/fifth.html?src=daily_push";
 
   try {
-    const u = new URL(url, self.location.origin);
-    url = u.toString();
+    url = new URL(url, self.location.origin).toString();
   } catch (e) {
-    url = self.location.origin + "/?src=daily_push";
+    url = self.location.origin + "/fifth.html?src=daily_push";
   }
 
   const options = {
     body,
-    // metti qui il path giusto della tua icona (se è in /public, l’URL è /icon-192.png)
-    icon: "/icon-192.png",
+    icon: "/icon-192.png",   // icona PWA (non /public/)
     badge: "/icon-192.png",
     data: {
       url,
@@ -52,37 +50,18 @@ self.addEventListener("push", (event) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// Click sulla notifica
+// 🔔 Click sulla notifica → apri SEMPRE l'URL della notifica
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const notifData = event.notification.data || {};
-  let targetUrl = notifData.url || "/";
+  const data = event.notification.data || {};
+  let targetUrl = data.url || data.click_action || "/fifth.html?src=daily_push";
 
   try {
-    const u = new URL(targetUrl, self.location.origin);
-    targetUrl = u.toString();
+    targetUrl = new URL(targetUrl, self.location.origin).toString();
   } catch (e) {
-    targetUrl = self.location.origin + "/";
+    targetUrl = self.location.origin + "/fifth.html?src=daily_push";
   }
 
-  event.waitUntil(
-    self.clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clientList) => {
-        if (clientList && clientList.length > 0) {
-          const sameOriginClient =
-            clientList.find((c) => (c.url || "").startsWith(self.location.origin)) ||
-            clientList[0];
-
-          if (sameOriginClient.navigate) {
-            sameOriginClient.navigate(targetUrl);
-          }
-
-          return sameOriginClient.focus();
-        }
-
-        return self.clients.openWindow(targetUrl);
-      })
-  );
+  event.waitUntil(self.clients.openWindow(targetUrl));
 });
