@@ -12,28 +12,33 @@ function normalizeSlot(raw) {
   const val = String(raw || "").toLowerCase();
   if (val === "afternoon") return "afternoon";
   if (val === "evening") return "evening";
-  return "morning";
+  return "morning"; // default
 }
 
 function normalizePhase(raw) {
-  return String(raw) === "2" ? 2 : 1; // 1 = What if, 2 = What the F
+  // 1 = What if, 2 = What the F
+  return String(raw) === "2" ? 2 : 1;
 }
 
 // Testi diversi per mattino / pomeriggio / sera e per voce
 function buildNotificationBody(slot, phase) {
   // slot: morning | afternoon | evening
   // phase: 1 (What if) | 2 (WTF)
+
   if (slot === "morning" && phase === 1) {
     // What if mattino
     return "Buongiorno: metti a fuoco una cosa che conta oggi e falla succedere. Vuoi chiedere o rispondere?";
   }
+
   if (slot === "evening" && phase === 2) {
     // What the F sera
     return "Giornata finita (più o meno): dimmi com’è andata davvero o chiedi qualcosa, così non te la porti a letto.";
   }
+
   if (slot === "afternoon" && phase === 1) {
     return "Pomeriggio a metà: com’è l’umore ora? Se vuoi, chiedi o racconta cosa sta andando storto o sorprendentemente bene.";
   }
+
   if (slot === "afternoon" && phase === 2) {
     return "Metà giornata, metà pazienza: sfogati o chiedi qualcosa, prima che ti ritrovi a urlare al muro.";
   }
@@ -42,6 +47,7 @@ function buildNotificationBody(slot, phase) {
   if (phase === 1) {
     return "Frase del giorno di What if: un passo concreto oggi, non domani. Vuoi chiedere o rispondere adesso?";
   }
+
   return "Commento cazzaro di What the F sulla tua giornata. Vuoi dirgli la tua o fargli una domanda?";
 }
 
@@ -66,6 +72,7 @@ export default async function handler(req, res) {
     // 🔗 Link completo che deve APRIRSI al tap
     const CLICK_LINK = `https://what-ifapp.vercel.app/fifth.html?signal=${slot}&phase=${phase}&src=daily_push`;
 
+    // Prendiamo gli ultimi token registrati
     const snap = await db
       .collection("fcm_tokens")
       .orderBy("createdAt", "desc")
@@ -76,30 +83,22 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: false, error: "no_tokens" });
     }
 
+    // I token sono gli ID dei documenti nella collection fcm_tokens
     const tokens = snap.docs.map((d) => d.id);
 
     const title = buildNotificationTitle(phase);
     const body = buildNotificationBody(slot, phase);
 
-    // ✅ QUI usiamo SIA `notification` SIA `data` SIA `webpush.fcmOptions.link`
+    // ✅ MESSAGGIO DATA-ONLY → sarà il service worker a mostrare la notifica
     const message = {
-      notification: {
+      data: {
         title,
         body,
-      },
-      data: {
-        // per il client / fifth.html se un domani vuoi leggerli
         src: "daily_push",
-        signal: slot,           // morning | afternoon | evening
-        phase: String(phase),   // "1" o "2"
+        signal: slot,             // morning | afternoon | evening
+        phase: String(phase),     // "1" o "2"
         url: CLICK_LINK,
-        click_action: CLICK_LINK
-      },
-      webpush: {
-        fcmOptions: {
-          // link aperto dal browser al tap
-          link: CLICK_LINK,
-        },
+        click_action: CLICK_LINK, // usato dal SW
       },
       tokens,
     };
