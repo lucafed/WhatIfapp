@@ -1287,6 +1287,86 @@
       registerDailyFCM(false);
     });
   </script>
+  <!-- 🔔 FCM: registra token e manda a /api/save-fcm-token -->
+  <script type="module">
+    import { messaging, getToken, auth } from "./firebase.init.js";
+
+    const VAPID_KEY = "BEoMbKJz69nMPuZJnyqvWoL97ff6sEttr_pc1qiEaFbh2COR7dmHGMa7RmFLPip_gMXQJzVN7fx297mSdZDc1Ac";
+
+    const DEBUG = location.search.includes("debug=1");
+    const dlog = (...a) => {
+      if (!DEBUG) return;
+      try {
+        alert("[FCM] " + a.join(" "));
+      } catch {}
+    };
+
+    async function registerDailyFCM(force = false){
+      try{
+        if(!("Notification" in window)){
+          dlog("Notification non supportato");
+          return;
+        }
+
+        const choice = localStorage.getItem("dailySignalsChoice");
+        if(!force && choice !== "accepted"){
+          dlog("choice=", choice, "→ niente FCM");
+          return;
+        }
+
+        let perm = Notification.permission;
+        dlog("perm iniziale:", perm);
+
+        if(perm === "default"){
+          perm = await Notification.requestPermission();
+          dlog("perm dopo request:", perm);
+        }
+        if(perm !== "granted"){
+          dlog("perm NON granted:", perm);
+          return;
+        }
+
+        const token = await getToken(messaging, { vapidKey: VAPID_KEY });
+        if(!token){
+          dlog("Nessun token generato");
+          return;
+        }
+
+        let uid = null;
+        try{ uid = auth.currentUser?.uid || null; }catch{}
+
+        const resp = await fetch("/api/save-fcm-token",{
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ token, uid })
+        });
+
+        let data = {};
+        try{ data = await resp.json(); }catch{}
+
+        if(!resp.ok || !data.ok){
+          dlog("Errore save-fcm-token:", resp.status, data.error || "");
+        }else{
+          dlog("Token salvato OK:", token.slice(0,10) + "…");
+        }
+
+        console.log("FCM token:", token);
+      }catch(e){
+        console.error("❌ registerDailyFCM error", e);
+        dlog("Exception:", e && (e.message || e.toString()));
+      }
+    }
+
+    // chiamata dal banner quando l’utente accetta
+    window.registerDailyFCM = () => registerDailyFCM(true);
+
+    // se aveva già accettato in passato, prova a registrare in automatico
+    window.addEventListener("load", ()=>{
+      registerDailyFCM(false);
+    });
+  </script>
+</body>
+</html>
 
 </body>
 </html>
