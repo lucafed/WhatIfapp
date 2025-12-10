@@ -1,47 +1,37 @@
 // FILE: api/push.js
-// Notifica giornaliera DATA-ONLY (NO notification)
-// → gestita SOLO dal Service Worker
-
 import admin from "../firebase-admin-server.js";
 
 const db = admin.firestore();
 
 function normalizeSlot(raw) {
   const v = String(raw || "").toLowerCase();
-  if (v === "afternoon") return "afternoon";
   if (v === "evening") return "evening";
+  if (v === "afternoon") return "afternoon";
   return "morning";
 }
 
 function normalizePhase(raw) {
-  return String(raw) === "2" ? 2 : 1; // 1 = What if | 2 = What the F
+  return String(raw) === "2" ? 2 : 1;
 }
 
-function buildTitle(phase) {
+function titleFor(phase) {
   return phase === 1
     ? "What if · frase del giorno"
     : "What the F · frase del giorno";
 }
 
-function buildBody(slot, phase) {
+function bodyFor(slot, phase) {
   if (slot === "morning" && phase === 1)
-    return "Buongiorno. Una cosa conta oggi: guardala in faccia. Vuoi chiedere o rispondere?";
+    return "Buongiorno. Un passo vero oggi cambia la giornata. Vuoi parlarne?";
   if (slot === "evening" && phase === 2)
-    return "Giornata finita. O quasi. Raccontala prima che ti resti addosso.";
-
-  return phase === 1
-    ? "Un segnale per oggi. Vuoi chiedere o rispondere?"
-    : "Commento non richiesto. Ma necessario.";
+    return "Fine giornata. Raccontami com’è andata davvero.";
+  return "Frase del giorno. Vuoi chiedere o rispondere?";
 }
 
 export default async function handler(req, res) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ ok: false });
-  }
-
   try {
-    const slot = normalizeSlot(req.query?.slot);
-    const phase = normalizePhase(req.query?.phase);
+    const slot = normalizeSlot(req.query.slot);
+    const phase = normalizePhase(req.query.phase);
 
     const CLICK_URL =
       `https://what-ifapp.vercel.app/fifth.html` +
@@ -54,19 +44,17 @@ export default async function handler(req, res) {
       .get();
 
     if (snap.empty) {
-      return res.status(200).json({ ok: false, error: "no_tokens" });
+      return res.json({ ok: false, error: "no_tokens" });
     }
 
     const tokens = snap.docs.map(d => d.id);
 
-    // ✅ DATA ONLY
     const message = {
+      // ✅ SOLO DATA — Chrome NON deve intervenire
       data: {
-        title: buildTitle(phase),
-        body: buildBody(slot, phase),
+        title: titleFor(phase),
+        body: bodyFor(slot, phase),
         url: CLICK_URL,
-        signal: slot,
-        phase: String(phase),
         src: "daily_push"
       },
       tokens
@@ -74,14 +62,14 @@ export default async function handler(req, res) {
 
     const resp = await admin.messaging().sendEachForMulticast(message);
 
-    return res.status(200).json({
+    res.json({
       ok: true,
       sent: resp.successCount,
       failed: resp.failureCount,
       url: CLICK_URL
     });
   } catch (e) {
-    console.error("push error:", e);
-    return res.status(500).json({ ok: false });
+    console.error(e);
+    res.status(500).json({ ok: false });
   }
 }
