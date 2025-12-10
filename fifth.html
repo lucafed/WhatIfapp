@@ -1408,7 +1408,7 @@ if (cached) {
     const adminToken=LS.getItem("admin_token"); if(adminToken) headers["x-admin-token"]=adminToken;
 
     const microPayload = req.micro || {};
-    if (isSignal) microPayload.src = "signal";
+    if (isSignal) microPayload.src = microPayload.src || "signal";
 
     const r=await fetch("/api/ask",{
       method:"POST",headers,
