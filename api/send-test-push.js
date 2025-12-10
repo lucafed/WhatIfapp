@@ -1,44 +1,51 @@
-// FILE: /api/send-test-push.js
-import admin from "firebase-admin";
+// FILE: api/send-test-push.js
+// Invia una notifica di test a tutti gli ultimi token salvati
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(
-      JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON)
-    ),
-  });
-}
+import admin from "../firebase-admin-server.js";
 
 const db = admin.firestore();
 
 export default async function handler(req, res) {
+  if (req.method !== "GET") {
+    return res
+      .status(405)
+      .json({ ok: false, error: "method_not_allowed" });
+  }
+
   try {
     const snap = await db
       .collection("fcm_tokens")
       .orderBy("createdAt", "desc")
-      .limit(1)
+      .limit(20)
       .get();
 
     if (snap.empty) {
-      return res.status(404).json({ ok: false, error: "no_tokens" });
+      return res
+        .status(200)
+        .json({ ok: false, error: "no_tokens" });
     }
 
-    const token = snap.docs[0].id;
+    const tokens = snap.docs.map((d) => d.id);
 
-    await admin.messaging().send({
-      token,
+    const message = {
       notification: {
-        title: "What?f",
-        body: "What if: e se domani fosse meno incasinato del previsto?\n\nWhat the F: sì vabbè… intanto dormi.",
+        title: "What?f · frase del giorno",
+        body: "Funziona! Questa è una notifica di test 🔔",
       },
-      data: {
-        click_action: "/index.html",
-      },
-    });
+      tokens,
+    };
 
-    res.json({ ok: true });
-  } catch (e) {
-    console.error("push error", e);
-    res.status(500).json({ ok: false });
+    const resp = await admin.messaging().sendEachForMulticast(message);
+
+    return res.status(200).json({
+      ok: true,
+      sent: resp.successCount,
+      failed: resp.failureCount,
+    });
+  } catch (err) {
+    console.error("send-test-push error", err);
+    return res
+      .status(500)
+      .json({ ok: false, error: "server_error" });
   }
 }
