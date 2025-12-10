@@ -1,15 +1,13 @@
 // FILE: api/push.js
-// Invia una notifica di "frase del giorno" a tutti gli ultimi token salvati
-
 import admin from "../firebase-admin-server.js";
 
 const db = admin.firestore();
 
-// URL che deve aprirsi quando l'utente tappa la notifica
+// 👉 quando clicchi la notifica, si apre questo URL
 const CLICK_LINK = "https://what-ifapp.vercel.app/?src=daily_push";
 
 export default async function handler(req, res) {
-  if (req.method !== "GET") {
+  if (req.method !== "GET" && req.method !== "POST") {
     return res.status(405).json({ ok: false, error: "method_not_allowed" });
   }
 
@@ -17,7 +15,7 @@ export default async function handler(req, res) {
     const snap = await db
       .collection("fcm_tokens")
       .orderBy("createdAt", "desc")
-      .limit(200) // margine per tanti utenti
+      .limit(500)
       .get();
 
     if (snap.empty) {
@@ -26,23 +24,23 @@ export default async function handler(req, res) {
 
     const tokens = snap.docs.map((d) => d.id);
 
+    const { title, body } = (req.method === "POST" && req.body) || {};
+    const notifTitle = title || "What?f · frase del giorno";
+    const notifBody  = body  || "Funziona! Questa è una notifica di test 🔔";
+
     const message = {
-      notification: {
-        title: "What?f · frase del giorno",
-        body: "Funziona! Questa è una notifica di test 🔔",
-      },
-      // 👇 qui salviamo il link dentro i dati della notifica
-      data: {
-        click_action: CLICK_LINK,
-        src: "daily_push",
-      },
+      tokens,
+      notification: { title: notifTitle, body: notifBody },
+      data: { src: "daily_push" },
       webpush: {
         fcmOptions: {
-          // 👇 per sicurezza, anche qui
-          link: CLICK_LINK,
+          link: CLICK_LINK, // 👈 importante
+        },
+        notification: {
+          icon: "/icon-192.png",
+          badge: "/icon-192.png",
         },
       },
-      tokens,
     };
 
     const resp = await admin.messaging().sendEachForMulticast(message);
