@@ -1,51 +1,61 @@
 // FILE: api/push.js
-// Invia una notifica (giornaliera / di test) a tutti gli ultimi token salvati
+// Invia una notifica "frase del giorno" a tutti i token registrati
 
 import admin from "../firebase-admin-server.js";
 
 const db = admin.firestore();
 
-// URL da aprire quando l’utente tocca la notifica
-const CLICK_LINK = "https://what-ifapp.vercel.app/";
+// URL aperto quando l’utente tocca la notifica ✅
+const CLICK_LINK = "https://what-ifapp.vercel.app/?src=daily_push";
 
 export default async function handler(req, res) {
-  // Se il cron di Vercel usa GET, lasciamo GET
-  if (req.method !== "GET") {
+  // Puoi chiamarlo sia in GET che in POST
+  if (req.method !== "GET" && req.method !== "POST") {
     return res
       .status(405)
       .json({ ok: false, error: "method_not_allowed" });
   }
 
   try {
-    // Prendiamo gli ultimi token registrati
+    // Leggo gli ultimi token salvati (max 500 per sicurezza)
     const snap = await db
       .collection("fcm_tokens")
       .orderBy("createdAt", "desc")
-      .limit(500) // puoi abbassare se vuoi
+      .limit(500)
       .get();
 
     if (snap.empty) {
-      return res
-        .status(200)
-        .json({ ok: false, error: "no_tokens" });
+      return res.status(200).json({
+        ok: false,
+        error: "no_tokens",
+      });
     }
 
     const tokens = snap.docs.map((d) => d.id);
 
-    // 👇 Testo della notifica (poi lo cambieremo con quelle “vere”)
-    const title = "What?f · frase del giorno";
-    const body  = "Hey, c’è una nuova frase del giorno che ti aspetta 🔔";
+    // Titolo e testo (puoi sovrascriverli via body JSON in POST)
+    const { title, body } =
+      (req.method === "POST" && req.body) || {};
+
+    const notifTitle =
+      title || "What?f · frase del giorno";
+    const notifBody =
+      body ||
+      "Funziona! Questa è una notifica di test 🔔";
 
     const message = {
+      tokens,
       notification: {
-        title,
-        body,
+        title: notifTitle,
+        body: notifBody,
       },
-
-      // 👇 Importante per il click su WEB
+      // Dati extra per il client (se ti servono in futuro)
+      data: {
+        src: "daily_push",
+      },
       webpush: {
         fcmOptions: {
-          // URL che il browser deve aprire quando tocchi la notifica
+          // 👉 quando tocchi la notifica apre questo link
           link: CLICK_LINK,
         },
         notification: {
@@ -53,14 +63,6 @@ export default async function handler(req, res) {
           badge: "/icon-192.png",
         },
       },
-
-      // 👇 Dati extra, usati anche dal service worker (notificationclick)
-      data: {
-        click_action: CLICK_LINK,
-        type: "daily_phrase",
-      },
-
-      tokens,
     };
 
     const resp = await admin.messaging().sendEachForMulticast(message);
@@ -71,7 +73,7 @@ export default async function handler(req, res) {
       failed: resp.failureCount,
     });
   } catch (err) {
-    console.error("push.js error", err);
+    console.error("push error", err);
     return res
       .status(500)
       .json({ ok: false, error: "server_error" });
