@@ -2,7 +2,7 @@
 // Service Worker per What?f
 // - Niente cache / fetch → niente rischi di pagina nera
 // - Gestione notifiche FCM data-only
-// - Click sulla notifica → apre / porta alla PWA con l'URL giusto
+// - Click sulla notifica → apre la PWA con l'URL giusto
 
 // 🔹 Attiva subito la nuova versione
 self.addEventListener("install", (event) => {
@@ -18,7 +18,7 @@ self.addEventListener("activate", (event) => {
 // (se mettiamo cache e sbagliamo qualcosa, tornano le schermate nere)
 
 
-// 🔔 PUSH: mostrata da questo SW (messaggio data-only da FCM)
+// 🔔 PUSH: notifiche mostrate da questo SW (messaggio data-only da FCM)
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -40,16 +40,16 @@ self.addEventListener("push", (event) => {
 
   // se è relativo, lo trasformiamo in assoluto rispetto all’origin
   try {
-    const u = new URL(url, self.location.origin);
-    url = u.toString();
+    url = new URL(url, self.location.origin).toString();
   } catch (e) {
     url = self.location.origin + "/?src=daily_push";
   }
 
   const options = {
     body,
-    icon: "/public/icon-192.png",
-    badge: "/public/icon-192.png",
+    // niente /public: le icone stanno già alla root nel deploy
+    icon: "/icon-192.png",
+    badge: "/icon-192.png",
     data: {
       url,
       src: data.src || "daily_push"
@@ -59,42 +59,22 @@ self.addEventListener("push", (event) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// 🔔 Click sulla notifica
+// 🔔 Click sulla notifica → apri SEMPRE l'URL della notifica
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const notifData = event.notification.data || {};
-  let targetUrl = notifData.url || "/";
+  const data = event.notification.data || {};
+  let targetUrl = data.url || data.click_action || "/?src=daily_push";
 
-  // normalizza anche qui
+  // normalizza l'URL (anche se è relativo)
   try {
-    const u = new URL(targetUrl, self.location.origin);
-    targetUrl = u.toString();
+    targetUrl = new URL(targetUrl, self.location.origin).toString();
   } catch (e) {
-    targetUrl = self.location.origin + "/";
+    targetUrl = self.location.origin + "/?src=daily_push";
   }
 
+  // Apriamo sempre una nuova finestra/scheda sull'URL della notifica
   event.waitUntil(
-    self.clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clientList) => {
-        // 1️⃣ Se c'è già una finestra dell'app, la riutilizziamo
-        if (clientList && clientList.length > 0) {
-          // prova a prendere un client sullo stesso origin
-          const sameOriginClient =
-            clientList.find((c) => c.url.startsWith(self.location.origin)) ||
-            clientList[0];
-
-          // naviga alla URL della notifica (es. https://…/?src=daily_push)
-          if (sameOriginClient.navigate) {
-            sameOriginClient.navigate(targetUrl);
-          }
-
-          return sameOriginClient.focus();
-        }
-
-        // 2️⃣ Nessuna finestra aperta → apri una nuova
-        return self.clients.openWindow(targetUrl);
-      })
+    self.clients.openWindow(targetUrl)
   );
 });
