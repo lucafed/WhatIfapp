@@ -1,19 +1,20 @@
 // FILE: api/push.js
-// Notifiche giornaliere senza duplicati
-// ➜ Mattina = WHAT IF
-// ➜ Sera = WHAT THE F
-// ➜ Nessuna notifica FCM automatica (solo data-only)
+// Invia una notifica "frase del giorno" a tutti gli ultimi token salvati
+// ⚠️ Data-only: niente campo `notification` → niente doppia notifica
+// ✅ Ora apre direttamente fifth.html in modalità FRASE DEL GIORNO (signal-mode)
 
 import admin from "../firebase-admin-server.js";
 
 const db = admin.firestore();
 
-// Funzione che crea l’URL corretto
-function buildLink(slot) {
-  if (slot === "evening") {
-    return "https://what-ifapp.vercel.app/fifth.html?signal=evening&style=wtf&slot=evening&src=daily";
-  }
-  return "https://what-ifapp.vercel.app/fifth.html?signal=morning&style=whatif&slot=morning&src=daily";
+// URL base pubblico della tua app
+const APP_URL = "https://what-ifapp.vercel.app";
+
+function normSlot(raw = "") {
+  const s = String(raw || "").toLowerCase();
+  if (s.includes("after")) return "afternoon";
+  if (s.includes("even") || s.includes("night") || s.includes("sera")) return "evening";
+  return "morning";
 }
 
 export default async function handler(req, res) {
@@ -22,8 +23,35 @@ export default async function handler(req, res) {
   }
 
   try {
-    const slot = req.query.slot || "morning";
-    const link = buildLink(slot);
+    // 🕒 parametri da cron o da URL manuale
+    const { slot: rawSlot = "morning", phase: rawPhase = "1" } = req.query || {};
+    const slot = normSlot(rawSlot);
+    const phaseNum = Number(rawPhase) === 2 ? 2 : 1; // 1 = WHAT IF, 2 = WTF
+    const style = phaseNum === 2 ? "wtf" : "whatif";
+
+    // 🎯 TITOLO / TESTO diversi per mattina/sera & stile
+    let title = "What?f · frase del giorno";
+    let body = "La tua frase di oggi è pronta 🔔";
+
+    if (slot === "morning" && phaseNum === 1) {
+      title = "What?f · segnale del mattino";
+      body = "La frase del mattino è pronta 🔔";
+    } else if (slot === "evening" && phaseNum === 2) {
+      title = "What the F · segnale della sera";
+      body = "Il commento cazzaro della sera è pronto 🔔";
+    }
+
+    // 🔗 URL verso fifth.html in modalità FRASE DEL GIORNO
+    const params = new URLSearchParams({
+      signal: slot,          // usato in fifth.html → bootstrapSignalFromUrl
+      phase: String(phaseNum), // 1 = WHAT IF, 2 = WTF
+      style,                 // whatif / wtf (solo informativo)
+      slot,                  // ridondante ma chiaro
+      src: "daily_push"      // per analytics / debug
+    });
+
+    const relativeUrl = `/fifth.html?${params.toString()}`;
+    const CLICK_LINK = `${APP_URL}${relativeUrl}`;
 
     const snap = await db
       .collection("fcm_tokens")
@@ -37,24 +65,31 @@ export default async function handler(req, res) {
 
     const tokens = snap.docs.map((d) => d.id);
 
-    // NOTIFICA DATA-ONLY (niente FCM automatico)
+    // 🔔 Messaggio DATA-ONLY
     const message = {
       data: {
-        title:
-          slot === "evening"
-            ? "What the F · frase della sera"
-            : "What?f · frase del mattino",
+        title,
+        body,
 
-        body:
-          slot === "evening"
-            ? "La tua frase della sera è pronta 💥"
-            : "La tua frase del mattino è qui 🔔",
-
+        // per capire in index/fifth da dove arrivi
         src: "daily_push",
+
+        // URL RELATIVO usato dal tuo sw.js (che lo normalizza con location.origin)
+        url: relativeUrl,
+
+        // URL ASSOLUTO per compat con firebase-messaging-sw.js
+        click_action: CLICK_LINK,
+
+        // meta utili se vuoi usarle in futuro
         slot,
-        style: slot === "evening" ? "wtf" : "whatif",
-        url: link,          // il SW usa questo
-        click_action: link  // android/web compat
+        phase: String(phaseNum),
+        style
+      },
+      webpush: {
+        fcmOptions: {
+          // per alcuni browser il link principale è questo
+          link: CLICK_LINK
+        }
       },
       tokens
     };
@@ -64,7 +99,10 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       sent: resp.successCount,
-      failed: resp.failureCount
+      failed: resp.failureCount,
+      slot,
+      phase: phaseNum,
+      style
     });
   } catch (err) {
     console.error("push error", err);
