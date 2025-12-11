@@ -1,10 +1,11 @@
 // FILE: firebase-messaging-sw.js
-// Service Worker per le notifiche Firebase — versione corretta e pulita
+// Service Worker per le notifiche push Firebase Cloud Messaging (FCM)
+// Versione pulita: usa SOLO i campi `data` del messaggio → niente doppie notifiche.
 
 importScripts("https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js");
 
-// CONFIG identica al progetto
+// stessa config del tuo firebase.init.js
 firebase.initializeApp({
   apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
   authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
@@ -15,47 +16,93 @@ firebase.initializeApp({
 });
 
 const messaging = firebase.messaging();
-const ORIGIN = self.location.origin;
+const APP_ORIGIN = self.location.origin;
 
-// 🔔 Notifica in background
+/**
+ * 1) MESSAGGIO IN BACKGROUND
+ *    Arriva un push "data-only" da /api/push, costruiamo noi la notifica.
+ */
 messaging.onBackgroundMessage((payload) => {
-  const data = payload.data || {};
+  console.log("[firebase-messaging-sw] onBackgroundMessage", payload);
 
-  // icon e badge devono essere assoluti o root
+  const data = payload?.data || {};
+
+  const title = data.title || "What?f · frase del giorno";
+  const body  = data.body  || "La tua frase di oggi è pronta 🔔";
+
+  // URL interno: se non arriva da data.url, apriamo la quinta pagina con signal/phase
+  let url = data.url;
+  if (!url) {
+    const slot  = (data.slot || data.signal || "morning").toLowerCase();
+    const phase = data.phase || "1";
+    const mood  = data.mood ? `&mood=${encodeURIComponent(data.mood)}` : "";
+    url = `/fifth.html?signal=${encodeURIComponent(slot)}&phase=${encodeURIComponent(phase)}${mood}`;
+  }
+
+  // Normalizza a URL assoluto
+  let absoluteUrl;
+  try {
+    absoluteUrl = new URL(url, APP_ORIGIN).toString();
+  } catch (e) {
+    absoluteUrl = `${APP_ORIGIN}/fifth.html?signal=morning&phase=1`;
+  }
+
   const options = {
-    body: data.body || "La tua frase di oggi è pronta 🔔",
-    icon: "/icon-192.png",
+    body,
+    icon: "/icon-192.png",   // in root del sito
     badge: "/icon-192.png",
     data: {
-      url: data.url || "/fifth.html?signal=morning&phase=1",
+      url: absoluteUrl,
+      src: data.src || "signal",
+      slot: data.slot || data.signal || "",
+      phase: data.phase || "1",
+      mood: data.mood || "",
     },
   };
 
-  self.registration.showNotification(
-    data.title || "What?f · frase del giorno",
-    options
-  );
+  self.registration.showNotification(title, options);
 });
 
-// 🔔 Click sulla notifica → apri fifth.html nella PWA
+/**
+ * 2) CLICK NOTIFICATION
+ *    - chiude la notifica
+ *    - se c'è una finestra PWA aperta → focus + navigate verso data.url
+ *    - se non c'è → apre una nuova finestra su data.url
+ */
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const url = event.notification.data.url;
-  const absolute = new URL(url, ORIGIN).href;
+  const data = event.notification.data || {};
+  let targetUrl = data.url || `${APP_ORIGIN}/fifth.html?signal=morning&phase=1`;
+
+  try {
+    targetUrl = new URL(targetUrl, APP_ORIGIN).toString();
+  } catch (e) {
+    targetUrl = `${APP_ORIGIN}/fifth.html?signal=morning&phase=1`;
+  }
 
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((cl) => {
-      // Se l'app è già aperta → naviga lì
-      for (const client of cl) {
-        if (client.url.startsWith(ORIGIN)) {
-          client.focus();
-          client.navigate(absolute);
+    (async () => {
+      const allClients = await clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+
+      // se esiste già una tab della webapp, usa quella
+      for (const client of allClients) {
+        if (client.url.startsWith(APP_ORIGIN)) {
+          try {
+            await client.focus();
+            await client.navigate(targetUrl);
+          } catch (e) {
+            await clients.openWindow(targetUrl);
+          }
           return;
         }
       }
-      // Altrimenti apri una nuova finestra
-      return clients.openWindow(absolute);
-    })
+
+      // altrimenti apri una nuova tab
+      await clients.openWindow(targetUrl);
+    })()
   );
 });
