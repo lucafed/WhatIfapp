@@ -1,22 +1,20 @@
 // FILE: /sw.js
 // Service Worker per What?f
-// - NIENTE cache/fetch (evitiamo schermate nere)
-// - Gestione notifiche push (FCM)
-// - Click sulla notifica → apre l’URL esatto passato da FCM
+// - Nessun caching → niente schermate nere
+// - Gestione notifiche PUSH (data-only da FCM)
+// - Click sulla notifica → apre SEMPRE l'URL passato da /api/push
 
-// 🔧 Install: attiva subito la nuova versione
+// 🔹 Attiva subito la nuova versione
 self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// 🔧 Activate: prende il controllo di tutte le pagine aperte
+// 🔹 Prende il controllo di tutte le pagine aperte
 self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-// ❗ NON gestiamo fetch → lasciamo tutto al browser
-
-// 🔔 PUSH: arriva il messaggio da FCM
+// 🔔 PUSH: arrivano messaggi "data-only" da FCM
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -27,58 +25,54 @@ self.addEventListener("push", (event) => {
     data = {};
   }
 
-  // Titolo e testo della notifica
   const title =
-    data.title || "What?f · frase del giorno";
-  const body =
-    data.body || "La tua frase di oggi è pronta 🔔";
+    data.title ||
+    "What?f · frase del giorno";
 
-  // URL da aprire al tap (quello che mandiamo da /api/push)
-  const clickUrl =
-    data.click_action ||
-    data.url ||
-    data.link ||
-    "/";
+  const body =
+    data.body ||
+    "La tua frase di oggi è pronta 🔔";
+
+  // URL che /api/push mette nel payload
+  // (CLICK_LINK = https://what-ifapp.vercel.app/fifth.html?... )
+  let url = data.click_action || data.url || "/fifth.html?src=daily_push";
+
+  // normalizza rispetto all'origin, così è sempre assoluto
+  try {
+    url = new URL(url, self.location.origin).toString();
+  } catch (e) {
+    url = self.location.origin + "/fifth.html?src=daily_push";
+  }
 
   const options = {
     body,
-    // 👇 usa l’icona dell’app (nel deploy è servita alla root)
-    // se preferisci assolutamente "public", metti "/public/icon-192.png"
+    // ⚠️ IMPORTANTE: i file in /public diventano /icon-192.png a root,
+    // NON /public/icon-192.png
     icon: "/icon-192.png",
     badge: "/icon-192.png",
     data: {
-      url: clickUrl
+      url,
+      src: data.src || "daily_push"
     }
   };
 
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  );
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// 🔔 CLICK: apre SEMPRE l’URL salvato in data.url
+// 🔔 Click sulla notifica → apri SEMPRE la pagina della frase
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const targetUrl =
-    (event.notification.data && event.notification.data.url) ||
-    "/";
+  const notifData = event.notification.data || {};
+  let targetUrl = notifData.url || "/fifth.html?src=daily_push";
+
+  try {
+    targetUrl = new URL(targetUrl, self.location.origin).toString();
+  } catch (e) {
+    targetUrl = self.location.origin + "/fifth.html?src=daily_push";
+  }
 
   event.waitUntil(
-    // Proviamo prima a riutilizzare una scheda aperta
-    self.clients.matchAll({
-      type: "window",
-      includeUncontrolled: true
-    }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url === targetUrl && "focus" in client) {
-          return client.focus();
-        }
-      }
-      // Altrimenti apriamo una nuova scheda / finestra
-      if (self.clients.openWindow) {
-        return self.clients.openWindow(targetUrl);
-      }
-    })
+    self.clients.openWindow(targetUrl)
   );
 });
