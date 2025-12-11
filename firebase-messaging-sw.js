@@ -1,108 +1,74 @@
-// FILE: api/push.js
-// Invia una notifica "frase del giorno" a tutti i token salvati
-// Usa query: ?slot=morning|afternoon|evening & phase=1|2
+// FILE: firebase-messaging-sw.js
+// Service Worker per le notifiche push Firebase Cloud Messaging (FCM)
 
-import admin from "../firebase-admin-server.js";
+// ⚠️ Nota:
+// Nel service worker usiamo le API "compat" perché Firebase Messaging
+// lato SW funziona ancora così, anche se nel resto del sito usi i modular v12.
 
-const db = admin.firestore();
+importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging-compat.js");
 
-function normalizeSlot(raw) {
-  const v = String(raw || "").toLowerCase();
-  if (v === "afternoon") return "afternoon";
-  if (v === "evening") return "evening";
-  return "morning";
-}
+// stessa config del tuo firebase.init.js
+firebase.initializeApp({
+  apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
+  authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
+  projectId: "whatif-oracolo-bc15d",
+  storageBucket: "whatif-oracolo-bc15d.firebasestorage.app",
+  messagingSenderId: "857481137283",
+  appId: "1:857481137283:web:ff8f766d14392835cf5fb6",
+});
 
-function normalizePhase(raw) {
-  return String(raw) === "2" ? 2 : 1; // 1 = What if, 2 = What the F
-}
+// Istanza Messaging nel SW
+const messaging = firebase.messaging();
 
-function buildNotificationBody(slot, phase) {
-  if (slot === "morning" && phase === 1) {
-    return "Buongiorno: metti a fuoco una cosa che conta oggi e falla succedere. Vuoi chiedere o rispondere?";
-  }
-  if (slot === "evening" && phase === 2) {
-    return "Giornata finita: dimmi com’è andata davvero o chiedi qualcosa, così non te la porti a letto.";
-  }
-  if (slot === "afternoon" && phase === 1) {
-    return "Pomeriggio a metà: com’è l’umore ora? Se vuoi, chiedi o racconta cosa sta andando storto o sorprendentemente bene.";
-  }
-  if (slot === "afternoon" && phase === 2) {
-    return "Metà giornata, metà pazienza: sfogati o chiedi qualcosa, prima che ti ritrovi a urlare al muro.";
-  }
+// URL pubblico della tua app
+const APP_URL = "https://what-ifapp.vercel.app/";
 
-  if (phase === 1) {
-    return "Frase del giorno di What if: un passo concreto oggi, non domani. Vuoi chiedere o rispondere adesso?";
-  }
-  return "Commento cazzaro di What the F sulla tua giornata. Vuoi dirgli la tua o fargli una domanda?";
-}
+// Gestione messaggi in background (quando la web app è chiusa o in background)
+messaging.onBackgroundMessage((payload) => {
+  console.log("[firebase-messaging-sw.js] Messaggio in background ricevuto:", payload);
 
-function buildNotificationTitle(phase) {
-  return phase === 1
-    ? "What if · frase del giorno"
-    : "What the F · frase del giorno";
-}
+  const notificationTitle =
+    (payload.notification && payload.notification.title) ||
+    "What?f";
 
-export default async function handler(req, res) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ ok: false, error: "method_not_allowed" });
-  }
+  const notificationBody =
+    (payload.notification && payload.notification.body) ||
+    "Hai un nuovo messaggio da What?f";
 
-  try {
-    const rawSlot = (req.query && req.query.slot) || "morning";
-    const rawPhase = (req.query && req.query.phase) || "1";
+  const data = payload.data || {};
 
-    const slot = normalizeSlot(rawSlot);
-    const phase = normalizePhase(rawPhase);
+  const notificationOptions = {
+    body: notificationBody,
+    icon: "/public/icon-192.png",   // usa la tua icona
+    badge: "/public/icon-192.png",  // opzionale
+    data,                           // IMPORTANTISSIMO: qui c'è anche click_action
+  };
 
-    const CLICK_LINK = `https://what-ifapp.vercel.app/fifth.html?signal=${slot}&phase=${phase}&src=daily_push`;
+  self.registration.showNotification(notificationTitle, notificationOptions);
+});
 
-    const snap = await db
-      .collection("fcm_tokens")
-      .orderBy("createdAt", "desc")
-      .limit(200)
-      .get();
+// click sulla notifica → apri la web app
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
 
-    if (snap.empty) {
-      return res.status(200).json({ ok: false, error: "no_tokens" });
-    }
+  const data = event.notification.data || {};
+  const targetUrl = data.click_action || APP_URL;
 
-    const tokens = snap.docs.map((d) => d.id);
-
-    const title = buildNotificationTitle(phase);
-    const body = buildNotificationBody(slot, phase);
-
-    // ⚠️ DATA-ONLY: niente `notification` → la notifica la mostra SOLO il SW (1 volta)
-    const message = {
-      data: {
-        title,
-        body,
-        src: "daily_push",
-        signal: slot,
-        phase: String(phase),
-        url: CLICK_LINK,
-        click_action: CLICK_LINK
-      },
-      webpush: {
-        fcmOptions: {
-          link: CLICK_LINK
+  event.waitUntil(
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        // se esiste già una tab di What?f, la porto in primo piano
+        for (const client of clientList) {
+          if (client.url.startsWith(APP_URL) && "focus" in client) {
+            return client.focus();
+          }
         }
-      },
-      tokens
-    };
-
-    const resp = await admin.messaging().sendEachForMulticast(message);
-
-    return res.status(200).json({
-      ok: true,
-      slot,
-      phase,
-      sent: resp.successCount,
-      failed: resp.failureCount,
-      click: CLICK_LINK
-    });
-  } catch (err) {
-    console.error("push error", err);
-    return res.status(500).json({ ok: false, error: "server_error" });
-  }
-}
+        // altrimenti ne apro una nuova
+        if (clients.openWindow) {
+          return clients.openWindow(targetUrl);
+        }
+      }),
+  );
+});
