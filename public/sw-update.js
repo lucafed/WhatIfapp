@@ -1,30 +1,37 @@
 // FILE: /public/sw-update.js
-// Controlla eventuali aggiornamenti del Service Worker
-// ma NON mostra nessuna notifica di sistema.
+// Registra /sw.js e gestisce gli aggiornamenti
+// ✅ NIENTE Notification API → sparisce la notifica "il sito è stato aggiornato in background"
 
-// Se vuoi, qui puoi solo loggare in console.
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((registration) => {
+        console.log("[sw-update] Service Worker registrato:", registration.scope);
 
-(function () {
-  if (!("serviceWorker" in navigator)) return;
+        // Quando il browser trova una nuova versione di /sw.js
+        registration.addEventListener("updatefound", () => {
+          const newWorker = registration.installing;
+          if (!newWorker) return;
 
-  navigator.serviceWorker
-    .getRegistration()
-    .then((reg) => {
-      if (!reg) return;
-      // Se arriva una nuova versione, ci limitiamo a loggare.
-      reg.addEventListener("updatefound", () => {
-        const newWorker = reg.installing;
-        if (!newWorker) return;
-
-        newWorker.addEventListener("statechange", () => {
-          if (newWorker.state === "installed") {
-            // Prima qui c'era la notifica
-            console.log("[sw-update] Nuova versione di What?f installata in background.");
-          }
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed") {
+              // 🟢 Qui PRIMA probabilmente mostravi una notifica tipo:
+              //    registration.showNotification("Il sito è stato aggiornato in background", ...)
+              // Adesso facciamo SOLO un log silenzioso:
+              if (navigator.serviceWorker.controller) {
+                console.log("[sw-update] Nuova versione di What?f installata in background.");
+                // Se vuoi, qui potresti mostrare un banner IN-PAGINA,
+                // ma NON una Notification vera.
+              } else {
+                console.log("[sw-update] Service Worker installato per la prima volta.");
+              }
+            }
+          });
         });
+      })
+      .catch((err) => {
+        console.error("[sw-update] Errore nella registrazione del SW:", err);
       });
-    })
-    .catch((err) => {
-      console.warn("[sw-update] errore nel controllo aggiornamenti:", err);
-    });
-})();
+  });
+}
