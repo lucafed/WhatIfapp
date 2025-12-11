@@ -1,20 +1,20 @@
 // FILE: /sw.js
 // Service Worker per What?f
-// - Nessuna cache custom (evitiamo schermate nere)
-// - Gestione notifiche push data-only FCM
-// - Click sulla notifica → apre fifth.html con i parametri giusti
+// - Niente cache custom
+// - Notifiche FCM data-only
+// - Click → apre l'URL passato da /api/push (fifth.html?signal=...)
 
-// Attiva subito la nuova versione del SW
+// Attiva subito la nuova versione
 self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// Prende il controllo di tutte le pagine aperte
+// Prende il controllo di tutte le pagine
 self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-// 🔔 Gestione dell'evento PUSH
+// PUSH: mostriamo noi la notifica
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -26,12 +26,13 @@ self.addEventListener("push", (event) => {
   }
 
   const title = data.title || "What?f · frase del giorno";
-  const body = data.body || "La tua frase di oggi è pronta 🔔";
+  const body =
+    data.body ||
+    "La tua frase di oggi è pronta 🔔";
 
-  // URL da aprire al tap sulla notifica
+  // URL da aprire al tap: prendiamo quello che manda /api/push
   let url = data.click_action || data.url || "/fifth.html?src=daily_push";
 
-  // Normalizza l'URL (se relativo → assoluto)
   try {
     url = new URL(url, self.location.origin).toString();
   } catch (e) {
@@ -40,7 +41,6 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body,
-    // tu hai le icone sotto /public, quindi usiamo quel path
     icon: "/public/icon-192.png",
     badge: "/public/icon-192.png",
     data: {
@@ -51,7 +51,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// 🔔 Click sulla notifica → apri SEMPRE l'URL salvato in data.url
+// CLICK: apriamo SEMPRE l'URL che abbiamo messo in data.url
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
