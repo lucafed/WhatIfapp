@@ -1,12 +1,12 @@
 // FILE: /api/push.js
 // Invia una notifica "frase del giorno" a tutti gli ultimi token salvati
-// ⚠️ Data-only: niente campo `notification` → la UI la gestisce firebase-messaging-sw.js
+// ⚠️ Data-only: niente campo `notification` → niente doppia notifica
 
 import admin from "../firebase-admin-server.js";
 
 const db = admin.firestore();
 
-// Dominio base della tua app
+// Origin dell'app (fisso per evitare problemi con env)
 const APP_ORIGIN = "https://what-ifapp.vercel.app";
 
 export default async function handler(req, res) {
@@ -15,94 +15,68 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 🔹 Leggo slot / phase / mood dai query param (usati anche dai CRON)
-    const url = new URL(req.url, "http://localhost");
-    const rawSlot = (url.searchParams.get("slot") || "morning").toLowerCase();
-    const rawPhase = url.searchParams.get("phase") || "1";
-    const mood = url.searchParams.get("mood") || "";
+    // slot = morning / afternoon / evening
+    // phase = 1 (WHAT IF) / 2 (WTF) o quello che ti serve
+    const { slot = "morning", phase = "1", mood = "" } = req.query || {};
 
-    const slot =
-      rawSlot.includes("even") || rawSlot.includes("sera")
-        ? "evening"
-        : rawSlot.includes("after") || rawSlot.includes("pomer")
-        ? "afternoon"
-        : "morning";
+    const safeSlot = ["morning", "afternoon", "evening"].includes(String(slot))
+      ? String(slot)
+      : "morning";
+    const safePhase = String(phase) === "2" ? "2" : "1";
+    const safeMood = String(mood || "");
 
-    const phase = rawPhase === "2" ? "2" : "1"; // 1 = WHAT IF, 2 = WTF
+    // URL interno che deve aprirsi nella webapp
+    // Esempio: /fifth.html?signal=morning&phase=1&mood=calm
+    const signalPath =
+      `/fifth.html?signal=${safeSlot}&phase=${safePhase}` +
+      (safeMood ? `&mood=${encodeURIComponent(safeMood)}` : "");
 
-    // 🔹 Costruisco il link giusto per la FIFTH in modalità "signal"
-    // Es: /fifth.html?signal=morning&phase=1
-    const signalPath = `/fifth.html?signal=${slot}&phase=${phase}${
-      mood ? `&mood=${encodeURIComponent(mood)}` : ""
-    }`;
     const CLICK_LINK = `${APP_ORIGIN}${signalPath}`;
 
-    // 🔹 Testo diverso per morning / evening + phase
-    let title;
-    let body;
-    if (phase === "2") {
-      // WHAT THE F (sera)
-      title = "What the F · frase di stasera";
-      body = "La tua frase cazzara di fine giornata è pronta 🔔";
-    } else {
-      // WHAT IF (mattina)
-      title = "What?f · frase del giorno";
-      body = "La tua frase del mattino è pronta 🔔";
-    }
-
-    // 🔎 Prendo gli ultimi token salvati
     const snap = await db
       .collection("fcm_tokens")
       .orderBy("createdAt", "desc")
-      .limit(200)
+      .limit(200) // margine per tanti utenti
       .get();
 
     if (snap.empty) {
       return res.status(200).json({ ok: false, error: "no_tokens" });
     }
 
-    // Piccola dedup per sicurezza
-    const tokenList = snap.docs.map((d) => d.id);
-    const tokens = Array.from(new Set(tokenList));
+    const tokens = snap.docs.map((d) => d.id);
 
     // 🔔 Messaggio DATA-ONLY
     const message = {
       data: {
-        // titolo / corpo usati dal service worker
-        title,
-        body,
+        title: "What?f · frase del giorno",
+        body: "La tua frase di oggi è pronta 🔔",
 
-        // per il fifth.html → bootstrapSignalFromUrl
-        src: "signal",       // importantissimo: indica che è una frase giornaliera
-        slot,                // morning | afternoon | evening
-        phase,               // "1" (WHAT IF) o "2" (WTF)
-        mood,                // opzionale, oggi vuoto nei CRON
+        // per capire in index/fifth da dove arrivi
+        src: "signal",
+        slot: safeSlot,
+        phase: safePhase,
+        mood: safeMood,
 
-        // URL interno logico (relativo)
+        // URL interno logico (lo userà firebase-messaging-sw.js)
         url: signalPath,
 
-        // compat: alcuni SW / browser guardano click_action
-        click_action: CLICK_LINK
+        // per compatibilità con alcuni browser / SW
+        click_action: CLICK_LINK,
       },
-
-      // Webpush: link “di default” se il browser lo usa
       webpush: {
         fcmOptions: {
-          link: CLICK_LINK
-        }
+          link: CLICK_LINK,
+        },
       },
-
-      tokens
+      tokens,
     };
 
     const resp = await admin.messaging().sendEachForMulticast(message);
 
     return res.status(200).json({
       ok: true,
-      slot,
-      phase,
       sent: resp.successCount,
-      failed: resp.failureCount
+      failed: resp.failureCount,
     });
   } catch (err) {
     console.error("push error", err);
