@@ -1,12 +1,7 @@
 // FILE: /api/push.js
-// Invia una notifica "frase del giorno" a tutti gli ultimi token salvati
-// ⚠️ Data-only: niente campo `notification` → niente doppia notifica
-
 import admin from "../firebase-admin-server.js";
 
 const db = admin.firestore();
-
-// Origin dell'app (fisso per evitare problemi con env)
 const APP_ORIGIN = "https://what-ifapp.vercel.app";
 
 export default async function handler(req, res) {
@@ -15,8 +10,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // slot = morning / afternoon / evening
-    // phase = 1 (WHAT IF) / 2 (WTF) o quello che ti serve
     const { slot = "morning", phase = "1", mood = "" } = req.query || {};
 
     const safeSlot = ["morning", "afternoon", "evening"].includes(String(slot))
@@ -25,8 +18,6 @@ export default async function handler(req, res) {
     const safePhase = String(phase) === "2" ? "2" : "1";
     const safeMood = String(mood || "");
 
-    // URL interno che deve aprirsi nella webapp
-    // Esempio: /fifth.html?signal=morning&phase=1&mood=calm
     const signalPath =
       `/fifth.html?signal=${safeSlot}&phase=${safePhase}` +
       (safeMood ? `&mood=${encodeURIComponent(safeMood)}` : "");
@@ -36,7 +27,7 @@ export default async function handler(req, res) {
     const snap = await db
       .collection("fcm_tokens")
       .orderBy("createdAt", "desc")
-      .limit(200) // margine per tanti utenti
+      .limit(200)
       .get();
 
     if (snap.empty) {
@@ -45,30 +36,23 @@ export default async function handler(req, res) {
 
     const tokens = snap.docs.map((d) => d.id);
 
-    // 🔔 Messaggio DATA-ONLY
+    // 🔔 MESSAGGIO SOLO DATA (no `notification`, no `webpush.notification`)
     const message = {
       data: {
         title: "What?f · frase del giorno",
         body: "La tua frase di oggi è pronta 🔔",
 
-        // per capire in index/fifth da dove arrivi
         src: "signal",
         slot: safeSlot,
         phase: safePhase,
         mood: safeMood,
 
-        // URL interno logico (lo userà firebase-messaging-sw.js)
         url: signalPath,
 
-        // per compatibilità con alcuni browser / SW
-        click_action: CLICK_LINK,
+        // opzionale, info in più, ma NON decide il click
+        click_action: CLICK_LINK
       },
-      webpush: {
-        fcmOptions: {
-          link: CLICK_LINK,
-        },
-      },
-      tokens,
+      tokens
     };
 
     const resp = await admin.messaging().sendEachForMulticast(message);
@@ -76,7 +60,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       sent: resp.successCount,
-      failed: resp.failureCount,
+      failed: resp.failureCount
     });
   } catch (err) {
     console.error("push error", err);
