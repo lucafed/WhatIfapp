@@ -383,12 +383,13 @@ import {
 /* ==== Base & prefs ==== */
 const LS = localStorage;
 const prefs = JSON.parse(LS.getItem('whatif_prefs')||'{}');
-let style = prefs.stile || 'whatif';   // ← diventa let
+let style = prefs.stile || 'whatif';
 const periodo = prefs.periodo || 'future';
 const IS_ADMIN = !!LS.getItem('admin_token');
 document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'whatif');
 
 /* 🔔 Bootstrap segnali da URL (notifiche → URL tipo ?signal=morning&phase=1&mood=su) */
+/* 🔴 QUI: NESSUNA DOMANDA FINTA, SOLO MICRO + SOURCE = "signal" */
 (function bootstrapSignalFromUrl() {
   try {
     const params = new URLSearchParams(location.search);
@@ -397,40 +398,6 @@ document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'w
 
     const phase = Number(params.get("phase") || "1"); // 1 = WHAT IF, 2 = WTF
     const mood  = params.get("mood") || null;        // opzionale (solo pomeriggio)
-
-    function buildSignalQuestion(slot, phase, mood) {
-      if (slot === "morning") {
-        if (phase === 1) {
-          return "Frase del giorno del mattino: un consiglio concreto per impostare la giornata, senza sapere come mi sento.";
-        } else {
-          return "Commento cazzaro del mattino sulla frase del giorno appena ricevuta.";
-        }
-      }
-      if (slot === "afternoon") {
-        let moodText = "umore non specificato";
-        if (mood) {
-          const m = mood.toLowerCase();
-          if (m.includes("su") || m.includes("up")) moodText = "mi sento carico o comunque bene";
-          else if (m.includes("giu") || m.includes("down")) moodText = "mi sento stanco, scarico o un po’ giù";
-          else moodText = "mi sento così così, a metà";
-        }
-        if (phase === 1) {
-          return `Check-in del pomeriggio con umore: ${moodText}.`;
-        } else {
-          return `Commento cazzaro del pomeriggio su questo umore: ${moodText}.`;
-        }
-      }
-      if (slot === "evening") {
-        if (phase === 1) {
-          return "Domanda di chiusura della giornata, per rivedere cosa è successo oggi e come ti ha toccato.";
-        } else {
-          return "Commento cazzaro di fine giornata sulla domanda di chiusura appena fatta.";
-        }
-      }
-      return "Segnale giornaliero senza dettagli.";
-    }
-
-    const domanda = buildSignalQuestion(slot, phase, mood);
 
     const micro = {
       src: "signal",
@@ -443,13 +410,12 @@ document.documentElement.setAttribute('data-theme', style === 'wtf' ? 'wtf' : 'w
 
     const req = {
       source: "signal",
-      domanda,
-      clarification: "",
       micro
+      // ❌ niente domanda, niente clarification
     };
 
     LS.setItem("whatif_request", JSON.stringify(req));
-    LS.setItem("domanda", domanda);
+    // ❌ NON salviamo LS.setItem("domanda", ...)
   } catch (e) {
     console.warn("bootstrapSignalFromUrl error:", e);
   }
@@ -507,7 +473,7 @@ const I18N = {
        dailySubEvening:"Segnale della sera",
        dailyCta:"💬 Chiedi o rispondi a questa",
        dailyHintWHF:"Se questa frase ti punge un po’, trasformala in domanda o raccontami cosa ti ha smosso.",
-       dailyHintWTF:"Se ti ha fatto sorridere o arrabbiare, giramela in una domanda o raccontami cosa ti ha punto.",
+       dailyHintWTF:"Se ti ha fatto sorridere o arrabbiare, giramela in domanda o raccontami cosa ti ha punto.",
        loginRequiredDaily:"Per usare la frase del giorno devi essere loggato.",
        noCreditsShort:"Hai terminato i crediti di oggi.",
        goStore:"🛒 Vai allo store crediti",
@@ -747,10 +713,17 @@ const I18N = {
 const SUP_LANG=['it','en','es','fr','de'];
 
 /* ======== LINGUA ======== */
-const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
-const IS_SIGNAL = !!(reqEarly && reqEarly.source === "signal" && reqEarly.micro);
+const URL_PARAMS = new URLSearchParams(location.search);
+const URL_SIGNAL = (URL_PARAMS.get("signal") || "").toLowerCase();
 
-/* 🔁 Override stile se la richiesta arriva da un segnale (morning/afternoon/evening) */
+const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
+
+const IS_SIGNAL = !!(
+  URL_SIGNAL ||
+  (reqEarly && reqEarly.micro && (reqEarly.source === "signal"))
+);
+
+/* override stile da segnali */
 if (IS_SIGNAL && reqEarly.micro && reqEarly.micro.phase) {
   style = reqEarly.micro.phase === 2 ? "wtf" : "whatif";
   document.documentElement.setAttribute(
@@ -762,7 +735,11 @@ if (IS_SIGNAL) {
   document.body.classList.add("signal-mode");
 }
 
-const domandaEarly = reqEarly.domanda || LS.getItem('domanda') || '';
+/* 🔴 se è signal, ignoriamo qualsiasi domanda salvata → niente “domanda fantasma” */
+const domandaEarly = IS_SIGNAL
+  ? ''
+  : (reqEarly.domanda || LS.getItem('domanda') || '');
+
 const langFromFourth = (reqEarly.lang || LS.getItem('lang') || '').toLowerCase().slice(0,2);
 function detectLang(text=''){
   const lower=(text||'').toLowerCase();
@@ -823,7 +800,6 @@ onAuthStateChanged(auth, async (user)=>{
   currentUser = user;
 
   if (!user && !IS_ADMIN) {
-    // Per la frase del giorno vogliamo che sia loggato
     if (IS_SIGNAL) {
       toast(t().loginRequiredDaily || t().noCredits || "");
       try{
@@ -850,16 +826,13 @@ onAuthStateChanged(auth, async (user)=>{
   updateCreditInfo();
 });
 
-/* 🔻 Scala 1 credito SOLO per segnali fase 1 (morning/afternoon/evening WHAT IF) */
+/* 🔻 credito solo segnali phase 1 */
 async function ensureSignalCredit(micro = {}) {
   if (!IS_SIGNAL) return true;
   if (IS_ADMIN) return true;
 
   const phase = Number(micro.phase || 1);
-  if (phase === 2) {
-    // WTF gratis
-    return true;
-  }
+  if (phase === 2) return true;
 
   if (!currentUser) {
     toast(t().loginRequiredDaily || t().noCredits || "");
@@ -869,7 +842,6 @@ async function ensureSignalCredit(micro = {}) {
   try {
     const ok = await consumeCredit();
     if (!ok) {
-      // niente redirect automatico: lo gestiamo in startFlow con CTA "Compra crediti"
       toast(t().noCreditsShort || t().noCredits || "Hai terminato i crediti.");
       try {
         const bal = await getBalance();
@@ -893,7 +865,7 @@ async function ensureSignalCredit(micro = {}) {
   }
 }
 
-/* ==== System prompts (solo UI, placeholder) ==== */
+/* ==== System prompts (solo placeholder) ==== */
 const SYSTEM_WTF=`SEI “WHAT THE F”. Obiettivo: monologo breve…`;
 const SYSTEM_WHIF=`SEI “WHAT IF”. Obiettivo: risposta empatica + pragmatica…`;
 
@@ -923,7 +895,7 @@ function showIntroOnce(){
     const seen = LS.getItem(INTRO_KEY)==='1';
     const box = document.getElementById('introBox');
     if(!box) return;
-    if(seen || IS_SIGNAL){ // in modalità frase del giorno niente intro Zoltar
+    if(seen || IS_SIGNAL){
       box.style.display='none';
       return;
     }
@@ -963,7 +935,6 @@ const typingSfx = document.getElementById('typingSfx');
 let typingTimeoutId = null;
 let typingAnswerTimer = null;
 
-/* suono breve */
 function playTypingShort(ms=2200){
   if(!typingSfx) return;
   try{
@@ -980,7 +951,6 @@ function playTypingShort(ms=2200){
   }, ms);
 }
 
-/* risposta: NIENTE macchina da scrivere → testo intero + fade-in, nessun saltello */
 function showAnswerWithTyping(text){
   const full = String(text || "");
   if(!answerEl) return;
@@ -994,10 +964,8 @@ function showAnswerWithTyping(text){
     typingTimeoutId = null;
   }
 
-  // eventualmente solo un suono breve all'inizio
   playTypingShort(1800);
 
-  // reset stile e applico fade-in
   answerEl.style.transition = "none";
   answerEl.style.opacity = 0;
   answerEl.style.height = "";
@@ -1005,7 +973,6 @@ function showAnswerWithTyping(text){
 
   answerEl.textContent = full;
 
-  // piccolo delay per permettere al browser di applicare lo stile
   requestAnimationFrame(()=>{
     answerEl.style.transition = "opacity .35s ease-out";
     answerEl.style.opacity = 1;
@@ -1036,7 +1003,6 @@ function slotLabelText(){
 function applyUI(q){
   const T=t();
   if (IS_SIGNAL) {
-    // modalità frase del giorno
     setText('#title', style==='wtf'?T.dailyTitleWTF:T.dailyTitleWHF);
     subtitle.textContent = slotLabelText() || "—";
   } else {
@@ -1055,7 +1021,6 @@ function applyUI(q){
   if(pctLabelBottom) pctLabelBottom.textContent=T.pctLabel;
   setText('#metaInfo', T.meta(style,periodo));
 
-  // video
   setText('#lblVideo', T.videoTitle || 'Video');
   const vh = qs('#videoHelp'); if(vh) vh.textContent = T.videoHelp || '';
   if(videoBtn) videoBtn.textContent = T.videoBtn || '🎬 Crea video';
@@ -1063,13 +1028,11 @@ function applyUI(q){
   if(openInstaBtn) openInstaBtn.textContent = T.videoOpenInsta || "📸 Instagram";
   if(videoNoteEl) videoNoteEl.textContent = '';
 
-  // TTS
   const ttsBtn = document.getElementById("readAnswerBtn");
   const ttsStatus = document.getElementById("ttsStatus");
   if(ttsBtn) ttsBtn.textContent = T.ttsBtn || "🔊";
   if(ttsStatus) ttsStatus.textContent = "";
 
-  // CTA frase del giorno
   if (signalCtaBox && signalHint && signalAskBtn) {
     if (IS_SIGNAL) {
       signalCtaBox.style.display = "flex";
@@ -1118,7 +1081,7 @@ function nextOracleLine(){
   return oracleDeck.pop();
 }
 function startOracleLoading(){
-  if (IS_SIGNAL) return; // niente oracle animato per frase del giorno
+  if (IS_SIGNAL) return;
   document.body.classList.add('loading');
   const lineEl = document.getElementById('oracleLine');
   const tick = ()=>{
@@ -1143,7 +1106,7 @@ function revealEffect(){
   setTimeout(()=> wrap.classList.remove('reveal'), 900);
 }
 
-/* ===== Motivazione demenziale per WTF ===== */
+/* Motivazioni WTF */
 function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
 function wtfMotivationDemenziale(langCode){
   const shots = rnd(1,3), spill = rnd(0,2), bruise = rnd(0,3);
@@ -1159,7 +1122,7 @@ function wtfMotivationDemenziale(langCode){
   return `Pseudoscienza da bancone: i micro-passi battono i piani epici. La commissione ha discusso al bancone: ${shots} shottini evaporati, ${spill} calici rovesciati, ${bruise} contusi; verdetto tra singhiozzi: fai, e smettila di pensarci troppo.`;
 }
 
-/* ===== NUOVE MOTIVAZIONI WHAT IF (più corte, da AI) ===== */
+/* Motivazioni what-if */
 function buildWhatIfMotivationsPretty(domanda, pct, rawFromAI){
   const L = lang;
   const isPast = (periodo === 'past');
@@ -1255,10 +1218,12 @@ function loadResultFromCache(domanda, clarification){
 }
 
 function applyResultToUI(result){
-  const domanda = result.domanda || LS.getItem('domanda') || '';
+  const domanda = IS_SIGNAL
+    ? ''
+    : (result.domanda || LS.getItem('domanda') || '');
 
   if (IS_SIGNAL) {
-    applyUI(""); // usa header daily
+    applyUI("");
     qView.textContent = "—";
   } else {
     applyUI(domanda);
@@ -1321,11 +1286,16 @@ function applyResultToUI(result){
 /* ==== Question & UI load ==== */
 function applyQuestion(){
   const req=JSON.parse(LS.getItem('whatif_request')||'{}');
-  const domanda=req.domanda || LS.getItem('domanda') || '';
+
+  /* 🔴 se è signal, domanda vuota */
+  const domanda = IS_SIGNAL
+    ? ''
+    : (req.domanda || LS.getItem('domanda') || '');
+
   const clarification = req.clarification || req.answer || '';
 
   if (IS_SIGNAL) {
-    applyUI(""); // header daily
+    applyUI("");
     qView.textContent = "—";
   } else {
     applyUI(domanda);
@@ -1357,11 +1327,11 @@ async function startFlow(){
   const {req, domanda, clarification, surprise} = applyQuestion();
   updateCreditInfo();
 
- const isSignal = IS_SIGNAL;
+  const isSignal = IS_SIGNAL;
   const micro = (req && req.micro) ? req.micro : {};
   const phase = Number(micro.phase || 1);
 
-  const cached = loadResultFromCache(domanda, clarification);
+  const cached = isSignal ? null : loadResultFromCache(domanda, clarification);
   if (cached) {
     showIntroOnce();
     applyResultToUI(cached);
@@ -1371,11 +1341,9 @@ async function startFlow(){
   showIntroOnce();
   if (!IS_SIGNAL) startOracleLoading();
 
-  // Se è un segnale WHAT IF (fase 1) e NON è in cache → scala 1 credito
   if (isSignal && phase === 1) {
     const okCredit = await ensureSignalCredit(micro);
     if (!okCredit) {
-      // Nessun credito → messaggio + CTA "Compra crediti"
       stopOracleLoading();
       answerEl.textContent = t().noCreditsShort || t().noCredits || "Hai terminato i crediti.";
       if (signalCtaBox && signalAskBtn) {
@@ -1404,20 +1372,32 @@ async function startFlow(){
     const microPayload = req.micro || {};
     if (isSignal) microPayload.src = microPayload.src || "signal";
 
+    const payload = {
+      stage: isSignal ? "signal" : "answer",
+      lang,
+      stile: style,
+      periodo,
+      micro: microPayload
+    };
 
-    const r=await fetch("/api/ask",{
-      method:"POST",headers,
-      body:JSON.stringify({
-        stage: isSignal ? "signal" : "answer",
-        domanda,
-        clarification: clarification || "",
-        lang,
-        stile: style,
-        periodo,
-        micro: microPayload
-      })
+    if (!isSignal) {
+      payload.domanda = domanda;
+      payload.clarification = clarification || "";
+    }
+
+    /* 🔴 QUI IL FETCH VERO (anche per i segnali) */
+    const r = await fetch("/api/ask", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload)
     });
-    const data=await r.json().catch(()=>null);
+    let data = null;
+    try {
+      data = await r.json();
+    } catch (_) {
+      data = null;
+    }
+
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
     let answerText=normalizeOneParagraph((data.answer||"").trim());
@@ -1511,7 +1491,6 @@ async function startFlow(){
     };
     saveResultToCache(resultForCache);
 
-    /* 🔹 LOG DOMANDA+RISPOSTA SU /api/save (non usa crediti OpenAI) */
     try {
       await fetch("/api/save", {
         method: "POST",
@@ -1526,7 +1505,6 @@ async function startFlow(){
       });
     } catch (logErr) {
       console.error("log /api/save failed:", logErr);
-      // non blocca l'utente, è solo logging
     }
 
   }catch(e){
@@ -1537,14 +1515,11 @@ async function startFlow(){
 }
 
 /* ==== VIDEO: Canvas + MediaRecorder ==== */
-
 function videoNotAvailable(msg){
   const T = t();
   const text = msg || (T.videoError || "Video non disponibile su questo dispositivo.");
   toast(text);
 }
-
-/* disegna testo a capo */
 function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
   const words = String(text || "").split(/\s+/);
   let line = "";
@@ -1565,8 +1540,6 @@ function wrapAndDraw(ctx, text, x, startY, maxWidth, lineHeight){
   }
   return y;
 }
-
-/* stato ultimo video (solo per eventuali usi futuri) */
 let lastVideoBlob = null;
 let lastVideoMime = null;
 
@@ -1864,11 +1837,10 @@ async function generateVideoClip(){
   requestAnimationFrame(loop);
 }
 
-/* ==== SOCIAL OPEN (solo Android via intent, fallback web) ==== */
+/* ==== SOCIAL OPEN ==== */
 function isAndroid(){
   return /Android/i.test(navigator.userAgent || "");
 }
-
 function openIntent(androidIntentUrl, webFallbackUrl){
   if (isAndroid()) {
     window.location.href = androidIntentUrl;
@@ -2023,7 +1995,6 @@ if(openInstaBtn){
 async function waitForAuthReady(){
   if (IS_ADMIN) return true;
 
-  // Se è già pronto, usiamo quello
   if (auth.currentUser) {
     currentUser = auth.currentUser;
     return true;
