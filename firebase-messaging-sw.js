@@ -21,54 +21,103 @@ firebase.initializeApp({
 // Istanza Messaging nel SW
 const messaging = firebase.messaging();
 
-// URL pubblico della tua app
-const APP_URL = "https://what-ifapp.vercel.app/";
+// Origin della tua app (puoi anche tenere fisso l'URL se preferisci)
+const APP_ORIGIN = self.location.origin;
 
-// Gestione messaggi in background (quando la web app è chiusa o in background)
+// 🔔 Messaggi in background (quando la web app è chiusa o in background)
 messaging.onBackgroundMessage((payload) => {
   console.log("[firebase-messaging-sw.js] Messaggio in background ricevuto:", payload);
 
   const notificationTitle =
     (payload.notification && payload.notification.title) ||
-    "What?f";
+    "What?f · frase del giorno";
 
   const notificationBody =
     (payload.notification && payload.notification.body) ||
-    "Hai un nuovo messaggio da What?f";
+    "La tua frase di oggi è pronta 🔔";
 
   const data = payload.data || {};
 
+  // 🎯 COSTRUZIONE URL PER LA FRASE DEL GIORNO
+  // priorità: click_action → url
+  let url = data.click_action || data.url;
+
+  if (!url) {
+    // Cerchiamo info sullo slot dal payload:
+    // puoi mandare dal backend: signal=morning/afternoon/evening, phase=1/2, mood=...
+    const slot =
+      data.signal ||
+      data.slot ||
+      data.timeOfDay ||
+      "morning"; // default: mattino
+    const phase = data.phase || "1"; // 1 = WHAT IF, 2 = WTF
+    const mood = data.mood ? `&mood=${encodeURIComponent(data.mood)}` : "";
+
+    url = `/fifth.html?signal=${encodeURIComponent(
+      String(slot).toLowerCase()
+    )}&phase=${encodeURIComponent(String(phase))}${mood}`;
+  }
+
+  // Normalizza a URL assoluto
+  try {
+    const u = new URL(url, APP_ORIGIN);
+    url = u.toString();
+  } catch (e) {
+    url = APP_ORIGIN + "/fifth.html?signal=morning&phase=1";
+  }
+
   const notificationOptions = {
     body: notificationBody,
-    icon: "/public/icon-192.png",   // usa la tua icona
-    badge: "/public/icon-192.png",  // opzionale
-    data,                           // IMPORTANTISSIMO: qui c'è anche click_action
+    icon: "/public/icon-192.png",
+    badge: "/public/icon-192.png",
+    data: {
+      url,
+      src: data.src || "daily_push",
+      signal: data.signal || data.slot || data.timeOfDay || null,
+      phase: data.phase || "1",
+      mood: data.mood || null
+    },
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// click sulla notifica → apri la web app
+// 🔔 click sulla notifica → apri / naviga alla frase del giorno
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const data = event.notification.data || {};
-  const targetUrl = data.click_action || APP_URL;
+  let targetUrl = data.url || (APP_ORIGIN + "/");
+
+  // normalizza anche qui
+  try {
+    const u = new URL(targetUrl, APP_ORIGIN);
+    targetUrl = u.toString();
+  } catch (e) {
+    targetUrl = APP_ORIGIN + "/fifth.html?signal=morning&phase=1";
+  }
 
   event.waitUntil(
     clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((clientList) => {
-        // se esiste già una tab di What?f, la porto in primo piano
-        for (const client of clientList) {
-          if (client.url.startsWith(APP_URL) && "focus" in client) {
-            return client.focus();
+        // se esiste già una tab dell'app, la riutilizziamo
+        if (clientList && clientList.length > 0) {
+          const sameOriginClient =
+            clientList.find((c) => c.url.startsWith(APP_ORIGIN)) ||
+            clientList[0];
+
+          if (sameOriginClient.navigate) {
+            sameOriginClient.navigate(targetUrl);
           }
+
+          return sameOriginClient.focus();
         }
-        // altrimenti ne apro una nuova
+
+        // altrimenti ne apriamo una nuova
         if (clients.openWindow) {
           return clients.openWindow(targetUrl);
         }
-      }),
+      })
   );
 });
