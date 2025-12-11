@@ -1,30 +1,40 @@
 // FILE: api/push.js
+// Invia una notifica "frase del giorno" a tutti i token salvati
+// Usa query: ?slot=morning|afternoon|evening & phase=1|2
 
 import admin from "../firebase-admin-server.js";
 
 const db = admin.firestore();
 
-// Normalizza slot e phase
 function normalizeSlot(raw) {
-  const val = String(raw || "").toLowerCase();
-  if (val === "afternoon") return "afternoon";
-  if (val === "evening") return "evening";
+  const v = String(raw || "").toLowerCase();
+  if (v === "afternoon") return "afternoon";
+  if (v === "evening") return "evening";
   return "morning";
 }
 
 function normalizePhase(raw) {
-  return String(raw) === "2" ? 2 : 1;
+  return String(raw) === "2" ? 2 : 1; // 1 = What if, 2 = What the F
 }
 
-// Testo per la notifica
 function buildNotificationBody(slot, phase) {
   if (slot === "morning" && phase === 1) {
     return "Buongiorno: metti a fuoco una cosa che conta oggi e falla succedere. Vuoi chiedere o rispondere?";
   }
   if (slot === "evening" && phase === 2) {
-    return "Giornata finita: com’è andata davvero? Puoi chiedere o rispondere qui.";
+    return "Giornata finita: dimmi com’è andata davvero o chiedi qualcosa, così non te la porti a letto.";
   }
-  return "La tua frase di oggi è pronta 🔔";
+  if (slot === "afternoon" && phase === 1) {
+    return "Pomeriggio a metà: com’è l’umore ora? Se vuoi, chiedi o racconta cosa sta andando storto o sorprendentemente bene.";
+  }
+  if (slot === "afternoon" && phase === 2) {
+    return "Metà giornata, metà pazienza: sfogati o chiedi qualcosa, prima che ti ritrovi a urlare al muro.";
+  }
+
+  if (phase === 1) {
+    return "Frase del giorno di What if: un passo concreto oggi, non domani. Vuoi chiedere o rispondere adesso?";
+  }
+  return "Commento cazzaro di What the F sulla tua giornata. Vuoi dirgli la tua o fargli una domanda?";
 }
 
 function buildNotificationTitle(phase) {
@@ -39,7 +49,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { slot: rawSlot, phase: rawPhase } = req.query || {};
+    const rawSlot = (req.query && req.query.slot) || "morning";
+    const rawPhase = (req.query && req.query.phase) || "1";
+
     const slot = normalizeSlot(rawSlot);
     const phase = normalizePhase(rawPhase);
 
@@ -60,9 +72,11 @@ export default async function handler(req, res) {
     const title = buildNotificationTitle(phase);
     const body = buildNotificationBody(slot, phase);
 
+    // ⚠️ DATA-ONLY: niente `notification` → la notifica la mostra SOLO il SW (1 volta)
     const message = {
-      notification: { title, body },
       data: {
+        title,
+        body,
         src: "daily_push",
         signal: slot,
         phase: String(phase),
@@ -70,7 +84,9 @@ export default async function handler(req, res) {
         click_action: CLICK_LINK
       },
       webpush: {
-        fcmOptions: { link: CLICK_LINK }
+        fcmOptions: {
+          link: CLICK_LINK
+        }
       },
       tokens
     };
@@ -85,9 +101,8 @@ export default async function handler(req, res) {
       failed: resp.failureCount,
       click: CLICK_LINK
     });
-
   } catch (err) {
     console.error("push error", err);
-    return res.status(500).json({ ok: false, error: "server_error", details: err.message });
+    return res.status(500).json({ ok: false, error: "server_error" });
   }
 }
