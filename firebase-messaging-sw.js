@@ -1,16 +1,17 @@
 // FILE: /firebase-messaging-sw.js
+// Service Worker dedicato a Firebase Messaging (notifiche push)
 
 importScripts("https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js");
 
 // 🔹 STESSA CONFIG DI firebase.init.js
 firebase.initializeApp({
-  apiKey: "XXX",
-  authDomain: "XXX",
-  projectId: "XXX",
-  storageBucket: "XXX",
-  messagingSenderId: "XXX",
-  appId: "XXX"
+  apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
+  authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
+  projectId: "whatif-oracolo-bc15d",
+  storageBucket: "whatif-oracolo-bc15d.firebasestorage.app",
+  messagingSenderId: "857481137283",
+  appId: "1:857481137283:web:ff8f766d14392835cf5fb6"
 });
 
 const messaging = firebase.messaging();
@@ -38,8 +39,8 @@ messaging.onBackgroundMessage((payload) => {
 
   const options = {
     body,
-    icon: "/icon-192.png",            // adatta se hai altri path
-    badge: "/icon-192.png",           // opzionale
+    icon: "/icon-192.png",   // icona già presente nel root
+    badge: "/icon-192.png",  // opzionale
     data: notifData
   };
 
@@ -49,8 +50,8 @@ messaging.onBackgroundMessage((payload) => {
 /**
  * 2) CLICK SULLA NOTIFICA
  *    - chiude la notifica
- *    - se c'è già una finestra dell'app → focus + navigate(url)
- *    - se non c'è → apre una nuova finestra su url
+ *    - apre SEMPRE una nuova tab sulla URL giusta
+ *      (es: /fifth.html?signal=...&phase=...)
  */
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
@@ -62,28 +63,8 @@ self.addEventListener("notificationclick", (event) => {
     ? targetPath
     : new URL(targetPath, self.location.origin).href;
 
+  // ✅ SEMPLICE: nuova finestra/tab sempre sulla pagina giusta
   event.waitUntil(
-    (async () => {
-      const allClients = await clients.matchAll({
-        type: "window",
-        includeUncontrolled: true
-      });
-
-      // Se c'è già una tab dell'app, usiamo quella
-      for (const client of allClients) {
-        if (client.url.startsWith(self.location.origin)) {
-          try {
-            await client.focus();
-            await client.navigate(absoluteUrl);
-          } catch (e) {
-            await clients.openWindow(absoluteUrl);
-          }
-          return;
-        }
-      }
-
-      // Nessuna tab aperta → nuova finestra
-      await clients.openWindow(absoluteUrl);
-    })()
+    clients.openWindow(absoluteUrl)
   );
 });
