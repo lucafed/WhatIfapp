@@ -1,67 +1,93 @@
-// FILE: /sw.js  (e anche /firebase-messaging-sw.js)
-// Service Worker per What?f
-// - niente cache/fetch (evita schermate nere)
-// - gestisce notifiche FCM data-only
-// - click apre sempre la PWA sull'URL giusto
+// FILE: api/push.js
 
-self.addEventListener("install", (event) => {
-  self.skipWaiting();
-});
+import admin from "../firebase-admin-server.js";
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
-});
+const db = admin.firestore();
 
-// 🔔 PUSH: le notifiche le mostra questo SW
-self.addEventListener("push", (event) => {
-  let data = {};
+// Normalizza slot e phase
+function normalizeSlot(raw) {
+  const val = String(raw || "").toLowerCase();
+  if (val === "afternoon") return "afternoon";
+  if (val === "evening") return "evening";
+  return "morning";
+}
+
+function normalizePhase(raw) {
+  return String(raw) === "2" ? 2 : 1;
+}
+
+// Testo per la notifica
+function buildNotificationBody(slot, phase) {
+  if (slot === "morning" && phase === 1) {
+    return "Buongiorno: metti a fuoco una cosa che conta oggi e falla succedere. Vuoi chiedere o rispondere?";
+  }
+  if (slot === "evening" && phase === 2) {
+    return "Giornata finita: com’è andata davvero? Puoi chiedere o rispondere qui.";
+  }
+  return "La tua frase di oggi è pronta 🔔";
+}
+
+function buildNotificationTitle(phase) {
+  return phase === 1
+    ? "What if · frase del giorno"
+    : "What the F · frase del giorno";
+}
+
+export default async function handler(req, res) {
+  if (req.method !== "GET") {
+    return res.status(405).json({ ok: false, error: "method_not_allowed" });
+  }
+
   try {
-    if (event.data) {
-      data = event.data.json();
+    const { slot: rawSlot, phase: rawPhase } = req.query || {};
+    const slot = normalizeSlot(rawSlot);
+    const phase = normalizePhase(rawPhase);
+
+    const CLICK_LINK = `https://what-ifapp.vercel.app/fifth.html?signal=${slot}&phase=${phase}&src=daily_push`;
+
+    const snap = await db
+      .collection("fcm_tokens")
+      .orderBy("createdAt", "desc")
+      .limit(200)
+      .get();
+
+    if (snap.empty) {
+      return res.status(200).json({ ok: false, error: "no_tokens" });
     }
-  } catch (e) {
-    data = {};
+
+    const tokens = snap.docs.map((d) => d.id);
+
+    const title = buildNotificationTitle(phase);
+    const body = buildNotificationBody(slot, phase);
+
+    const message = {
+      notification: { title, body },
+      data: {
+        src: "daily_push",
+        signal: slot,
+        phase: String(phase),
+        url: CLICK_LINK,
+        click_action: CLICK_LINK
+      },
+      webpush: {
+        fcmOptions: { link: CLICK_LINK }
+      },
+      tokens
+    };
+
+    const resp = await admin.messaging().sendEachForMulticast(message);
+
+    return res.status(200).json({
+      ok: true,
+      slot,
+      phase,
+      sent: resp.successCount,
+      failed: resp.failureCount,
+      click: CLICK_LINK
+    });
+
+  } catch (err) {
+    console.error("push error", err);
+    return res.status(500).json({ ok: false, error: "server_error", details: err.message });
   }
-
-  const title = data.title || "What?f · frase del giorno";
-  const body =
-    data.body ||
-    "La tua frase di oggi è pronta 🔔";
-
-  // URL da aprire quando tocchi la notifica
-  let url = data.click_action || data.url || "/fifth.html?src=daily_push";
-
-  try {
-    url = new URL(url, self.location.origin).toString();
-  } catch (e) {
-    url = self.location.origin + "/fifth.html?src=daily_push";
-  }
-
-  const options = {
-    body,
-    icon: "/icon-192.png",   // icona PWA (non /public/)
-    badge: "/icon-192.png",
-    data: {
-      url,
-      src: data.src || "daily_push"
-    }
-  };
-
-  event.waitUntil(self.registration.showNotification(title, options));
-});
-
-// 🔔 Click sulla notifica → apri SEMPRE l'URL della notifica
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-
-  const data = event.notification.data || {};
-  let targetUrl = data.url || data.click_action || "/fifth.html?src=daily_push";
-
-  try {
-    targetUrl = new URL(targetUrl, self.location.origin).toString();
-  } catch (e) {
-    targetUrl = self.location.origin + "/fifth.html?src=daily_push";
-  }
-
-  event.waitUntil(self.clients.openWindow(targetUrl));
-});
+}
