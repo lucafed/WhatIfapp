@@ -1410,18 +1410,28 @@ if (cached) {
     const microPayload = req.micro || {};
     if (isSignal) microPayload.src = microPayload.src || "signal";
 
-    const r=await fetch("/api/ask",{
-      method:"POST",headers,
-      body:JSON.stringify({
-        stage: isSignal ? "signal" : "answer",
-        domanda,
-        clarification: clarification || "",
-        lang,
-        stile: style,
-        periodo,
-        micro: microPayload
-      })
+    // 🔧 Costruiamo il payload in modo diverso per segnali vs domande normali
+    const payload = {
+      stage: isSignal ? "signal" : "answer",
+      lang,
+      stile: style,
+      periodo,
+      micro: microPayload
+    };
+
+    // ❗ Per la frase del giorno NON mandiamo domanda/clarification:
+    // l'API /api/ask con stage:"signal" si occupa di pescare la domanda del giorno.
+    if (!isSignal) {
+      payload.domanda = domanda;
+      payload.clarification = clarification || "";
+    }
+
+    const r = await fetch("/api/ask", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload)
     });
+
     const data=await r.json().catch(()=>null);
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
