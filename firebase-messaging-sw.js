@@ -1,70 +1,123 @@
-// FILE: /firebase-messaging-sw.js
-// Service Worker dedicato a Firebase Messaging (notifiche push)
+// FILE: firebase-messaging-sw.js
+// Service Worker per le notifiche push Firebase Cloud Messaging (FCM)
 
-importScripts("https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js");
+// ⚠️ Nota:
+// Nel service worker usiamo le API "compat" perché Firebase Messaging
+// lato SW funziona ancora così, anche se nel resto del sito usi i modular v12.
 
-// 🔹 STESSA CONFIG DI firebase.init.js
+importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging-compat.js");
+
+// stessa config del tuo firebase.init.js
 firebase.initializeApp({
   apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
   authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
   projectId: "whatif-oracolo-bc15d",
   storageBucket: "whatif-oracolo-bc15d.firebasestorage.app",
   messagingSenderId: "857481137283",
-  appId: "1:857481137283:web:ff8f766d14392835cf5fb6"
+  appId: "1:857481137283:web:ff8f766d14392835cf5fb6",
 });
 
+// Istanza Messaging nel SW
 const messaging = firebase.messaging();
 
-/**
- * 1) MESSAGGIO IN BACKGROUND
- *    - Arriva la push data-only da /api/push
- *    - Costruiamo noi la notifica
- */
+// Origin della tua app (puoi anche tenere fisso l'URL se preferisci)
+const APP_ORIGIN = self.location.origin;
+
+// 🔔 Messaggi in background (quando la web app è chiusa o in background)
 messaging.onBackgroundMessage((payload) => {
-  console.log("[firebase-messaging-sw] onBackgroundMessage", payload);
-  const data = payload?.data || {};
+  console.log("[firebase-messaging-sw.js] Messaggio in background ricevuto:", payload);
 
-  const title = data.title || "What?f · frase del giorno";
-  const body = data.body || "La tua frase di oggi è pronta 🔔";
+  const notificationTitle =
+    (payload.notification && payload.notification.title) ||
+    "What?f · frase del giorno";
 
-  const notifData = {
-    // es: "/fifth.html?signal=morning&phase=1&mood=..."
-    url: data.url || "/",
-    src: data.src || "signal",
-    slot: data.slot || "",
-    phase: data.phase || "",
-    mood: data.mood || ""
+  const notificationBody =
+    (payload.notification && payload.notification.body) ||
+    "La tua frase di oggi è pronta 🔔";
+
+  const data = payload.data || {};
+
+  // 🎯 COSTRUZIONE URL PER LA FRASE DEL GIORNO
+  // priorità: click_action → url
+  let url = data.click_action || data.url;
+
+  if (!url) {
+    // Cerchiamo info sullo slot dal payload:
+    // puoi mandare dal backend: signal=morning/afternoon/evening, phase=1/2, mood=...
+    const slot =
+      data.signal ||
+      data.slot ||
+      data.timeOfDay ||
+      "morning"; // default: mattino
+    const phase = data.phase || "1"; // 1 = WHAT IF, 2 = WTF
+    const mood = data.mood ? `&mood=${encodeURIComponent(data.mood)}` : "";
+
+    url = `/fifth.html?signal=${encodeURIComponent(
+      String(slot).toLowerCase()
+    )}&phase=${encodeURIComponent(String(phase))}${mood}`;
+  }
+
+  // Normalizza a URL assoluto
+  try {
+    const u = new URL(url, APP_ORIGIN);
+    url = u.toString();
+  } catch (e) {
+    url = APP_ORIGIN + "/fifth.html?signal=morning&phase=1";
+  }
+
+  const notificationOptions = {
+    body: notificationBody,
+    icon: "/public/icon-192.png",
+    badge: "/public/icon-192.png",
+    data: {
+      url,
+      src: data.src || "daily_push",
+      signal: data.signal || data.slot || data.timeOfDay || null,
+      phase: data.phase || "1",
+      mood: data.mood || null
+    },
   };
 
-  const options = {
-    body,
-    icon: "/icon-192.png",   // icona già presente nel root
-    badge: "/icon-192.png",  // opzionale
-    data: notifData
-  };
-
-  self.registration.showNotification(title, options);
+  self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-/**
- * 2) CLICK SULLA NOTIFICA
- *    - chiude la notifica
- *    - apre SEMPRE una nuova tab sulla URL giusta
- *      (es: /fifth.html?signal=...&phase=...)
- */
+// 🔔 click sulla notifica → apri / naviga alla frase del giorno
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const data = event.notification.data || {};
-  const targetPath = data.url || "/";
+  let targetUrl = data.url || (APP_ORIGIN + "/");
 
-  const absoluteUrl = targetPath.startsWith("http")
-    ? targetPath
-    : new URL(targetPath, self.location.origin).href;
+  // normalizza anche qui
+  try {
+    const u = new URL(targetUrl, APP_ORIGIN);
+    targetUrl = u.toString();
+  } catch (e) {
+    targetUrl = APP_ORIGIN + "/fifth.html?signal=morning&phase=1";
+  }
 
-  // ✅ SEMPLICE: nuova finestra/tab sempre sulla pagina giusta
   event.waitUntil(
-    clients.openWindow(absoluteUrl)
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        // se esiste già una tab dell'app, la riutilizziamo
+        if (clientList && clientList.length > 0) {
+          const sameOriginClient =
+            clientList.find((c) => c.url.startsWith(APP_ORIGIN)) ||
+            clientList[0];
+
+          if (sameOriginClient.navigate) {
+            sameOriginClient.navigate(targetUrl);
+          }
+
+          return sameOriginClient.focus();
+        }
+
+        // altrimenti ne apriamo una nuova
+        if (clients.openWindow) {
+          return clients.openWindow(targetUrl);
+        }
+      })
   );
 });
