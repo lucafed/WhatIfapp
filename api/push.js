@@ -1,13 +1,20 @@
 // FILE: api/push.js
-// Invia una notifica "frase del giorno" a tutti gli ultimi token salvati
-// ⚠️ Data-only: niente campo `notification` → niente doppia notifica
+// Notifiche giornaliere senza duplicati
+// ➜ Mattina = WHAT IF
+// ➜ Sera = WHAT THE F
+// ➜ Nessuna notifica FCM automatica (solo data-only)
 
 import admin from "../firebase-admin-server.js";
 
 const db = admin.firestore();
 
-// URL che deve aprirsi quando l'utente tappa la notifica
-const CLICK_LINK = "https://what-ifapp.vercel.app/?src=daily_push";
+// Funzione che crea l’URL corretto
+function buildLink(slot) {
+  if (slot === "evening") {
+    return "https://what-ifapp.vercel.app/fifth.html?signal=evening&style=wtf&slot=evening&src=daily";
+  }
+  return "https://what-ifapp.vercel.app/fifth.html?signal=morning&style=whatif&slot=morning&src=daily";
+}
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -15,10 +22,13 @@ export default async function handler(req, res) {
   }
 
   try {
+    const slot = req.query.slot || "morning";
+    const link = buildLink(slot);
+
     const snap = await db
       .collection("fcm_tokens")
       .orderBy("createdAt", "desc")
-      .limit(200) // margine per tanti utenti
+      .limit(200)
       .get();
 
     if (snap.empty) {
@@ -27,25 +37,24 @@ export default async function handler(req, res) {
 
     const tokens = snap.docs.map((d) => d.id);
 
-    // 🔔 Messaggio DATA-ONLY
+    // NOTIFICA DATA-ONLY (niente FCM automatico)
     const message = {
       data: {
-        title: "What?f · frase del giorno",
-        body: "La tua frase di oggi è pronta 🔔",
+        title:
+          slot === "evening"
+            ? "What the F · frase della sera"
+            : "What?f · frase del mattino",
 
-        // per capire in index.html da dove arrivi
+        body:
+          slot === "evening"
+            ? "La tua frase della sera è pronta 💥"
+            : "La tua frase del mattino è qui 🔔",
+
         src: "daily_push",
-
-        // URL interno logico
-        url: "/?src=daily_push",
-
-        // per compatibilità con alcuni browser / SW
-        click_action: CLICK_LINK
-      },
-      webpush: {
-        fcmOptions: {
-          link: CLICK_LINK
-        }
+        slot,
+        style: slot === "evening" ? "wtf" : "whatif",
+        url: link,          // il SW usa questo
+        click_action: link  // android/web compat
       },
       tokens
     };
