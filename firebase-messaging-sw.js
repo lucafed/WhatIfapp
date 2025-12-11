@@ -1,10 +1,8 @@
 // FILE: firebase-messaging-sw.js
 // Service Worker per le notifiche push Firebase Cloud Messaging (FCM)
+// Gestisce SOLO le notifiche (nessuna cache qui)
 
-// ⚠️ Nota:
-// Nel service worker usiamo le API "compat" perché Firebase Messaging
-// lato SW funziona ancora così, anche se nel resto del sito usi i modular v12.
-
+// ⚠️ Compat perché Messaging SW usa ancora le compat
 importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging-compat.js");
 
@@ -21,91 +19,97 @@ firebase.initializeApp({
 // Istanza Messaging nel SW
 const messaging = firebase.messaging();
 
-// URL pubblico della tua app (con / finale)
+// Dominio pubblico della tua app
 const APP_URL = "https://what-ifapp.vercel.app/";
 
-// Helper: costruisce URL assoluto verso la app
-function resolveTargetUrl(data = {}) {
-  // 1) data.url: es. "/fifth.html?signal=morning&phase=1&src=daily_push"
-  if (data.url) {
-    try {
-      return new URL(data.url, APP_URL).href;
-    } catch (e) {}
-  }
-
-  // 2) click_action assoluto dal payload
-  if (data.click_action) {
-    try {
-      return new URL(data.click_action).href;
-    } catch (e) {}
-  }
-
-  // 3) fallback: home
-  return APP_URL;
-}
-
-// Gestione messaggi in background (quando la web app è chiusa o in background)
+/**
+ * 🔔 Messaggi in background (data-only):
+ * usiamo SOLO payload.data → e mostriamo noi la notifica.
+ */
 messaging.onBackgroundMessage((payload) => {
-  console.log("[firebase-messaging-sw.js] Messaggio in background ricevuto:", payload);
+  console.log(
+    "[firebase-messaging-sw.js] Messaggio in background ricevuto:",
+    payload
+  );
 
   const data = payload.data || {};
 
   const notificationTitle =
     data.title ||
-    (payload.notification && payload.notification.title) ||
-    "What?f";
+    (data.phase === "2"
+      ? "What the F · frase del giorno"
+      : "What?f · frase del giorno");
 
   const notificationBody =
     data.body ||
-    (payload.notification && payload.notification.body) ||
-    "Hai un nuovo messaggio da What?f";
+    (data.phase === "2"
+      ? "La tua frase di stasera è pronta 🔔"
+      : "La tua frase di oggi è pronta 🔔");
+
+  // URL da aprire → priorità:
+  // 1) data.click_action (assoluto)
+  // 2) data.url (relativo, es: /fifth.html?signal=...)
+  // 3) fallback alla home
+  let targetUrl = data.click_action || data.url || "/?src=daily_push";
+
+  try {
+    const u = new URL(targetUrl, self.location.origin);
+    targetUrl = u.toString();
+  } catch (e) {
+    targetUrl = APP_URL;
+  }
 
   const notificationOptions = {
     body: notificationBody,
-    // usa la tua icona reale nel public root (senza /public davanti)
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
-    // IMPORTANTISSIMO: qui salviamo tutti i campi data (url, slot, phase, click_action…)
-    data,
+    icon: "/public/icon-192.png",
+    badge: "/public/icon-192.png",
+    data: {
+      ...data,
+      url: targetUrl,
+      click_action: targetUrl,
+      src: data.src || "daily_push",
+    },
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// click sulla notifica → apri SEMPRE la pagina target (fifth.html con signal/phase)
+// 🔔 Click sulla notifica → apri / naviga SEMPRE alla fifth giornaliera
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const data = event.notification.data || {};
-  const targetUrl = resolveTargetUrl(data); // es. https://what-ifapp.vercel.app/fifth.html?signal=...
+
+  let targetUrl = data.click_action || data.url || APP_URL;
+
+  try {
+    const u = new URL(targetUrl, self.location.origin);
+    targetUrl = u.toString();
+  } catch (e) {
+    targetUrl = APP_URL;
+  }
 
   event.waitUntil(
-    (async () => {
-      const clientList = await clients.matchAll({
-        type: "window",
-        includeUncontrolled: true,
-      });
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        if (clientList && clientList.length > 0) {
+          // Se c'è già una tab della tua app, la riuso ma la *navigo* alla URL corretta
+          const sameOriginClient =
+            clientList.find((c) => c.url.startsWith(self.location.origin)) ||
+            clientList[0];
 
-      // 1) se esiste già una tab della tua app → navigala verso targetUrl
-      for (const client of clientList) {
-        if (client.url.startsWith(APP_URL)) {
-          // se il browser supporta navigate, usiamo quello
-          if ("navigate" in client) {
-            return client.navigate(targetUrl);
+          if (sameOriginClient && "navigate" in sameOriginClient) {
+            sameOriginClient.navigate(targetUrl);
           }
-          // fallback: focus + openWindow (alcuni browser vecchi)
-          await client.focus();
-          if (clients.openWindow) {
-            return clients.openWindow(targetUrl);
-          }
-          return;
+
+          return sameOriginClient.focus();
         }
-      }
 
-      // 2) se non c'è nessuna tab aperta → apri una nuova finestra su targetUrl
-      if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
-      }
-    })()
+        // Nessuna finestra aperta → apri una nuova tab con la URL della fifth
+        if (clients.openWindow) {
+          return clients.openWindow(targetUrl);
+        }
+      })
   );
 });
