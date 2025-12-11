@@ -1,73 +1,51 @@
 // FILE: api/push.js
-// Notifica giornaliera DATA-ONLY (NO notification)
-// → gestita SOLO dal Service Worker
+// Invia una notifica "frase del giorno" a tutti gli ultimi token salvati
+// ⚠️ Data-only: niente campo `notification` → niente doppia notifica
 
 import admin from "../firebase-admin-server.js";
 
 const db = admin.firestore();
 
-function normalizeSlot(raw) {
-  const v = String(raw || "").toLowerCase();
-  if (v === "afternoon") return "afternoon";
-  if (v === "evening") return "evening";
-  return "morning";
-}
-
-function normalizePhase(raw) {
-  return String(raw) === "2" ? 2 : 1; // 1 = What if | 2 = What the F
-}
-
-function buildTitle(phase) {
-  return phase === 1
-    ? "What if · frase del giorno"
-    : "What the F · frase del giorno";
-}
-
-function buildBody(slot, phase) {
-  if (slot === "morning" && phase === 1)
-    return "Buongiorno. Una cosa conta oggi: guardala in faccia. Vuoi chiedere o rispondere?";
-  if (slot === "evening" && phase === 2)
-    return "Giornata finita. O quasi. Raccontala prima che ti resti addosso.";
-
-  return phase === 1
-    ? "Un segnale per oggi. Vuoi chiedere o rispondere?"
-    : "Commento non richiesto. Ma necessario.";
-}
+// URL che deve aprirsi quando l'utente tappa la notifica
+const CLICK_LINK = "https://what-ifapp.vercel.app/?src=daily_push";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
-    return res.status(405).json({ ok: false });
+    return res.status(405).json({ ok: false, error: "method_not_allowed" });
   }
 
   try {
-    const slot = normalizeSlot(req.query?.slot);
-    const phase = normalizePhase(req.query?.phase);
-
-    const CLICK_URL =
-      `https://what-ifapp.vercel.app/fifth.html` +
-      `?signal=${slot}&phase=${phase}&src=daily_push`;
-
     const snap = await db
       .collection("fcm_tokens")
       .orderBy("createdAt", "desc")
-      .limit(500)
+      .limit(200) // margine per tanti utenti
       .get();
 
     if (snap.empty) {
       return res.status(200).json({ ok: false, error: "no_tokens" });
     }
 
-    const tokens = snap.docs.map(d => d.id);
+    const tokens = snap.docs.map((d) => d.id);
 
-    // ✅ DATA ONLY
+    // 🔔 Messaggio DATA-ONLY
     const message = {
       data: {
-        title: buildTitle(phase),
-        body: buildBody(slot, phase),
-        url: CLICK_URL,
-        signal: slot,
-        phase: String(phase),
-        src: "daily_push"
+        title: "What?f · frase del giorno",
+        body: "La tua frase di oggi è pronta 🔔",
+
+        // per capire in index.html da dove arrivi
+        src: "daily_push",
+
+        // URL interno logico
+        url: "/?src=daily_push",
+
+        // per compatibilità con alcuni browser / SW
+        click_action: CLICK_LINK
+      },
+      webpush: {
+        fcmOptions: {
+          link: CLICK_LINK
+        }
       },
       tokens
     };
@@ -77,11 +55,10 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       sent: resp.successCount,
-      failed: resp.failureCount,
-      url: CLICK_URL
+      failed: resp.failureCount
     });
-  } catch (e) {
-    console.error("push error:", e);
-    return res.status(500).json({ ok: false });
+  } catch (err) {
+    console.error("push error", err);
+    return res.status(500).json({ ok: false, error: "server_error" });
   }
 }
