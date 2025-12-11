@@ -1,8 +1,8 @@
 // FILE: /sw.js
 // Service Worker per What?f
-// - Nessun caching → niente schermate nere
-// - Gestione notifiche PUSH (data-only da FCM)
-// - Click sulla notifica → apre SEMPRE l'URL passato da /api/push
+// - Niente cache / fetch → niente rischi di pagina nera
+// - Gestione notifiche FCM data-only
+// - Click sulla notifica → apre / porta alla PWA con l'URL giusto
 
 // 🔹 Attiva subito la nuova versione
 self.addEventListener("install", (event) => {
@@ -14,7 +14,11 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-// 🔔 PUSH: arrivano messaggi "data-only" da FCM
+// ✅ NIENTE fetch handler → lasciamo gestire tutto a Chrome
+// (se mettiamo cache e sbagliamo qualcosa, tornano le schermate nere)
+
+
+// 🔔 PUSH: mostrata da questo SW (messaggio data-only da FCM)
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -25,31 +29,27 @@ self.addEventListener("push", (event) => {
     data = {};
   }
 
-  const title =
-    data.title ||
-    "What?f · frase del giorno";
-
+  const title = data.title || "What?f · frase del giorno";
   const body =
     data.body ||
     "La tua frase di oggi è pronta 🔔";
 
-  // URL che /api/push mette nel payload
-  // (CLICK_LINK = https://what-ifapp.vercel.app/fifth.html?... )
-  let url = data.click_action || data.url || "/fifth.html?src=daily_push";
+  // URL da aprire quando l’utente tappa la notifica
+  // priorità: click_action (pieno) → url (relativo) → fallback
+  let url = data.click_action || data.url || "/?src=daily_push";
 
-  // normalizza rispetto all'origin, così è sempre assoluto
+  // se è relativo, lo trasformiamo in assoluto rispetto all’origin
   try {
-    url = new URL(url, self.location.origin).toString();
+    const u = new URL(url, self.location.origin);
+    url = u.toString();
   } catch (e) {
-    url = self.location.origin + "/fifth.html?src=daily_push";
+    url = self.location.origin + "/?src=daily_push";
   }
 
   const options = {
     body,
-    // ⚠️ IMPORTANTE: i file in /public diventano /icon-192.png a root,
-    // NON /public/icon-192.png
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
+    icon: "/public/icon-192.png",
+    badge: "/public/icon-192.png",
     data: {
       url,
       src: data.src || "daily_push"
@@ -59,20 +59,42 @@ self.addEventListener("push", (event) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// 🔔 Click sulla notifica → apri SEMPRE la pagina della frase
+// 🔔 Click sulla notifica
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const notifData = event.notification.data || {};
-  let targetUrl = notifData.url || "/fifth.html?src=daily_push";
+  let targetUrl = notifData.url || "/";
 
+  // normalizza anche qui
   try {
-    targetUrl = new URL(targetUrl, self.location.origin).toString();
+    const u = new URL(targetUrl, self.location.origin);
+    targetUrl = u.toString();
   } catch (e) {
-    targetUrl = self.location.origin + "/fifth.html?src=daily_push";
+    targetUrl = self.location.origin + "/";
   }
 
   event.waitUntil(
-    self.clients.openWindow(targetUrl)
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        // 1️⃣ Se c'è già una finestra dell'app, la riutilizziamo
+        if (clientList && clientList.length > 0) {
+          // prova a prendere un client sullo stesso origin
+          const sameOriginClient =
+            clientList.find((c) => c.url.startsWith(self.location.origin)) ||
+            clientList[0];
+
+          // naviga alla URL della notifica (es. https://…/?src=daily_push)
+          if (sameOriginClient.navigate) {
+            sameOriginClient.navigate(targetUrl);
+          }
+
+          return sameOriginClient.focus();
+        }
+
+        // 2️⃣ Nessuna finestra aperta → apri una nuova
+        return self.clients.openWindow(targetUrl);
+      })
   );
 });
