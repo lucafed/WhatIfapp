@@ -1,7 +1,5 @@
 // FILE: firebase.init.js
-// Inizializzazione unica di Firebase (Auth + Firestore) via CDN
-// + re-export di TUTTE le funzioni Firestore usate in /store/credits.js
-// + Firebase Messaging (notifiche)
+// Inizializzazione unica di Firebase (Auth + Firestore + Messaging)
 
 // Import SDK modulari (stessa versione ovunque!)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -53,6 +51,59 @@ const db = getFirestore(app);
 
 // 🔔 MESSAGING (notifiche)
 const messaging = getMessaging(app);
+
+/**
+ * Inizializza le push notification:
+ * - registra /firebase-messaging-sw.js
+ * - chiede il permesso
+ * - ottiene il token FCM usando quel service worker
+ */
+export async function initPushNotifications() {
+  if (!("serviceWorker" in navigator)) {
+    console.warn("[push] Service worker non supportato");
+    return null;
+  }
+
+  try {
+    // ✅ REGISTRA SOLO QUESTO SW per l’app
+    const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+    console.log("[push] SW registrato:", registration.scope);
+
+    // Richiesta permesso notifiche
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") {
+      console.warn("[push] Permesso notifiche negato:", perm);
+      return null;
+    }
+
+    // ⚠️ Usa la STESSA VAPID KEY che avevi prima nelle notifiche
+    const vapidKey = "METTI_QUI_LA_TUA_VAPID_KEY";
+
+    const token = await getToken(messaging, {
+      vapidKey,
+      serviceWorkerRegistration: registration,
+    });
+
+    if (!token) {
+      console.warn("[push] Nessun token ottenuto");
+      return null;
+    }
+
+    console.log("[push] FCM token:", token);
+    return token;
+  } catch (err) {
+    console.error("[push] Errore initPushNotifications:", err);
+    return null;
+  }
+}
+
+// Messaggi ricevuti a PAGINA APERTA (foreground)
+// ⚠️ QUI NON CREIAMO notifiche: ci pensa il service worker in background
+onMessage(messaging, (payload) => {
+  console.log("[push] Messaggio in foreground:", payload);
+  // Se vuoi, puoi aggiornare l'UI (banner, toast interno, ecc.),
+  // ma NON fare new Notification(...).
+});
 
 // 👉 Esporto TUTTO ciò che usano fourth / fifth / admin / credits
 export {
