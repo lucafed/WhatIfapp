@@ -1,10 +1,6 @@
 // FILE: firebase-messaging-sw.js
 // Service Worker per le notifiche push Firebase Cloud Messaging (FCM)
 
-// ⚠️ Nota:
-// Nel service worker usiamo le API "compat" perché Firebase Messaging
-// lato SW funziona ancora così, anche se nel resto del sito usi i modular v12.
-
 importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging-compat.js");
 
@@ -21,10 +17,10 @@ firebase.initializeApp({
 // Istanza Messaging nel SW
 const messaging = firebase.messaging();
 
-// Origin della tua app (puoi anche tenere fisso l'URL se preferisci)
+// Origin della tua app
 const APP_ORIGIN = self.location.origin;
 
-// 🔔 Messaggi in background (quando la web app è chiusa o in background)
+// 🔔 Messaggi in background (web data-only consigliato)
 messaging.onBackgroundMessage((payload) => {
   console.log("[firebase-messaging-sw.js] Messaggio in background ricevuto:", payload);
 
@@ -39,12 +35,14 @@ messaging.onBackgroundMessage((payload) => {
   const data = payload.data || {};
 
   // 🎯 COSTRUZIONE URL PER LA FRASE DEL GIORNO
-  // priorità: click_action → url
-  let url = data.click_action || data.url;
+  // ↳ IGNORIAMO click_action sul web
+  let url = data.url || null;
 
   if (!url) {
-    // Cerchiamo info sullo slot dal payload:
-    // puoi mandare dal backend: signal=morning/afternoon/evening, phase=1/2, mood=...
+    // Dal backend mandate (consigliato):
+    // data.signal = "morning" | "afternoon" | "evening"
+    // data.phase  = "1" | "2"
+    // data.mood   = "su" | "giu" | "mezzo" (opzionale)
     const slot =
       data.signal ||
       data.slot ||
