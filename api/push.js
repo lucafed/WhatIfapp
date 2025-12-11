@@ -1,10 +1,13 @@
 // FILE: api/push.js
-// Invia una notifica "frase del giorno" agli ultimi token salvati
-// ⚠️ Data-only: niente campo `notification` → niente doppia notifica browser+SW
+// Invia una notifica "frase del giorno" a tutti gli ultimi token salvati
+// ⚠️ DATA-ONLY: niente campo `notification` → niente doppia notifica automatica FCM
 
 import admin from "../firebase-admin-server.js";
 
 const db = admin.firestore();
+
+// Dominio base della tua app
+const BASE_URL = "https://what-ifapp.vercel.app";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -12,23 +15,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 👉 slot & phase arrivano dalla query (es. /api/push?slot=morning&phase=1)
+    // slot=morning|afternoon|evening  ·  phase=1 (WHAT IF) | 2 (WTF)
     const { slot = "morning", phase = "1" } = req.query || {};
 
-    // signal = morning | afternoon | evening → quello che si aspetta fifth.html
-    const signal = String(slot).toLowerCase();
-    const phaseStr = String(phase);
+    const safeSlot = ["morning", "afternoon", "evening"].includes(
+      String(slot).toLowerCase()
+    )
+      ? String(slot).toLowerCase()
+      : "morning";
 
-    // 👉 URL interno logico per la pagina "frase del giorno"
-    //    fifth.html userà signal + phase per capire stile (whatif / wtf) e fascia oraria
-    const PATH = `/fifth.html?signal=${encodeURIComponent(
-      signal
-    )}&phase=${encodeURIComponent(phaseStr)}&src=daily_push`;
+    const safePhase = String(phase) === "2" ? "2" : "1"; // 1 = whatif, 2 = wtf
 
-    // URL assoluto (usato da alcuni browser e come fallback)
-    const CLICK_LINK = `https://what-ifapp.vercel.app${PATH}`;
+    // Path interno verso la UI giornaliera (fifth in modalità signal-mode)
+    const clickPath = `/fifth.html?signal=${safeSlot}&phase=${safePhase}&src=daily_push`;
+    const CLICK_LINK = `${BASE_URL}${clickPath}`;
 
-    // 🔍 Prendiamo gli ultimi N token registrati
     const snap = await db
       .collection("fcm_tokens")
       .orderBy("createdAt", "desc")
@@ -41,36 +42,36 @@ export default async function handler(req, res) {
 
     const tokens = snap.docs.map((d) => d.id);
 
-    const isEvening = phaseStr === "2";
+    // Testo leggermente diverso tra mattino (whatif) e sera (wtf)
+    const title =
+      safePhase === "1"
+        ? "What?f · frase del giorno"
+        : "What the F · frase del giorno";
 
-    // Titolo / corpo diversi tra mattina (WHAT IF) e sera (WHAT THE F)
-    const title = isEvening
-      ? "What the F · frase di stasera"
-      : "What?f · frase del giorno";
+    const body =
+      safePhase === "1"
+        ? "La frase del mattino è pronta 🔔"
+        : "La frase della sera è pronta 🔔";
 
-    const body = isEvening
-      ? "Chiudiamo la giornata con il lato cazzaro 🍷"
-      : "La tua frase di oggi è pronta 🔔";
-
-    // 🔔 Messaggio DATA-ONLY per FCM Web
+    // 🔔 Messaggio DATA-ONLY (niente notification → nessuna notifica automatica)
     const message = {
       data: {
-        // Campi letti dal service worker
         title,
         body,
+
+        // per la logica interna della web app
         src: "daily_push",
-        slot: signal,
-        phase: phaseStr,
+        slot: safeSlot,
+        phase: safePhase,
 
-        // URL interno che il SW userà per aprire la pagina giusta
-        url: PATH,
-
-        // Per compatibilità con alcuni browser / SW
-        click_action: CLICK_LINK,
+        // URL relativo che il SW convertirà in assoluto
+        url: clickPath,
+        // compat + fallback per alcuni ambienti
+        click_action: CLICK_LINK
       },
       webpush: {
         fcmOptions: {
-          // Alcuni client usano direttamente questo link
+          // usato da FCM solo come "link di apertura" di default
           link: CLICK_LINK,
         },
       },
@@ -83,6 +84,9 @@ export default async function handler(req, res) {
       ok: true,
       sent: resp.successCount,
       failed: resp.failureCount,
+      slot: safeSlot,
+      phase: safePhase,
+      link: CLICK_LINK,
     });
   } catch (err) {
     console.error("push error", err);
