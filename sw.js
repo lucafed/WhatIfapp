@@ -1,20 +1,20 @@
 // FILE: /sw.js
 // Service Worker per What?f
-// - Nessun caching → niente schermate nere
-// - Gestione notifiche PUSH (data-only da FCM)
-// - Click sulla notifica → apre SEMPRE l'URL passato da /api/push
+// - Nessuna cache custom (evitiamo schermate nere)
+// - Gestione notifiche push data-only FCM
+// - Click sulla notifica → apre fifth.html con i parametri giusti
 
-// 🔹 Attiva subito la nuova versione
+// Attiva subito la nuova versione del SW
 self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// 🔹 Prende il controllo di tutte le pagine aperte
+// Prende il controllo di tutte le pagine aperte
 self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-// 🔔 PUSH: arrivano messaggi "data-only" da FCM
+// 🔔 Gestione dell'evento PUSH
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -25,19 +25,13 @@ self.addEventListener("push", (event) => {
     data = {};
   }
 
-  const title =
-    data.title ||
-    "What?f · frase del giorno";
+  const title = data.title || "What?f · frase del giorno";
+  const body = data.body || "La tua frase di oggi è pronta 🔔";
 
-  const body =
-    data.body ||
-    "La tua frase di oggi è pronta 🔔";
-
-  // URL che /api/push mette nel payload
-  // (CLICK_LINK = https://what-ifapp.vercel.app/fifth.html?... )
+  // URL da aprire al tap sulla notifica
   let url = data.click_action || data.url || "/fifth.html?src=daily_push";
 
-  // normalizza rispetto all'origin, così è sempre assoluto
+  // Normalizza l'URL (se relativo → assoluto)
   try {
     url = new URL(url, self.location.origin).toString();
   } catch (e) {
@@ -46,25 +40,23 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body,
-    // ⚠️ IMPORTANTE: i file in /public diventano /icon-192.png a root,
-    // NON /public/icon-192.png
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
+    // tu hai le icone sotto /public, quindi usiamo quel path
+    icon: "/public/icon-192.png",
+    badge: "/public/icon-192.png",
     data: {
-      url,
-      src: data.src || "daily_push"
+      url
     }
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// 🔔 Click sulla notifica → apri SEMPRE la pagina della frase
+// 🔔 Click sulla notifica → apri SEMPRE l'URL salvato in data.url
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const notifData = event.notification.data || {};
-  let targetUrl = notifData.url || "/fifth.html?src=daily_push";
+  let targetUrl = notifData.url || (self.location.origin + "/fifth.html?src=daily_push");
 
   try {
     targetUrl = new URL(targetUrl, self.location.origin).toString();
@@ -72,7 +64,5 @@ self.addEventListener("notificationclick", (event) => {
     targetUrl = self.location.origin + "/fifth.html?src=daily_push";
   }
 
-  event.waitUntil(
-    self.clients.openWindow(targetUrl)
-  );
+  event.waitUntil(self.clients.openWindow(targetUrl));
 });
