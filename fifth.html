@@ -1433,13 +1433,29 @@ if (cached) {
       payload.clarification = clarification || "";
     }
 
-    const r = await fetch("/api/ask", {
-      method: "POST",
-      headers,
-      body: JSON.stringify(payload)
-    });
+// 🔍 Controllo: arrivo dalla frase giornaliera?
+const url = new URL(location.href);
+const isDaily = url.searchParams.get("src") === "daily_push";
 
-    const data=await r.json().catch(()=>null);
+if (isDaily) {
+  // 📌 Recupero titolo e testo dalla notifica
+  const cached = sessionStorage.getItem("daily_push_text");
+
+  if (cached) {
+    const data = JSON.parse(cached);
+    showAnswerWithTyping(data.body);
+    stopOracleLoading();
+    revealEffect();
+    return;
+  }
+
+  // Fallback: testo minimo
+  showAnswerWithTyping("La tua frase del giorno ✨");
+  stopOracleLoading();
+  revealEffect();
+  return;
+}
+ 
     if(!r.ok || !data || !data.answer) throw new Error(data?.detail||"bad_response");
 
     let answerText=normalizeOneParagraph((data.answer||"").trim());
