@@ -1,14 +1,10 @@
 // FILE: firebase-messaging-sw.js
-// Service Worker per le notifiche push Firebase Cloud Messaging (FCM)
+// Service Worker per le notifiche Firebase — versione corretta e pulita
 
-// ⚠️ Nota:
-// Nel service worker usiamo le API "compat" perché Firebase Messaging
-// lato SW funziona ancora così, anche se nel resto del sito usi i modular v12.
+importScripts("https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js");
 
-importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging-compat.js");
-
-// stessa config del tuo firebase.init.js
+// CONFIG identica al progetto
 firebase.initializeApp({
   apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
   authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
@@ -18,106 +14,48 @@ firebase.initializeApp({
   appId: "1:857481137283:web:ff8f766d14392835cf5fb6",
 });
 
-// Istanza Messaging nel SW
 const messaging = firebase.messaging();
+const ORIGIN = self.location.origin;
 
-// Origin della tua app (puoi anche tenere fisso l'URL se preferisci)
-const APP_ORIGIN = self.location.origin;
-
-// 🔔 Messaggi in background (quando la web app è chiusa o in background)
+// 🔔 Notifica in background
 messaging.onBackgroundMessage((payload) => {
-  console.log("[firebase-messaging-sw.js] Messaggio in background ricevuto:", payload);
-
-  const notificationTitle =
-    (payload.notification && payload.notification.title) ||
-    "What?f · frase del giorno";
-
-  const notificationBody =
-    (payload.notification && payload.notification.body) ||
-    "La tua frase di oggi è pronta 🔔";
-
   const data = payload.data || {};
 
-  // 🎯 COSTRUZIONE URL PER LA FRASE DEL GIORNO
-  // priorità: click_action → url
-  let url = data.click_action || data.url;
-
-  if (!url) {
-    // Cerchiamo info sullo slot dal payload:
-    // puoi mandare dal backend: signal=morning/afternoon/evening, phase=1/2, mood=...
-    const slot =
-      data.signal ||
-      data.slot ||
-      data.timeOfDay ||
-      "morning"; // default: mattino
-    const phase = data.phase || "1"; // 1 = WHAT IF, 2 = WTF
-    const mood = data.mood ? `&mood=${encodeURIComponent(data.mood)}` : "";
-
-    url = `/fifth.html?signal=${encodeURIComponent(
-      String(slot).toLowerCase()
-    )}&phase=${encodeURIComponent(String(phase))}${mood}`;
-  }
-
-  // Normalizza a URL assoluto
-  try {
-    const u = new URL(url, APP_ORIGIN);
-    url = u.toString();
-  } catch (e) {
-    url = APP_ORIGIN + "/fifth.html?signal=morning&phase=1";
-  }
-
-  const notificationOptions = {
-    body: notificationBody,
-    icon: "/public/icon-192.png",
-    badge: "/public/icon-192.png",
+  // icon e badge devono essere assoluti o root
+  const options = {
+    body: data.body || "La tua frase di oggi è pronta 🔔",
+    icon: "/icon-192.png",
+    badge: "/icon-192.png",
     data: {
-      url,
-      src: data.src || "daily_push",
-      signal: data.signal || data.slot || data.timeOfDay || null,
-      phase: data.phase || "1",
-      mood: data.mood || null
+      url: data.url || "/fifth.html?signal=morning&phase=1",
     },
   };
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  self.registration.showNotification(
+    data.title || "What?f · frase del giorno",
+    options
+  );
 });
 
-// 🔔 click sulla notifica → apri / naviga alla frase del giorno
+// 🔔 Click sulla notifica → apri fifth.html nella PWA
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const data = event.notification.data || {};
-  let targetUrl = data.url || (APP_ORIGIN + "/");
-
-  // normalizza anche qui
-  try {
-    const u = new URL(targetUrl, APP_ORIGIN);
-    targetUrl = u.toString();
-  } catch (e) {
-    targetUrl = APP_ORIGIN + "/fifth.html?signal=morning&phase=1";
-  }
+  const url = event.notification.data.url;
+  const absolute = new URL(url, ORIGIN).href;
 
   event.waitUntil(
-    clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clientList) => {
-        // se esiste già una tab dell'app, la riutilizziamo
-        if (clientList && clientList.length > 0) {
-          const sameOriginClient =
-            clientList.find((c) => c.url.startsWith(APP_ORIGIN)) ||
-            clientList[0];
-
-          if (sameOriginClient.navigate) {
-            sameOriginClient.navigate(targetUrl);
-          }
-
-          return sameOriginClient.focus();
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((cl) => {
+      // Se l'app è già aperta → naviga lì
+      for (const client of cl) {
+        if (client.url.startsWith(ORIGIN)) {
+          client.focus();
+          client.navigate(absolute);
+          return;
         }
-
-        // altrimenti ne apriamo una nuova
-        if (clients.openWindow) {
-          return clients.openWindow(targetUrl);
-        }
-      })
+      }
+      // Altrimenti apri una nuova finestra
+      return clients.openWindow(absolute);
+    })
   );
 });
