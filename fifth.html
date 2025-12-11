@@ -747,14 +747,21 @@ const I18N = {
 const SUP_LANG=['it','en','es','fr','de'];
 
 /* ======== LINGUA ======== */
+// leggiamo subito i parametri dell'URL
+const URL_PARAMS = new URLSearchParams(location.search);
+const URL_SIGNAL = (URL_PARAMS.get("signal") || "").toLowerCase(); // morning | afternoon | evening
+
 const reqEarly = JSON.parse(LS.getItem('whatif_request')||'{}');
-// È un "segnale" sia se arriva dai bottoni-test (source: "signal")
-// sia se arriva da una notifica giornaliera (source: "daily_push")
+
+// È "signal" se:
+// - c'è il parametro ?signal=... nell'URL (notifica)
+//   OPPURE
+// - localStorage dice che la richiesta è di tipo "signal"
 const IS_SIGNAL = !!(
-  reqEarly &&
-  (reqEarly.source === "signal" || reqEarly.source === "daily_push") &&
-  reqEarly.micro
+  URL_SIGNAL ||
+  (reqEarly && reqEarly.micro && (reqEarly.source === "signal"))
 );
+
 /* 🔁 Override stile se la richiesta arriva da un segnale (morning/afternoon/evening) */
 if (IS_SIGNAL && reqEarly.micro && reqEarly.micro.phase) {
   style = reqEarly.micro.phase === 2 ? "wtf" : "whatif";
