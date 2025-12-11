@@ -1357,7 +1357,7 @@ async function startFlow(){
   const {req, domanda, clarification, surprise} = applyQuestion();
   updateCreditInfo();
 
-  const isSignal = !!(req && req.source === "signal");
+ const isSignal = IS_SIGNAL;
   const micro = (req && req.micro) ? req.micro : {};
   const phase = Number(micro.phase || 1);
 
