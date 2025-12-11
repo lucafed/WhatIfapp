@@ -1,138 +1,111 @@
-/* FILE: firebase-messaging-sw.js
- * Service worker per notifiche "frase del giorno" (FCM data-only)
- * - NIENTE doppia notifica
- * - click → apre fifth.html con i parametri ricevuti
- */
+// FILE: firebase-messaging-sw.js
+// Service Worker per le notifiche push Firebase Cloud Messaging (FCM)
 
-/* Se usi ancora la versione compat di Firebase (classica): */
-importScripts("https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js");
+// ⚠️ Nota:
+// Nel service worker usiamo le API "compat" perché Firebase Messaging
+// lato SW funziona ancora così, anche se nel resto del sito usi i modular v12.
 
-/* ✅ COPIA QUI LO STESSO CONFIG CHE USI IN firebase.init.js */
+importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging-compat.js");
+
+// stessa config del tuo firebase.init.js
 firebase.initializeApp({
-  apiKey: "COPIA_DA_firebase.init.js",
-  authDomain: "COPIA_DA_firebase.init.js",
-  projectId: "COPIA_DA_firebase.init.js",
-  messagingSenderId: "COPIA_DA_firebase.init.js",
-  appId: "COPIA_DA_firebase.init.js"
-  // se hai measurementId ecc puoi aggiungerli, ma non è obbligatorio per FCM
+  apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
+  authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
+  projectId: "whatif-oracolo-bc15d",
+  storageBucket: "whatif-oracolo-bc15d.firebasestorage.app",
+  messagingSenderId: "857481137283",
+  appId: "1:857481137283:web:ff8f766d14392835cf5fb6",
 });
 
+// Istanza Messaging nel SW
 const messaging = firebase.messaging();
 
-/**
- * 1️⃣ Ricezione messaggi in background (DATA ONLY)
- * Qui NON arriva il campo `notification`, solo `data`.
- * Mostriamo NOI una sola notifica.
- */
+// URL pubblico della tua app (con / finale)
+const APP_URL = "https://what-ifapp.vercel.app/";
+
+// Helper: costruisce URL assoluto verso la app
+function resolveTargetUrl(data = {}) {
+  // 1) data.url: es. "/fifth.html?signal=morning&phase=1&src=daily_push"
+  if (data.url) {
+    try {
+      return new URL(data.url, APP_URL).href;
+    } catch (e) {}
+  }
+
+  // 2) click_action assoluto dal payload
+  if (data.click_action) {
+    try {
+      return new URL(data.click_action).href;
+    } catch (e) {}
+  }
+
+  // 3) fallback: home
+  return APP_URL;
+}
+
+// Gestione messaggi in background (quando la web app è chiusa o in background)
 messaging.onBackgroundMessage((payload) => {
-  // payload.data contiene quello che hai mandato da /api/push.js
+  console.log("[firebase-messaging-sw.js] Messaggio in background ricevuto:", payload);
+
   const data = payload.data || {};
 
-  const title =
-    data.title || "What?f · frase del giorno";
+  const notificationTitle =
+    data.title ||
+    (payload.notification && payload.notification.title) ||
+    "What?f";
 
-  const options = {
-    body: data.body || "La tua frase di oggi è pronta.",
-    // Icone opzionali (metti le tue se vuoi)
-    icon: "/icons/icon-192.png",
-    badge: "/icons/icon-192.png",
+  const notificationBody =
+    data.body ||
+    (payload.notification && payload.notification.body) ||
+    "Hai un nuovo messaggio da What?f";
 
-    // Importantissimo: ci serve per il click
-    data: {
-      // URL completa (se la mandiamo da server) oppure costruiamo una fallback
-      url: data.url || data.click_action || "/",
-      slot: data.slot || "morning",
-      style: data.style || "whatif",
-      src: data.src || "daily_push"
-    }
+  const notificationOptions = {
+    body: notificationBody,
+    // usa la tua icona reale nel public root (senza /public davanti)
+    icon: "/icon-192.png",
+    badge: "/icon-192.png",
+    // IMPORTANTISSIMO: qui salviamo tutti i campi data (url, slot, phase, click_action…)
+    data,
   };
 
-  self.registration.showNotification(title, options);
+  self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-/**
- * 2️⃣ Click sulla notifica
- * - Chiudiamo la notifica
- * - Cerchiamo una tab già aperta con il nostro sito
- * - Se c’è, la mettiamo in focus e la navighiamo all’URL della frase
- * - Se non c’è, apriamo una nuova tab
- */
+// click sulla notifica → apri SEMPRE la pagina target (fifth.html con signal/phase)
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const data = event.notification.data || {};
-  const targetUrl = data.url || "/";
+  const targetUrl = resolveTargetUrl(data); // es. https://what-ifapp.vercel.app/fifth.html?signal=...
 
   event.waitUntil(
     (async () => {
-      // Prendiamo tutte le finestre/tab aperte del nostro origin
-      const allClients = await clients.matchAll({
+      const clientList = await clients.matchAll({
         type: "window",
-        includeUncontrolled: true
+        includeUncontrolled: true,
       });
 
-      // Proviamo a riusare una tab esistente
-      let matchingClient = null;
-      for (const client of allClients) {
-        // Se il client è già su questo origin, lo riusiamo
-        // (non controllo il path preciso per evitare edge case)
-        if (client.url && "focus" in client) {
-          matchingClient = client;
-          break;
+      // 1) se esiste già una tab della tua app → navigala verso targetUrl
+      for (const client of clientList) {
+        if (client.url.startsWith(APP_URL)) {
+          // se il browser supporta navigate, usiamo quello
+          if ("navigate" in client) {
+            return client.navigate(targetUrl);
+          }
+          // fallback: focus + openWindow (alcuni browser vecchi)
+          await client.focus();
+          if (clients.openWindow) {
+            return clients.openWindow(targetUrl);
+          }
+          return;
         }
       }
 
-      if (matchingClient) {
-        // Se la tab esiste:
-        await matchingClient.focus();
-        try {
-          // proviamo a navigare all’URL della frase del giorno
-          matchingClient.navigate(targetUrl);
-        } catch (e) {
-          // se fallisce, apriamo una nuova finestra
-          await clients.openWindow(targetUrl);
-        }
-      } else {
-        // Nessuna tab → apriamo una nuova finestra
-        await clients.openWindow(targetUrl);
+      // 2) se non c'è nessuna tab aperta → apri una nuova finestra su targetUrl
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
       }
     })()
   );
-});
-
-/**
- * 3️⃣ (Opzionale) Gestione evento "push" puro
- * Nel caso qualche browser passi il messaggio via PushEvent invece che via
- * messaging.onBackgroundMessage, mettiamo un fallback.
- */
-self.addEventListener("push", (event) => {
-  if (!event.data) return;
-
-  let payload;
-  try {
-    payload = event.data.json();
-  } catch {
-    return;
-  }
-
-  // Se è già il formato FCM classico con "data", lo usiamo
-  const data = payload.data || payload;
-
-  const title =
-    data.title || "What?f · frase del giorno";
-
-  const options = {
-    body: data.body || "La tua frase di oggi è pronta.",
-    icon: "/icons/icon-192.png",
-    badge: "/icons/icon-192.png",
-    data: {
-      url: data.url || data.click_action || "/",
-      slot: data.slot || "morning",
-      style: data.style || "whatif",
-      src: data.src || "daily_push"
-    }
-  };
-
-  event.waitUntil(self.registration.showNotification(title, options));
 });
