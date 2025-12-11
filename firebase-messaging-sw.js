@@ -1,87 +1,94 @@
-// FILE: /firebase-messaging-sw.js
-// Service Worker SOLO per le notifiche FCM (Web Push)
+/* FILE: firebase-messaging-sw.js */
+/* Service worker FCM per What?f — gestisce SOLO le notifiche push */
 
-// 👉 NIENTE logica di cache qui, niente fetch handler.
-// Tutto il resto (install/activate generici) puoi tenerlo in sw.js.
+importScripts("https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js");
 
-importScripts("https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js");
-
-// ⚠️ METTI QUI LA TUA CONFIG DI FIREBASE (la stessa che usi in firebase.init.js)
+// 🔹 METTI QUI LA TUA CONFIG (quella che hai già in progetto)
 firebase.initializeApp({
   apiKey: "XXX",
   authDomain: "XXX",
   projectId: "XXX",
+  storageBucket: "XXX",
   messagingSenderId: "XXX",
-  appId: "XXX",
+  appId: "XXX"
 });
 
 const messaging = firebase.messaging();
 
-// 🔔 BACKGROUND MESSAGE → MOSTRA UNA SOLA NOTIFICA, DATA-ONLY
+/**
+ * BACKGROUND MESSAGE
+ * Qui costruiamo noi la notifica e passiamo dentro TUTTI i dati utili
+ * (soprattutto `data.url`) così il click handler sa dove portarti.
+ */
 messaging.onBackgroundMessage((payload) => {
+  console.log("[firebase-messaging-sw] onBackgroundMessage", payload);
+
   const data = payload.data || {};
 
-  const title =
-    data.title || "What?f · frase del giorno";
-  const body =
-    data.body || "La tua frase di oggi è pronta 🔔";
+  const title = data.title || "What?f · frase del giorno";
+  const body = data.body || "La tua frase di oggi è pronta 🔔";
 
-  // URL che vogliamo aprire (fifth in modalità signal)
-  // es: /fifth.html?signal=morning&phase=1
-  const urlFromData = data.url || "/";
+  // ⚠️ QUI è la chiave: mettiamo `data.url` dentro `notification.data`
+  const notifData = {
+    url: data.url || "/", // es: "/fifth.html?signal=morning&phase=1"
+    src: data.src || "signal",
+    slot: data.slot || "",
+    phase: data.phase || "",
+    mood: data.mood || ""
+  };
 
   const options = {
     body,
-    icon: "/icons/icon-192.png",    // se li hai, altrimenti commenta
-    badge: "/icons/badge-72.png",   // se li hai, altrimenti commenta
-    data: {
-      // ci salviamo l’URL per il click
-      url: urlFromData,
-      ...data,
-    },
+    icon: "/icons/icon-192.png",   // adatta al tuo path
+    badge: "/icons/badge-72.png",  // opzionale
+    data: notifData
   };
 
   self.registration.showNotification(title, options);
 });
 
-// 🔗 CLICK NOTIFICA → APRI O FOCALIZZA FIFTH.HTML?signal=...
+/**
+ * CLICK NOTIFICATION
+ * Quando tocchi la notifica:
+ * - chiude la notifica
+ * - cerca una finestra aperta della webapp
+ * - la porta su `data.url` (fifth.html?signal=...)
+ *   oppure apre una nuova tab su quell’URL
+ */
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const data = event.notification.data || {};
-  const targetUrl = data.url || "/";
+  const targetPath = data.url || "/"; // relativo (es. "/fifth.html?signal=morning&phase=1")
+
+  // Costruiamo URL assoluto rispetto all'origine del SW
+  const absoluteUrl = targetPath.startsWith("http")
+    ? targetPath
+    : new URL(targetPath, self.location.origin).href;
 
   event.waitUntil(
     (async () => {
       const allClients = await clients.matchAll({
         type: "window",
-        includeUncontrolled: true,
+        includeUncontrolled: true
       });
 
-      // Se esiste già una tab della nostra origin, la riuso
-      for (const client of allClients) {
-        if (!client.url.startsWith(self.location.origin)) continue;
-
-        // Se è già sulla stessa pagina, focus e basta
-        if (client.url.includes(targetUrl)) {
-          await client.focus();
-          return;
-        }
-
-        // Altrimenti la navigo alla fifth
+      if (allClients.length > 0) {
+        // Prendo la prima finestra dell’app e la porto SULL’URL desiderato
+        const client = allClients[0];
         try {
-          await client.navigate(targetUrl);
+          await client.focus();
+          await client.navigate(absoluteUrl);
         } catch (e) {
-          // alcuni browser non supportano navigate: ripieghiamo su openWindow
-          return clients.openWindow(targetUrl);
+          // fallback
+          await clients.openWindow(absoluteUrl);
         }
-        await client.focus();
         return;
       }
 
-      // Nessuna finestra aperta → ne apro una nuova
-      return clients.openWindow(targetUrl);
+      // Nessuna finestra aperta → ne apro una nuova direttamente lì
+      await clients.openWindow(absoluteUrl);
     })()
   );
 });
