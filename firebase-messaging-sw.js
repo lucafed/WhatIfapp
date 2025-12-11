@@ -1,96 +1,87 @@
-// FILE: firebase-messaging-sw.js
-// Service Worker per le notifiche push Firebase Cloud Messaging (FCM)
-// Gestisce SOLO le notifiche (nessuna cache qui)
+// FILE: /firebase-messaging-sw.js
+// Service Worker SOLO per le notifiche FCM (Web Push)
 
-importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging-compat.js");
+// 👉 NIENTE logica di cache qui, niente fetch handler.
+// Tutto il resto (install/activate generici) puoi tenerlo in sw.js.
 
+importScripts("https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js");
+
+// ⚠️ METTI QUI LA TUA CONFIG DI FIREBASE (la stessa che usi in firebase.init.js)
 firebase.initializeApp({
-  apiKey: "AIzaSyAeWhmo9BtwWUVVeBxwJKUgLODMDQNUZTE",
-  authDomain: "whatif-oracolo-bc15d.firebaseapp.com",
-  projectId: "whatif-oracolo-bc15d",
-  storageBucket: "whatif-oracolo-bc15d.firebasestorage.app",
-  messagingSenderId: "857481137283",
-  appId: "1:857481137283:web:ff8f766d14392835cf5fb6",
+  apiKey: "XXX",
+  authDomain: "XXX",
+  projectId: "XXX",
+  messagingSenderId: "XXX",
+  appId: "XXX",
 });
 
 const messaging = firebase.messaging();
-const APP_URL = "https://what-ifapp.vercel.app/";
 
-// Messaggi in background (data-only)
+// 🔔 BACKGROUND MESSAGE → MOSTRA UNA SOLA NOTIFICA, DATA-ONLY
 messaging.onBackgroundMessage((payload) => {
-  console.log("[firebase-messaging-sw.js] background:", payload);
-
   const data = payload.data || {};
-  const notificationTitle =
-    data.title ||
-    (data.phase === "2"
-      ? "What the F · frase del giorno"
-      : "What?f · frase del giorno");
 
-  const notificationBody =
-    data.body ||
-    (data.phase === "2"
-      ? "La tua frase di stasera è pronta 🔔"
-      : "La tua frase di oggi è pronta 🔔");
+  const title =
+    data.title || "What?f · frase del giorno";
+  const body =
+    data.body || "La tua frase di oggi è pronta 🔔";
 
-  let targetUrl = data.click_action || data.url || "/?src=daily_push";
+  // URL che vogliamo aprire (fifth in modalità signal)
+  // es: /fifth.html?signal=morning&phase=1
+  const urlFromData = data.url || "/";
 
-  try {
-    const u = new URL(targetUrl, self.location.origin);
-    targetUrl = u.toString();
-  } catch (e) {
-    targetUrl = APP_URL;
-  }
-
-  const notificationOptions = {
-    body: notificationBody,
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
+  const options = {
+    body,
+    icon: "/icons/icon-192.png",    // se li hai, altrimenti commenta
+    badge: "/icons/badge-72.png",   // se li hai, altrimenti commenta
     data: {
+      // ci salviamo l’URL per il click
+      url: urlFromData,
       ...data,
-      url: targetUrl,
-      click_action: targetUrl,
-      src: data.src || "daily_push",
     },
   };
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  self.registration.showNotification(title, options);
 });
 
-// Click sulla notifica → naviga sempre alla fifth in signal-mode
+// 🔗 CLICK NOTIFICA → APRI O FOCALIZZA FIFTH.HTML?signal=...
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const data = event.notification.data || {};
-  let targetUrl = data.click_action || data.url || APP_URL;
-
-  try {
-    const u = new URL(targetUrl, self.location.origin);
-    targetUrl = u.toString();
-  } catch (e) {
-    targetUrl = APP_URL;
-  }
+  const targetUrl = data.url || "/";
 
   event.waitUntil(
-    clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clientList) => {
-        if (clientList && clientList.length > 0) {
-          const sameOriginClient =
-            clientList.find((c) => c.url.startsWith(self.location.origin)) ||
-            clientList[0];
+    (async () => {
+      const allClients = await clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
 
-          if (sameOriginClient && "navigate" in sameOriginClient) {
-            sameOriginClient.navigate(targetUrl);
-          }
+      // Se esiste già una tab della nostra origin, la riuso
+      for (const client of allClients) {
+        if (!client.url.startsWith(self.location.origin)) continue;
 
-          return sameOriginClient.focus();
+        // Se è già sulla stessa pagina, focus e basta
+        if (client.url.includes(targetUrl)) {
+          await client.focus();
+          return;
         }
 
-        if (clients.openWindow) {
+        // Altrimenti la navigo alla fifth
+        try {
+          await client.navigate(targetUrl);
+        } catch (e) {
+          // alcuni browser non supportano navigate: ripieghiamo su openWindow
           return clients.openWindow(targetUrl);
         }
-      })
+        await client.focus();
+        return;
+      }
+
+      // Nessuna finestra aperta → ne apro una nuova
+      return clients.openWindow(targetUrl);
+    })()
   );
 });
