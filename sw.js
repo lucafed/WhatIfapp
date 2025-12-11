@@ -1,17 +1,13 @@
 // FILE: /sw.js
-// Service Worker per What?f
-// - Nessuna gestione push qui (delegata a firebase-messaging-sw.js)
-// - Nessun cache/fetch → niente rischi di pagina nera
+// Service Worker vuoto per What?f
+// Nessuna gestione push → la fa firebase-messaging-sw.js
 
-// 🔹 Attiva subito la nuova versione
 self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// 🔹 Prende il controllo di tutte le pagine aperte
 self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-// ✅ NIENTE push, NIENTE fetch handler qui.
-// Tutta la parte notifiche è in firebase-messaging-sw.js
+// STOP — niente importScripts, niente messaging, niente notifiche.
