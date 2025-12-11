@@ -1,9 +1,9 @@
 // FILE: firebase-messaging-sw.js
 // Service Worker per le notifiche push Firebase Cloud Messaging (FCM)
-// Versione: usa SOLO i campi `data` → niente doppie notifiche.
+// Usa SOLO i campi `data` → niente doppie notifiche automatiche.
 
-importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js");
 
 // stessa config del tuo firebase.init.js
 firebase.initializeApp({
@@ -25,12 +25,12 @@ const APP_ORIGIN = self.location.origin;
 messaging.onBackgroundMessage((payload) => {
   console.log("[firebase-messaging-sw] onBackgroundMessage", payload);
 
-  const data = payload && payload.data ? payload.data : {};
+  const data = payload?.data || {};
 
   const title = data.title || "What?f · frase del giorno";
   const body  = data.body  || "La tua frase di oggi è pronta 🔔";
 
-  // URL interno: se non arriva da data.url, apriamo la quinta pagina con signal/phase
+  // URL interno: se non arriva data.url, apriamo fifth.html con signal/phase
   let url = data.url;
   if (!url) {
     const slot  = (data.slot || data.signal || "morning").toLowerCase();
@@ -44,13 +44,12 @@ messaging.onBackgroundMessage((payload) => {
   try {
     absoluteUrl = new URL(url, APP_ORIGIN).toString();
   } catch (e) {
-    console.warn("[firebase-messaging-sw] URL non valida, fallback:", e);
     absoluteUrl = `${APP_ORIGIN}/fifth.html?signal=morning&phase=1`;
   }
 
   const options = {
     body,
-    icon: "/icon-192.png",   // file che hai già in root
+    icon: "/icon-192.png",   // icona app (root)
     badge: "/icon-192.png",
     data: {
       url: absoluteUrl,
@@ -67,8 +66,8 @@ messaging.onBackgroundMessage((payload) => {
 /**
  * 2) CLICK NOTIFICATION
  *    - chiude la notifica
- *    - se c'è una finestra PWA aperta → focus + navigate verso data.url
- *    - se non c'è → apre una nuova finestra su data.url
+ *    - APRE SEMPRE una nuova finestra/tab sulla pagina giusta
+ *      (così non rischiamo di restare sulla home della PWA installata)
  */
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
@@ -83,27 +82,6 @@ self.addEventListener("notificationclick", (event) => {
   }
 
   event.waitUntil(
-    (async () => {
-      const allClients = await clients.matchAll({
-        type: "window",
-        includeUncontrolled: true,
-      });
-
-      // se esiste già una tab della webapp, usa quella
-      for (const client of allClients) {
-        if (client.url.startsWith(APP_ORIGIN)) {
-          try {
-            await client.focus();
-            await client.navigate(targetUrl);
-          } catch (e) {
-            await clients.openWindow(targetUrl);
-          }
-          return;
-        }
-      }
-
-      // altrimenti apri una nuova tab
-      await clients.openWindow(targetUrl);
-    })()
+    clients.openWindow(targetUrl)
   );
 });
