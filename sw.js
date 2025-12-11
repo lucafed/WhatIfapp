@@ -1,20 +1,17 @@
 // FILE: /sw.js
 // Service Worker per What?f
-// - Niente cache custom
-// - Notifiche FCM data-only
-// - Click → apre l'URL passato da /api/push (fifth.html?signal=...)
 
-// Attiva subito la nuova versione
+// 🔹 Attiva subito la nuova versione
 self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// Prende il controllo di tutte le pagine
+// 🔹 Prende il controllo di tutte le pagine aperte
 self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-// PUSH: mostriamo noi la notifica
+// 🔔 PUSH: notifiche mostrate da questo SW (messaggio *data-only* da FCM)
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -30,9 +27,11 @@ self.addEventListener("push", (event) => {
     data.body ||
     "La tua frase di oggi è pronta 🔔";
 
-  // URL da aprire al tap: prendiamo quello che manda /api/push
+  // URL da aprire quando l’utente tappa la notifica
+  // priorità: click_action → url → fallback
   let url = data.click_action || data.url || "/fifth.html?src=daily_push";
 
+  // se è relativo, lo trasformiamo in assoluto rispetto all’origin
   try {
     url = new URL(url, self.location.origin).toString();
   } catch (e) {
@@ -41,6 +40,7 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body,
+    // come vuoi tu: con /public
     icon: "/public/icon-192.png",
     badge: "/public/icon-192.png",
     data: {
@@ -51,18 +51,21 @@ self.addEventListener("push", (event) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// CLICK: apriamo SEMPRE l'URL che abbiamo messo in data.url
+// 🔔 Click sulla notifica → apri SEMPRE l'URL della notifica
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const notifData = event.notification.data || {};
-  let targetUrl = notifData.url || (self.location.origin + "/fifth.html?src=daily_push");
+  const data = event.notification.data || {};
+  let targetUrl = data.url || "/fifth.html?src=daily_push";
 
+  // normalizza l'URL (anche se è relativo)
   try {
     targetUrl = new URL(targetUrl, self.location.origin).toString();
   } catch (e) {
     targetUrl = self.location.origin + "/fifth.html?src=daily_push";
   }
 
-  event.waitUntil(self.clients.openWindow(targetUrl));
+  event.waitUntil(
+    self.clients.openWindow(targetUrl)
+  );
 });
