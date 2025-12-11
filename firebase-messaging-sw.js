@@ -1,9 +1,9 @@
 // FILE: firebase-messaging-sw.js
 // Service Worker per le notifiche push Firebase Cloud Messaging (FCM)
-// Versione pulita: usa SOLO i campi `data` del messaggio → niente doppie notifiche.
+// Versione: usa SOLO i campi `data` → niente doppie notifiche.
 
-importScripts("https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging-compat.js");
 
 // stessa config del tuo firebase.init.js
 firebase.initializeApp({
@@ -25,7 +25,7 @@ const APP_ORIGIN = self.location.origin;
 messaging.onBackgroundMessage((payload) => {
   console.log("[firebase-messaging-sw] onBackgroundMessage", payload);
 
-  const data = payload?.data || {};
+  const data = payload && payload.data ? payload.data : {};
 
   const title = data.title || "What?f · frase del giorno";
   const body  = data.body  || "La tua frase di oggi è pronta 🔔";
@@ -44,12 +44,13 @@ messaging.onBackgroundMessage((payload) => {
   try {
     absoluteUrl = new URL(url, APP_ORIGIN).toString();
   } catch (e) {
+    console.warn("[firebase-messaging-sw] URL non valida, fallback:", e);
     absoluteUrl = `${APP_ORIGIN}/fifth.html?signal=morning&phase=1`;
   }
 
   const options = {
     body,
-    icon: "/icon-192.png",   // in root del sito
+    icon: "/icon-192.png",   // file che hai già in root
     badge: "/icon-192.png",
     data: {
       url: absoluteUrl,
