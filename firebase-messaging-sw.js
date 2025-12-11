@@ -1,13 +1,9 @@
 // FILE: /firebase-messaging-sw.js
-// Service Worker DI FIREBASE per le notifiche di What?f
-// - Usa SOLO onBackgroundMessage (data-only da /api/push)
-// - Mostra UNA sola notifica
-// - Click → apre SEMPRE fifth.html con i parametri giusti
 
 importScripts("https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js");
 
-// ⚠️ USA LA STESSA CONFIG DELL'APP (quella in firebase.init.js)
+// 🔹 STESSA CONFIG DI firebase.init.js
 firebase.initializeApp({
   apiKey: "XXX",
   authDomain: "XXX",
@@ -19,7 +15,11 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// 🔹 Notifiche background: data-only da /api/push
+/**
+ * 1) MESSAGGIO IN BACKGROUND
+ *    - Arriva la push data-only da /api/push
+ *    - Costruiamo noi la notifica
+ */
 messaging.onBackgroundMessage((payload) => {
   console.log("[firebase-messaging-sw] onBackgroundMessage", payload);
   const data = payload?.data || {};
@@ -27,58 +27,63 @@ messaging.onBackgroundMessage((payload) => {
   const title = data.title || "What?f · frase del giorno";
   const body = data.body || "La tua frase di oggi è pronta 🔔";
 
-  // es: "/fifth.html?signal=morning&phase=1&mood=..."
-  const urlFromData = data.url || "/";
+  const notifData = {
+    // es: "/fifth.html?signal=morning&phase=1&mood=..."
+    url: data.url || "/",
+    src: data.src || "signal",
+    slot: data.slot || "",
+    phase: data.phase || "",
+    mood: data.mood || ""
+  };
 
   const options = {
     body,
-    // opzionali: metti le tue icone se le hai
-    // icon: "/icons/icon-192.png",
-    // badge: "/icons/badge-72.png",
-    data: {
-      url: urlFromData,
-      src: data.src || "signal",
-      slot: data.slot || "",
-      phase: data.phase || "",
-      mood: data.mood || "",
-    },
-    tag: `daily-signal-${data.slot || "x"}-${data.phase || "1"}`,
-    renotify: false,
+    icon: "/icon-192.png",            // adatta se hai altri path
+    badge: "/icon-192.png",           // opzionale
+    data: notifData
   };
 
   self.registration.showNotification(title, options);
 });
 
-// 🔹 Click → porta SEMPRE alla fifth giusta
+/**
+ * 2) CLICK SULLA NOTIFICA
+ *    - chiude la notifica
+ *    - se c'è già una finestra dell'app → focus + navigate(url)
+ *    - se non c'è → apre una nuova finestra su url
+ */
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const data = event.notification?.data || {};
-  const relativeUrl = data.url || "/";
-  const targetUrl = new URL(relativeUrl, "https://what-ifapp.vercel.app").href;
+  const data = event.notification.data || {};
+  const targetPath = data.url || "/";
+
+  const absoluteUrl = targetPath.startsWith("http")
+    ? targetPath
+    : new URL(targetPath, self.location.origin).href;
 
   event.waitUntil(
     (async () => {
       const allClients = await clients.matchAll({
         type: "window",
-        includeUncontrolled: true,
+        includeUncontrolled: true
       });
 
-      // se c'è già una tab dell'app, la uso ma NAVIGO alla URL giusta
+      // Se c'è già una tab dell'app, usiamo quella
       for (const client of allClients) {
-        if (client.url.startsWith("https://what-ifapp.vercel.app") && "focus" in client) {
-          client.navigate(targetUrl);
-          return client.focus();
+        if (client.url.startsWith(self.location.origin)) {
+          try {
+            await client.focus();
+            await client.navigate(absoluteUrl);
+          } catch (e) {
+            await clients.openWindow(absoluteUrl);
+          }
+          return;
         }
       }
 
-      // altrimenti apro una tab nuova
-      if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
-      }
+      // Nessuna tab aperta → nuova finestra
+      await clients.openWindow(absoluteUrl);
     })()
   );
 });
-
-// ✅ Nessun event "push" extra qui.
-// Firebase internamente aggancia il push a onBackgroundMessage.
