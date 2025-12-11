@@ -34,16 +34,34 @@ self.addEventListener("push", (event) => {
     data.body ||
     "La tua frase di oggi è pronta 🔔";
 
-  // URL da aprire quando l’utente tappa la notifica
-  // priorità: click_action (pieno) → url (relativo) → fallback
-  let url = data.click_action || data.url || "/?src=daily_push";
+  // 🎯 COSTRUZIONE URL PER LA FRASE DEL GIORNO
+  // priorità: click_action (pieno) → url (relativo/assoluto)
+  // se non ci sono, costruiamo noi /fifth.html?signal=...&phase=...
+  let url = data.click_action || data.url;
+
+  if (!url) {
+    // Cerchiamo info sullo slot dal payload:
+    // puoi mandare dal backend: signal=morning/afternoon/evening, phase=1/2, mood=...
+    const slot =
+      data.signal ||
+      data.slot ||
+      data.timeOfDay ||
+      "morning"; // default: mattino
+    const phase = data.phase || "1"; // 1 = WHAT IF, 2 = WTF
+    const mood = data.mood ? `&mood=${encodeURIComponent(data.mood)}` : "";
+
+    url = `/fifth.html?signal=${encodeURIComponent(
+      String(slot).toLowerCase()
+    )}&phase=${encodeURIComponent(String(phase))}${mood}`;
+  }
 
   // se è relativo, lo trasformiamo in assoluto rispetto all’origin
   try {
     const u = new URL(url, self.location.origin);
     url = u.toString();
   } catch (e) {
-    url = self.location.origin + "/?src=daily_push";
+    // fallback: sempre sulla frase del mattino
+    url = self.location.origin + "/fifth.html?signal=morning&phase=1";
   }
 
   const options = {
@@ -52,7 +70,10 @@ self.addEventListener("push", (event) => {
     badge: "/public/icon-192.png",
     data: {
       url,
-      src: data.src || "daily_push"
+      src: data.src || "daily_push",
+      signal: data.signal || data.slot || data.timeOfDay || null,
+      phase: data.phase || "1",
+      mood: data.mood || null
     }
   };
 
@@ -71,7 +92,8 @@ self.addEventListener("notificationclick", (event) => {
     const u = new URL(targetUrl, self.location.origin);
     targetUrl = u.toString();
   } catch (e) {
-    targetUrl = self.location.origin + "/";
+    // fallback sempre su frase del giorno (mattino WHAT IF)
+    targetUrl = self.location.origin + "/fifth.html?signal=morning&phase=1";
   }
 
   event.waitUntil(
@@ -85,7 +107,7 @@ self.addEventListener("notificationclick", (event) => {
             clientList.find((c) => c.url.startsWith(self.location.origin)) ||
             clientList[0];
 
-          // naviga alla URL della notifica (es. https://…/?src=daily_push)
+          // naviga alla URL della notifica (es. https://…/fifth.html?signal=morning&phase=1)
           if (sameOriginClient.navigate) {
             sameOriginClient.navigate(targetUrl);
           }
