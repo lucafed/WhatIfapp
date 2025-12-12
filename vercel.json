@@ -18,7 +18,7 @@
     },
     {
       "path": "/api/push?slot=evening&phase=2",
-      "schedule": "15 22 * * *"
+      "schedule": "0 19 * * *"
     }
   ]
 }
