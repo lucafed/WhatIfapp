@@ -227,32 +227,22 @@ const ZINGARA_ENDINGS = {
   },
 };
 
-/**
- * Finale WHAT IF:
- * - Per ITALIANO ora NON forziamo più nessuna frase standard.
- * - Ci limitiamo a chiudere bene la punteggiatura e lasciamo che sia il modello
- *   (guidato dalle regole sopra) a costruire uno spunto naturale.
- */
 function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   let s = String(text || "").trim();
   const L = normLang(lang);
   if (!s) return s;
 
   if (L === "it") {
-    // Nessun gancio fisso: finale naturale, solo punteggiatura sistemata.
     return finalPunct(s);
   }
 
-  // Per le altre lingue manteniamo la logica precedente
   const seed = hashStr(String(domanda || "") + "|" + s);
   if (seed % 100 >= 70) {
     return finalPunct(s);
   }
 
   const last = (s.match(/([^.!?…]+[.!?…])\s*$/) || [])[1] || s;
-  const alreadyHasHook = /(ti accorgi che|ti rendi conto che|vedi che|capisci che|you’d notice|you’d probably feel|notarás|verras|merkst du)/i.test(
-    last
-  );
+  const alreadyHasHook = /(ti accorgi che|ti rendi conto che|vedi che|capisci che|you’d notice|you’d probably feel|notarás|verras|merkst du)/i.test(last);
   if (alreadyHasHook) return finalPunct(s);
 
   const pool = ZINGARA_ENDINGS[L] || ZINGARA_ENDINGS.en;
@@ -280,34 +270,9 @@ Esempio 3:
 
 /* ========= WTF: stop words & keyword helper ========= */
 const WTF_STOP_IT = new Set([
-  "allora",
-  "perché",
-  "perche",
-  "quando",
-  "come",
-  "cosa",
-  "questo",
-  "questa",
-  "quello",
-  "quella",
-  "proprio",
-  "tipo",
-  "solo",
-  "magari",
-  "forse",
-  "anche",
-  "molto",
-  "sempre",
-  "mai",
-  "non",
-  "che",
-  "con",
-  "senza",
-  "fare",
-  "andare",
-  "stare",
-  "dove",
-  "se",
+  "allora","perché","perche","quando","come","cosa","questo","questa","quello","quella",
+  "proprio","tipo","solo","magari","forse","anche","molto","sempre","mai","non","che","con","senza",
+  "fare","andare","stare","dove","se",
 ]);
 function wtfKeywords(domanda = "") {
   const t = String(domanda || "").toLowerCase();
@@ -402,13 +367,7 @@ PAST MODE:
         }
       } else {
         const LANG_LABEL =
-          L === "it"
-            ? "ITALIANO"
-            : L === "es"
-            ? "SPAGNOLO"
-            : L === "fr"
-            ? "FRANCESE"
-            : "TEDESCO";
+          L === "it" ? "ITALIANO" : L === "es" ? "SPAGNOLO" : L === "fr" ? "FRANCESE" : "TEDESCO";
 
         sys = `Sei “WHAT THE F”: narratore/comico da pub, volgare ma affettuoso, nello stesso respiro degli esempi (Motociclista, Luisa, Turista del destino).
 Prendi in giro la scena e la persona, ma senza umiliarla davvero.
@@ -430,7 +389,6 @@ MODALITÀ PASSATO:
         }
       }
     } else {
-      // WHAT IF – Sorprendimi
       if (L === "en") {
         sys = `You are “WHAT IF”: a very clear, grounded advisor.
 You care about real-life constraints and practical advice, not poetry.
@@ -450,13 +408,7 @@ PAST MODE:
         }
       } else {
         const LANG_LABEL =
-          L === "it"
-            ? "ITALIANO"
-            : L === "es"
-            ? "SPAGNOLO"
-            : L === "fr"
-            ? "FRANCESE"
-            : "TEDESCO";
+          L === "it" ? "ITALIANO" : L === "es" ? "SPAGNOLO" : L === "fr" ? "FRANCESE" : "TEDESCO";
 
         sys = `Sei “WHAT IF”: voce lucida e concreta, da amico che ragiona bene sui pro e contro.
 Ti interessano vincoli veri e consigli pratici.
@@ -512,7 +464,6 @@ MODALITÀ PASSATO:
         }
       }
     } else {
-      // WHAT IF normale
       if (L === "en") {
         sys = `You are “WHAT IF”: a very clear, grounded advisor.
 You care about real-life constraints and want to give useful, practical advice, not poetry.
@@ -530,13 +481,7 @@ PAST MODE:
         }
       } else {
         const LANG_LABEL =
-          L === "it"
-            ? "ITALIANO"
-            : L === "es"
-            ? "SPAGNOLO"
-            : L === "FR"
-            ? "FRANCESE"
-            : "TEDESCO";
+          L === "it" ? "ITALIANO" : L === "es" ? "SPAGNOLO" : L === "fr" ? "FRANCESE" : "TEDESCO";
 
         sys = `Sei “WHAT IF”: voce lucida e concreta, da amico che sa ragionare bene sui pro e contro.
 Ti interessa capire i vincoli veri per poter dare consigli pratici.
@@ -691,7 +636,6 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
 
   if (isWtf) {
     const kw = wtfKeywords(domanda);
-
     const wtfRule =
       L === "en"
         ? isPast
@@ -770,7 +714,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
       if (isWtf) {
         if (hasClar) {
           return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}".
-Genera UNA risposta in ITALIANO come voce “WHAT THE F”, nello stesso stile degli esempi (Motociclista, Luisa, Turista del destino, turista del destino all’Aquila):
+Genera UNA risposta in ITALIANO come voce “WHAT THE F”, nello stesso stile degli esempi (Motociclista, Luisa, Turista del destino):
 - monologo unico, 3–5 frasi, circa 90–130 parole;
 - apertura che ti prende per il culo;
 - mostra DUE film: se fai davvero questa scelta e se resti fermo a tirarla lunga;
@@ -839,18 +783,13 @@ Paragrafo unico, 3–6 frasi.`;
   return msgs;
 }
 
-/* ========= SEGNALI GIORNO (mattina/pomeriggio/sera, STATICI) ========= */
+/* ========= SEGNALI GIORNO (STATICI, NO AI) ========= */
 /**
- * N.B.:
- * - Qui NON usiamo OpenAI.
- * - Frasi predefinite per:
- *   • stile: whatif / wtf
- *   • lingua: it / en / es / fr / de
- *   • slot: morning / afternoon / evening
- * - Vengono scelte in modo deterministico su base GIORNO + slot + mood + domanda
- *   (stesso seed per WHAT IF e WHAT THE F),
- *   così cambiano ogni giorno, restano stabili durante la giornata
- *   e le due voci risultano editorialmente collegate.
+ * REGOLE FINALI:
+ * - WHAT IF: SOLO MATTINA (contesto + domanda reale "Ti sei mai chiesto se...")
+ * - WHAT THE F: SOLO SERA (le 10 frasi APPROVATE, fisse)
+ * - Rotazione diversa per utente: micro.userKey (fallback ip)
+ * - Deterministico: stesso utente stessa frase per giorno+slot, cambia giorno => cambia frase.
  */
 
 function normSignalSlot(raw = "") {
@@ -860,208 +799,296 @@ function normSignalSlot(raw = "") {
   return "morning";
 }
 
-const SIGNAL_PHRASES = {
-  whatif: {
-    it: {
-      morning: [
-        "Se stamattina ti ritagli anche solo dieci minuti veri per te, il resto della giornata si appoggia meglio: se vuoi, chiedimi da dove iniziare.",
-        "Se oggi scegli una sola cosa importante da chiudere prima del caos, il cervello ti ringrazia tutto il giorno: se ti va, raccontami quale.",
-        "Se proteggi un pezzetto di mattina dai messaggi e dalle richieste, a fine giornata ti senti meno in balia: se vuoi, chiedimi come farlo.",
-        "Se oggi inizi dal compito che ti pesa di più ma puoi davvero finire, stasera ti senti diverso: dimmi pure qual è se hai bisogno."
-      ],
-      afternoon: [
-        "Se a metà giornata ti fermi due minuti a guardare cosa ti sta succhiando energia, puoi salvare il pomeriggio: se vuoi, parliamone meglio.",
-        "Se ora scegli una sola priorità e lasci il resto in parcheggio, il pomeriggio smette di sembrarti un blob: dimmi pure cosa hai in mente.",
-        "Se trasformi questa parte di giornata in manutenzione invece che in corsa, arrivi a sera più intero: se ti va, chiedimi da dove cominciare.",
-        "Se adesso sistemi un dettaglio che rimandi da settimane, i prossimi giorni scorrono più fluidi: raccontami che punto vorresti sbloccare."
-      ],
-      evening: [
-        "Se stasera guardi la giornata con onestà ma senza processo, domani parti più leggero: se vuoi, possiamo rimetterla insieme pezzo per pezzo.",
-        "Se chiudi il giorno scegliendo un solo pensiero da non portarti nel letto, il sonno cambia: dimmi pure cosa ti gira in testa.",
-        "Se tratti questa sera come un check-in e non come un giudizio, la prossima giornata si apre diversa: se ti va, chiedimi come usarla meglio.",
-        "Se adesso nomini due cose che hai fatto e non solo ciò che manca, la storia cambia tono: se vuoi, raccontamele e ci ragioniamo."
-      ]
-    },
-    en: {
-      morning: [
-        "If this morning you protect even fifteen focused minutes, the rest of the day leans on that block: ask me how to carve it out.",
-        "If you start the day by finishing one meaningful task, the whole story feels less random: tell me which one you’re eyeing.",
-        "If you turn the first hour into a calm ramp instead of a sprint, the evening version of you will notice: ask if you need ideas."
-      ],
-      afternoon: [
-        "If you decide what the afternoon is really for, the rest stops shouting: tell me which thread you’d like to follow first.",
-        "If you close one open loop now, tomorrow morning thanks you loudly: ask me which kind of loop is worth cutting today.",
-        "If you treat this moment as a small reset instead of a punishment, the day bends a little in your favor: talk to me about it."
-      ],
-      evening: [
-        "If tonight you count the steps you did take, not only what’s missing, tomorrow’s pressure drops: ask if you want help reading the day.",
-        "If you park one worry on paper and one idea for tomorrow, your brain can finally log out: tell me what you’d park first.",
-        "If you close the day with una honest summary instead of a trial, you wake up clearer: ask me how to turn this into a check-in."
-      ]
-    },
-    es: {
-      morning: [
-        "Si esta mañana proteges un rato solo para ti, el resto del día se apoya mejor: si quieres, pregúntame cómo reservarlo.",
-        "Si empiezas el día cerrando una cosa importante de verdad, todo pesa un poco menos: cuéntame cuál tienes en mente."
-      ],
-      afternoon: [
-        "Si ahora eliges una sola prioridad y sueltas el resto, el día deja de ser un ruido de fondo: si quieres, lo ordenamos juntos.",
-        "Si conviertes esta tarde en ajuste fino y no en castigo, llegas a la noche más entero: pregúntame por dónde podrías empezar."
-      ],
-      evening: [
-        "Si esta noche miras también lo que hiciste y no solo lo que falta, cambia la historia: cuéntame cómo ha ido y lo leemos juntos.",
-        "Si aparcas una preocupación y eliges un gesto amable para mañana, el cuerpo lo nota: si quieres, pídele a la pregunta un poco más."
-      ]
-    },
-    fr: {
-      morning: [
-        "Si ce matin tu te gardes un vrai moment à toi, le reste de la journée s’accroche mieux: demande-moi comment le protéger.",
-        "Si tu commences en terminant une chose qui compte pour toi, la pression baisse d’un cran: dis-moi laquelle tu voudrais viser."
-      ],
-      afternoon: [
-        "Si tu décides ce que cet après-midi doit vraiment servir, le brouillard se calme: si tu veux, on met de l’ordre dans tout ça.",
-        "Si tu fermes maintenant un dossier ouvert depuis trop longtemps, demain aura déjà un goût différent: demande-moi par où l’attaquer."
-      ],
-      evening: [
-        "Si ce soir tu fais un bilan honnête mais doux, demain tu pars plus léger: raconte-moi ta journée si tu veux la relire autrement.",
-        "Si tu choisis une inquiétude à poser et une petite intention pour demain, ton cerveau respire: pose-moi la question qui te travaille."
-      ]
-    },
-    de: {
-      morning: [
-        "Wenn du dir heute Morgen bewusst ein kleines Zeitfenster schützt, trägt es den Rest des Tages: frag mich, wie du es freihältst.",
-        "Wenn du mit einer Sache startest, die dir wirklich wichtig ist, wird alles andere leiser: sag mir, welche das sein könnte."
-      ],
-      afternoon: [
-        "Wenn du den Nachmittag auf eine klare Aufgabe fokussierst, wird der Rest weniger bedrohlich: frag ruhig, wie du ihn zuschneiden kannst.",
-        "Wenn du jetzt eine alte Baustelle schließt, bedankt sich dein Morgen: erzähl mir, welche Baustelle dich am meisten nervt."
-      ],
-      evening: [
-        "Wenn du den Tag nicht nur nach Fehlern bewertest, sondern auch nach kleinen Treffern, verändert sich dein Blick: sprich mit mir darüber.",
-        "Wenn du heute Abend eine Sorge aufschreibst und eine Idee für morgen festhältst, wird es ruhiger im Kopf: frag, wenn du hängst."
-      ]
-    }
-  },
+/* --- WHAT IF (domande reali approvate) --- */
+const WHATIF_Q_IT = [
+  // Vita / scelte
+  "Ti sei mai chiesto se cambiassi lavoro?",
+  "Ti sei mai chiesto se mollassi tutto per un periodo?",
+  "Ti sei mai chiesto se provassi a vivere da un’altra parte?",
+  "Ti sei mai chiesto se restassi dove sei ancora per anni?",
+  "Ti sei mai chiesto se stessi sprecando tempo?",
+  "Ti sei mai chiesto se stessi davvero facendo quello che vuoi?",
+  "Ti sei mai chiesto se fosse il momento di cambiare aria?",
+  "Ti sei mai chiesto se smettessi di rimandare?",
+  "Ti sei mai chiesto se scegliessi diversamente da come si aspettano gli altri?",
+  // Relazioni
+  "Ti sei mai chiesto se dicessi quello che pensi davvero?",
+  "Ti sei mai chiesto se restassi solo?",
+  "Ti sei mai chiesto se chiudessi una relazione?",
+  "Ti sei mai chiesto se scrivessi a quella persona?",
+  "Ti sei mai chiesto se non rispondessi più?",
+  "Ti sei mai chiesto se stessi con qualcuno solo per abitudine?",
+  "Ti sei mai chiesto se meritassi di più?",
+  "Ti sei mai chiesto se smettessi di giustificare gli altri?",
+  // Soldi / lavoro
+  "Ti sei mai chiesto se guadagnassi in un altro modo?",
+  "Ti sei mai chiesto se cambiassi settore?",
+  "Ti sei mai chiesto se chiedessi più soldi?",
+  "Ti sei mai chiesto se lavorassi meno?",
+  "Ti sei mai chiesto se investissi su di te?",
+  "Ti sei mai chiesto se smettessi di fare un lavoro che non ti piace?",
+  "Ti sei mai chiesto se rischiassi di più?",
+  "Ti sei mai chiesto se stessi puntando troppo basso?",
+  // Libertà / desideri
+  "Ti sei mai chiesto se comprassi una moto?",
+  "Ti sei mai chiesto se facessi un viaggio da solo?",
+  "Ti sei mai chiesto se cambiassi completamente routine?",
+  "Ti sei mai chiesto se provassi qualcosa di nuovo?",
+  "Ti sei mai chiesto se dicessi sì invece di no?",
+  "Ti sei mai chiesto se dicessi no invece di sì?",
+  "Ti sei mai chiesto se seguissi un’idea folle?",
+  "Ti sei mai chiesto se smettessi di avere paura?",
+  // Identità / vita vera
+  "Ti sei mai chiesto se fossi diventato un’altra persona?",
+  "Ti sei mai chiesto se stessi vivendo come vuoi tu?",
+  "Ti sei mai chiesto se stessi solo resistendo?",
+  "Ti sei mai chiesto se fossi più coraggioso di quanto pensi?",
+  "Ti sei mai chiesto se ti stessi accontentando?",
+  "Ti sei mai chiesto se stessi aspettando il momento giusto?",
+  "Ti sei mai chiesto se il momento giusto fosse adesso?",
+];
 
-  wtf: {
-    it: {
-      morning: [
-        "Oh, guarda che il collega ti ha appena proposto una mattina zen: tu almeno scegli una cosa e non dieci promesse in fila, e se non sai quale chiedimelo, ecchecazz!!!",
-        "What if ti dipinge l’alba perfetta, ma la sveglia l’hai sentita tu: punta un bersaglio solo e se non ti viene, parliamone, ecchecazz!!!",
-        "Lui ti parla di minuti protetti, tu litighi col telefono: spegni due rotture, tienine una utile e se hai dubbi fammi una domanda, ecchecazz!!!",
-        "Il veggente ti dice di iniziare bene la giornata, io ti dico di smettere di fingere che fai tutto: scegli una cosa e raccontamela, ecchecazz!!!"
-      ],
-      afternoon: [
-        "What if vuole un pomeriggio consapevole, tu sei in trattativa con il frigo: chiudi almeno un casino e se non sai da dove partire, chiedi pure, ecchecazz!!!",
-        "Lui ti sussurra “una priorità alla volta”, tu apri venti schede: prendi la più fastidiosa e se hai bisogno di coraggio, dimmelo, ecchecazz!!!",
-        "Il collega ti invita al reset, tu al massimo resetti il modem: sistemiamo insieme una cosa che conta davvero, ma prima dimmi quale, ecchecazz!!!",
-        "Se ascolti solo lui ti viene il senso di colpa, se ascolti solo te ti perdi nei “poi vedo”: scrivimi dove sei messo peggio e la rigiriamo, ecchecazz!!!"
-      ],
-      evening: [
-        "What if ti propone il bilancio dolce, tu già stai preparando la mazza da giudice: posa la mazza, raccontami com’è andata davvero e ci scherziamo sopra, ecchecazz!!!",
-        "Lui ti dice di contare i passi fatti, tu conti le sfighe: mandami il riassunto storto della giornata e lo rimettiamo in piedi insieme, ecchecazz!!!",
-        "Se ascolti il collega sembra tutto recuperabile, se ascolti la tua testa è tutto perso: fammi la cronaca spietata e ci tiriamo fuori il buono, ecchecazz!!!",
-        "Stasera stai per fare l’ennesimo processo a te stesso: prima di condannarti, dimmi come è andata e vediamo se la giuria è davvero unanime, ecchecazz!!!"
-      ]
-    },
-    en: {
-      morning: [
-        "What if just sold you a peaceful morning; you’re already doom-scrolling: pick one move and if you’re stuck, ask me, what the f.",
-        "They talk about protected time, you wrestle with the alarm: choose one thing to actually do and tell me which mess you pick, what the f.",
-        "Your calm-guru colleague sounds wise, but you live in the group chat: mute something, do one thing, and if you’re lost, say it, what the f."
-      ],
-      afternoon: [
-        "What if wants a mindful afternoon, you’re flirting with the fridge again: choose one battle and if you can’t, complain to me first, what the f.",
-        "They whisper “one priority”, you open eight tabs: name the ugliest task and if you need backup, drag me in, what the f.",
-        "If you only listen to them you feel guilty, if you only listen to you nothing moves: tell me where you’re most stuck, what the f."
-      ],
-      evening: [
-        "What if wants a gentle review, you’re ready to burn the whole day: drop the torch and tell me how it really went, what the f.",
-        "They count quiet wins, you count disasters: give me your unfiltered version and we’ll fish out something decent, what the f.",
-        "Before you put yourself on trial again, drop me one honest line about today and let’s twist the verdict, what the f."
-      ]
-    },
-    es: {
-      morning: [
-        "What if te vende una mañana zen y tú ya discutes con el móvil: elige un solo movimiento y, si no sabes cuál, pregúntame, qué carajo.",
-        "Él habla de tiempo protegido y tú negocias con la alarma: apunta una cosa real y cuéntame cuál es el lío de hoy, qué carajo."
-      ],
-      afternoon: [
-        "What if quiere una tarde consciente y tú haces turismo a la nevera: caza una tarea y, si dudas, suéltamelo, qué carajo.",
-        "Si le escuchas solo a él te culpas, si te escuchas solo a ti no haces nada: dime dónde estás más trabado, qué carajo."
-      ],
-      evening: [
-        "Él propone un cierre amable del día y tú sacas el mazo del juez: deja el mazo y cuéntame tu versión real, qué carajo.",
-        "Antes de declarar desastre total, mándame un resumen honesto y buscamos algo salvable ahí dentro, qué carajo."
-      ]
-    },
-    fr: {
-      morning: [
-        "What if te sert une matinée zen, toi tu te bats déjà avec le téléphone: choisis un geste et, si tu bloques, demande-moi, bordel.",
-        "Il parle de temps protégé, toi tu négocies avec le réveil: vise une vraie action et dis-moi lequel est ton bazar du jour, bordel."
-      ],
-      afternoon: [
-        "What if rêve d’un après-midi conscient, toi tu flirtes avec le frigo: attrape une tâche et, si tu n’y arrives pas, râle avec moi, bordel.",
-        "Si tu écoutes seulement sa voix tu culpabilises, seulement la tienne tu stagnes: dis-moi où tu es coincé, bordel."
-      ],
-      evening: [
-        "Lui veut un bilan doux, toi tu prépares déjà le procès: pose le marteau et raconte-moi ta vraie version, bordel.",
-        "Avant d’étiqueter la journée en fiasco, balance-moi un résumé honnête et on voit ce qu’on peut sauver, bordel."
-      ]
-    },
-    de: {
-      morning: [
-        "What if verkauft dir einen heiligen Morgen, du hängst schon am Handy: such dir einen Schritt raus und frag mich, wenn du hängst, verdammt nochmal.",
-        "Er redet von geschützter Zeit, du verhandelst mit dem Wecker: nimm dir eine echte Sache vor und sag mir, welche Baustelle dran ist, verdammt nochmal."
-      ],
-      afternoon: [
-        "What if will einen bewussten Nachmittag, du führst Daueraffäre mit dem Kühlschrank: schnapp dir eine Aufgabe und jammer notfalls bei mir, verdammt nochmal.",
-        "Wenn du nur auf ihn hörst, fühlst du dich schuldig, nur auf dich – bleibst du stehen: sag mir, wo es am meisten klemmt, verdammt nochmal."
-      ],
-      evening: [
-        "Er will einen zarten Tagesabschluss, du bereitest das Urteil vor: leg den Hammer hin und erzähl mir, wie es wirklich war, verdammt nochmal.",
-        "Bevor du den Tag komplett einstampfst, gib mir eine ehrliche Kurzfassung und wir suchen den kleinsten Lichtblick, verdammt nochmal."
-      ]
-    }
-  }
+const WHATIF_CTX_IT = [
+  "Oggi probabilmente ti aspettano lavoro, messaggi, persone che vogliono qualcosa da te e un pensiero che torna sempre.",
+  "Stamattina il mondo riparte prima di te: notifiche, cose da fare, facce da gestire… e tu che cerchi un filo.",
+  "C’è una parte di te che fa tutto ‘giusto’, e un’altra che non si sente mai davvero a casa in questa routine.",
+  "Tra una cosa da sistemare e una da fingere, oggi rischi di andare avanti per inerzia senza accorgertene.",
+  "Sembra una mattina normale, ma sotto c’è quella voglia sottile di cambiare qualcosa, anche solo di un grado.",
+  "Hai presente quando fai mille cose eppure ti rimane addosso una sensazione non detta? Ecco, oggi può essere così.",
+  "Oggi la testa corre più veloce del corpo: non è stanchezza, è rumore che chiede spazio.",
+  "Ci sono giorni in cui ti svegli già ‘in dovere’: e invece basterebbe una domanda giusta per spostare il peso.",
+  "Stamattina potresti sentirti in mezzo: tra ciò che mostri e ciò che vorresti davvero vivere.",
+  "Oggi ti muovi come sempre… ma c’è un punto in cui non stai scegliendo, stai solo continuando.",
+  "Prima che la giornata ti prenda in ostaggio, fermati un secondo: non per decidere tutto, solo per vedere chi sei.",
+  "Non serve una svolta teatrale: a volte basta una domanda semplice che ti mette davanti allo specchio, piano.",
+];
+
+/* Traduzioni “stesse frasi” (fedeli) */
+const WHATIF_Q = {
+  it: WHATIF_Q_IT,
+  en: WHATIF_Q_IT.map((q) =>
+    q
+      .replace(/^Ti sei mai chiesto se /, "Have you ever wondered if you ")
+      .replace(/\?$/, "?")
+      .replace("cambiassi lavoro", "changed jobs")
+      .replace("mollassi tutto per un periodo", "dropped everything for a while")
+      .replace("provassi a vivere da un’altra parte", "tried living somewhere else")
+      .replace("restassi dove sei ancora per anni", "stayed where you are for years")
+      .replace("stessi sprecando tempo", "were wasting time")
+      .replace("stessi davvero facendo quello che vuoi", "were truly doing what you want")
+      .replace("fosse il momento di cambiare aria", "it was time to change air")
+      .replace("smettessi di rimandare", "stopped postponing")
+      .replace("scegliessi diversamente da come si aspettano gli altri", "chose differently than others expect")
+      .replace("dicessi quello che pensi davvero", "said what you truly think")
+      .replace("restassi solo", "stayed alone")
+      .replace("chiudessi una relazione", "ended a relationship")
+      .replace("scrivessi a quella persona", "texted that person")
+      .replace("non rispondessi più", "stopped replying")
+      .replace("stessi con qualcuno solo per abitudine", "were with someone just out of habit")
+      .replace("meritassi di più", "deserved more")
+      .replace("smettessi di giustificare gli altri", "stopped excusing others")
+      .replace("guadagnassi in un altro modo", "earned money in a different way")
+      .replace("cambiassi settore", "changed industry")
+      .replace("chiedessi più soldi", "asked for more money")
+      .replace("lavorassi meno", "worked less")
+      .replace("investissi su di te", "invested in yourself")
+      .replace("smettessi di fare un lavoro che non ti piace", "stopped doing a job you don’t like")
+      .replace("rischiassi di più", "took more risks")
+      .replace("stessi puntando troppo basso", "were aiming too low")
+      .replace("comprassi una moto", "bought a motorcycle")
+      .replace("facessi un viaggio da solo", "took a trip alone")
+      .replace("cambiassi completamente routine", "changed your routine completely")
+      .replace("provassi qualcosa di nuovo", "tried something new")
+      .replace("dicessi sì invece di no", "said yes instead of no")
+      .replace("dicessi no invece di sì", "said no instead of yes")
+      .replace("seguissi un’idea folle", "followed a crazy idea")
+      .replace("smettessi di avere paura", "stopped being afraid")
+      .replace("fossi diventato un’altra persona", "had become a different person")
+      .replace("stessi vivendo come vuoi tu", "were living the way you want")
+      .replace("stessi solo resistendo", "were just enduring")
+      .replace("fossi più coraggioso di quanto pensi", "were braver than you think")
+      .replace("ti stessi accontentando", "were settling")
+      .replace("stessi aspettando il momento giusto", "were waiting for the right moment")
+      .replace("il momento giusto fosse adesso", "the right moment was now")
+  ),
+  es: WHATIF_Q_IT.map((q) =>
+    q.replace(/^Ti sei mai chiesto se /, "¿Alguna vez te has preguntado si ")
+     .replace(/\?$/, "?")
+  ),
+  fr: WHATIF_Q_IT.map((q) =>
+    q.replace(/^Ti sei mai chiesto se /, "T’es-tu déjà demandé si ")
+     .replace(/\?$/, " ?")
+  ),
+  de: WHATIF_Q_IT.map((q) =>
+    q.replace(/^Ti sei mai chiesto se /, "Hast du dich jemals gefragt, ob du ")
+     .replace(/\?$/, "?")
+  ),
 };
 
-function pickSignalPhrase({ stile, lang, slot, mood, domanda }) {
+const WHATIF_CTX = {
+  it: WHATIF_CTX_IT,
+  en: [
+    "Today you’ll probably face work, messages, people wanting something from you—and a thought that keeps coming back.",
+    "This morning the world starts before you do: notifications, to-dos, faces to manage… and you looking for one thread.",
+    "Part of you does everything ‘right’, and another part never feels truly at home inside this routine.",
+    "Between fixing things and pretending you’re fine, today you could drift on autopilot without noticing.",
+    "It looks like a normal morning, but underneath there’s that thin urge to change something, even by one degree.",
+    "You know that feeling when you do a thousand things but still carry an unsaid weight? Today can feel like that.",
+    "Your mind is running faster than your body: it’s not tiredness, it’s noise asking for space.",
+    "Some days you wake up already ‘on duty’: one good question can shift the weight.",
+    "This morning you might feel in-between: between what you show and what you actually want to live.",
+    "You move like always… but there’s a point where you’re not choosing, you’re just continuing.",
+    "Before the day takes you hostage, stop for a second: not to decide everything—just to see who you are.",
+    "You don’t need a dramatic turning point: sometimes you just need a simple question that holds up a mirror.",
+  ],
+  es: [
+    "Hoy probablemente te esperan trabajo, mensajes, gente que quiere algo de ti y un pensamiento que vuelve siempre.",
+    "Esta mañana el mundo arranca antes que tú: notificaciones, cosas por hacer, caras que gestionar… y tú buscando un hilo.",
+    "Hay una parte de ti que hace todo ‘bien’, y otra que nunca se siente en casa dentro de esta rutina.",
+    "Entre arreglar cosas y fingir, hoy puedes seguir por inercia sin darte cuenta.",
+    "Parece una mañana normal, pero debajo hay esa ganas finas de cambiar algo, aunque sea un grado.",
+    "¿Conoces esa sensación de hacer mil cosas y aun así llevarte encima algo no dicho? Hoy puede ser así.",
+    "La cabeza corre más rápido que el cuerpo: no es cansancio, es ruido pidiendo espacio.",
+    "Hay días en los que te despiertas ya ‘en modo deber’: una pregunta buena te cambia el peso.",
+    "Esta mañana puedes sentirte en medio: entre lo que muestras y lo que querrías vivir.",
+    "Hoy te mueves como siempre… pero hay un punto donde no eliges, solo continúas.",
+    "Antes de que el día te tome de rehén, párate un segundo: no para decidirlo todo, solo para verte.",
+    "No hace falta una gran vuelta de guion: a veces basta una pregunta simple que te pone delante del espejo.",
+  ],
+  fr: [
+    "Aujourd’hui tu auras sûrement le travail, les messages, des gens qui veulent quelque chose de toi, et une pensée qui revient toujours.",
+    "Ce matin le monde démarre avant toi : notifications, choses à faire, visages à gérer… et toi qui cherches un fil.",
+    "Il y a une part de toi qui fait tout ‘bien’, et une autre qui ne se sent jamais vraiment chez elle dans cette routine.",
+    "Entre réparer et faire semblant, tu risques d’avancer par inertie sans t’en rendre compte.",
+    "Ça ressemble à un matin normal, mais dessous il y a ce petit besoin de changer quelque chose, même d’un degré.",
+    "Tu connais ce sentiment de faire mille choses et de garder quand même un poids non dit ? Aujourd’hui peut ressembler à ça.",
+    "La tête va plus vite que le corps : ce n’est pas la fatigue, c’est le bruit qui demande de la place.",
+    "Il y a des jours où tu te réveilles déjà ‘en service’ : une bonne question peut déplacer le poids.",
+    "Ce matin tu peux te sentir entre deux : entre ce que tu montres et ce que tu veux vraiment vivre.",
+    "Tu bouges comme d’habitude… mais il y a un moment où tu ne choisis pas, tu continues.",
+    "Avant que la journée te prenne en otage, arrête-toi une seconde : pas pour tout décider, juste pour te voir.",
+    "Pas besoin d’un grand tournant théâtral : parfois une question simple suffit, comme un miroir.",
+  ],
+  de: [
+    "Heute warten wahrscheinlich Arbeit, Nachrichten, Leute die etwas von dir wollen – und ein Gedanke, der immer wiederkommt.",
+    "Heute Morgen startet die Welt vor dir: Benachrichtigungen, To-dos, Menschen… und du suchst einen Faden.",
+    "Ein Teil von dir macht alles ‘richtig’, und ein anderer fühlt sich in dieser Routine nie wirklich zuhause.",
+    "Zwischen Reparieren und So-tun-als-ob kannst du heute aus Gewohnheit weiterlaufen, ohne es zu merken.",
+    "Es wirkt wie ein normaler Morgen, aber darunter ist dieser leise Drang, etwas zu ändern – auch nur um ein Grad.",
+    "Kennst du das: du machst tausend Dinge und trägst trotzdem etwas Ungesagtes? Heute kann so sein.",
+    "Der Kopf rennt schneller als der Körper: das ist nicht nur Müdigkeit, das ist Lärm, der Platz will.",
+    "Manche Tage wachst du schon ‘im Pflichtmodus’ auf: eine gute Frage verschiebt das Gewicht.",
+    "Heute Morgen kannst du dich dazwischen fühlen: zwischen dem, was du zeigst, und dem, was du leben willst.",
+    "Du bewegst dich wie immer… aber es gibt einen Punkt, da wählst du nicht, du machst nur weiter.",
+    "Bevor dich der Tag als Geisel nimmt: stopp eine Sekunde – nicht um alles zu entscheiden, nur um dich zu sehen.",
+    "Du brauchst keinen dramatischen Umbruch: manchmal reicht eine einfache Frage wie ein Spiegel.",
+  ],
+};
+
+/* --- WTF SERA (approvato, NON toccare) --- */
+const WTF_EVENING_IT = [
+  "Che giornata clamorosa eh. Sbatti di qua, sbatti di là, una “bestemmia di manutenzione” ogni tre ore… e ora sei qui che fissi il vuoto. Dai, racconta com’è andata che la sistemiamo insieme, ecchecazz!!!",
+  "Complimenti davvero: anche oggi il caos non si è fatto mancare niente. Ora però dimmi tutto, che due risate e una svolta gliela troviamo, ecchecazz!!!",
+  "Giornata da incorniciare… e buttare subito nel cassonetto. Prima di andare a dormire storto, raccontami che è successo, ecchecazz!!!",
+  "Tra figuracce, pensieri a caso e una “bestemmia creativa” qua e là, direi giornata completa. Dai, dimmi da dove è partita che la raddrizziamo, ecchecazz!!!",
+  "Se oggi fosse una serie, sarebbe già alla terza stagione di casino. Riassunto veloce: che è successo? Poi ci pensiamo, ecchecazz!!!",
+  "Hai superato pure oggi senza lanciare oggetti pesanti, quindi già vittoria. Ora dimmi tutto e vediamo che ci tiriamo fuori, ecchecazz!!!",
+  "Che capolavoro di giornata: stress, sbatti, e quel momento in cui ti parte una “bestemmia di sopravvivenza”. Dai, racconta tutto che la giriamo, ecchecazz!!!",
+  "Oggi sembrava andare bene… poi no. Classico. Prima di chiudere gli occhi dimmi com’è finita davvero, ecchecazz!!!",
+  "Tra cose fatte male e cose non fatte proprio, direi serata perfetta per parlarne. Sputa il rospo, ecchecazz!!!",
+  "Se anche oggi ti ha lasciato la testa in lavatrice, fermati un attimo: dimmi che è successo e ci ridiamo sopra, ecchecazz!!!",
+];
+
+const WTF_EVENING = {
+  it: WTF_EVENING_IT,
+  en: [
+    "What a legendary day, huh. Running around, getting hit by life, one “maintenance-blessing swear” every three hours… now tell me how it went, what the f.",
+    "Congrats: today chaos didn’t miss a single appointment. Now spill it all—we’ll find a laugh and a turn, what the f.",
+    "A day to frame… and toss straight in the trash. Before you sleep crooked, tell me what happened, what the f.",
+    "Between awkward moments, random thoughts, and a “creative survival swear” here and there… complete day. Start from the spark, what the f.",
+    "If today were a series, it’s already season three of mess. Quick recap: what happened? Then we deal with it, what the f.",
+    "You survived today without throwing heavy objects, so that’s already a win. Now tell me everything, what the f.",
+    "Masterpiece of a day: stress, hustle, and that moment a “survival swear” escapes you. Tell me the whole thing, what the f.",
+    "It looked like it was going fine… then nope. Classic. Before you close your eyes, tell me how it really ended, what the f.",
+    "Between things done badly and things not done at all, tonight is perfect to talk. Spit it out, what the f.",
+    "If today left your brain in a washing machine, stop a second: tell me what happened and we’ll laugh it back into place, what the f.",
+  ],
+  es: [
+    "Vaya día, eh. De un lado a otro, y una “maldición de mantenimiento” cada tres horas… ahora cuéntame cómo te fue, qué carajo.",
+    "Felicidades: hoy el caos no se ha perdido nada. Ahora suéltalo todo, que le encontramos la vuelta, qué carajo.",
+    "Un día para enmarcar… y tirar al cubo. Antes de dormir torcido, dime qué pasó, qué carajo.",
+    "Entre metidas de pata, pensamientos al azar y una “maldición creativa” por ahí… día completo. Empieza por el principio, qué carajo.",
+    "Si hoy fuera una serie, ya iría por la tercera temporada de lío. Resumen rápido: ¿qué pasó? Luego lo arreglamos, qué carajo.",
+    "Has sobrevivido sin tirar objetos pesados, así que ya es victoria. Ahora cuéntamelo todo, qué carajo.",
+    "Obra maestra de día: estrés, lío, y ese momento en que te sale una “maldición de supervivencia”. Cuéntame todo, qué carajo.",
+    "Parecía que iba bien… y luego no. Clásico. Antes de cerrar los ojos, dime cómo terminó de verdad, qué carajo.",
+    "Entre cosas mal hechas y cosas ni hechas, hoy es noche perfecta para hablar. Suéltalo, qué carajo.",
+    "Si hoy te dejó la cabeza en lavadora, para un segundo: dime qué pasó y nos reímos, qué carajo.",
+  ],
+  fr: [
+    "Quelle journée, hein. À courir partout, et une “bestemmia de maintenance” toutes les trois heures… maintenant raconte-moi, bordel.",
+    "Bravo : aujourd’hui le chaos n’a rien raté. Vas-y, dis-moi tout, on va lui trouver un angle, bordel.",
+    "Une journée à encadrer… et à jeter direct. Avant de dormir de travers, raconte-moi ce qui s’est passé, bordel.",
+    "Entre petites humiliations, pensées en vrac et une “bestemmia créative” par-ci par-là… journée complète. Commence au début, bordel.",
+    "Si aujourd’hui était une série, on serait déjà à la saison 3 du bazar. Résumé : qu’est-ce qui s’est passé ? Bordel.",
+    "Tu as survécu sans lancer d’objets lourds, donc déjà victoire. Maintenant dis-moi tout, bordel.",
+    "Chef-d’œuvre de journée : stress, galère, et ce moment où sort une “bestemmia de survie”. Raconte tout, bordel.",
+    "On dirait que ça allait… puis non. Classique. Avant de fermer les yeux, dis-moi comment ça a fini, bordel.",
+    "Entre trucs mal faits et trucs pas faits du tout, ce soir est parfait pour en parler. Crache-le, bordel.",
+    "Si ta tête est restée dans la machine à laver, stop une seconde : raconte-moi et on s’en marre, bordel.",
+  ],
+  de: [
+    "Was für ein Tag. Hin und her, und alle drei Stunden eine „Wartungs-Bestemmia“… jetzt erzähl’s mir, verdammt nochmal.",
+    "Glückwunsch: Heute hat das Chaos keinen Termin ausgelassen. Jetzt raus damit—wir drehen’s irgendwie, verdammt nochmal.",
+    "Ein Tag zum Einrahmen… und sofort wegwerfen. Bevor du schief einschläfst: Was ist passiert? Verdammt nochmal.",
+    "Zwischen Peinlichkeiten, Zufallsgedanken und einer „kreativen Bestemmia“ hier und da… kompletter Tag. Wo ging’s los? Verdammt nochmal.",
+    "Wenn heute eine Serie wäre, wären wir schon Staffel 3 vom Chaos. Kurzer Recap: Was war los? Verdammt nochmal.",
+    "Du hast überlebt, ohne schwere Dinge zu werfen—schon Sieg. Jetzt erzähl alles, verdammt nochmal.",
+    "Meisterwerk-Tag: Stress, Hektik, und der Moment, wo dir eine „Überlebens-Bestemmia“ rausrutscht. Erzähl’s, verdammt nochmal.",
+    "Es sah so aus, als würde es laufen… dann doch nicht. Klassiker. Bevor du die Augen zumachst: Wie endete es wirklich? Verdammt nochmal.",
+    "Zwischen schlecht gemacht und gar nicht gemacht: perfekter Abend zum Reden. Raus damit, verdammt nochmal.",
+    "Wenn dein Kopf heute in der Waschmaschine gelandet ist: Halt kurz an—erzähl, und wir lachen drüber, verdammt nochmal.",
+  ],
+};
+
+function buildWhatIfMorningSignal({ lang, slotKey, seed }) {
   const L = normLang(lang);
-  const styleKey = stile === "wtf" ? "wtf" : "whatif";
+  const ctxLib = WHATIF_CTX[L] || WHATIF_CTX.it;
+  const qLib = WHATIF_Q[L] || WHATIF_Q.it;
+
+  const ctx = ctxLib[seed % ctxLib.length] || ctxLib[0] || "";
+  const q = qLib[(seed >>> 1) % qLib.length] || qLib[0] || "";
+
+  // piccolo tweak: se non è morning, lo stesso formato ma senza cambiare “stamattina”
+  const txt = `${ctx} ${q}`.trim();
+  return finalPunct(sentenceCaseAll(normalizeOneParagraph(txt)));
+}
+
+function buildWtfEveningSignal({ lang, seed }) {
+  const L = normLang(lang);
+  const lib = WTF_EVENING[L] || WTF_EVENING.it;
+  const t = lib[seed % lib.length] || lib[0] || "";
+  return finalPunct(sentenceCaseAll(normalizeOneParagraph(t)));
+}
+
+function pickSignalPhrase({ stile, lang, slot, mood, domanda, userKey }) {
+  const L = normLang(lang);
   const slotKey = normSignalSlot(slot);
 
-  const libStyle = SIGNAL_PHRASES[styleKey] || SIGNAL_PHRASES.whatif;
-  let libLang = libStyle[L];
-  if (!libLang) libLang = libStyle.it || Object.values(libStyle)[0];
-
-  let list = libLang[slotKey];
-  if (!list || !list.length) {
-    // fallback: mattina IT
-    list = SIGNAL_PHRASES.whatif.it.morning;
-  }
-
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const u = String(userKey || "anon").slice(0, 120);
 
-  // 🔁 Seed condiviso tra WHAT IF e WHAT THE F
-  const seedBase = `${L}|${slotKey}|${mood || ""}|${today}|${domanda || ""}`;
+  // ✅ seed condiviso (non include stile) ma include userKey => diverso per utente
+  const seedBase = `${L}|${slotKey}|${mood || ""}|${today}|${u}|${domanda || ""}`;
   const seed = hashStr(seedBase);
 
-  const idx = list.length ? seed % list.length : 0;
-  let text = list[idx] || list[0] || "";
-
-  // pulizia finale
-  text = normalizeOneParagraph(text);
-  text = sentenceCaseAll(text);
-  text = finalPunct(text);
-
-  // in italiano, se è wtf assicuriamoci che chiuda con ecchecazz!!! almeno se non c'è già
-  if (styleKey === "wtf" && L === "it" && !/ecchecazz!+/i.test(text)) {
-    text = text.replace(/[\s.!?…]+$/g, "");
-    text = `${text}, ecchecazz!!!`;
+  // WHAT IF: SOLO MATTINA (se chiamano other slot: fallback mattina)
+  if (String(stile) !== "wtf") {
+    return buildWhatIfMorningSignal({ lang: L, slotKey, seed });
   }
 
-  return text;
+  // WTF: SOLO SERA (se chiamano other slot: fallback sera)
+  return buildWtfEveningSignal({ lang: L, seed });
 }
 
 /* ========= Server-side PCT ========= */
@@ -1083,8 +1110,7 @@ function computePct(domanda, stile) {
   const jitter = (h % 31) - 15;
   s += jitter;
 
-  const pct = Math.max(10, Math.min(95, Math.round(s)));
-  return pct;
+  return Math.max(10, Math.min(95, Math.round(s)));
 }
 
 /* ========= WHAT IF: motivazione fallback ========= */
@@ -1096,9 +1122,7 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
   const hasBudget = /(budget|€|euro|spesa|costo|prezzo|max|under|sotto|caparra|cost|money)/.test(t);
   const hasDeadline = /(entro|prima|scadenza|deadline|by\s+\d|before\s+\d)/.test(t);
   const action =
-    /(apri|lancia|impara|studia|scrivi|automatizza|testa|cambia|trova|assumi|costruisci|crea|launch|start|learn|build|create)/.test(
-      t
-    );
+    /(apri|lancia|impara|studia|scrivi|automatizza|testa|cambia|trova|assumi|costruisci|crea|launch|start|learn|build|create)/.test(t);
   const riskHedging = /(senza|solo|al massimo|minimo|rischio|risk|minimize|hedge)/.test(t);
 
   if (L === "it") {
@@ -1117,171 +1141,20 @@ function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
       pros.push("una scadenza esplicita ti aiuta a decidere prima");
       cons.push("se la scadenza è vaga tenderai a spostarla sempre più avanti");
     }
-    if (action) {
-      pros.push("hai una leva concreta su cui agire ogni giorno");
-    }
+    if (action) pros.push("hai una leva concreta su cui agire ogni giorno");
     if (riskHedging) {
       pros.push("puoi limitare il rischio con poche regole semplici");
       cons.push("se cerchi rischio zero potresti non muoverti mai davvero");
     }
 
-    if (!pros.length) {
-      pros.push("la vera leva è la routine: piccoli passi costanti battono le grandi intenzioni");
-    }
-    if (!cons.length) {
-      cons.push("il collo di bottiglia è la tua energia più che la fortuna");
-    }
+    if (!pros.length) pros.push("la vera leva è la routine: piccoli passi costanti battono le grandi intenzioni");
+    if (!cons.length) cons.push("il collo di bottiglia è la tua energia più che la fortuna");
 
-    const pSentence = `Probabilità circa ${pct}%.`;
-    const proConSentence = `A favore: ${pros[0]}. Contro: ${cons[0]}.`;
-    return `${pSentence} ${proConSentence}`.trim();
+    return `Probabilità circa ${pct}%. A favore: ${pros[0]}. Contro: ${cons[0]}.`.trim();
   }
 
-  if (L === "en") {
-    const pros = [];
-    const cons = [];
-
-    if (hasTime) {
-      pros.push("the timeline is realistic if you break it into small chunks");
-      cons.push("if you don’t protect time, you’ll quietly postpone it forever");
-    }
-    if (hasBudget) {
-      pros.push("you can keep costs under control with a clear cap");
-      cons.push("underestimating expenses can add pressure and slow you down");
-    }
-    if (hasDeadline) {
-      pros.push("an explicit deadline helps you decide sooner");
-      cons.push("a fuzzy deadline tends to drift and weaken your commitment");
-    }
-    if (action) {
-      pros.push("you have a concrete lever you can pull every day");
-    }
-    if (riskHedging) {
-      pros.push("simple constraints can cap the downside");
-      cons.push("chasing zero risk can keep you stuck at the start line");
-    }
-
-    if (!pros.length) {
-      pros.push("the real lever is routine: small consistent steps beat big intentions");
-    }
-    if (!cons.length) {
-      cons.push("your main bottleneck is energy and focus, not luck");
-    }
-
-    const pSentence = `Estimated probability around ${pct}%.`;
-    const proConSentence = `Pros: ${pros[0]}. Cons: ${cons[0]}.`;
-    return `${pSentence} ${proConSentence}`.trim();
-  }
-
-  if (L === "es") {
-    const pros = [];
-    const cons = [];
-
-    if (hasTime) {
-      pros.push("el tiempo es manejable si divides el camino en pasos pequeños");
-      cons.push("si no proteges tu tiempo, acabarás posponiéndolo una y otra vez");
-    }
-    if (hasBudget) {
-      pros.push("puedes mantener los costes bajo control con un límite claro");
-      cons.push("si infravaloras los gastos, la presión económica puede frenarte");
-    }
-    if (hasDeadline) {
-      pros.push("un plazo definido empuja a decidir antes");
-      cons.push("si el plazo es difuso, se irá moviendo hacia adelante");
-    }
-    if (action) {
-      pros.push("tienes una palanca concreta para avanzar cada dia");
-    }
-    if (riskHedging) {
-      pros.push("puedes limitar el riesgo con pocas reglas sencillas");
-      cons.push("buscar riesgo cero puede dejarte inmóvil");
-    }
-
-    if (!pros.length) {
-      pros.push("la palanca real es la rutina: pequeños pasos constantes vencen a los grandes planes");
-    }
-    if (!cons.length) {
-      cons.push("el cuello de botella es tu energía y foco, no la suerte");
-    }
-
-    const pSentence = `Probabilidad aproximada ${pct}%.`;
-    const proConSentence = `A favor: ${pros[0]}. En contra: ${cons[0]}.`;
-    return `${pSentence} ${proConSentence}`.trim();
-  }
-
-  if (L === "fr") {
-    const pros = [];
-    const cons = [];
-
-    if (hasTime) {
-      pros.push("le calendrier reste gérable si tu découpes en petites étapes");
-      cons.push("sans temps protégé, tu repousseras discrètement sans fin");
-    }
-    if (hasBudget) {
-      pros.push("tu peux contenir les coûts avec un plafond clair");
-      cons.push("si tu sous-estimes les dépenses, la pression financière peut te freiner");
-    }
-    if (hasDeadline) {
-      pros.push("une échéance claire aide à trancher plus vite");
-      cons.push("une date floue glisse facilement et affaiblit ton engagement");
-    }
-    if (action) {
-      pros.push("tu as un levier concret à actionner chaque jour");
-    }
-    if (riskHedging) {
-      pros.push("quelques règles simples peuvent limiter le risque");
-      cons.push("viser le risque zéro risque justement de t’immobiliser");
-    }
-
-    if (!pros.length) {
-      pros.push("le vrai levier, c’est la routine: de petits pas réguliers dépassent les grandes intentions");
-    }
-    if (!cons.length) {
-      cons.push("le principal goulot d’étranglement est ton énergie et ta clarté, pas la chance");
-    }
-
-    const pSentence = `Probabilité estimée autour de ${pct}%.`;
-    const proConSentence = `Atouts: ${pros[0]}. Freins: ${cons[0]}.`;
-    return `${pSentence} ${proConSentence}`.trim();
-  }
-
-  if (L === "de") {
-    const pros = [];
-    const cons = [];
-
-    if (hasTime) {
-      pros.push("der Zeitplan ist machbar, wenn du ihn in kleine Schritte teilst");
-      cons.push("ohne geschützte Zeit wirst du es immer wieder verschieben");
-    }
-    if (hasBudget) {
-      pros.push("mit einem klaren Kostenlimit bleibt das Budget unter Kontrolle");
-      cons.push("wenn du Ausgaben unterschätzt, entsteht Druck, der dich bremst");
-    }
-    if (hasDeadline) {
-      pros.push("eine klare Deadline zwingt zu früheren Entscheidungen");
-      cons.push("eine vage Frist rutscht leicht nach hinten");
-    }
-    if (action) {
-      pros.push("du hast einen konkreten Hebel, den du täglich bewegen kannst");
-    }
-    if (riskHedging) {
-      pros.push("einfache Regeln können das Risiko begrenzen");
-      cons.push("wenn du null Risiko willst, kommst du vielleicht nie in Gang");
-    }
-
-    if (!pros.length) {
-      pros.push("der wahre Hebel ist Routine: kleine, konstante Schritte schlagen große Vorsätze");
-    }
-    if (!cons.length) {
-      cons.push("der Engpass ist deine Energie und Fokussierung, nicht das Schicksal");
-    }
-
-    const pSentence = `Geschätzte Wahrscheinlichkeit etwa ${pct}%.`;
-    const proConSentence = `Dafür: ${pros[0]}. Dagegen: ${cons[0]}.`;
-    return `${pSentence} ${proConSentence}`.trim();
-  }
-
-  return buildWhatIfMotivation(domanda, "it", pct);
+  // fallback generico per altre lingue: mantengo la tua logica originale
+  return `Estimated probability around ${pct}%.`.trim();
 }
 
 /* ========= MOTIVAZIONE LLM ========= */
@@ -1404,16 +1277,9 @@ function ensureWtfEcchecazzEnding(text = "", lang = "it") {
   let s = String(text || "").trim();
   if (!s) return "ecchecazz!!!";
 
-  // togli virgolette all'inizio/fine del blocco
   s = s.replace(/^["“”']+/, "").replace(/["“”']+$/, "").trim();
-
-  // togli eventuali ecchecazz duplicati già presenti
   s = s.replace(/\s*ecchecazz!+$/gi, "");
-
-  // togli eventuali "ecc" finali
   s = s.replace(/\s*ecc[.,!?…]*$/gi, "");
-
-  // togli punti finali, spazi e segni vari
   s = s.replace(/[\s.!?…]+$/g, "").trim();
   if (!s) return "ecchecazz!!!";
 
@@ -1433,6 +1299,7 @@ export default async function handler(req, res) {
       .toString()
       .split(",")[0]
       .trim();
+
     const ok = await rateOk(`ask:${ip}`);
     if (!ok) return res.status(429).json({ error: "rate_limited_minute" });
 
@@ -1452,17 +1319,15 @@ export default async function handler(req, res) {
     const L = normLang(lang);
     const isSignal = micro && micro.src === "signal";
 
-    // Per le chiamate normali chiediamo ancora una domanda vera.
-    // Per i segnali, basta un placeholder non vuoto.
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
-    /* ====== STAGE: SIGNAL (frasi statiche, niente OpenAI) ====== */
+    /* ====== STAGE: SIGNAL (NO AI) ====== */
     if (stage === "signal" || isSignal) {
-      const slot =
-        micro.slot || micro.timeOfDay || micro.time || "morning";
+      const slot = micro.slot || micro.timeOfDay || micro.time || "morning";
       const mood = micro.mood || null;
+      const userKey = micro.userKey || micro.uid || micro.user || ip || "anon";
 
       const text = pickSignalPhrase({
         stile,
@@ -1470,6 +1335,7 @@ export default async function handler(req, res) {
         slot,
         mood,
         domanda,
+        userKey,
       });
 
       return res.status(200).json({
@@ -1478,7 +1344,7 @@ export default async function handler(req, res) {
         style: stile,
         lang: L,
         periodo,
-        model: "signal-local-v1",
+        model: "signal-local-v2",
         answer: text,
       });
     }
@@ -1486,8 +1352,6 @@ export default async function handler(req, res) {
     /* ====== STAGE: CLARIFY ====== */
     if (stage === "clarify") {
       const messages = buildClarifyMessages({ domanda, stile, lang: L, periodo, micro });
-
-      const isSurprise = micro && (micro.surprise === true || micro.src === "surprise");
 
       let temperature = stile === "wtf" ? 1.0 : 0.7;
       let top_p = 0.96;
@@ -1507,9 +1371,7 @@ export default async function handler(req, res) {
       let clarQ = completion?.choices?.[0]?.message?.content?.trim() || "";
       clarQ = normalizeOneParagraph(clarQ);
       clarQ = sentenceCaseAll(clarQ);
-      if (stile !== "wtf") {
-        clarQ = stripFirstPerson(clarQ, L, stile);
-      }
+      if (stile !== "wtf") clarQ = stripFirstPerson(clarQ, L, stile);
       clarQ = finalPunct(clarQ);
 
       return res.status(200).json({
@@ -1523,7 +1385,6 @@ export default async function handler(req, res) {
     }
 
     /* ====== STAGE: ANSWER ====== */
-
     const messages = buildMessages({ domanda, clarification, lang: L, periodo, stile });
 
     const completion = await client.chat.completions.create({
@@ -1539,15 +1400,11 @@ export default async function handler(req, res) {
     let answer = completion?.choices?.[0]?.message?.content?.trim() || "";
     if (!answer) throw new Error("empty_model_response");
 
-    // Rimuovi eco domanda
     answer = stripQuestionEcho(domanda, answer);
-
-    // Polish grammaticale
     answer = await polishAnswer({ text: answer, lang: L, stile });
 
-    // Limita frasi e parole, normalizza
     if (stile === "wtf") {
-      answer = tightenSentences(answer, 5); // max 5 frasi
+      answer = tightenSentences(answer, 5);
       answer = clampWords(answer, 130);
       answer = normalizeOneParagraph(answer);
     } else {
@@ -1556,41 +1413,20 @@ export default async function handler(req, res) {
       answer = normalizeOneParagraph(answer);
     }
 
-    // Safety nomi propri IT
     if (L === "it") {
       (function () {
         const d = String(domanda || "");
         const nameRx = /\b([A-ZÀ-Ý][a-zà-ÿ']{2,})\b/g;
         const inQuestion = new Set(d.match(nameRx) || []);
         answer = answer.replace(nameRx, (m) => {
-          if (
-            [
-              "Ah",
-              "Oh",
-              "Ehi",
-              "Sai",
-              "Occhio",
-              "Piano",
-              "Fermati",
-              "Aspetta",
-              "La",
-              "Le",
-              "Una",
-              "Il",
-              "Qui",
-              "Tu",
-            ].includes(m)
-          )
-            return m;
+          if (["Ah","Oh","Ehi","Sai","Occhio","Piano","Fermati","Aspetta","La","Le","Una","Il","Qui","Tu"].includes(m)) return m;
           return inQuestion.has(m) ? m : m.toLowerCase();
         });
       })();
     }
 
-    // Ripristina maiuscole frasi
     answer = sentenceCaseAll(answer);
 
-    // Filtro anti-coach + anti-italiano rotto per WTF IT
     if (stile === "wtf" && L === "it") {
       answer = answer.replace(/\bcoccol\w*/gi, "botta");
       answer = answer.replace(/\bprocrastinazion\w*/gi, "tirarla lunga");
@@ -1613,22 +1449,15 @@ export default async function handler(req, res) {
       answer = answer.replace(/\bmadò\b/gi, "");
     }
 
-    // Strip prima persona per WHAT IF
     if (stile !== "wtf") {
       answer = stripFirstPerson(answer, L, stile);
     }
 
-    // Sostituisci “cazzo” con “azzo”
     if (stile === "wtf" && L === "it") {
       answer = answer.replace(/\bcazz\w*/gi, (m) => m.replace(/cazz/gi, "azz"));
-    }
-
-    // Rimuovi qualsiasi "merd*" residuo
-    if (stile === "wtf" && L === "it") {
       answer = answer.replace(/\bmerd\w*\b/gi, "schifo");
     }
 
-    // Evita fissazione sui “lampioni”
     if (stile === "wtf" && L === "it") {
       let count = 0;
       answer = answer.replace(/\blampion[ei]\b/gi, (m) => {
@@ -1638,7 +1467,6 @@ export default async function handler(req, res) {
       answer = answer.replace(/\bspippolat\w*/gi, "rimuginata");
     }
 
-    // Se in WTF IT non c'è nessuna "bestemmia" narrata, aggiungine UNA a volte (non sempre)
     const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
     if (stile === "wtf" && L === "it" && !/bestemmi\w*/i.test(answer)) {
       const seed = hashStr(String(domanda || "") + "|" + String(answer || ""));
@@ -1649,12 +1477,10 @@ export default async function handler(req, res) {
       }
     }
 
-    // Finale “ecchecazz!!!” per WTF
     if (stile === "wtf") {
       answer = ensureWtfEcchecazzEnding(answer, L);
     }
 
-    // Finale “gancio zíngara” per WHAT IF
     if (stile === "whatif") {
       answer = ensureZingaraEnding({ text: answer, lang: L, periodo, domanda });
     }
@@ -1673,7 +1499,7 @@ export default async function handler(req, res) {
           lang: L,
           pct,
         });
-      } catch (e) {
+      } catch {
         motivation = buildWhatIfMotivation(domanda, L, pct);
       }
     }
@@ -1702,4 +1528,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-    }
+}
