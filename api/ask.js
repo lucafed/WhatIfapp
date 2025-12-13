@@ -2,7 +2,7 @@
 // - WHATIF: analisi scenari + consigli pratici, con almeno un punto NON ovvio che fa riflettere.
 // - WTF: narratore/comico da pub, volgare ma affettuoso, stile “turista del destino”.
 // - SORPRENDIMI: domande assurde “intelligenti”, varie, non ripetute.
-// - SIGNAL: frasi giornaliere (mattina/pomeriggio/sera) SENZA usare token OpenAI.
+// - SIGNAL: frasi giornaliere (mattina/sera) SENZA usare token OpenAI.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -201,16 +201,16 @@ const ZINGARA_ENDINGS = {
     future: [
       "E piano piano ti rendi conto che conta più come ti tratti ogni giorno che la singola decisione di oggi.",
       "E quasi senza accorgertene inizi a capire che la svolta vera è nel modo in cui ti prendi cura di te.",
-      "E alla fine ti accorgi che non stai salvando il mondo, ma ti stai dando un modo più gentile di viverci."
+      "E alla fine ti accorgi che non stai salvando il mondo, ma ti stai dando un modo più gentile di viverci.",
     ],
     past: [
       "E guardando quella versione di te capisci che non era la scelta perfetta, solo un modo diverso di complicarti la vita.",
       "Da fuori ti rendi conto che non hai buttato via la vita, l’hai solo portata su un binario diverso da imparare a usare.",
-      "E lì cominci a usare quel rimpianto più come un promemoria per le prossime scelte che come una condanna."
+      "E lì cominci a usare quel rimpianto più come un promemoria per le prossime scelte che come una condanna.",
     ],
   },
   en: {
-    future: ["And there you notice it’s less about miracles and more about how you show up every day."],
+    future: ["And you notice it’s less about miracles and more about how you show up every day."],
     past: ["You’d probably see it wasn’t the perfect choice, just a different one you’d have to live with."],
   },
   es: {
@@ -232,25 +232,21 @@ function ensureZingaraEnding({ text, lang, periodo, domanda }) {
   const L = normLang(lang);
   if (!s) return s;
 
-  if (L === "it") {
-    return finalPunct(s);
-  }
+  // IT: niente gancio fisso, finale naturale
+  if (L === "it") return finalPunct(s);
 
   const seed = hashStr(String(domanda || "") + "|" + s);
-  if (seed % 100 >= 70) {
-    return finalPunct(s);
-  }
+  if (seed % 100 >= 70) return finalPunct(s);
 
   const last = (s.match(/([^.!?…]+[.!?…])\s*$/) || [])[1] || s;
-  const alreadyHasHook = /(ti accorgi che|ti rendi conto che|vedi che|capisci che|you’d notice|you’d probably feel|notarás|verras|merkst du)/i.test(last);
+  const alreadyHasHook = /(ti accorgi che|ti rendi conto che|vedi che|capisci che|you’d notice|you’d probably feel|notarás|verras|merkst du)/i.test(
+    last
+  );
   if (alreadyHasHook) return finalPunct(s);
 
   const pool = ZINGARA_ENDINGS[L] || ZINGARA_ENDINGS.en;
-  const bag =
-    String(periodo).toLowerCase() === "past"
-      ? pool.past || ZINGARA_ENDINGS.en.past
-      : pool.future || ZINGARA_ENDINGS.en.future;
-  const addon = pickDet(bag, seed);
+  const bag = String(periodo).toLowerCase() === "past" ? pool.past : pool.future;
+  const addon = pickDet(bag || [], seed);
   if (!addon) return finalPunct(s);
 
   s = s.replace(/[.!?…]+$/, "");
@@ -334,7 +330,7 @@ function scientificReportDemenziale(domanda, lang = "it") {
   const n = 30 + (seed % 70);
 
   if ((lang || "it").startsWith("en")) {
-    return `Rapporto scientific-ish: ${u} (n=${n}) ha scoperto che una “${e}” migliora la chiarezza decisionale (${m}). Revisionato da ${j}, più o meno.`;
+    return `Scientific-ish report: ${u} (n=${n}) found that one “${e}” boosts decision clarity (${m}). Reviewed by ${j}, sort of.`;
   }
   return `Rapporto scientifico (più o meno): ${u} (n=${n}) rileva che una “${e}” migliora la chiarezza decisionale (${m}). Revisione a cura di ${j}, forse.`;
 }
@@ -378,7 +374,7 @@ MODALITÀ SORPRENDIMI (DOMANDA ASSURDA “INTELLIGENTE”):
 - Fai ESATTAMENTE UNA domanda di chiarimento in ${LANG_LABEL}.
 - La domanda deve essere assurda ma non gratuita: scena strana, oggetti che reagiscono, però legata alla scelta vera.
 - Puoi usare UNA micro-scenetta (frigorifero che ti giudica, tazzina che vibra, sedia che ti guarda storto, barista che alza il sopracciglio).
-- Ogni volta inventi una scena nuova: NON riutilizzare sempre le stesse metafore o oggetti, e gli oggetti devono avere senso nella scena (niente citofoni nel deserto, niente ascensori in spiaggia).
+- Ogni volta inventi una scena nuova: NON riutilizzare sempre le stesse metafore o oggetti, e gli oggetti devono avere senso nella scena.
 - Niente morale, niente consigli: solo una domanda.
 - Una sola frase, massimo 22 parole, niente emoji, niente elenco.
 - NON chiudere con “ecchecazz!!!”.`;
@@ -389,6 +385,7 @@ MODALITÀ PASSATO:
         }
       }
     } else {
+      // WHAT IF – Sorprendimi
       if (L === "en") {
         sys = `You are “WHAT IF”: a very clear, grounded advisor.
 You care about real-life constraints and practical advice, not poetry.
@@ -450,7 +447,7 @@ PAST MODE:
         sys = `Sei “WHAT THE F”: narratore comico da pub nello stesso tono degli esempi (Motociclista, Luisa, Turista del destino).
 Parli come se fossi al bancone: prendi in giro, esageri le immagini, fai ridere ma dici la verità.
 Puoi usare parolacce leggere da bar (culo, chiappe, incasinato, figuraccia, ecc.), MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
-Puoi citare la parola “bestemmia” in modo narrato (“ti parte una bestemmia cosmica”), ma senza riferimenti religiosi.
+Puoi citare la parola “bestemmia” in modo narrato, ma senza riferimenti religiosi.
 
 COMPITO:
 - Fai ESATTAMENTE UNA domanda di chiarimento in ITALIANO.
@@ -464,6 +461,7 @@ MODALITÀ PASSATO:
         }
       }
     } else {
+      // WHAT IF normale
       if (L === "en") {
         sys = `You are “WHAT IF”: a very clear, grounded advisor.
 You care about real-life constraints and want to give useful, practical advice, not poetry.
@@ -510,7 +508,7 @@ MODALITÀ PASSATO:
       : L === "es"
       ? `Pregunta "¿y si...?" del usuario:\n"${domanda}"\nHaz UNA sola pregunta de aclaración en ESPAÑOL, con el estilo indicado arriba.`
       : L === "fr"
-      ? `Question "et si..." de l’utilisateur :\n"${domanda}"\nPose UNE seule question de clarification en FRANÇAIS, selon les règles de stile ci-dessus.`
+      ? `Question "et si..." de l’utilisateur :\n"${domanda}"\nPose UNE seule question de clarification en FRANÇAIS, selon les règles de style ci-dessus.`
       : `„Was wäre, wenn…“-Frage des Nutzers:\n"${domanda}"\nStelle EINE Rückfrage auf DEUTSCH im oben beschriebenen Stil.`;
 
   return [
@@ -531,63 +529,59 @@ TONO:
 - Seconda persona: “ti scappa”, “ti ritrovi”, “ti parte”, “resti lì come un cretino simpatico”.
 - Puoi usare parolacce leggere da bar (culo, chiappe, incasinato, figuraccia, casino, ecc.), MAI parole d’odio, MAI insulti a gruppi o identità, MAI usare la parola “merda”.
 - Di solito inserisci UNA sola “bestemmia” narrata, creativa e tra virgolette (“bestemmia di ritorno”, “bestemmia mal calibrata”, ecc.) e falla uscire con formule vive tipo “ti parte una…”, “ti scappa una…”, “ti esce una…”, variandole ogni volta.
-- Oggetti e ambiente reagiscono (divano, barista, finestra, trolley, lampada, piccione, tazzina, porta, sedia, specchio, ascensore, bicchiere…), massimo 3–5 elementi, e CAMBIALI spesso: non usare sempre gli stessi, e devono avere senso nella scena (niente oggetti a caso fuori contesto).
-- Il cuore comico sono i tuoi pro e contro: devono sembrare scemi, da bar, ma con un fondo di verità (es. pro = ti senti di nuovo vivo, contro = ti incasini con la logistica come sempre).
-- Nessun motivazionalese zuccheroso, niente frasi tipo "la vita ti chiama", niente teoria astratta (“vivere vuol dire…”).
+- Oggetti e ambiente reagiscono (divano, barista, finestra, trolley, lampada, piccione, tazzina, porta, sedia, specchio, ascensore, bicchiere…), massimo 3–5 elementi, e CAMBIALI spesso.
+- Il cuore comico sono i tuoi pro e contro: devono sembrare scemi, da bar, ma con un fondo di verità.
+- Nessun motivazionalese zuccheroso, niente teoria astratta (“vivere vuol dire…”).
 
 COMPITO (FUTURO):
 - Devi mostrare DUE film:
-  • film A: cosa succede se lo fai DAVVERO (torni, cambi, ti butti);
+  • film A: cosa succede se lo fai DAVVERO;
   • film B: cosa succede se resti fermo e continui a tirarla lunga.
-- Nei film il “pro” e il “contro” sono dentro la scena, NON come elenco: sensazioni, figuracce, piccoli sollievi.
+- Nei film il “pro” e il “contro” sono dentro la scena, NON come elenco.
 - La voce è convinta di quello che dice: parla come uno che ti conosce da anni e sa già dove ti incarti.
 
 FORMATO:
 - 3–5 frasi, un solo paragrafo, circa 90–130 parole.
-- Italiano da bar ma corretto, niente elenchi, niente emoji.
-- L’ULTIMA frase chiude con una mini-morale sporca ma concreta e termina con “ecchecazz!!!” (tutto attaccato, tre punti esclamativi).`;
+- Niente elenchi, niente emoji.
+- L’ULTIMA frase termina con “ecchecazz!!!”.`;
 
 const WTF_RULE_IT_PAST = `Sei “WHAT THE F” in modalità FLASHBACK, stessa voce da comico da pub, ma applicata alla vita alternativa in cui avevi fatto l’altra scelta.
 
 TONO:
 - Racconti quella stagione come una serie che è già andata in onda: mezzo epica, mezzo disastro, molto umana.
 - Seconda persona: “ti saresti ritrovato”, “ti sarebbero esplose in faccia”, “avresti passato le sere…”.
-- Puoi usare parolacce leggere da bar (culo, chiappe, incasinato, figuraccia, casino, ecc.), MAI parole d’odio, MAI insulti a gruppi o identità, MAI usare la parola “merda”.
-- Di solito inserisci UNA “bestemmia” solo narrata, con aggettivi strani (“bestemmia nostalgica”, “bestemmia di bilancio”, ecc.) e falla uscire con formule tipo “ti sarebbe partita una…”, “ti sarebbe scappata una…”, “ti sarebbe uscita una…”, sempre diverse ma comprensibili.
-- Oggetti e ambiente commentano: divano, pc, bicchiere, barista, finestra, porta, tazzina, sedie, corridoio, tapparelle, tv che borbotta, giubbotto buttato sulla sedia.
+- Puoi usare parolacce leggere da bar, MAI parole d’odio, MAI insulti a gruppi o identità, MAI usare la parola “merda”.
+- Di solito inserisci UNA “bestemmia” solo narrata, con aggettivi strani e formule tipo “ti sarebbe partita…”.
 
 COMPITO (PASSATO):
-- Descrivi come sarebbe andata se quella scelta l’avessi fatta: quali pro scemi ma veri avresti avuto, quali contro altrettanto scemi ma pesanti (routine, chiappe incollate, drammi da salotto).
-- Porta la scena fino a oggi: guardi quella vita alternativa da fuori e capisci qualcosa, ma in modo cazzaro, non romantico.
-- Niente finali edificanti: la consapevolezza arriva ridendo delle tue stesse manie.
+- Descrivi come sarebbe andata se quella scelta l’avessi fatta.
+- Porta la scena fino a oggi: capisci qualcosa ma in modo cazzaro, non romantico.
 
 FORMATO:
 - 3–5 frasi, un solo paragrafo, circa 90–130 parole.
-- Nessun elenco, nessuna emoji.
-- L’ULTIMA frase chiude con una riga secca legata a un gesto/oggetto e finisce con “ecchecazz!!!”.`;
+- Niente elenchi, niente emoji.
+- L’ULTIMA frase finisce con “ecchecazz!!!”.`;
 
-const WTF_RULE_EN_FUT = `You are “WHAT THE F”: a rough, foul-mouthed but very cultured and pissed-off narrator.
+const WTF_RULE_EN_FUT = `You are “WHAT THE F”: a rough, foul-mouthed but very cultured narrator.
 You roast every decision with love and swear words, but never attack identities or groups.
 
 TASK (FUTURE):
-- Show what happens if they actually do this and what happens if they keep delaying.
-- Turn the scene into a mini-episode, not a novel.
+- Show what happens if they do it and what happens if they keep delaying.
 - Last sentence: blunt, foul-mouthed line about what makes sense today.
 
 FORMAT:
 - 3–5 sentences, one paragraph, max ~120 words.
 - No echo of the question, no emojis.`;
 
-const WTF_RULE_EN_PAST = `You are “WHAT THE F” in FLASHBACK MODE:
-you’re recapping the lost season of their life where they made the other choice.
+const WTF_RULE_EN_PAST = `You are “WHAT THE F” in FLASHBACK MODE.
 
 TASK (PAST):
 - Describe what WOULD have happened if they’d gone that way.
-- End with a blunt, foul-mouthed line about what makes sense today.
+- End blunt.
 
 FORMAT:
 - 3–5 sentences, one paragraph, max ~120 words.
-- No echo of the question, no emojis.`;
+- No echo, no emojis.`;
 
 /* ========= MESSAGGI RISPOSTA ========= */
 function buildMessages({ domanda, clarification, lang, periodo, stile }) {
@@ -608,29 +602,24 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
       : `REGOLE GENERALI WTF:
 - Un solo paragrafo, niente elenchi, niente emoji.
 - NON ripetere la domanda.
-- Seconda persona protagonista (“ti scappa”, “ti parte”, “ti ritrovi…”).
-- Puoi usare parolacce leggere da bar (culo, chiappe, incasinato, figuraccia, casino, ecc.), ma MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
-- La parola “bestemmia” va usata solo in modo narrato con aggettivi creativi, come negli esempi, facendo uscire la scena con formule vive tipo “ti parte una…”, “ti scappa una…”, sempre diverse.
-- Evita parole zuccherose (“abbraccio dell’universo”, “gocce di libertà”, “anima che si apre”, ecc.).
-- Evita termini teorici come “procrastinazione”, “mindset”, “accettazione radicale”.
-- Non usare “rimando” come sostantivo.
-- Non racchiudere l’intero testo tra virgolette: usa le virgolette solo su bestemmie narrate o frasi riportate.
-- Non inventare parole senza senso: se usi espressioni strane devono essere comprensibili dal contesto.`
+- Seconda persona protagonista.
+- Parolacce leggere ok, MAI bestemmie reali, MAI insulti a categorie o identità, MAI usare la parola “merda”.
+- “Bestemmia” solo narrata e creativa, come negli esempi.
+- Evita motivazionalese e teoria astratta.`
     : L === "en"
     ? `RULES WHAT IF:
 - Single paragraph, no bullets, no emojis.
 - Do NOT restate the question.
-- SECOND PERSON (“you / your”) for the user.
-- Avoid first person (“I, me, we, us”).
-- Include at least ONE non-obvious insight: a hidden trade-off, a blind spot, or a consequence they’re likely underestimating.
-- Grammar clean, few repetitions, short sentences (~20 words max).`
+- SECOND PERSON.
+- Avoid first person.
+- Include at least ONE non-obvious insight.
+- Clean grammar, few repetitions.`
     : `REGOLE WHAT IF:
 - Un solo paragrafo, niente elenchi, niente emoji.
 - NON ripetere la domanda.
-- Usa la seconda persona (tu / ti / te / tuo).
-- Evita la prima persona narrativa (“io, noi, mi”).
-- Inserisci almeno un elemento che faccia dire all’utente “cavolo, non ci avevo pensato”: un costo nascosto, un limite di energia, un impatto su identità o relazioni.
-- Frasi brevi (~20 parole), grammatica pulita, poche ripetizioni.`;
+- Usa la seconda persona.
+- Evita la prima persona narrativa.
+- Inserisci almeno un punto non ovvio (costo nascosto / impatto identità-relazioni / vincolo energia).`;
 
   const msgs = [{ role: "system", content: baseRules }];
 
@@ -652,7 +641,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
         role: "system",
         content: `PAROLE CHIAVE DALLA SCENA UTENTE: ${kw.join(
           ", "
-        )}. Usa 1–2 di questi elementi per immagini e metafore, nello stile degli esempi (Motociclista, Luisa, Turista del destino). Evita di fissarti sempre sugli stessi oggetti, varia spesso le cose che reagiscono nella scena (tazzina, porta, tapparelle, corridoio, bicchiere, divano, finestra, sedia, zaino, ecc.) e scegli oggetti che abbiano senso nella situazione descritta.`,
+        )}. Usa 1–2 elementi per immagini/metafore; varia spesso gli oggetti che reagiscono nella scena.`,
       });
     }
   } else {
@@ -685,7 +674,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
       msgs.push({
         role: "system",
         content:
-          "La risposta extra dell’utente è contesto importante: usala per orientare l’analisi, senza citarla o riassumerla in modo diretto.",
+          "La risposta extra dell’utente è contesto importante: usala per orientare l’analisi, senza citarla o riassumerla direttamente.",
       });
     }
   }
@@ -693,93 +682,42 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
   const ask = (function () {
     if (L === "en") {
       if (isWtf) {
-        if (hasClar) {
-          return `Original question (do not repeat it): "${domanda}". Extra detail: "${c}". Write ONE absurd, brutally honest answer in ENGLISH as “WHAT THE F”. Single paragraph, 3–5 sentences, loud, sarcastic, messy but secretly wise. Show what happens if they do it and if they keep dodging it, then close with a crooked but clear piece of advice.`;
-        }
-        return `Question (do not repeat it): "${domanda}". Write ONE answer in ENGLISH as “WHAT THE F”. Single paragraph, 3–5 sentences, extremely ironic and over-the-top, but still answering what happens with this choice and what you’d recommend.`;
+        return hasClar
+          ? `Original question (do not repeat it): "${domanda}". Extra detail: "${c}". Write ONE answer in ENGLISH as “WHAT THE F”.`
+          : `Question (do not repeat it): "${domanda}". Write ONE answer in ENGLISH as “WHAT THE F”.`;
       }
-      if (hasClar) {
-        if (isPast) {
-          return `Original question about the PAST (do not repeat it): "${domanda}". Extra detail: "${c}". Write ONE COUNTERFACTUAL answer in ENGLISH as “WHAT IF”: describe the alternate timeline, then extract what matters now and give practical advice, including at least one angle they probably haven’t considered.`;
-        }
-        return `Original question (do not repeat it): "${domanda}". Extra detail: "${c}". Write ONE answer in ENGLISH as “WHAT IF”: first analyse different scenarios, then clearly suggest what makes more sense and how to act, and add at least one non-obvious insight that makes the user think “oh, right, I hadn’t seen that”.`;
-      }
-      if (isPast) {
-        return `Question about the PAST (do not repeat it): "${domanda}". Write ONE COUNTERFACTUAL answer in ENGLISH, including at least one hidden trade-off or consequence the user is likely overlooking.`;
-      }
-      return `Question (do not repeat it): "${domanda}". Write ONE answer in ENGLISH as “WHAT IF”: analyse different scenarios and then give clear, practical advice, adding at least one surprising but realistic angle the user might have missed.`;
+      return hasClar
+        ? `Original question (do not repeat it): "${domanda}". Extra detail: "${c}". Write ONE answer in ENGLISH as “WHAT IF”, practical and non-obvious.`
+        : `Question (do not repeat it): "${domanda}". Write ONE answer in ENGLISH as “WHAT IF”, practical and non-obvious.`;
     }
 
     if (L === "it") {
       if (isWtf) {
-        if (hasClar) {
-          return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}".
-Genera UNA risposta in ITALIANO come voce “WHAT THE F”, nello stesso stile degli esempi (Motociclista, Luisa, Turista del destino):
-- monologo unico, 3–5 frasi, circa 90–130 parole;
-- apertura che ti prende per il culo;
-- mostra DUE film: se fai davvero questa scelta e se resti fermo a tirarla lunga;
-- i pro e i contro devono essere dentro le scene, scemi e demenziali ma con un fondo di verità (routine, chiappe, ansia, piccole libertà);
-- usa 2–4 oggetti che reagiscono (bicchiere, divano, finestra, trolley, barista, piccione, porta, tazzina, tapparelle…), cambiandoli spesso e facendoli sembrare credibili nella scena;
-- inserisci di solito UNA sola “bestemmia” narrata, creativa e tra virgolette, che esce con formule tipo “ti parte una…”, “ti scappa una…”, “ti esce una…”, sempre diverse e senza riferimenti religiosi;
-- niente motivazionalese, niente “vivere vuol dire…”, niente poesia romantica;
-- finale cazzaro ma centrato, che chiude con “ecchecazz!!!”.
-Paragrafo unico, niente emoji.`;
-        }
-        return `Domanda (non ripeterla): "${domanda}".
-Genera UNA risposta in ITALIANO come voce “WHAT THE F”, identica come respiro agli esempi (Motociclista, Luisa, Turista del destino):
-- monologo unico, 3–5 frasi, circa 90–130 parole;
-- apertura da presa in giro;
-- fai vedere cosa succede se lo fai davvero e cosa succede se resti a tirarla lunga (pro e contro dentro le scenette, stupidi ma veri);
-- pochi oggetti ma molto vivi che reagiscono (lampada, bicchiere, barista, divano, finestra, porta, sedia, specchio, tazzina…), e non sempre gli stessi: scegli cose che abbiano senso nel contesto della domanda;
-- inserisci di solito UNA sola “bestemmia” narrata, mai reale, che esce con formule tipo “ti parte una…”, “ti scappa una…”, sempre diversa e senza religione;
-- linguaggio da bar, anche volgare ma non gratuito, niente teoria astratta;
-- l’ULTIMA frase chiude la scena con un colpo secco e finisce con “ecchecazz!!!”.
-Paragrafo unico, niente emoji.`;
+        return hasClar
+          ? `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta in ITALIANO come “WHAT THE F”.`
+          : `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO come “WHAT THE F”.`;
       }
-
-      if (hasClar) {
-        if (isPast) {
-          return `Domanda sul PASSATO (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF”: racconta come sarebbe andata davvero in quella vita alternativa, porta almeno un dettaglio non ovvio (un compromesso, una rinuncia o un vantaggio strano da immaginare) e poi spiega cosa impari e come ti conviene muoverti ORA, in modo pratico e gentile. Paragrafo unico, 3–6 frasi, tono empatico e concreto.`;
-        }
-        return `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta in ITALIANO come “WHAT IF”:
-- apri con una frase naturale che aggancia come ti sta dicendo la cosa adesso;
-- poi analizzi pochi scenari concreti (se lo fai, se non lo fai, se lo fai in modo diverso);
-- tieni conto del motivo esplicito della domanda (salute, lavoro, città, relazione, soldi…) senza inventare drammi laterali;
-- dai uno sguardo sia ai pro (sollievo, spazio mentale, opportunità) che ai contro reali (impegno, energia, conseguenze pratiche), con tono ottimista ma onesto;
-- inserisci almeno un punto non ovvio che faccia davvero ragionare;
-- chiudi con uno spunto o un consiglio pratico fuso nell’ultima frase, senza frasi staccate tipo “e lì capisci che…”.
-Paragrafo unico, 3–6 frasi, tono caldo ma lucido.`;
-      }
-      if (isPast) {
-        return `Domanda sul PASSATO (non ripeterla): "${domanda}". Genera UNA risposta CONTROFATTUALE in ITALIANO come “WHAT IF”: descrivi come sarebbe andata quella scelta (pro e contro reali), porta almeno un dettaglio inaspettato e chiudi collegando la lezione al presente in modo concreto e gentile, dentro l’ultima frase. Paragrafo unico, 3–6 frasi.`;
-      }
-      return `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO come “WHAT IF”:
-- apri con una frase naturale che sembra un’osservazione su come sei messo adesso;
-- descrivi cosa succede se fai davvero questa scelta e cosa succede se resti fermo;
-- resta aderente al tema (salute, lavoro, soldi, relazione, città…) senza inventare problemi che l’utente non ha nominato;
-- evidenzia pro e contro reali, con tono ottimista ma non ingenuo;
-- inserisci almeno un’osservazione non banale che faccia cambiare prospettiva;
-- chiudi con uno spunto pratico o di consapevolezza integrato nel discorso, non come slogan.
-Paragrafo unico, 3–6 frasi.`;
+      return hasClar
+        ? `Domanda originale (non ripeterla): "${domanda}". Dettaglio aggiuntivo (quarta pagina): "${c}". Genera UNA risposta in ITALIANO come “WHAT IF”.`
+        : `Domanda (non ripeterla): "${domanda}". Genera UNA risposta in ITALIANO come “WHAT IF”.`;
     }
 
     if (L === "es") {
       return hasClar
-        ? `Pregunta original (no la repitas): "${domanda}". Detalle adicional del usuario: "${c}". Escribe UNA respuesta en ESPAÑOL, clara y concreta, en un solo párrafo, incluyendo al menos un ángulo no obvio que haga pensar al usuario.`
-        : `Pregunta (no la repitas): "${domanda}". Escribe UNA respuesta en ESPAÑOL, en un solo párrafo, con al menos una observación inesperada pero realista.`;
+        ? `Pregunta original (no la repitas): "${domanda}". Detalle: "${c}". Escribe UNA respuesta en ESPAÑOL, concreta, con un ángulo no obvio.`
+        : `Pregunta (no la repitas): "${domanda}". Escribe UNA respuesta en ESPAÑOL, con un ángulo no obvio.`;
     }
     if (L === "fr") {
       return hasClar
-        ? `Question originale (ne la répète pas) : « ${domanda} ». Détail supplémentaire : « ${c} ». Donne UNE réponse en FRANÇAIS, claire et concrète, en un seul paragraphe, avec au moins un point de vue auquel l’utilisateur ne pense pas spontanément.`
-        : `Question (ne la répète pas) : « ${domanda} ». Donne UNE réponse en FRANÇAIS, en un seul paragraphe, avec au moins un angle surprenant mais crédible.`;
+        ? `Question originale (ne la répète pas) : « ${domanda} ». Détail : « ${c} ». Donne UNE réponse en FRANÇAIS, concrète, avec un angle non évident.`
+        : `Question (ne la répète pas) : « ${domanda} ». Donne UNE réponse en FRANÇAIS, avec un angle non évident.`;
     }
     return hasClar
-      ? `Ursprüngliche Frage (nicht wiederholen): „${domanda}“. Zusatzdetail: „${c}“. Gib EINE klare, konkrete Antwort auf DEUTSCH, ein einziger Absatz, mit mindestens einem unerwarteten, aber realistischen Blickwinkel.`
-      : `Frage (nicht wiederholen): „${domanda}“. Gib EINE Antwort auf DEUTSCH, ein einziger Absatz, mit mindestens einer nicht offensichtlichen, aber plausiblen Beobachtung.`;
+      ? `Ursprüngliche Frage (nicht wiederholen): „${domanda}“. Zusatz: „${c}“. Gib EINE Antwort auf DEUTSCH, konkret, mit einem nicht offensichtlichen Punkt.`
+      : `Frage (nicht wiederholen): „${domanda}“. Gib EINE Antwort auf DEUTSCH, konkret, mit einem nicht offensichtlichen Punkt.`;
   })();
 
   msgs.push({ role: "user", content: ask });
-
   return msgs;
 }
 
@@ -787,146 +725,246 @@ Paragrafo unico, 3–6 frasi.`;
 /**
  * REGOLE FINALI:
  * - WHAT IF: SOLO MATTINA (contesto + domanda reale "Ti sei mai chiesto se...")
- * - WHAT THE F: SOLO SERA (le 10 frasi APPROVATE, fisse)
+ * - WHAT THE F: SOLO SERA (le 10 frasi APPROVATE)
  * - Rotazione diversa per utente: micro.userKey (fallback ip)
  * - Deterministico: stesso utente stessa frase per giorno+slot, cambia giorno => cambia frase.
  */
 
 function normSignalSlot(raw = "") {
   const s = String(raw || "").toLowerCase();
-  if (/pom|after/.test(s)) return "afternoon";
   if (/sera|even|night/.test(s)) return "evening";
   return "morning";
 }
 
 /* --- WHAT IF (domande reali approvate) --- */
-const WHATIF_Q_IT = [
-  // Vita / scelte
-  "Ti sei mai chiesto se cambiassi lavoro?",
-  "Ti sei mai chiesto se mollassi tutto per un periodo?",
-  "Ti sei mai chiesto se provassi a vivere da un’altra parte?",
-  "Ti sei mai chiesto se restassi dove sei ancora per anni?",
-  "Ti sei mai chiesto se stessi sprecando tempo?",
-  "Ti sei mai chiesto se stessi davvero facendo quello che vuoi?",
-  "Ti sei mai chiesto se fosse il momento di cambiare aria?",
-  "Ti sei mai chiesto se smettessi di rimandare?",
-  "Ti sei mai chiesto se scegliessi diversamente da come si aspettano gli altri?",
-  // Relazioni
-  "Ti sei mai chiesto se dicessi quello che pensi davvero?",
-  "Ti sei mai chiesto se restassi solo?",
-  "Ti sei mai chiesto se chiudessi una relazione?",
-  "Ti sei mai chiesto se scrivessi a quella persona?",
-  "Ti sei mai chiesto se non rispondessi più?",
-  "Ti sei mai chiesto se stessi con qualcuno solo per abitudine?",
-  "Ti sei mai chiesto se meritassi di più?",
-  "Ti sei mai chiesto se smettessi di giustificare gli altri?",
-  // Soldi / lavoro
-  "Ti sei mai chiesto se guadagnassi in un altro modo?",
-  "Ti sei mai chiesto se cambiassi settore?",
-  "Ti sei mai chiesto se chiedessi più soldi?",
-  "Ti sei mai chiesto se lavorassi meno?",
-  "Ti sei mai chiesto se investissi su di te?",
-  "Ti sei mai chiesto se smettessi di fare un lavoro che non ti piace?",
-  "Ti sei mai chiesto se rischiassi di più?",
-  "Ti sei mai chiesto se stessi puntando troppo basso?",
-  // Libertà / desideri
-  "Ti sei mai chiesto se comprassi una moto?",
-  "Ti sei mai chiesto se facessi un viaggio da solo?",
-  "Ti sei mai chiesto se cambiassi completamente routine?",
-  "Ti sei mai chiesto se provassi qualcosa di nuovo?",
-  "Ti sei mai chiesto se dicessi sì invece di no?",
-  "Ti sei mai chiesto se dicessi no invece di sì?",
-  "Ti sei mai chiesto se seguissi un’idea folle?",
-  "Ti sei mai chiesto se smettessi di avere paura?",
-  // Identità / vita vera
-  "Ti sei mai chiesto se fossi diventato un’altra persona?",
-  "Ti sei mai chiesto se stessi vivendo come vuoi tu?",
-  "Ti sei mai chiesto se stessi solo resistendo?",
-  "Ti sei mai chiesto se fossi più coraggioso di quanto pensi?",
-  "Ti sei mai chiesto se ti stessi accontentando?",
-  "Ti sei mai chiesto se stessi aspettando il momento giusto?",
-  "Ti sei mai chiesto se il momento giusto fosse adesso?",
-];
-
-const WHATIF_CTX_IT = [
-  "Oggi probabilmente ti aspettano lavoro, messaggi, persone che vogliono qualcosa da te e un pensiero che torna sempre.",
-  "Stamattina il mondo riparte prima di te: notifiche, cose da fare, facce da gestire… e tu che cerchi un filo.",
-  "C’è una parte di te che fa tutto ‘giusto’, e un’altra che non si sente mai davvero a casa in questa routine.",
-  "Tra una cosa da sistemare e una da fingere, oggi rischi di andare avanti per inerzia senza accorgertene.",
-  "Sembra una mattina normale, ma sotto c’è quella voglia sottile di cambiare qualcosa, anche solo di un grado.",
-  "Hai presente quando fai mille cose eppure ti rimane addosso una sensazione non detta? Ecco, oggi può essere così.",
-  "Oggi la testa corre più veloce del corpo: non è stanchezza, è rumore che chiede spazio.",
-  "Ci sono giorni in cui ti svegli già ‘in dovere’: e invece basterebbe una domanda giusta per spostare il peso.",
-  "Stamattina potresti sentirti in mezzo: tra ciò che mostri e ciò che vorresti davvero vivere.",
-  "Oggi ti muovi come sempre… ma c’è un punto in cui non stai scegliendo, stai solo continuando.",
-  "Prima che la giornata ti prenda in ostaggio, fermati un secondo: non per decidere tutto, solo per vedere chi sei.",
-  "Non serve una svolta teatrale: a volte basta una domanda semplice che ti mette davanti allo specchio, piano.",
-];
-
-/* Traduzioni “stesse frasi” (fedeli) */
 const WHATIF_Q = {
-  it: WHATIF_Q_IT,
-  en: WHATIF_Q_IT.map((q) =>
-    q
-      .replace(/^Ti sei mai chiesto se /, "Have you ever wondered if you ")
-      .replace(/\?$/, "?")
-      .replace("cambiassi lavoro", "changed jobs")
-      .replace("mollassi tutto per un periodo", "dropped everything for a while")
-      .replace("provassi a vivere da un’altra parte", "tried living somewhere else")
-      .replace("restassi dove sei ancora per anni", "stayed where you are for years")
-      .replace("stessi sprecando tempo", "were wasting time")
-      .replace("stessi davvero facendo quello che vuoi", "were truly doing what you want")
-      .replace("fosse il momento di cambiare aria", "it was time to change air")
-      .replace("smettessi di rimandare", "stopped postponing")
-      .replace("scegliessi diversamente da come si aspettano gli altri", "chose differently than others expect")
-      .replace("dicessi quello che pensi davvero", "said what you truly think")
-      .replace("restassi solo", "stayed alone")
-      .replace("chiudessi una relazione", "ended a relationship")
-      .replace("scrivessi a quella persona", "texted that person")
-      .replace("non rispondessi più", "stopped replying")
-      .replace("stessi con qualcuno solo per abitudine", "were with someone just out of habit")
-      .replace("meritassi di più", "deserved more")
-      .replace("smettessi di giustificare gli altri", "stopped excusing others")
-      .replace("guadagnassi in un altro modo", "earned money in a different way")
-      .replace("cambiassi settore", "changed industry")
-      .replace("chiedessi più soldi", "asked for more money")
-      .replace("lavorassi meno", "worked less")
-      .replace("investissi su di te", "invested in yourself")
-      .replace("smettessi di fare un lavoro che non ti piace", "stopped doing a job you don’t like")
-      .replace("rischiassi di più", "took more risks")
-      .replace("stessi puntando troppo basso", "were aiming too low")
-      .replace("comprassi una moto", "bought a motorcycle")
-      .replace("facessi un viaggio da solo", "took a trip alone")
-      .replace("cambiassi completamente routine", "changed your routine completely")
-      .replace("provassi qualcosa di nuovo", "tried something new")
-      .replace("dicessi sì invece di no", "said yes instead of no")
-      .replace("dicessi no invece di sì", "said no instead of yes")
-      .replace("seguissi un’idea folle", "followed a crazy idea")
-      .replace("smettessi di avere paura", "stopped being afraid")
-      .replace("fossi diventato un’altra persona", "had become a different person")
-      .replace("stessi vivendo come vuoi tu", "were living the way you want")
-      .replace("stessi solo resistendo", "were just enduring")
-      .replace("fossi più coraggioso di quanto pensi", "were braver than you think")
-      .replace("ti stessi accontentando", "were settling")
-      .replace("stessi aspettando il momento giusto", "were waiting for the right moment")
-      .replace("il momento giusto fosse adesso", "the right moment was now")
-  ),
-  es: WHATIF_Q_IT.map((q) =>
-    q.replace(/^Ti sei mai chiesto se /, "¿Alguna vez te has preguntado si ")
-     .replace(/\?$/, "?")
-  ),
-  fr: WHATIF_Q_IT.map((q) =>
-    q.replace(/^Ti sei mai chiesto se /, "T’es-tu déjà demandé si ")
-     .replace(/\?$/, " ?")
-  ),
-  de: WHATIF_Q_IT.map((q) =>
-    q.replace(/^Ti sei mai chiesto se /, "Hast du dich jemals gefragt, ob du ")
-     .replace(/\?$/, "?")
-  ),
+  it: [
+    "Ti sei mai chiesto se cambiassi lavoro?",
+    "Ti sei mai chiesto se mollassi tutto per un periodo?",
+    "Ti sei mai chiesto se provassi a vivere da un’altra parte?",
+    "Ti sei mai chiesto se restassi dove sei ancora per anni?",
+    "Ti sei mai chiesto se stessi sprecando tempo?",
+    "Ti sei mai chiesto se stessi davvero facendo quello che vuoi?",
+    "Ti sei mai chiesto se fosse il momento di cambiare aria?",
+    "Ti sei mai chiesto se smettessi di rimandare?",
+    "Ti sei mai chiesto se scegliessi diversamente da come si aspettano gli altri?",
+    "Ti sei mai chiesto se dicessi quello che pensi davvero?",
+    "Ti sei mai chiesto se restassi solo?",
+    "Ti sei mai chiesto se chiudessi una relazione?",
+    "Ti sei mai chiesto se scrivessi a quella persona?",
+    "Ti sei mai chiesto se non rispondessi più?",
+    "Ti sei mai chiesto se stessi con qualcuno solo per abitudine?",
+    "Ti sei mai chiesto se meritassi di più?",
+    "Ti sei mai chiesto se smettessi di giustificare gli altri?",
+    "Ti sei mai chiesto se guadagnassi in un altro modo?",
+    "Ti sei mai chiesto se cambiassi settore?",
+    "Ti sei mai chiesto se chiedessi più soldi?",
+    "Ti sei mai chiesto se lavorassi meno?",
+    "Ti sei mai chiesto se investissi su di te?",
+    "Ti sei mai chiesto se smettessi di fare un lavoro che non ti piace?",
+    "Ti sei mai chiesto se rischiassi di più?",
+    "Ti sei mai chiesto se stessi puntando troppo basso?",
+    "Ti sei mai chiesto se comprassi una moto?",
+    "Ti sei mai chiesto se facessi un viaggio da solo?",
+    "Ti sei mai chiesto se cambiassi completamente routine?",
+    "Ti sei mai chiesto se provassi qualcosa di nuovo?",
+    "Ti sei mai chiesto se dicessi sì invece di no?",
+    "Ti sei mai chiesto se dicessi no invece di sì?",
+    "Ti sei mai chiesto se seguissi un’idea folle?",
+    "Ti sei mai chiesto se smettessi di avere paura?",
+    "Ti sei mai chiesto se fossi diventato un’altra persona?",
+    "Ti sei mai chiesto se stessi vivendo come vuoi tu?",
+    "Ti sei mai chiesto se stessi solo resistendo?",
+    "Ti sei mai chiesto se fossi più coraggioso di quanto pensi?",
+    "Ti sei mai chiesto se ti stessi accontentando?",
+    "Ti sei mai chiesto se stessi aspettando il momento giusto?",
+    "Ti sei mai chiesto se il momento giusto fosse adesso?",
+  ],
+  en: [
+    "Have you ever wondered if you changed jobs?",
+    "Have you ever wondered if you dropped everything for a while?",
+    "Have you ever wondered if you tried living somewhere else?",
+    "Have you ever wondered if you stayed where you are for years?",
+    "Have you ever wondered if you were wasting time?",
+    "Have you ever wondered if you were truly doing what you want?",
+    "Have you ever wondered if it was time for a change of air?",
+    "Have you ever wondered if you stopped postponing?",
+    "Have you ever wondered if you chose differently than others expect?",
+    "Have you ever wondered if you said what you really think?",
+    "Have you ever wondered if you stayed alone?",
+    "Have you ever wondered if you ended a relationship?",
+    "Have you ever wondered if you texted that person?",
+    "Have you ever wondered if you stopped replying?",
+    "Have you ever wondered if you were with someone just out of habit?",
+    "Have you ever wondered if you deserved more?",
+    "Have you ever wondered if you stopped excusing others?",
+    "Have you ever wondered if you earned money in a different way?",
+    "Have you ever wondered if you changed industries?",
+    "Have you ever wondered if you asked for more money?",
+    "Have you ever wondered if you worked less?",
+    "Have you ever wondered if you invested in yourself?",
+    "Have you ever wondered if you stopped doing a job you don’t like?",
+    "Have you ever wondered if you took more risks?",
+    "Have you ever wondered if you were aiming too low?",
+    "Have you ever wondered if you bought a motorcycle?",
+    "Have you ever wondered if you took a trip alone?",
+    "Have you ever wondered if you changed your routine completely?",
+    "Have you ever wondered if you tried something new?",
+    "Have you ever wondered if you said yes instead of no?",
+    "Have you ever wondered if you said no instead of yes?",
+    "Have you ever wondered if you followed a crazy idea?",
+    "Have you ever wondered if you stopped being afraid?",
+    "Have you ever wondered if you became a different person?",
+    "Have you ever wondered if you were living the way you want?",
+    "Have you ever wondered if you were just enduring?",
+    "Have you ever wondered if you were braver than you think?",
+    "Have you ever wondered if you were settling?",
+    "Have you ever wondered if you were waiting for the right moment?",
+    "Have you ever wondered if the right moment was now?",
+  ],
+  es: [
+    "¿Alguna vez te has preguntado si cambiaras de trabajo?",
+    "¿Alguna vez te has preguntado si lo dejaras todo por un tiempo?",
+    "¿Alguna vez te has preguntado si probaras a vivir en otro lugar?",
+    "¿Alguna vez te has preguntado si te quedaras donde estás durante años?",
+    "¿Alguna vez te has preguntado si estuvieras perdiendo el tiempo?",
+    "¿Alguna vez te has preguntado si de verdad estuvieras haciendo lo que quieres?",
+    "¿Alguna vez te has preguntado si fuera el momento de cambiar de aire?",
+    "¿Alguna vez te has preguntado si dejaras de posponer?",
+    "¿Alguna vez te has preguntado si eligieras distinto de lo que esperan los demás?",
+    "¿Alguna vez te has preguntado si dijeras lo que de verdad piensas?",
+    "¿Alguna vez te has preguntado si te quedaras solo?",
+    "¿Alguna vez te has preguntado si cerraras una relación?",
+    "¿Alguna vez te has preguntado si escribieras a esa persona?",
+    "¿Alguna vez te has preguntado si dejaras de responder?",
+    "¿Alguna vez te has preguntado si estuvieras con alguien solo por costumbre?",
+    "¿Alguna vez te has preguntado si merecieras más?",
+    "¿Alguna vez te has preguntado si dejaras de justificar a los demás?",
+    "¿Alguna vez te has preguntado si ganaras dinero de otra manera?",
+    "¿Alguna vez te has preguntado si cambiaras de sector?",
+    "¿Alguna vez te has preguntado si pidieras más dinero?",
+    "¿Alguna vez te has preguntado si trabajaras menos?",
+    "¿Alguna vez te has preguntado si invirtieras en ti?",
+    "¿Alguna vez te has preguntado si dejaras un trabajo que no te gusta?",
+    "¿Alguna vez te has preguntado si arriesgaras más?",
+    "¿Alguna vez te has preguntado si apuntaras demasiado bajo?",
+    "¿Alguna vez te has preguntado si compraras una moto?",
+    "¿Alguna vez te has preguntado si hicieras un viaje solo?",
+    "¿Alguna vez te has preguntado si cambiaras por completo tu rutina?",
+    "¿Alguna vez te has preguntado si probaras algo nuevo?",
+    "¿Alguna vez te has preguntado si dijeras sí en vez de no?",
+    "¿Alguna vez te has preguntado si dijeras no en vez de sí?",
+    "¿Alguna vez te has preguntado si siguieras una idea loca?",
+    "¿Alguna vez te has preguntado si dejaras de tener miedo?",
+    "¿Alguna vez te has preguntado si te hubieras convertido en otra persona?",
+    "¿Alguna vez te has preguntado si estuvieras viviendo como tú quieres?",
+    "¿Alguna vez te has preguntado si solo estuvieras resistiendo?",
+    "¿Alguna vez te has preguntado si fueras más valiente de lo que crees?",
+    "¿Alguna vez te has preguntado si te estuvieras conformando?",
+    "¿Alguna vez te has preguntado si estuvieras esperando el momento correcto?",
+    "¿Alguna vez te has preguntado si el momento correcto fuera ahora?",
+  ],
+  fr: [
+    "T’es-tu déjà demandé si tu changeais de travail ?",
+    "T’es-tu déjà demandé si tu lâchais tout pendant un moment ?",
+    "T’es-tu déjà demandé si tu essayais de vivre ailleurs ?",
+    "T’es-tu déjà demandé si tu restais là où tu es pendant des années ?",
+    "T’es-tu déjà demandé si tu perdais du temps ?",
+    "T’es-tu déjà demandé si tu faisais vraiment ce que tu veux ?",
+    "T’es-tu déjà demandé si c’était le moment de changer d’air ?",
+    "T’es-tu déjà demandé si tu arrêtais de remettre à plus tard ?",
+    "T’es-tu déjà demandé si tu choisissais autrement que ce que les autres attendent ?",
+    "T’es-tu déjà demandé si tu disais ce que tu penses vraiment ?",
+    "T’es-tu déjà demandé si tu restais seul ?",
+    "T’es-tu déjà demandé si tu mettais fin à une relation ?",
+    "T’es-tu déjà demandé si tu écrivais à cette personne ?",
+    "T’es-tu déjà demandé si tu ne répondais plus ?",
+    "T’es-tu déjà demandé si tu étais avec quelqu’un par habitude ?",
+    "T’es-tu déjà demandé si tu méritais mieux ?",
+    "T’es-tu déjà demandé si tu arrêtais d’excuser les autres ?",
+    "T’es-tu déjà demandé si tu gagnais ta vie autrement ?",
+    "T’es-tu déjà demandé si tu changeais de secteur ?",
+    "T’es-tu déjà demandé si tu demandais plus d’argent ?",
+    "T’es-tu déjà demandé si tu travaillais moins ?",
+    "T’es-tu déjà demandé si tu investissais en toi ?",
+    "T’es-tu déjà demandé si tu arrêtais un boulot que tu n’aimes pas ?",
+    "T’es-tu déjà demandé si tu prenais plus de risques ?",
+    "T’es-tu déjà demandé si tu visais trop bas ?",
+    "T’es-tu déjà demandé si tu achetais une moto ?",
+    "T’es-tu déjà demandé si tu faisais un voyage seul ?",
+    "T’es-tu déjà demandé si tu changeais complètement de routine ?",
+    "T’es-tu déjà demandé si tu essayais quelque chose de nouveau ?",
+    "T’es-tu déjà demandé si tu disais oui au lieu de non ?",
+    "T’es-tu déjà demandé si tu disais non au lieu de oui ?",
+    "T’es-tu déjà demandé si tu suivais une idée folle ?",
+    "T’es-tu déjà demandé si tu arrêtais d’avoir peur ?",
+    "T’es-tu déjà demandé si tu étais devenu une autre personne ?",
+    "T’es-tu déjà demandé si tu vivais comme tu le veux ?",
+    "T’es-tu déjà demandé si tu ne faisais que tenir ?",
+    "T’es-tu déjà demandé si tu étais plus courageux que tu ne le crois ?",
+    "T’es-tu déjà demandé si tu te contentais de peu ?",
+    "T’es-tu déjà demandé si tu attendais le bon moment ?",
+    "T’es-tu déjà demandé si le bon moment, c’était maintenant ?",
+  ],
+  de: [
+    "Hast du dich jemals gefragt, ob du den Job wechseln würdest?",
+    "Hast du dich jemals gefragt, ob du für eine Weile alles hinschmeißen würdest?",
+    "Hast du dich jemals gefragt, ob du woanders leben würdest?",
+    "Hast du dich jemals gefragt, ob du noch jahrelang dort bleiben würdest, wo du bist?",
+    "Hast du dich jemals gefragt, ob du Zeit verschwendest?",
+    "Hast du dich jemals gefragt, ob du wirklich das tust, was du willst?",
+    "Hast du dich jemals gefragt, ob es Zeit wäre, mal frischen Wind reinzulassen?",
+    "Hast du dich jemals gefragt, ob du aufhören würdest aufzuschieben?",
+    "Hast du dich jemals gefragt, ob du anders wählen würdest als andere es erwarten?",
+    "Hast du dich jemals gefragt, ob du sagst, was du wirklich denkst?",
+    "Hast du dich jemals gefragt, ob du allein bleiben würdest?",
+    "Hast du dich jemals gefragt, ob du eine Beziehung beenden würdest?",
+    "Hast du dich jemals gefragt, ob du dieser Person schreiben würdest?",
+    "Hast du dich jemals gefragt, ob du einfach nicht mehr antworten würdest?",
+    "Hast du dich jemals gefragt, ob du nur aus Gewohnheit mit jemandem zusammen bist?",
+    "Hast du dich jemals gefragt, ob du mehr verdienst?",
+    "Hast du dich jemals gefragt, ob du aufhören würdest, andere zu entschuldigen?",
+    "Hast du dich jemals gefragt, ob du auf eine andere Weise Geld verdienen würdest?",
+    "Hast du dich jemals gefragt, ob du die Branche wechseln würdest?",
+    "Hast du dich jemals gefragt, ob du mehr Geld verlangen würdest?",
+    "Hast du dich jemals gefragt, ob du weniger arbeiten würdest?",
+    "Hast du dich jemals gefragt, ob du in dich investieren würdest?",
+    "Hast du dich jemals gefragt, ob du mit einem Job aufhören würdest, den du nicht magst?",
+    "Hast du dich jemals gefragt, ob du mehr riskieren würdest?",
+    "Hast du dich jemals gefragt, ob du zu niedrig zielst?",
+    "Hast du dich jemals gefragt, ob du dir ein Motorrad kaufen würdest?",
+    "Hast du dich jemals gefragt, ob du allein verreisen würdest?",
+    "Hast du dich jemals gefragt, ob du deine Routine komplett ändern würdest?",
+    "Hast du dich jemals gefragt, ob du etwas Neues ausprobieren würdest?",
+    "Hast du dich jemals gefragt, ob du ja statt nein sagen würdest?",
+    "Hast du dich jemals gefragt, ob du nein statt ja sagen würdest?",
+    "Hast du dich jemals gefragt, ob du einer verrückten Idee folgen würdest?",
+    "Hast du dich jemals gefragt, ob du aufhören würdest, Angst zu haben?",
+    "Hast du dich jemals gefragt, ob du zu einer anderen Person geworden wärst?",
+    "Hast du dich jemals gefragt, ob du so lebst, wie du es willst?",
+    "Hast du dich jemals gefragt, ob du nur durchhältst?",
+    "Hast du dich jemals gefragt, ob du mutiger bist, als du denkst?",
+    "Hast du dich jemals gefragt, ob du dich zufrieden gibst?",
+    "Hast du dich jemals gefragt, ob du auf den richtigen Moment wartest?",
+    "Hast du dich jemals gefragt, ob der richtige Moment jetzt wäre?",
+  ],
 };
 
 const WHATIF_CTX = {
-  it: WHATIF_CTX_IT,
+  it: [
+    "Oggi probabilmente ti aspettano lavoro, messaggi, persone che vogliono qualcosa da te e un pensiero che torna sempre.",
+    "Stamattina il mondo riparte prima di te: notifiche, cose da fare, facce da gestire… e tu che cerchi un filo.",
+    "C’è una parte di te che fa tutto ‘giusto’, e un’altra che non si sente mai davvero a casa in questa routine.",
+    "Tra una cosa da sistemare e una da fingere, oggi rischi di andare avanti per inerzia senza accorgertene.",
+    "Sembra una mattina normale, ma sotto c’è quella voglia sottile di cambiare qualcosa, anche solo di un grado.",
+    "Hai presente quando fai mille cose eppure ti rimane addosso una sensazione non detta? Ecco, oggi può essere così.",
+    "Oggi la testa corre più veloce del corpo: non è stanchezza, è rumore che chiede spazio.",
+    "Ci sono giorni in cui ti svegli già ‘in dovere’: e invece basterebbe una domanda giusta per spostare il peso.",
+    "Stamattina potresti sentirti in mezzo: tra ciò che mostri e ciò che vorresti davvero vivere.",
+    "Oggi ti muovi come sempre… ma c’è un punto in cui non stai scegliendo, stai solo continuando.",
+    "Prima che la giornata ti prenda in ostaggio, fermati un secondo: non per decidere tutto, solo per vedere chi sei.",
+    "Non serve una svolta teatrale: a volte basta una domanda semplice che ti mette davanti allo specchio, piano.",
+  ],
   en: [
     "Today you’ll probably face work, messages, people wanting something from you—and a thought that keeps coming back.",
     "This morning the world starts before you do: notifications, to-dos, faces to manage… and you looking for one thread.",
@@ -946,7 +984,7 @@ const WHATIF_CTX = {
     "Esta mañana el mundo arranca antes que tú: notificaciones, cosas por hacer, caras que gestionar… y tú buscando un hilo.",
     "Hay una parte de ti que hace todo ‘bien’, y otra que nunca se siente en casa dentro de esta rutina.",
     "Entre arreglar cosas y fingir, hoy puedes seguir por inercia sin darte cuenta.",
-    "Parece una mañana normal, pero debajo hay esa ganas finas de cambiar algo, aunque sea un grado.",
+    "Parece una mañana normal, pero debajo hay esas ganas finas de cambiar algo, aunque sea un grado.",
     "¿Conoces esa sensación de hacer mil cosas y aun así llevarte encima algo no dicho? Hoy puede ser así.",
     "La cabeza corre más rápido que el cuerpo: no es cansancio, es ruido pidiendo espacio.",
     "Hay días en los que te despiertas ya ‘en modo deber’: una pregunta buena te cambia el peso.",
@@ -985,73 +1023,71 @@ const WHATIF_CTX = {
   ],
 };
 
-/* --- WTF SERA (approvato, NON toccare) --- */
-const WTF_EVENING_IT = [
-  "Che giornata clamorosa eh. Sbatti di qua, sbatti di là, una “bestemmia di manutenzione” ogni tre ore… e ora sei qui che fissi il vuoto. Dai, racconta com’è andata che la sistemiamo insieme, ecchecazz!!!",
-  "Complimenti davvero: anche oggi il caos non si è fatto mancare niente. Ora però dimmi tutto, che due risate e una svolta gliela troviamo, ecchecazz!!!",
-  "Giornata da incorniciare… e buttare subito nel cassonetto. Prima di andare a dormire storto, raccontami che è successo, ecchecazz!!!",
-  "Tra figuracce, pensieri a caso e una “bestemmia creativa” qua e là, direi giornata completa. Dai, dimmi da dove è partita che la raddrizziamo, ecchecazz!!!",
-  "Se oggi fosse una serie, sarebbe già alla terza stagione di casino. Riassunto veloce: che è successo? Poi ci pensiamo, ecchecazz!!!",
-  "Hai superato pure oggi senza lanciare oggetti pesanti, quindi già vittoria. Ora dimmi tutto e vediamo che ci tiriamo fuori, ecchecazz!!!",
-  "Che capolavoro di giornata: stress, sbatti, e quel momento in cui ti parte una “bestemmia di sopravvivenza”. Dai, racconta tutto che la giriamo, ecchecazz!!!",
-  "Oggi sembrava andare bene… poi no. Classico. Prima di chiudere gli occhi dimmi com’è finita davvero, ecchecazz!!!",
-  "Tra cose fatte male e cose non fatte proprio, direi serata perfetta per parlarne. Sputa il rospo, ecchecazz!!!",
-  "Se anche oggi ti ha lasciato la testa in lavatrice, fermati un attimo: dimmi che è successo e ci ridiamo sopra, ecchecazz!!!",
-];
-
+/* --- WTF SERA (approvato, NON toccare per IT) --- */
 const WTF_EVENING = {
-  it: WTF_EVENING_IT,
+  it: [
+    "Che giornata clamorosa eh. Sbatti di qua, sbatti di là, una “bestemmia di manutenzione” ogni tre ore… e ora sei qui che fissi il vuoto. Dai, racconta com’è andata che la sistemiamo insieme, ecchecazz!!!",
+    "Complimenti davvero: anche oggi il caos non si è fatto mancare niente. Ora però dimmi tutto, che due risate e una svolta gliela troviamo, ecchecazz!!!",
+    "Giornata da incorniciare… e buttare subito nel cassonetto. Prima di andare a dormire storto, raccontami che è successo, ecchecazz!!!",
+    "Tra figuracce, pensieri a caso e una “bestemmia creativa” qua e là, direi giornata completa. Dai, dimmi da dove è partita che la raddrizziamo, ecchecazz!!!",
+    "Se oggi fosse una serie, sarebbe già alla terza stagione di casino. Riassunto veloce: che è successo? Poi ci pensiamo, ecchecazz!!!",
+    "Hai superato pure oggi senza lanciare oggetti pesanti, quindi già vittoria. Ora dimmi tutto e vediamo che ci tiriamo fuori, ecchecazz!!!",
+    "Che capolavoro di giornata: stress, sbatti, e quel momento in cui ti parte una “bestemmia di sopravvivenza”. Dai, racconta tutto che la giriamo, ecchecazz!!!",
+    "Oggi sembrava andare bene… poi no. Classico. Prima di chiudere gli occhi dimmi com’è finita davvero, ecchecazz!!!",
+    "Tra cose fatte male e cose non fatte proprio, direi serata perfetta per parlarne. Sputa il rospo, ecchecazz!!!",
+    "Se anche oggi ti ha lasciato la testa in lavatrice, fermati un attimo: dimmi che è successo e ci ridiamo sopra, ecchecazz!!!",
+  ],
   en: [
-    "What a legendary day, huh. Running around, getting hit by life, one “maintenance-blessing swear” every three hours… now tell me how it went, what the f.",
+    "What a legendary day, huh. Running around, getting hit by life… now tell me how it went, what the f.",
     "Congrats: today chaos didn’t miss a single appointment. Now spill it all—we’ll find a laugh and a turn, what the f.",
     "A day to frame… and toss straight in the trash. Before you sleep crooked, tell me what happened, what the f.",
-    "Between awkward moments, random thoughts, and a “creative survival swear” here and there… complete day. Start from the spark, what the f.",
+    "Between awkward moments, random thoughts, and a creative survival swear here and there… complete day. Start from the spark, what the f.",
     "If today were a series, it’s already season three of mess. Quick recap: what happened? Then we deal with it, what the f.",
     "You survived today without throwing heavy objects, so that’s already a win. Now tell me everything, what the f.",
-    "Masterpiece of a day: stress, hustle, and that moment a “survival swear” escapes you. Tell me the whole thing, what the f.",
+    "Masterpiece of a day: stress, hustle, and that moment a survival swear escapes you. Tell me the whole thing, what the f.",
     "It looked like it was going fine… then nope. Classic. Before you close your eyes, tell me how it really ended, what the f.",
     "Between things done badly and things not done at all, tonight is perfect to talk. Spit it out, what the f.",
     "If today left your brain in a washing machine, stop a second: tell me what happened and we’ll laugh it back into place, what the f.",
   ],
   es: [
-    "Vaya día, eh. De un lado a otro, y una “maldición de mantenimiento” cada tres horas… ahora cuéntame cómo te fue, qué carajo.",
+    "Vaya día, eh. De un lado a otro… ahora cuéntame cómo te fue, qué carajo.",
     "Felicidades: hoy el caos no se ha perdido nada. Ahora suéltalo todo, que le encontramos la vuelta, qué carajo.",
     "Un día para enmarcar… y tirar al cubo. Antes de dormir torcido, dime qué pasó, qué carajo.",
-    "Entre metidas de pata, pensamientos al azar y una “maldición creativa” por ahí… día completo. Empieza por el principio, qué carajo.",
+    "Entre metidas de pata, pensamientos al azar y una maldición de supervivencia por ahí… día completo. Empieza por el principio, qué carajo.",
     "Si hoy fuera una serie, ya iría por la tercera temporada de lío. Resumen rápido: ¿qué pasó? Luego lo arreglamos, qué carajo.",
     "Has sobrevivido sin tirar objetos pesados, así que ya es victoria. Ahora cuéntamelo todo, qué carajo.",
-    "Obra maestra de día: estrés, lío, y ese momento en que te sale una “maldición de supervivencia”. Cuéntame todo, qué carajo.",
+    "Obra maestra de día: estrés, lío, y ese momento en que te sale una maldición de supervivencia. Cuéntame todo, qué carajo.",
     "Parecía que iba bien… y luego no. Clásico. Antes de cerrar los ojos, dime cómo terminó de verdad, qué carajo.",
     "Entre cosas mal hechas y cosas ni hechas, hoy es noche perfecta para hablar. Suéltalo, qué carajo.",
     "Si hoy te dejó la cabeza en lavadora, para un segundo: dime qué pasó y nos reímos, qué carajo.",
   ],
   fr: [
-    "Quelle journée, hein. À courir partout, et une “bestemmia de maintenance” toutes les trois heures… maintenant raconte-moi, bordel.",
-    "Bravo : aujourd’hui le chaos n’a rien raté. Vas-y, dis-moi tout, on va lui trouver un angle, bordel.",
+    "Quelle journée, hein. À courir partout… maintenant raconte-moi, bordel.",
+    "Bravo : aujourd’hui le chaos n’a rien raté. Vas-y, dis-moi tout, on lui trouve une sortie, bordel.",
     "Une journée à encadrer… et à jeter direct. Avant de dormir de travers, raconte-moi ce qui s’est passé, bordel.",
-    "Entre petites humiliations, pensées en vrac et une “bestemmia créative” par-ci par-là… journée complète. Commence au début, bordel.",
+    "Entre moments gênants, pensées en vrac et un juron de survie… journée complète. Commence au début, bordel.",
     "Si aujourd’hui était une série, on serait déjà à la saison 3 du bazar. Résumé : qu’est-ce qui s’est passé ? Bordel.",
     "Tu as survécu sans lancer d’objets lourds, donc déjà victoire. Maintenant dis-moi tout, bordel.",
-    "Chef-d’œuvre de journée : stress, galère, et ce moment où sort une “bestemmia de survie”. Raconte tout, bordel.",
+    "Chef-d’œuvre de journée : stress, galère, et ce moment où sort un juron de survie. Raconte tout, bordel.",
     "On dirait que ça allait… puis non. Classique. Avant de fermer les yeux, dis-moi comment ça a fini, bordel.",
     "Entre trucs mal faits et trucs pas faits du tout, ce soir est parfait pour en parler. Crache-le, bordel.",
     "Si ta tête est restée dans la machine à laver, stop une seconde : raconte-moi et on s’en marre, bordel.",
   ],
   de: [
-    "Was für ein Tag. Hin und her, und alle drei Stunden eine „Wartungs-Bestemmia“… jetzt erzähl’s mir, verdammt nochmal.",
+    "Was für ein Tag. Hin und her… jetzt erzähl’s mir, verdammt nochmal.",
     "Glückwunsch: Heute hat das Chaos keinen Termin ausgelassen. Jetzt raus damit—wir drehen’s irgendwie, verdammt nochmal.",
     "Ein Tag zum Einrahmen… und sofort wegwerfen. Bevor du schief einschläfst: Was ist passiert? Verdammt nochmal.",
-    "Zwischen Peinlichkeiten, Zufallsgedanken und einer „kreativen Bestemmia“ hier und da… kompletter Tag. Wo ging’s los? Verdammt nochmal.",
+    "Zwischen Peinlichkeiten, Zufallsgedanken und einem Überlebensfluch… kompletter Tag. Wo ging’s los? Verdammt nochmal.",
     "Wenn heute eine Serie wäre, wären wir schon Staffel 3 vom Chaos. Kurzer Recap: Was war los? Verdammt nochmal.",
     "Du hast überlebt, ohne schwere Dinge zu werfen—schon Sieg. Jetzt erzähl alles, verdammt nochmal.",
-    "Meisterwerk-Tag: Stress, Hektik, und der Moment, wo dir eine „Überlebens-Bestemmia“ rausrutscht. Erzähl’s, verdammt nochmal.",
+    "Meisterwerk-Tag: Stress, Hektik, und der Moment, wo dir ein Überlebensfluch rausrutscht. Erzähl’s, verdammt nochmal.",
     "Es sah so aus, als würde es laufen… dann doch nicht. Klassiker. Bevor du die Augen zumachst: Wie endete es wirklich? Verdammt nochmal.",
     "Zwischen schlecht gemacht und gar nicht gemacht: perfekter Abend zum Reden. Raus damit, verdammt nochmal.",
     "Wenn dein Kopf heute in der Waschmaschine gelandet ist: Halt kurz an—erzähl, und wir lachen drüber, verdammt nochmal.",
   ],
 };
 
-function buildWhatIfMorningSignal({ lang, slotKey, seed }) {
+function buildWhatIfMorningSignal({ lang, seed }) {
   const L = normLang(lang);
   const ctxLib = WHATIF_CTX[L] || WHATIF_CTX.it;
   const qLib = WHATIF_Q[L] || WHATIF_Q.it;
@@ -1059,7 +1095,6 @@ function buildWhatIfMorningSignal({ lang, slotKey, seed }) {
   const ctx = ctxLib[seed % ctxLib.length] || ctxLib[0] || "";
   const q = qLib[(seed >>> 1) % qLib.length] || qLib[0] || "";
 
-  // piccolo tweak: se non è morning, lo stesso formato ma senza cambiare “stamattina”
   const txt = `${ctx} ${q}`.trim();
   return finalPunct(sentenceCaseAll(normalizeOneParagraph(txt)));
 }
@@ -1078,16 +1113,16 @@ function pickSignalPhrase({ stile, lang, slot, mood, domanda, userKey }) {
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
   const u = String(userKey || "anon").slice(0, 120);
 
-  // ✅ seed condiviso (non include stile) ma include userKey => diverso per utente
+  // seed include userKey => diverso per utente, stabile per giorno
   const seedBase = `${L}|${slotKey}|${mood || ""}|${today}|${u}|${domanda || ""}`;
   const seed = hashStr(seedBase);
 
-  // WHAT IF: SOLO MATTINA (se chiamano other slot: fallback mattina)
+  // WHAT IF: SOLO MATTINA (se chiamano altro => comunque morning)
   if (String(stile) !== "wtf") {
-    return buildWhatIfMorningSignal({ lang: L, slotKey, seed });
+    return buildWhatIfMorningSignal({ lang: L, seed });
   }
 
-  // WTF: SOLO SERA (se chiamano other slot: fallback sera)
+  // WTF: SOLO SERA (se chiamano altro => comunque evening)
   return buildWtfEveningSignal({ lang: L, seed });
 }
 
@@ -1113,48 +1148,14 @@ function computePct(domanda, stile) {
   return Math.max(10, Math.min(95, Math.round(s)));
 }
 
-/* ========= WHAT IF: motivazione fallback ========= */
+/* ========= WHAT IF: motivazione fallback (multi-lingua) ========= */
 function buildWhatIfMotivation(domanda, lang = "it", pct = 60) {
-  const L = (lang || "it").slice(0, 2);
-  const t = String(domanda || "").toLowerCase();
-
-  const hasTime = /\b(7|14|21|30|60|90|giorn|settiman|mes|mesi|anni|days?|weeks?|months?|years?)\b/.test(t);
-  const hasBudget = /(budget|€|euro|spesa|costo|prezzo|max|under|sotto|caparra|cost|money)/.test(t);
-  const hasDeadline = /(entro|prima|scadenza|deadline|by\s+\d|before\s+\d)/.test(t);
-  const action =
-    /(apri|lancia|impara|studia|scrivi|automatizza|testa|cambia|trova|assumi|costruisci|crea|launch|start|learn|build|create)/.test(t);
-  const riskHedging = /(senza|solo|al massimo|minimo|rischio|risk|minimize|hedge)/.test(t);
-
-  if (L === "it") {
-    const pros = [];
-    const cons = [];
-
-    if (hasTime) {
-      pros.push("la timeline è gestibile se spezzetti il percorso");
-      cons.push("se non proteggi il tempo, rischi di tirarla lunga all’infinito");
-    }
-    if (hasBudget) {
-      pros.push("puoi tenere i costi sotto controllo fissando un tetto chiaro");
-      cons.push("se sottostimi le spese, la pressione economica può frenarti");
-    }
-    if (hasDeadline) {
-      pros.push("una scadenza esplicita ti aiuta a decidere prima");
-      cons.push("se la scadenza è vaga tenderai a spostarla sempre più avanti");
-    }
-    if (action) pros.push("hai una leva concreta su cui agire ogni giorno");
-    if (riskHedging) {
-      pros.push("puoi limitare il rischio con poche regole semplici");
-      cons.push("se cerchi rischio zero potresti non muoverti mai davvero");
-    }
-
-    if (!pros.length) pros.push("la vera leva è la routine: piccoli passi costanti battono le grandi intenzioni");
-    if (!cons.length) cons.push("il collo di bottiglia è la tua energia più che la fortuna");
-
-    return `Probabilità circa ${pct}%. A favore: ${pros[0]}. Contro: ${cons[0]}.`.trim();
-  }
-
-  // fallback generico per altre lingue: mantengo la tua logica originale
-  return `Estimated probability around ${pct}%.`.trim();
+  const L = normLang(lang);
+  if (L === "it") return `Probabilità circa ${pct}%. È plausibile se proteggi tempo ed energia; cala se resti nel rumore e nella routine senza scelta.`;
+  if (L === "en") return `Estimated probability around ${pct}%. It holds if you protect time and energy; it drops if you stay on autopilot.`;
+  if (L === "es") return `Probabilidad aproximada ${pct}%. Funciona si proteges tiempo y energía; baja si sigues en piloto automático.`;
+  if (L === "fr") return `Probabilité estimée autour de ${pct}%. Ça tient si tu protèges ton temps et ton énergie; ça baisse si tu restes en mode automatique.`;
+  return `Geschätzte Wahrscheinlichkeit etwa ${pct}%. Es klappt eher, wenn du Zeit und Energie schützt; es sinkt im Autopilot-Modus.`;
 }
 
 /* ========= MOTIVAZIONE LLM ========= */
@@ -1210,7 +1211,6 @@ Kohärent mit der Hauptantwort, max. 25 Wörter, keine Emojis.`;
   m = normalizeOneParagraph(m);
   m = sentenceCaseAll(m);
   m = finalPunct(m);
-
   const first = m.split(/(?<=[.!?…])\s+/)[0] || m;
   return first.trim();
 }
@@ -1226,34 +1226,15 @@ async function polishAnswer({ text, lang, stile }) {
   if (L === "it") {
     sys =
       stile === "wtf"
-        ? `Sei un correttore di bozze per un monologo colorito nello stile degli esempi (Motociclista, Luisa, Turista del destino).
-Prendi il testo seguente e:
-- mantieni intatto il tono da narratore comico da pub, le parolacce e le immagini;
-- NON ammorbidire il lessico: lascia le parti grezze e un po’ volgari;
-- correggi solo errori grammaticali evidenti, concordanze, doppioni di parole, ripetizioni troppo ravvicinate;
-- NON aggiungere nuove metafore;
-- non cambiare pronomi o persona verbale, a meno che la frase non sia davvero scorretta;
-- mantieni lunghezza simile e un unico paragrafo;
-- NON trasformare “bestemmia” in bestemmie reali o riferimenti religiosi;
-- non racchiudere tutto il testo tra virgolette.`
+        ? `Sei un correttore di bozze per un monologo colorito.
+Correggi solo errori evidenti e ripetizioni, senza cambiare tono, parolacce o immagini. Un paragrafo.`
         : `Sei un correttore di bozze.
-Prendi il testo seguente e:
-- mantieni intatto senso e tono, anche il lato un po’ mistico ma umano;
-- correggi errori grammaticali e ripetizioni inutili;
-- non cambiare pronomi o persona verbale, a meno che la frase non sia proprio scorretta;
-- mantieni un unico paragrafo e lunghezza simile.`;
-  } else if (L === "en") {
+Correggi errori e ripetizioni senza cambiare senso o tono. Un paragrafo.`;
+  } else {
     sys =
       stile === "wtf"
-        ? `You are a copy editor for a foul-mouthed monologue.
-Keep the same tone and swearing, only fix clear grammar issues and obvious word repetition. Do not change pronouns or person unless the sentence is clearly wrong. Keep it one paragraph, similar length.`
-        : `You are a copy editor.
-Keep the same meaning and tone, fix grammar and useless repetitions. Avoid changing pronouns or person unless absolutely necessary. Keep it one paragraph, similar length.`;
-  } else {
-    sys = `You are a copy editor.
-Keep the same tone and meaning, fix obvious grammar errors and unnecessary repetitions.
-Avoid changing pronouns or verb person unless the sentence is clearly wrong.
-Keep it one paragraph and roughly the same length.`;
+        ? `You are a copy editor for a foul-mouthed monologue. Fix only clear errors and repetition. Keep one paragraph.`
+        : `You are a copy editor. Fix only clear errors and repetition. Keep one paragraph.`;
   }
 
   const completion = await client.chat.completions.create({
@@ -1283,7 +1264,9 @@ function ensureWtfEcchecazzEnding(text = "", lang = "it") {
   s = s.replace(/[\s.!?…]+$/g, "").trim();
   if (!s) return "ecchecazz!!!";
 
-  return `${s}, ecchecazz!!!`;
+  // Solo IT chiude sempre con ecchecazz!!!
+  if (normLang(lang) === "it") return `${s}, ecchecazz!!!`;
+  return finalPunct(s);
 }
 
 /* ========= HANDLER ========= */
@@ -1327,6 +1310,8 @@ export default async function handler(req, res) {
     if (stage === "signal" || isSignal) {
       const slot = micro.slot || micro.timeOfDay || micro.time || "morning";
       const mood = micro.mood || null;
+
+      // ✅ rotazione per utente (firebase uid / userKey), fallback ip
       const userKey = micro.userKey || micro.uid || micro.user || ip || "anon";
 
       const text = pickSignalPhrase({
@@ -1344,7 +1329,7 @@ export default async function handler(req, res) {
         style: stile,
         lang: L,
         periodo,
-        model: "signal-local-v2",
+        model: "signal-local-final",
         answer: text,
       });
     }
@@ -1353,18 +1338,13 @@ export default async function handler(req, res) {
     if (stage === "clarify") {
       const messages = buildClarifyMessages({ domanda, stile, lang: L, periodo, micro });
 
-      let temperature = stile === "wtf" ? 1.0 : 0.7;
-      let top_p = 0.96;
-      let frequency_penalty = stile === "wtf" ? 0.8 : 0.2;
-      let presence_penalty = stile === "wtf" ? 0.7 : 0.1;
-
       const completion = await client.chat.completions.create({
         model: MODEL,
-        temperature,
-        top_p,
+        temperature: stile === "wtf" ? 1.0 : 0.7,
+        top_p: 0.96,
         max_tokens: 80,
-        frequency_penalty,
-        presence_penalty,
+        frequency_penalty: stile === "wtf" ? 0.8 : 0.2,
+        presence_penalty: stile === "wtf" ? 0.7 : 0.1,
         messages,
       });
 
@@ -1413,6 +1393,7 @@ export default async function handler(req, res) {
       answer = normalizeOneParagraph(answer);
     }
 
+    // Safety nomi propri IT
     if (L === "it") {
       (function () {
         const d = String(domanda || "");
@@ -1427,60 +1408,26 @@ export default async function handler(req, res) {
 
     answer = sentenceCaseAll(answer);
 
+    // Filtri WTF IT
     if (stile === "wtf" && L === "it") {
-      answer = answer.replace(/\bcoccol\w*/gi, "botta");
       answer = answer.replace(/\bprocrastinazion\w*/gi, "tirarla lunga");
-      answer = answer.replace(/\bmagari domani\b/gi, "poi, poi, poi");
-
-      answer = answer.replace(/\bvivere vuol dire[^.?!]*[.?!]/gi, "");
-      answer = answer.replace(/\bvuol dire che[^.?!]*[.?!]/gi, "");
-      answer = answer.replace(/\bsignifica che[^.?!]*[.?!]/gi, "");
-
       answer = answer.replace(/\brimando\b/gi, "tirarla lunga");
-
-      answer = answer.replace(
-        /come se stesse versando la vita dentro il tuo bicchiere/gi,
-        "come se ti tirasse addosso una sveglia liquida"
-      );
-
-      answer = answer.replace(/\bviaggiatore della nostalgia\b/gi, "turista del destino");
-      answer = answer.replace(/\ballegria nel cuore\b/gi, "quella voglia storta di rimetterti in gioco");
-
-      answer = answer.replace(/\bmadò\b/gi, "");
+      answer = answer.replace(/\bmagari domani\b/gi, "poi, poi, poi");
+      answer = answer.replace(/\bmerd\w*\b/gi, "schifo");
+      answer = answer.replace(/\bcazz\w*/gi, (m) => m.replace(/cazz/gi, "azz"));
     }
 
+    // Strip prima persona per WHAT IF
     if (stile !== "wtf") {
       answer = stripFirstPerson(answer, L, stile);
     }
 
-    if (stile === "wtf" && L === "it") {
-      answer = answer.replace(/\bcazz\w*/gi, (m) => m.replace(/cazz/gi, "azz"));
-      answer = answer.replace(/\bmerd\w*\b/gi, "schifo");
-    }
-
-    if (stile === "wtf" && L === "it") {
-      let count = 0;
-      answer = answer.replace(/\blampion[ei]\b/gi, (m) => {
-        count += 1;
-        return count > 1 ? "semaforo" : m;
-      });
-      answer = answer.replace(/\bspippolat\w*/gi, "rimuginata");
-    }
-
-    const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
-    if (stile === "wtf" && L === "it" && !/bestemmi\w*/i.test(answer)) {
-      const seed = hashStr(String(domanda || "") + "|" + String(answer || ""));
-      if (seed % 100 < 65) {
-        answer =
-          answer.replace(/\s*[.!?…]*$/, "") +
-          `, e ti scappa una "bestemmia di manutenzione" che fa vibrare pure la tazzina sul tavolo`;
-      }
-    }
-
+    // Finale WTF
     if (stile === "wtf") {
       answer = ensureWtfEcchecazzEnding(answer, L);
     }
 
+    // Finale WHAT IF
     if (stile === "whatif") {
       answer = ensureZingaraEnding({ text: answer, lang: L, periodo, domanda });
     }
@@ -1505,6 +1452,7 @@ export default async function handler(req, res) {
     }
 
     let scientific;
+    const isSurprise = !!(micro && (micro.surprise === true || micro.src === "surprise"));
     if (stile === "wtf" && !isSurprise) {
       const seedSci = hashStr(String(domanda || "") + "|scientific");
       if (seedSci % 100 < 70) {
@@ -1528,4 +1476,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-                  }
+    }
