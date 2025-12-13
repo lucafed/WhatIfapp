@@ -41,11 +41,42 @@
   const I18N = {
     lang: localStorage.getItem('whatif_lang') || (navigator.language||'it').slice(0,2),
     t(key){ return (dict[this.lang] && dict[this.lang][key]) || (dict.it[key]||key); },
+
+    // ✅ AGGIUNTO: prova ad aggiornare la lingua sul token FCM già salvato
+    async _syncFcmLang(){
+      try {
+        // Cerca un token già salvato in localStorage (chiavi comuni)
+        const token =
+          localStorage.getItem('fcm_token') ||
+          localStorage.getItem('FCM_TOKEN') ||
+          localStorage.getItem('whatif_fcm_token') ||
+          localStorage.getItem('whatif_fcmToken') ||
+          localStorage.getItem('fcmToken');
+
+        if (!token) return; // se non c'è token, non facciamo nulla
+
+        await fetch('/api/save-fcm-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token,
+            lang: this.lang
+          })
+        });
+      } catch (e) {
+        // niente: non blocchiamo l'app se fallisce
+      }
+    },
+
     setLang(l){
       this.lang = (l==='en'?'en':'it');
       localStorage.setItem('whatif_lang', this.lang);
       this.apply();
+
+      // ✅ AGGIUNTO: aggiorna subito la lingua del token in Firestore
+      this._syncFcmLang();
     },
+
     apply(){
       // Testi
       document.querySelectorAll('[data-i18n]').forEach(el=>{
@@ -62,6 +93,7 @@
       document.dispatchEvent(new CustomEvent('i18n:ready'));
     }
   };
+
   window.I18N = I18N;
   // Applica all'avvio
   document.addEventListener('DOMContentLoaded', ()=> I18N.apply());
