@@ -641,11 +641,19 @@
       if(n.startsWith('de')) return 'de';      
       return 'it';      
     }      
+
+    /* ✅ FIX: valida lingua SEMPRE (fallback it) */
+    function normalizeLang(x){
+      const l = (x || '').toLowerCase();
+      return ['it','en','es','fr','de'].includes(l) ? l : 'it';
+    }
+
     function getLang(){      
-      return (LS.getItem('lang') || detectBrowserLang()).toLowerCase();      
+      return normalizeLang(LS.getItem('lang') || detectBrowserLang());      
     }      
+
     function setLang(l){      
-      LS.setItem('lang', l.toLowerCase());      
+      LS.setItem('lang', normalizeLang(l));      
       applyLang();      
   
       /* ✅ AGGIUNTO: aggiorna lang in Firestore se notifiche attive */  
@@ -689,9 +697,18 @@
       if(window.dailySignalsApplyText) window.dailySignalsApplyText();  
       if(window.dailySignalsRefreshToggleLabel) window.dailySignalsRefreshToggleLabel();  
     }      
-  
+
     if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());      
     applyLang();      
+
+    /* ✅ FIX BACK: quando torni su index (bfcache), riapplica lingua */
+    window.addEventListener('pageshow', () => { try{ applyLang(); }catch{} });
+    document.addEventListener('visibilitychange', () => {
+      if(!document.hidden){ try{ applyLang(); }catch{} }
+    });
+    window.addEventListener('storage', (e) => {
+      if(e && e.key === 'lang'){ try{ applyLang(); }catch{} }
+    });
   
     window.I18N = DICT;      
     window.getCurrentLang = getLang;      
