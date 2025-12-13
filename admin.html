@@ -7,282 +7,349 @@
   <meta name="theme-color" content="#0A0F14"/>
   <style>
     :root{
-      --bg:#05070B; --bg2:#0C1220; --card:#111821;
+      --bg:#05070B; --bg2:#0C1220;
+      --card:rgba(17,24,33,.92);
       --fg:#F4F7FB; --muted:#A0B2BA;
       --accent:#1C57A0; --accent2:#FFEC01;
-      --chip:#121b24; --line:#1b2834; --bad:#ff5858;
+      --line:rgba(255,255,255,.10);
+      --chip:rgba(255,255,255,.05);
+      --shadow:rgba(0,0,0,.55);
+      --bad:#ff5858;
+      --good:#49e39a;
     }
     html,body{
       margin:0;
       background:
-        radial-gradient(800px 600px at 18% 14%, var(--bg2) 0%, var(--bg) 60%),
-        radial-gradient(700px 520px at 80% 80%, rgba(255,236,1,.06), transparent 65%);
+        radial-gradient(900px 700px at 18% 14%, var(--bg2) 0%, var(--bg) 62%),
+        radial-gradient(700px 520px at 82% 80%, rgba(255,236,1,.07), transparent 65%),
+        radial-gradient(900px 680px at 50% 110%, rgba(28,87,160,.10), transparent 65%);
       color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       -webkit-font-smoothing:antialiased;
     }
-    main{max-width:960px;margin:0 auto;padding:18px 14px 40px}
-    h1{margin:4px 0 4px;font-size:clamp(22px,5vw,30px);color:var(--accent2);text-shadow:0 0 18px rgba(255,236,1,.22)}
-    .sub{margin:0 0 14px;color:var(--muted);font-size:13px}
+    main{max-width:1080px;margin:0 auto;padding:18px 14px 44px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    h1{margin:4px 0 2px;font-size:clamp(22px,5vw,32px);color:var(--accent2);text-shadow:0 0 18px rgba(255,236,1,.22)}
+    .sub{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.5}
+
     .card{
-      background:var(--card);border-radius:16px;border:1px solid var(--line);
-      padding:14px 14px 16px;margin-top:12px;box-shadow:0 8px 28px rgba(0,0,0,.45);
+      background:var(--card);
+      border-radius:16px;
+      border:1px solid var(--line);
+      padding:14px 14px 16px;
+      margin-top:12px;
+      box-shadow:0 10px 30px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.03);
+      backdrop-filter: blur(10px);
     }
-    .label{font-size:13px;font-weight:800;color:var(--accent2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
-    .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-    .grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
-    .chip{padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--chip);font-size:12px;color:#d7e8ec}
-    .chip.warn{border-color:var(--accent2);color:#fff;font-weight:800;box-shadow:0 0 18px rgba(255,236,1,.2)}
+    .label{
+      font-size:12px;font-weight:900;color:var(--accent2);
+      margin-bottom:10px;text-transform:uppercase;letter-spacing:.08em;
+      display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    }
+    .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
+    .col-6{grid-column:span 6}
+    .col-4{grid-column:span 4}
+    .col-3{grid-column:span 3}
+    .col-12{grid-column:span 12}
+    @media (max-width:860px){ .col-6,.col-4,.col-3{grid-column:span 12} }
+
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;
+      border:1px solid var(--line);
+      background:var(--chip);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      color:#d7e8ec;
+    }
+    .badge{
+      border-radius:999px;
+      padding:5px 10px;
+      font-size:12px;
+      font-weight:900;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      display:inline-flex;align-items:center;gap:8px;
+    }
+    .badge.ok{border-color:rgba(73,227,154,.5); background:rgba(73,227,154,.08); color:#dfffea}
+    .badge.no{border-color:rgba(255,88,88,.55); background:rgba(255,88,88,.08); color:#ffe3e3}
+
     .btn{
-      appearance:none;border-radius:12px;border:1px solid var(--line);
-      padding:8px 12px;font-weight:700;background:var(--chip);color:var(--fg);cursor:pointer;
+      appearance:none;
+      border-radius:12px;
+      border:1px solid var(--line);
+      padding:9px 12px;
+      font-weight:800;
+      background:rgba(255,255,255,.05);
+      color:var(--fg);
+      cursor:pointer;
     }
     .btn.primary{
       border:none;
       background:linear-gradient(180deg,var(--accent),var(--accent2));
-      color:#061017;box-shadow:0 8px 24px rgba(0,0,0,.5);
+      color:#061017;
+      box-shadow:0 8px 22px rgba(0,0,0,.55), 0 0 24px rgba(255,236,1,.18);
     }
-    .btn.danger{border-color:var(--bad);color:#ffd4d4}
-    .btn[disabled]{opacity:.4;cursor:not-allowed}
+    .btn.danger{border-color:rgba(255,88,88,.65); color:#ffd4d4}
+    .btn[disabled]{opacity:.45;cursor:not-allowed}
+
     input{
-      background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--line);
-      padding:8px 10px;color:var(--fg);min-width:0;font-size:14px;
+      background:rgba(255,255,255,.04);
+      border-radius:12px;
+      border:1px solid var(--line);
+      padding:10px 12px;
+      color:var(--fg);
+      min-width:0;
+      font-size:14px;
+      width:100%;
     }
-    .value{font-weight:800}
-    .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
-    .small{font-size:11px;color:var(--muted);margin-top:4px}
-    .hr{height:1px;background:rgba(255,255,255,.08);margin:10px 0}
-    .badge{border-radius:999px;padding:4px 9px;font-size:11px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
-    .badge.admin{background:rgba(255,236,1,.09);border-color:rgba(255,236,1,.5);color:#fff}
-    .badge.off{opacity:.6}
-    .toast{
-      position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
-      background:rgba(10,15,20,.96);border-radius:12px;border:1px solid var(--line);
-      padding:8px 14px;font-size:13px;font-weight:700;z-index:9999;
-      opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;
+    .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+
+    .kpi{
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius:16px;
+      padding:12px 12px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.03), 0 10px 28px rgba(0,0,0,.35);
     }
-    .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
-    /* Cronologia & log */
-    .story-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
-    .story{
-      border-radius:12px;border:1px solid var(--line);padding:8px 10px;
-      background:rgba(255,255,255,.02);font-size:13px;
+    .kpi-title{font-size:12px;color:var(--muted);font-weight:900;letter-spacing:.04em;text-transform:uppercase}
+    .kpi-val{
+      margin-top:6px;
+      font-size:28px;
+      font-weight:1000;
+      letter-spacing:.3px;
+      color:var(--accent2);
+      text-shadow:0 0 18px rgba(255,236,1,.18);
     }
-    .story-q{font-weight:600;margin-bottom:3px}
-    .story-meta{font-size:11px;color:var(--muted)}
+    .kpi-sub{margin-top:4px;font-size:12px;color:var(--muted)}
+    .kpi-val.small{font-size:22px}
+
+    .matrix{
+      border:1px solid var(--line);
+      border-radius:16px;
+      overflow:hidden;
+      background:rgba(255,255,255,.03);
+    }
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px}
+    th{color:#fff;font-weight:1000;background:rgba(255,255,255,.04);text-align:left}
+    td{color:#dfeaf0}
+    .td-big{font-weight:1000;font-size:15px;color:#fff}
+    .right{text-align:right}
+    .muted{color:var(--muted)}
+    .pill{
+      display:inline-flex;align-items:center;justify-content:center;
+      min-width:54px;
+      padding:5px 10px;
+      border-radius:999px;
+      font-weight:1000;
+      background:linear-gradient(180deg,var(--accent),var(--accent2));
+      color:#061017;
+      box-shadow:0 8px 18px rgba(0,0,0,.35), 0 0 18px rgba(255,236,1,.12);
+    }
+    .mini{
+      font-size:12px;color:var(--muted);line-height:1.5;margin-top:6px
+    }
+
     details summary{cursor:pointer;list-style:none}
     details summary::-webkit-details-marker{display:none}
     details summary::after{content:"▶";margin-left:6px;font-size:10px;opacity:.7}
     details[open] summary::after{content:"▼"}
-    @media (max-width:580px){.grid-2{grid-template-columns:1fr}}
-    /* Select dentro chip */
-    .chip select{
-      background:transparent;border:none;color:inherit;font:inherit;outline:none;padding:0 0 0 4px;
+
+    .toast{
+      position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
+      background:rgba(10,15,20,.96);border-radius:12px;border:1px solid var(--line);
+      padding:8px 14px;font-size:13px;font-weight:800;z-index:9999;
+      opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;
     }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
   </style>
 </head>
+
 <body>
 <main>
-  <h1>What?f — Admin</h1>
-  <p class="sub">
-    Gestione wallet Firestore + preferenze locali. In questa pagina:
-    <br>• vedi <strong>solo le tue domande</strong> salvate in locale (cronologia / next prompts),
-    <br>• i log lato server sono <strong>100% anonimi</strong>: solo stile, tempo (passato/futuro) e se hanno usato <em>Sorprendimi</em> o <em>Spunti rapidi</em>.
-  </p>
+  <div class="topbar">
+    <div>
+      <h1>What?f — Admin</h1>
+      <p class="sub">
+        Admin “pulito”: sei admin <strong>solo</strong> se il token viene verificato con <span class="mono">/api/admin-logs</span>.
+        Niente più “∞” solo perché esiste un valore in localStorage.
+      </p>
+    </div>
+    <div class="row">
+      <span id="adminStatusBadge" class="badge no">🔒 Admin: OFF</span>
+      <button class="btn" id="btnHome">🏠 Home</button>
+      <button class="btn danger" id="btnAdminLogout" disabled>🚪 Esci admin</button>
+    </div>
+  </div>
 
-  <!-- UTENTE / ADMIN LOCALE -->
+  <!-- TOKEN -->
   <div class="card">
-    <div class="grid-2">
-      <div>
-        <div class="label">Utente loggato</div>
-        <div id="userInfo" class="small">—</div>
-      </div>
-      <div>
-        <div class="label">Stato admin locale</div>
-        <div class="row" style="margin-bottom:4px">
-          <span id="adminBadge" class="badge off">Admin locale: OFF</span>
-          <button class="btn" id="btnSimula">Simula utente (disattiva ∞)</button>
-          <button class="btn" id="btnTornaAdmin">Torna admin (∞)</button>
+    <div class="label">Token admin</div>
+
+    <div class="grid">
+      <div class="col-6">
+        <input id="adminTokenInput" type="text" placeholder="Incolla il token admin qui…">
+        <div class="mini">
+          Il token viene salvato in <span class="mono">localStorage.admin_token</span> e poi <strong>verificato</strong> chiamando
+          <span class="mono">/api/admin-logs</span>. Se non è valido → admin OFF.
         </div>
-        <div class="small">
-          Admin locale = presenza di <span class="mono">admin_token</span> in <span class="mono">localStorage</span>:
-          fourth/fifth mostrano ∞ crediti, ma
-          <strong>non</strong> viene mai salvato il testo delle domande degli utenti lato server.
+      </div>
+      <div class="col-6">
+        <div class="row" style="justify-content:flex-end">
+          <button class="btn primary" id="btnSaveToken">💾 Salva & Verifica</button>
+          <button class="btn danger" id="btnClearToken">🗑 Rimuovi token</button>
+        </div>
+        <div class="mini">
+          Stato token: <span id="tokenStatus" class="mono">—</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- TOKEN ADMIN (SERVER) -->
+  <!-- DASHBOARD KPI (LOG SERVER) -->
   <div class="card">
-    <div class="label">Token admin (server /api/admin-logs)</div>
-    <div class="grid-2">
-      <div>
-        <div class="row">
-          <input id="adminTokenInput" type="text" placeholder="Incolla qui il token admin…" style="flex:1;min-width:0;">
-        </div>
-        <div class="small">
-          Il token viene salvato in <span class="mono">localStorage.admin_token</span> e usato per:
-          <br>• mostrare ∞ crediti lato client (admin locale),
-          <br>• autenticarti su <span class="mono">/api/admin-logs</span> per leggere i log <strong>solo metadati</strong>.
-        </div>
-      </div>
-      <div>
-        <div class="row">
-          <button class="btn primary" id="btnSaveAdminToken">💾 Salva token</button>
-          <button class="btn danger" id="btnClearAdminToken">🗑 Rimuovi token</button>
-        </div>
-        <div class="small">
-          Stato token:
-          <span id="adminTokenStatus" class="mono">— nessun token salvato</span>
-        </div>
-      </div>
-    </div>
-  </div>
+    <div class="label">Dashboard chiamate server</div>
 
-  <!-- WALLET FIRESTORE (SOLO LETTURA + TEST) -->
-  <div class="card">
-    <div class="label">Wallet corrente (Firestore)</div>
-    <div class="grid-2">
-      <div>
-        <div class="row">
-          <span class="chip">Crediti disponibili: <span id="walBalance" class="value">—</span></span>
-          <span class="chip">Usati oggi: <span id="walUsed" class="value">—</span></span>
-          <span class="chip">Cap giornaliero: <span id="walCap" class="value">—</span></span>
-        </div>
-        <div class="small">Valori letti da Firestore se sei loggato. Se c’è un problema di regole, vedrai solo “—”.</div>
-      </div>
-      <div>
-        <div class="row">
-          <button class="btn" id="btnReload">🔄 Ricarica da Firestore</button>
-          <button class="btn" id="btnTestCredit">+5 crediti (solo test)</button>
-        </div>
-        <div class="small">
-          I bottoni usano <span class="mono">store/credits.js</span>.
-          Se Firestore non è configurato, l’errore va solo in console (nessun alert).
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PRESET RAPIDI (SOLO CLIENT + ADMIN FIRESTORE) -->
-  <div class="card">
-    <div class="label">Preset rapidi (piano)</div>
-    <div class="row" style="margin-bottom:6px">
-      <button class="btn" id="btnPresetFree">FREE (3 crediti/giorno)</button>
-      <button class="btn" id="btnPresetPro">PRO (30 crediti/giorno)</button>
-    </div>
-    <div class="row" style="margin-bottom:4px">
-      <span class="chip" id="chipPreset">Preset attuale: —</span>
-      <span class="chip" id="chipPrefs">Prefs: —</span>
-    </div>
-    <div class="small">
-      I preset:
-      <br>• aggiornano <span class="mono">whatif_prefs</span> in localStorage (<span class="mono">pro: true/false</span>),
-      <br>• aggiornano il wallet Firestore tramite <span class="mono">adminSetDailyLimit</span> / <span class="mono">adminResetToday</span>,
-      <br>• impostano un “cap locale” (<span class="mono">wallet_daily_cap</span>) usato solo per UI.
-    </div>
-  </div>
-
-  <!-- CRONOLOGIA LOCALE -->
-  <div class="card">
-    <details open>
-      <summary class="label">Cronologia domande (locale)</summary>
-      <div class="story-list" id="histList"></div>
-      <div class="hr"></div>
+    <div class="row" style="justify-content:space-between;margin-bottom:8px">
       <div class="row">
-        <button class="btn danger" id="btnClearHist">Svuota cronologia</button>
-        <span class="small">Legge da <span class="mono">cronologia</span> in localStorage (massimo 50 voci). Questi dati restano solo sul tuo dispositivo.</span>
+        <button class="btn" id="btnReloadLogs" disabled>🔄 Ricarica log</button>
+        <span class="chip">Fonte: <span class="mono">/api/admin-logs</span></span>
+        <span class="chip">Max: <span class="mono">200</span></span>
       </div>
-    </details>
-  </div>
-
-  <!-- PROSSIME DOMANDE SALVATE -->
-  <div class="card">
-    <details>
-      <summary class="label">Domande salvate / Next prompts (locale)</summary>
-      <div class="story-list" id="nextList"></div>
-      <div class="hr"></div>
       <div class="row">
-        <button class="btn danger" id="btnClearNext">Svuota salvate</button>
-        <span class="small">Usa la stessa lista “Domande salvate” che vedi in fourth, sempre solo in locale.</span>
+        <span class="chip">Ultimo refresh: <span id="lastRefresh" class="mono">—</span></span>
       </div>
-    </details>
-  </div>
+    </div>
 
-  <!-- LOG DOMANDE (SERVER) -->
-  <div class="card">
-    <details open>
-      <summary class="label">Log domande (server, solo metadati anonimi)</summary>
-      <div class="row" style="margin-bottom:6px">
-        <button class="btn" id="btnReloadLogs">🔄 Ricarica log</button>
-        <button class="btn danger" id="btnClearLogsView">🧹 Svuota vista</button>
-        <span class="small" id="logsInfo">
-          Legge da <span class="mono">/api/admin-logs</span> (max 200).
-          Nessun testo di domanda/risposta, nessun IP, solo stile/tempo/Sorprendimi/Spunti rapidi.
-        </span>
+    <div class="grid">
+      <div class="col-3">
+        <div class="kpi">
+          <div class="kpi-title">Totale chiamate (log)</div>
+          <div class="kpi-val" id="kpiTotal">—</div>
+          <div class="kpi-sub">Tutte le voci ricevute dal server (max 200)</div>
+        </div>
       </div>
-      <div class="row" style="margin-bottom:6px">
-        <span class="chip">
-          Stile:
-          <select id="logsFilterStyle" class="mono">
-            <option value="">tutti</option>
-            <option value="whatif">whatif</option>
-            <option value="wtf">wtf</option>
-          </select>
-        </span>
-        <span class="chip">
-          Tempo:
-          <select id="logsFilterPeriodo" class="mono">
-            <option value="">tutti</option>
-            <option value="future">future</option>
-            <option value="past">past</option>
-          </select>
-        </span>
-        <span class="chip">
-          Sorgente:
-          <select id="logsFilterSource" class="mono">
-            <option value="">tutte</option>
-            <option value="manual">manuale</option>
-            <option value="hint">spunti rapidi</option>
-            <option value="surprise">sorprendimi</option>
-          </select>
-        </span>
+      <div class="col-3">
+        <div class="kpi">
+          <div class="kpi-title">Oggi</div>
+          <div class="kpi-val" id="kpiToday">—</div>
+          <div class="kpi-sub">Conteggio per data UTC</div>
+        </div>
       </div>
-      <!-- CONTATORI DOMANDE -->
-      <div class="row" style="margin-bottom:6px">
-        <span class="chip warn" id="logsCountChipTotal">Log mostrati: 0</span>
-        <span class="chip" id="logsCountChipToday">Di oggi: 0</span>
+      <div class="col-3">
+        <div class="kpi">
+          <div class="kpi-title">What if</div>
+          <div class="kpi-val small" id="kpiWhatif">—</div>
+          <div class="kpi-sub">Stile = whatif</div>
+        </div>
+      </div>
+      <div class="col-3">
+        <div class="kpi">
+          <div class="kpi-title">What the F</div>
+          <div class="kpi-val small" id="kpiWtf">—</div>
+          <div class="kpi-sub">Stile = wtf</div>
+        </div>
       </div>
 
-      <div class="story-list" id="logsList"></div>
-    </details>
+      <div class="col-12">
+        <div class="label" style="margin-top:6px">Stile × Modo (periodo) — super in evidenza</div>
+        <div class="matrix">
+          <table>
+            <thead>
+              <tr>
+                <th>Stile</th>
+                <th class="right">Future</th>
+                <th class="right">Past</th>
+                <th class="right">Totale</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="td-big">whatif</td>
+                <td class="right"><span class="pill" id="mWiFuture">—</span></td>
+                <td class="right"><span class="pill" id="mWiPast">—</span></td>
+                <td class="right"><span class="pill" id="mWiTotal">—</span></td>
+              </tr>
+              <tr>
+                <td class="td-big">wtf</td>
+                <td class="right"><span class="pill" id="mWtfFuture">—</span></td>
+                <td class="right"><span class="pill" id="mWtfPast">—</span></td>
+                <td class="right"><span class="pill" id="mWtfTotal">—</span></td>
+              </tr>
+              <tr>
+                <td class="td-big">Totale</td>
+                <td class="right"><span class="pill" id="mAllFuture">—</span></td>
+                <td class="right"><span class="pill" id="mAllPast">—</span></td>
+                <td class="right"><span class="pill" id="mAllTotal">—</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mini">
+          “Modo” = <span class="mono">periodo</span> (future/past). Questa tabella ti dà subito il numero chiamate per stile e modo.
+        </div>
+      </div>
+
+      <div class="col-12">
+        <details open>
+          <summary class="label">Breakdown per sorgente</summary>
+          <div class="matrix">
+            <table>
+              <thead>
+                <tr>
+                  <th>Sorgente</th>
+                  <th class="right">Conteggio</th>
+                </tr>
+              </thead>
+              <tbody id="sourceTableBody">
+                <tr><td class="muted">—</td><td class="right muted">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="mini">
+            Usa <span class="mono">item.source</span> se presente (manual/hint/surprise/signal/daily_push ecc.).
+            Se il server non invia source, verrà mostrato “manual”.
+          </div>
+        </details>
+      </div>
+
+      <div class="col-12">
+        <details>
+          <summary class="label">Lista log (solo metadati)</summary>
+          <div class="matrix">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Stile</th>
+                  <th>Periodo</th>
+                  <th>Sorgente</th>
+                </tr>
+              </thead>
+              <tbody id="logsListBody">
+                <tr><td class="muted" colspan="4">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="mini">
+            Nessun testo domanda/risposta. Solo metadati.
+          </div>
+        </details>
+      </div>
+    </div>
   </div>
 
   <div id="toast" class="toast"></div>
 </main>
 
 <script type="module">
-  import { auth } from "./firebase.init.js";
-  import {
-    onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-
-  import {
-    bootCredits,
-    getBalance,
-    consumeCredit,      // solo test UI
-    getWalletRaw,
-    adminSetDailyLimit,
-    adminAddCredits,
-    adminResetToday,
-    adminWipeWallet
-  } from "./store/credits.js";
-
   const LS = localStorage;
-  const $ = id => document.getElementById(id);
+  const $ = (id)=>document.getElementById(id);
 
-  /* ========= TOAST ========= */
+  // ===== Toast =====
   function toast(msg){
     const t = $('toast'); if(!t) return;
     t.textContent = msg;
@@ -290,578 +357,295 @@
     setTimeout(()=>t.classList.remove('show'),1500);
   }
 
-  /* ========= ADMIN TOKEN (server + locale) ========= */
-  let adminTokenState = 'unknown'; // 'unknown' | 'ok' | 'invalid'
+  // ===== Token storage =====
+  const TOKEN_KEY = "admin_token";
 
-  function getAdminToken(){
-    return LS.getItem('admin_token') || '';
+  function getToken(){
+    try { return (LS.getItem(TOKEN_KEY) || "").trim(); } catch { return ""; }
+  }
+  function setToken(v){
+    try { LS.setItem(TOKEN_KEY, v); } catch {}
+  }
+  function clearToken(){
+    try { LS.removeItem(TOKEN_KEY); } catch {}
+  }
+  function mask(tok){
+    if(!tok) return "—";
+    if(tok.length <= 8) return "•••";
+    return tok.slice(0,4) + "…" + tok.slice(-3);
   }
 
-  function maskToken(tok){
-    if(!tok) return '— nessun token salvato';
-    const s = String(tok);
-    if(s.length <= 6) return '•••';
-    return s.slice(0,4) + '…' + s.slice(-3);
-  }
-
-  function renderAdminTokenUI(){
-    const tok = getAdminToken();
-    const status = $('adminTokenStatus');
-    const input  = $('adminTokenInput');
-    if(!status) return;
-
-    if(!tok){
-      status.textContent = '— nessun token salvato';
-      if(input && document.activeElement !== input) input.value = '';
-      return;
-    }
-
-    let suffix = '';
-    if(adminTokenState === 'ok')        suffix = ' (OK)';
-    else if(adminTokenState === 'invalid') suffix = ' (non valido)';
-    else                                suffix = ' (non verificato)';
-
-    status.textContent = maskToken(tok) + suffix;
-    if(input && document.activeElement !== input){
-      input.value = tok;
-    }
-  }
-
-  /* ========= ADMIN LOCALE (∞) ========= */
-  function isAdminLocal(){ return !!getAdminToken(); }
+  // ===== Admin verified state (IMPORTANT) =====
+  // Sei admin SOLO se token verificato da /api/admin-logs (200).
+  let isAdminVerified = false;
 
   function renderAdminBadge(){
-    const badge = $('adminBadge');
-    if(!badge) return;
-    if(isAdminLocal()){
-      badge.textContent = "Admin locale: ON (∞ crediti lato client)";
-      badge.classList.add('admin');
-      badge.classList.remove('off');
+    const b = $('adminStatusBadge');
+    if(!b) return;
+    if(isAdminVerified){
+      b.classList.remove('no'); b.classList.add('ok');
+      b.textContent = "✅ Admin: ON (token verificato)";
+      $('btnAdminLogout').disabled = false;
+      $('btnReloadLogs').disabled = false;
     }else{
-      badge.textContent = "Admin locale: OFF (usa wallet reale)";
-      badge.classList.remove('admin');
-      badge.classList.add('off');
+      b.classList.remove('ok'); b.classList.add('no');
+      b.textContent = "🔒 Admin: OFF";
+      $('btnAdminLogout').disabled = true;
+      $('btnReloadLogs').disabled = true;
     }
   }
 
-  renderAdminTokenUI();
-  renderAdminBadge();
-
-  $('btnSimula').onclick = () => {
-    // modalità "utente": rimuove completamente il token admin
-    LS.removeItem('admin_token');
-    adminTokenState = 'unknown';
-    renderAdminTokenUI();
-    renderAdminBadge();
-    renderWalletUI();
-    toast('Simulazione utente attiva (niente ∞, niente log server).');
-  };
-
-  $('btnTornaAdmin').onclick = () => {
-    // se non c'è già un token, metto un token dummy "1" (solo locale, niente permessi su /api/admin-logs)
-    if(!getAdminToken()){
-      LS.setItem('admin_token','1');
-      adminTokenState = 'unknown';
-      renderAdminTokenUI();
-    }
-    renderAdminBadge();
-    renderWalletUI();
-    toast('Admin locale attivo (∞ crediti lato client).');
-  };
-
-  // Salvataggio token admin da input
-  $('btnSaveAdminToken').onclick = () => {
-    const input = $('adminTokenInput');
-    if(!input) return;
-    const v = input.value.trim();
-    if(!v){
-      toast('Inserisci un token prima di salvare.');
-      return;
-    }
-    LS.setItem('admin_token', v);
-    adminTokenState = 'unknown';
-    renderAdminTokenUI();
-    renderAdminBadge();
-    toast('Token admin salvato.');
-    // provo subito a ricaricare i log per verificare se è valido
-    fetchLogsFromApi();
-  };
-
-  $('btnClearAdminToken').onclick = () => {
-    LS.removeItem('admin_token');
-    adminTokenState = 'unknown';
-    renderAdminTokenUI();
-    renderAdminBadge();
-    toast('Token admin rimosso.');
-    lastLogsItems = [];
-    logsLastSeenTs = 0;
-    renderLogsWithCurrentFilters();
-  };
-
-  /* ========= UTENTE LOGGATO + WALLET FIRESTORE ========= */
-  let currentUser = null;
-  let currentBalance = 0;
-  let walUsedToday = 0;
-  let walDailyCap = 0;
-
-  function renderUser(){
-    const box = $('userInfo');
-    if(!box) return;
-    if(!currentUser){
-      box.textContent = "Nessun utente loggato. I preset FREE/PRO funzionano comunque lato client; il wallet Firestore resta inattivo.";
-    }else{
-      box.innerHTML = `
-        <div><span class="value">${currentUser.email || currentUser.uid}</span></div>
-        <div class="small mono">uid: ${currentUser.uid}</div>
-      `;
-    }
+  function renderTokenStatus(text){
+    const el = $('tokenStatus');
+    if(el) el.textContent = text || "—";
   }
 
-  function renderWalletUI(){
-    $('walBalance').textContent = isAdminLocal()
-      ? "∞ (admin)"
-      : (Number.isFinite(currentBalance) ? currentBalance : "—");
-    $('walUsed').textContent = Number.isFinite(walUsedToday) ? walUsedToday : "—";
-    $('walCap').textContent  = Number.isFinite(walDailyCap)  ? walDailyCap  : "—";
-  }
-
-  async function syncWalletFromServer(showToast=false){
-    if(!auth.currentUser){
-      currentBalance = 0;
-      walUsedToday = 0;
-      walDailyCap = 0;
-      renderWalletUI();
-      return;
-    }
+  function fmtLocal(ts){
     try{
-      await bootCredits();              // crea/aggiorna doc se serve
-
-      const raw = await getWalletRaw();
-      const today = new Date().toISOString().slice(0,10);
-      if(raw){
-        const day = typeof raw.day === "string" ? raw.day : today;
-        walDailyCap = Number.isFinite(+raw.dailyLimit) ? +raw.dailyLimit : 0;
-        walUsedToday = Number.isFinite(+raw.usedToday) ? +raw.usedToday : 0;
-        if(day !== today) walUsedToday = 0;
-      }else{
-        walDailyCap = 0;
-        walUsedToday = 0;
-      }
-
-      const bal = await getBalance();
-      currentBalance = Number.isFinite(+bal) ? +bal : 0;
-
-      renderWalletUI();
-      if(showToast) toast('Wallet ricaricato da Firestore.');
-    }catch(e){
-      console.error("Wallet sync error:", e);
-      currentBalance = 0;
-      walUsedToday = 0;
-      walDailyCap = 0;
-      renderWalletUI();
-      if(showToast) toast('Impossibile leggere il wallet (vedi console).');
-    }
-  }
-
-  onAuthStateChanged(auth, async (user)=>{
-    currentUser = user;
-    renderUser();
-    await syncWalletFromServer(false);
-  });
-
-  $('btnReload').onclick = ()=> syncWalletFromServer(true);
-
-  // +5 crediti di test: NON scrive su Firestore, solo per vedere che risponde
-  $('btnTestCredit').onclick = async ()=>{
-    if(!auth.currentUser){
-      toast('Devi essere loggato per testare il wallet.');
-      return;
-    }
-    try{
-      await bootCredits();
-      const bal = await getBalance();
-      currentBalance = Number.isFinite(+bal) ? +bal + 5 : 5; // solo visual
-      renderWalletUI();
-      toast('Test: +5 crediti (solo UI, non salvato).');
-    }catch(e){
-      console.error("Test credit error:", e);
-      toast('Errore nel test dei crediti (vedi console).');
-    }
-  };
-
-  /* ========= PRESET FREE / PRO ========= */
-  function readPrefs(){
-    try{
-      return JSON.parse(LS.getItem('whatif_prefs') || '{}') || {};
-    }catch{ return {}; }
-  }
-  function writePrefs(p){
-    LS.setItem('whatif_prefs', JSON.stringify(p));
-  }
-  function renderPresetInfo(){
-    const prefs = readPrefs();
-    const preset = prefs.pro ? 'PRO' : 'FREE';
-    const capLocal = LS.getItem('wallet_daily_cap') || '—';
-    $('chipPreset').textContent = `Preset attuale: ${preset}`;
-    $('chipPrefs').textContent = `Prefs: pro=${!!prefs.pro}, stile=${prefs.stile || 'whatif'}, periodo=${prefs.periodo || 'future'}, cap locale=${capLocal}`;
-  }
-
-  $('btnPresetFree').onclick = async ()=>{
-    const prefs = readPrefs();
-    prefs.pro = false;
-    writePrefs(prefs);
-    LS.setItem('wallet_daily_cap','3');
-
-    if(!auth.currentUser){
-      renderPresetInfo();
-      toast('Preset FREE applicato lato client. Non sei loggato, il wallet Firestore resterà vuoto.');
-      return;
-    }
-
-    try{
-      await bootCredits();
-      await adminSetDailyLimit(3);
-      await adminResetToday();
-      await syncWalletFromServer(false);
-      renderPresetInfo();
-      toast('Preset FREE applicato: 3 crediti/giorno su Firestore.');
-    }catch(e){
-      console.error('Preset FREE error:', e);
-      renderPresetInfo();
-      toast('Errore nel preset FREE (vedi console).');
-    }
-  };
-
-  $('btnPresetPro').onclick = async ()=>{
-    const PRO_LIMIT = 30; // se vuoi cambi il limite PRO qui
-    const prefs = readPrefs();
-    prefs.pro = true;
-    writePrefs(prefs);
-
-    if(!auth.currentUser){
-      LS.setItem('wallet_daily_cap', String(PRO_LIMIT));
-      renderPresetInfo();
-      toast('Preset PRO applicato lato client. Non sei loggato, il wallet Firestore resterà vuoto.');
-      return;
-    }
-
-    try{
-      await bootCredits();
-      await adminSetDailyLimit(PRO_LIMIT);
-      await adminResetToday();
-      LS.setItem('wallet_daily_cap', String(PRO_LIMIT));
-      await syncWalletFromServer(false);
-      renderPresetInfo();
-      toast(`Preset PRO applicato: ${PRO_LIMIT} crediti/giorno su Firestore.`);
-    }catch(e){
-      console.error('Preset PRO error:', e);
-      renderPresetInfo();
-      toast('Errore nel preset PRO (vedi console).');
-    }
-  };
-
-  renderPresetInfo();
-
-  /* ========= CRONOLOGIA LOCALE ========= */
-  function fmt(ts){
-    try{
-      return new Date(ts).toLocaleString('it-IT',{hour12:false});
-    }catch{return '—'}
-  }
-
-  function renderHistory(){
-    const box = $('histList');
-    if(!box) return;
-    box.innerHTML = '';
-    let arr=[];
-    try{ arr = JSON.parse(LS.getItem('cronologia') || '[]'); if(!Array.isArray(arr)) arr=[]; }catch{arr=[];}
-    if(!arr.length){
-      const div=document.createElement('div');
-      div.className='small';
-      div.textContent='— Nessuna cronologia trovata.';
-      box.appendChild(div);
-      return;
-    }
-    arr.slice(-50).reverse().forEach(item=>{
-      const d=document.createElement('div');
-      d.className='story';
-      d.innerHTML = `
-        <div class="story-q">${(item.domanda || '—')
-          .replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
-        <div class="story-meta">
-          ${fmt(item.ts)} · stile: ${item.stile || 'whatif'} · periodo: ${item.periodo || 'future'}
-          ${item.surprise ? ' · surprise' : ''}
-        </div>
-      `;
-      box.appendChild(d);
-    });
-  }
-
-  function renderNext(){
-    const box = $('nextList');
-    if(!box) return;
-    box.innerHTML='';
-    let arr=[];
-    try{ arr = JSON.parse(LS.getItem('next_prompts') || '[]'); if(!Array.isArray(arr)) arr=[]; }catch{arr=[];}
-    if(!arr.length){
-      const div=document.createElement('div');
-      div.className='small';
-      div.textContent='— Nessuna domanda salvata.';
-      box.appendChild(div);
-      return;
-    }
-    arr.slice(0,50).forEach(item=>{
-      const d=document.createElement('div');
-      d.className='story';
-      d.innerHTML = `
-        <div class="story-q">${(item.q || '—')
-          .replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
-        <div class="story-meta">${fmt(item.ts)}</div>
-      `;
-      box.appendChild(d);
-    });
-  }
-
-  $('btnClearHist').onclick = ()=>{
-    if(!confirm('Sicuro di voler svuotare tutta la cronologia locale?')) return;
-    LS.removeItem('cronologia');
-    renderHistory();
-    toast('Cronologia svuotata.');
-  };
-  $('btnClearNext').onclick = ()=>{
-    if(!confirm('Sicuro di voler svuotare tutte le domande salvate?')) return;
-    LS.removeItem('next_prompts');
-    renderNext();
-    toast('Domande salvate svuotate.');
-  };
-
-  renderHistory();
-  renderNext();
-
-  /* ========= LOG DOMANDE (SERVER, SOLO METADATI) ========= */
-  let lastLogsItems = [];
-  let logsLastSeenTs = 0; // ultimo timestamp visto (per ricarica incrementale)
-
-  function updateLogsCounters(){
-    const total = (lastLogsItems || []).length;
-    const todayStr = new Date().toISOString().slice(0,10);
-    let todayCount = 0;
-
-    for(const it of lastLogsItems){
-      const ts = it.ts || 0;
       const d = new Date(ts);
-      if(!isNaN(d.getTime())){
-        const ds = d.toISOString().slice(0,10);
-        if(ds === todayStr) todayCount++;
+      if(isNaN(d.getTime())) return "—";
+      return d.toLocaleString("it-IT",{hour12:false});
+    }catch{ return "—"; }
+  }
+
+  function setLastRefreshNow(){
+    const el = $('lastRefresh');
+    if(!el) return;
+    const d = new Date();
+    el.textContent = d.toLocaleString("it-IT",{hour12:false});
+  }
+
+  // ===== KPI helpers =====
+  function safeStyle(it){
+    return (it.style || it.stile || "whatif").toLowerCase();
+  }
+  function safePeriodo(it){
+    return (it.periodo || it.mode || "future").toLowerCase(); // mode fallback
+  }
+  function safeSource(it){
+    return (it.source || it.src || "manual").toLowerCase();
+  }
+
+  function updateDashboard(items){
+    const total = items.length;
+
+    const todayStr = new Date().toISOString().slice(0,10); // UTC
+    let today = 0;
+
+    let wi = 0, wtf = 0;
+
+    let wiFuture = 0, wiPast = 0;
+    let wtfFuture = 0, wtfPast = 0;
+
+    const sources = new Map(); // source -> count
+
+    for(const it of items){
+      const ts = Number(it.ts || 0);
+      if(ts){
+        const d = new Date(ts);
+        if(!isNaN(d.getTime()) && d.toISOString().slice(0,10) === todayStr) today++;
+      }
+
+      const st = safeStyle(it);
+      const per = safePeriodo(it);
+      const src = safeSource(it);
+
+      sources.set(src, (sources.get(src)||0) + 1);
+
+      if(st === "wtf"){
+        wtf++;
+        if(per === "past") wtfPast++; else wtfFuture++;
+      }else{
+        wi++;
+        if(per === "past") wiPast++; else wiFuture++;
       }
     }
 
-    const chipTot = $('logsCountChipTotal');
-    const chipToday = $('logsCountChipToday');
-    if(chipTot) chipTot.textContent = `Log mostrati: ${total}`;
-    if(chipToday) chipToday.textContent = `Di oggi: ${todayCount}`;
-  }
+    // KPIs
+    $('kpiTotal').textContent = total;
+    $('kpiToday').textContent = today;
+    $('kpiWhatif').textContent = wi;
+    $('kpiWtf').textContent = wtf;
 
-  function renderLogsWithCurrentFilters(){
-    const box = $('logsList');
-    if(!box) return;
-    box.innerHTML = '';
+    // Matrix Stile x Periodo
+    $('mWiFuture').textContent  = wiFuture;
+    $('mWiPast').textContent    = wiPast;
+    $('mWiTotal').textContent   = (wiFuture + wiPast);
 
-    const items = lastLogsItems || [];
-    const styleFilter   = ($('logsFilterStyle')   && $('logsFilterStyle').value)   || '';
-    const periodoFilter = ($('logsFilterPeriodo') && $('logsFilterPeriodo').value) || '';
-    const sourceFilter  = ($('logsFilterSource')  && $('logsFilterSource').value)  || '';
+    $('mWtfFuture').textContent = wtfFuture;
+    $('mWtfPast').textContent   = wtfPast;
+    $('mWtfTotal').textContent  = (wtfFuture + wtfPast);
 
-    const filtered = items.filter(it=>{
-      const style   = it.style   || it.stile || 'whatif';
-      const periodo = it.periodo || 'future';
-      const source  = it.source  || 'manual';
+    $('mAllFuture').textContent = (wiFuture + wtfFuture);
+    $('mAllPast').textContent   = (wiPast + wtfPast);
+    $('mAllTotal').textContent  = total;
 
-      if(styleFilter   && style   !== styleFilter)   return false;
-      if(periodoFilter && periodo !== periodoFilter) return false;
-      if(sourceFilter  && source  !== sourceFilter)  return false;
-      return true;
-    });
-
-    if(!filtered.length){
-      const div=document.createElement('div');
-      div.className='small';
-      div.textContent='— Nessun log che rispetta questi filtri.';
-      box.appendChild(div);
-      updateLogsCounters();
-      return;
+    // Sources table
+    const body = $('sourceTableBody');
+    if(body){
+      const rows = Array.from(sources.entries()).sort((a,b)=>b[1]-a[1]);
+      if(!rows.length){
+        body.innerHTML = `<tr><td class="muted">—</td><td class="right muted">—</td></tr>`;
+      }else{
+        body.innerHTML = rows.map(([k,v])=>`
+          <tr>
+            <td class="td-big">${escapeHtml(k)}</td>
+            <td class="right td-big">${v}</td>
+          </tr>
+        `).join("");
+      }
     }
 
-    filtered.forEach(it=>{
-      const d = document.createElement('div');
-      d.className = 'story';
-
-      const ts       = fmt(it.ts || Date.now());
-      const style    = it.style   || it.stile || 'whatif';
-      const periodo  = it.periodo || 'future';
-      const source   = it.source  || 'manual';       // 'manual' | 'hint' | 'surprise'
-      const surprise = !!it.surprise;                // true se è stato usato Sorprendimi
-      const usedHint = source === 'hint' || it.usedHint === true;
-
-      const labelSource =
-        source === 'hint'      ? 'spunti rapidi'
-      : source === 'surprise'  ? 'sorprendimi'
-      :                          'manuale';
-
-      d.innerHTML = `
-        <div class="story-q">
-          ${ts} · stile: ${style} · periodo: ${periodo}
-        </div>
-        <div class="story-meta">
-          sorgente: ${labelSource}
-          · Sorprendimi: ${surprise ? 'sì' : 'no'}
-          · Spunti rapidi: ${usedHint ? 'sì' : 'no'}
-        </div>
-      `;
-      box.appendChild(d);
-    });
-
-    updateLogsCounters();
+    // Logs list
+    const listBody = $('logsListBody');
+    if(listBody){
+      if(!items.length){
+        listBody.innerHTML = `<tr><td class="muted" colspan="4">—</td></tr>`;
+      }else{
+        const top = items.slice(0,200).sort((a,b)=>(b.ts||0)-(a.ts||0));
+        listBody.innerHTML = top.map(it=>{
+          const ts = fmtLocal(it.ts || 0);
+          const st = escapeHtml(safeStyle(it));
+          const per = escapeHtml(safePeriodo(it));
+          const src = escapeHtml(safeSource(it));
+          return `<tr><td>${ts}</td><td class="td-big">${st}</td><td>${per}</td><td>${src}</td></tr>`;
+        }).join("");
+      }
+    }
   }
 
-  async function fetchLogsFromApi(){
-    const box = $('logsList');
-    const info = $('logsInfo');
-    if(!box) return;
+  function escapeHtml(s){
+    return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
 
-    // non distruggo il contenuto se ho già log: solo messaggio piccolo in cima
-    if(!lastLogsItems.length){
-      box.innerHTML = '<div class="small">Caricamento log dal server…</div>';
+  // ===== API fetch (verifica token + logs) =====
+  async function fetchAdminLogs(){
+    const tok = getToken();
+    if(!tok){
+      isAdminVerified = false;
+      renderAdminBadge();
+      renderTokenStatus("— nessun token");
+      toast("Inserisci un token admin.");
+      return [];
     }
 
     try{
-      const adminTok = getAdminToken();
-      const headers = {};
-      if(adminTok) headers['x-admin-token'] = adminTok;
-
-      const res = await fetch('/api/admin-logs?limit=200&order=desc',{ headers });
+      const res = await fetch("/api/admin-logs?limit=200&order=desc",{
+        headers:{ "x-admin-token": tok }
+      });
 
       if(res.status === 401){
-        adminTokenState = 'invalid';
-        renderAdminTokenUI();
-        box.innerHTML = '<div class="small">Non autorizzato: token admin non valido o scaduto. Controlla il valore inserito.</div>';
-        if(info) info.textContent = 'Token admin mancante o non valido per /api/admin-logs.';
-        toast('Token admin non valido per /api/admin-logs.');
-        lastLogsItems = [];
-        logsLastSeenTs = 0;
-        updateLogsCounters();
-        return;
+        isAdminVerified = false;
+        renderAdminBadge();
+        renderTokenStatus(`${mask(tok)} (NON valido)`);
+        toast("Token non valido o scaduto.");
+        return [];
       }
 
       if(!res.ok){
-        adminTokenState = 'unknown';
-        renderAdminTokenUI();
-        box.innerHTML = '<div class="small">Errore nel leggere /api/admin-logs (HTTP '+res.status+').</div>';
-        if(info) info.textContent = 'Errore HTTP nel recuperare i log.';
-        lastLogsItems = [];
-        logsLastSeenTs = 0;
-        updateLogsCounters();
-        return;
+        isAdminVerified = false;
+        renderAdminBadge();
+        renderTokenStatus(`${mask(tok)} (errore HTTP ${res.status})`);
+        toast("Errore nel recuperare i log.");
+        return [];
       }
 
       const data = await res.json().catch(()=>null);
       const items = (data && Array.isArray(data.items)) ? data.items : [];
 
-      adminTokenState = 'ok';
-      renderAdminTokenUI();
+      // ✅ token verificato
+      isAdminVerified = true;
+      renderAdminBadge();
+      renderTokenStatus(`${mask(tok)} (OK)`);
 
-      if(!items.length){
-        if(!lastLogsItems.length){
-          box.innerHTML = '<div class="small">Token OK, ma nessun log trovato (lista vuota).</div>';
-          if(info) info.textContent = 'Token valido. Nessun log presente in /api/admin-logs.';
-        }
-        updateLogsCounters();
-        return;
-      }
-
-      // calcolo max ts ricevuto
-      let maxTsInBatch = logsLastSeenTs;
-      for(const it of items){
-        const ts = Number(it.ts || 0);
-        if(ts > maxTsInBatch) maxTsInBatch = ts;
-      }
-
-      if(logsLastSeenTs === 0){
-        // primo caricamento: prendo tutto
-        lastLogsItems = items.slice().sort((a,b)=>(b.ts||0)-(a.ts||0));
-        logsLastSeenTs = maxTsInBatch;
-        renderLogsWithCurrentFilters();
-        if(info){
-          info.textContent = `Log lato server (solo metadati anonimi): ${items.length} voci lette (max 200). Filtri applicati solo lato client.`;
-        }
-        toast(`Caricati ${items.length} log totali dal server.`);
-        return;
-      }
-
-      // caricamento successivo: solo log con ts maggiore dell'ultimo visto
-      const newItems = items.filter(it => {
-        const ts = Number(it.ts || 0);
-        return ts > logsLastSeenTs;
-      });
-
-      if(!newItems.length){
-        // niente di nuovo, mantengo la vista com'è
-        if(!lastLogsItems.length){
-          box.innerHTML = '<div class="small">Nessun log nuovo. (Vista vuota, ma i log più vecchi restano sul server.)</div>';
-        }
-        if(info){
-          info.textContent = `Nessun nuovo log dal server. Log totali mostrati: ${lastLogsItems.length}.`;
-        }
-        toast('Nessun nuovo log dal server.');
-        updateLogsCounters();
-        return;
-      }
-
-      // aggiungo solo i nuovi, mantengo ordinamento per ts desc
-      lastLogsItems = lastLogsItems.concat(newItems);
-      lastLogsItems.sort((a,b)=>(b.ts||0)-(a.ts||0));
-      logsLastSeenTs = maxTsInBatch;
-
-      renderLogsWithCurrentFilters();
-      if(info){
-        info.textContent = `Log lato server (solo metadati anonimi): ${lastLogsItems.length} voci totali in vista. (+${newItems.length} nuove)`;
-      }
-      toast(`Aggiunti ${newItems.length} nuovi log.`);
-
+      return items;
     }catch(e){
-      console.error('admin-logs error:', e);
-      adminTokenState = 'unknown';
-      renderAdminTokenUI();
-      box.innerHTML = '<div class="small">Errore imprevisto nel leggere /api/admin-logs (vedi console).</div>';
-      if(info) info.textContent = 'Errore imprevisto nel recuperare i log.';
-      updateLogsCounters();
+      console.error("fetchAdminLogs error:", e);
+      isAdminVerified = false;
+      renderAdminBadge();
+      renderTokenStatus(`${mask(tok)} (errore rete)`);
+      toast("Errore rete o server.");
+      return [];
     }
   }
 
-  // svuota SOLO la vista locale dei log (non tocca il server, non resetta logsLastSeenTs)
-  $('btnClearLogsView').onclick = () => {
-    lastLogsItems = [];
-    const box = $('logsList');
-    if(box){
-      box.innerHTML = '<div class="small">Vista log svuotata. I log più vecchi restano sul server; con “Ricarica log” vedrai solo le chiamate nuove.</div>';
+  async function reloadLogs(){
+    const items = await fetchAdminLogs();
+    updateDashboard(items);
+    setLastRefreshNow();
+    if(isAdminVerified) toast("Dashboard aggiornata.");
+  }
+
+  // ===== Admin logout (pulito) =====
+  async function adminLogout(){
+    const tok = getToken();
+
+    // opzionale: revoca lato server se hai endpoint (non blocca se non esiste)
+    if(tok){
+      try{
+        await fetch("/api/admin-token?action=revoke",{
+          method:"POST",
+          headers:{ "x-admin-token": tok }
+        });
+      }catch{}
     }
-    updateLogsCounters();
-    toast('Vista log svuotata (server intatto).');
+
+    clearToken();
+    isAdminVerified = false;
+    renderAdminBadge();
+    renderTokenStatus("— rimosso");
+    $('adminTokenInput').value = "";
+
+    // reset dashboard UI
+    updateDashboard([]);
+    setLastRefreshNow();
+
+    toast("Uscito da admin.");
+    location.href = "index.html";
+  }
+
+  // ===== Wiring UI =====
+  $('btnHome').onclick = ()=> location.href = "index.html";
+
+  $('btnSaveToken').onclick = async ()=>{
+    const v = ($('adminTokenInput').value || "").trim();
+    if(!v){
+      toast("Incolla un token.");
+      return;
+    }
+    setToken(v);
+    renderTokenStatus(`${mask(v)} (da verificare…)`);
+    await reloadLogs();
   };
 
-  if($('btnReloadLogs')){
-    $('btnReloadLogs').onclick = fetchLogsFromApi;
-  }
-  if($('logsFilterStyle'))   $('logsFilterStyle').onchange   = renderLogsWithCurrentFilters;
-  if($('logsFilterPeriodo')) $('logsFilterPeriodo').onchange = renderLogsWithCurrentFilters;
-  if($('logsFilterSource'))  $('logsFilterSource').onchange  = renderLogsWithCurrentFilters;
+  $('btnClearToken').onclick = ()=>{
+    clearToken();
+    isAdminVerified = false;
+    renderAdminBadge();
+    renderTokenStatus("— rimosso");
+    $('adminTokenInput').value = "";
+    updateDashboard([]);
+    toast("Token rimosso.");
+  };
 
-  // prova caricamento log all’avvio (se c’è già un token salvato)
-  if(getAdminToken()){
-    fetchLogsFromApi();
-  } else {
-    updateLogsCounters();
-  }
+  $('btnAdminLogout').onclick = adminLogout;
+  $('btnReloadLogs').onclick = reloadLogs;
+
+  // ===== Boot =====
+  (function init(){
+    renderAdminBadge();
+
+    const tok = getToken();
+    if(tok){
+      $('adminTokenInput').value = tok;
+      renderTokenStatus(`${mask(tok)} (da verificare…)`);
+      // prova verifica+dashboard subito
+      reloadLogs();
+    }else{
+      renderTokenStatus("— nessun token");
+      updateDashboard([]);
+    }
+  })();
 </script>
 </body>
 </html>
