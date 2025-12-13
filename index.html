@@ -647,6 +647,13 @@
     function setLang(l){    
       LS.setItem('lang', l.toLowerCase());    
       applyLang();    
+
+      /* ✅ AGGIUNTO: aggiorna lang in Firestore se notifiche attive */
+      try{
+        if (localStorage.getItem('dailySignalsChoice') === 'accepted' && window.registerDailyFCM) {
+          window.registerDailyFCM();
+        }
+      }catch{}
     }    
 
     function applyLang(){    
@@ -1288,10 +1295,16 @@
         let uid = null;
         try{ uid = auth.currentUser?.uid || null; }catch{}
 
+        /* ✅ AGGIUNTO: invio anche lang (lingua pagina) */
+        let lang = "it";
+        try{
+          lang = (window.getCurrentLang && window.getCurrentLang()) || localStorage.getItem("lang") || "it";
+        }catch{}
+
         const resp = await fetch("/api/save-fcm-token",{
           method:"POST",
           headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ token, uid })
+          body: JSON.stringify({ token, uid, lang })
         });
 
         let data = {};
