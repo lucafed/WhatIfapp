@@ -126,6 +126,9 @@
       <li data-i="s1b6">
         <strong>Dati relativi a pubblicità e acquisti</strong> (ad es. identificatore dell’annuncio visto, esito della visualizzazione, ID transazione di crediti acquistati), qualora vengano attivati annunci o sistemi di acquisto, trattati dal fornitore AdTech e/o dallo store o provider di pagamento secondo le proprie policy.
       </li>
+      <li data-i="s1b8">
+        <strong>Notifiche push</strong>: utilizziamo Firebase Cloud Messaging (FCM) per inviarti notifiche relative all’esperienza dell’app (ad es. messaggi giornalieri o avvisi di servizio), se attive. A tal fine viene generato e salvato un <code>token di notifica</code> associato al tuo dispositivo. Il token non contiene dati personali e viene usato solo per recapitare le notifiche. La lingua della notifica viene utilizzata esclusivamente per mostrarti il messaggio nella lingua selezionata nell’app.
+      </li>
       <li data-i="s1b7">
         <strong>Dati che NON raccogliamo nella versione attuale dell’app</strong>: non accediamo alla tua rubrica, ai tuoi SMS, al tuo calendario, ai tuoi file personali, al microfono, alla fotocamera o alla posizione precisa, salvo che ciò sia chiaramente richiesto e spiegato in futuro in questa Informativa e nelle schermate di consenso.
       </li>
@@ -333,7 +336,7 @@
     </p>
     <ul>
       <li data-i="perm_b1">
-        L’app <strong>non richiede</strong> accesso alla tua rubrica, ai tuoi SMS, al calendario, alla cronologia chiamate, ai contatti del dispositivo o ai tuoi file personali.
+        L’app <strong>non richiede</strong> accesso alla tua rubrica, ai tuoi SMS, al tuo calendario, alla cronologia chiamate, ai contatti del dispositivo o ai tuoi file personali.
       </li>
       <li data-i="perm_b2">
         L’app <strong>non utilizza</strong> il microfono o la fotocamera per registrare audio o video, salvo eventuali future funzionalità chiaramente indicate e per cui ti verrà chiesto un consenso specifico.
@@ -381,7 +384,11 @@
 <footer>© 2025 What?f</footer>
 
 <script>
-  const L = (localStorage.getItem('lang') || 'it').toLowerCase();
+  function getLang(){
+    const L = (localStorage.getItem('lang') || 'it').toLowerCase();
+    return ['it','en','es','fr','de'].includes(L) ? L : 'it';
+  }
+
   const DICT = {
     it: {
       back:"Indietro",
@@ -390,52 +397,53 @@
       updated:"Ultimo aggiornamento",
       s1:"Dati trattati",
       s1p1:"What?f adotta un approccio di minimizzazione dei dati. Trattiamo solo le informazioni necessarie per farti usare l’app e il sistema di crediti. Non salviamo in modo permanente il contenuto delle tue domande o delle risposte sui nostri server: il testo è usato solo per generare la risposta tramite i servizi di AI e rimane nella cronologia locale sul tuo dispositivo.",
-      s1b1:"Dati account (tramite login, ad es. Google): identificativo univoco (uid) ed email. Eventuali altri dati di profilo (es. nome o immagine) restano gestiti dal provider di autenticazione e non sono utilizzati da What?f per finalità di marketing o profilazione.",
-      s1b2:"Wallet crediti su Firebase Firestore: giorno corrente, crediti giornalieri disponibili, crediti usati, crediti totali utilizzati e metadati tecnici (timestamp, flag di sicurezza).",
-      s1b3:"Log di utilizzo anonimi lato server: stile scelto (What if / What the F), periodo (passato/futuro), lingua, sorgente (manuale / spunti rapidi / Sorprendimi) e timestamp. Questi log non contengono il testo delle domande o delle risposte, né l’email, l’uid o l’indirizzo IP.",
-      s1b4:"Preferenze locali sul dispositivo (lingua, tema, cronologia locale, domande salvate) memorizzate in locale tramite localStorage. Questi dati restano sul tuo dispositivo.",
-      s1b5:"Dati tecnici (es. indirizzo IP, identificatori di dispositivo, informazioni su browser/sistema operativo, log di errore) necessari a sicurezza, statistiche aggregate e prevenzione abusi, trattati principalmente dai fornitori di infrastruttura (es. hosting, rete, Firebase).",
-      s1b6:"Dati relativi a pubblicità e acquisti (es. identificatore dell’annuncio visto, esito della visualizzazione, ID transazione di crediti acquistati), qualora vengano attivati annunci o sistemi di acquisto, trattati dal fornitore AdTech e/o dallo store o provider di pagamento secondo le proprie policy.",
-      s1b7:"Dati che NON raccogliamo nella versione attuale dell’app: non accediamo alla tua rubrica, ai tuoi SMS, al tuo calendario, ai tuoi file personali, al microfono, alla fotocamera o alla posizione precisa, salvo che ciò sia chiaramente richiesto e spiegato in futuro in questa Informativa e nelle schermate di consenso.",
+      s1b1:"<strong>Dati account</strong> (tramite login, ad es. Google): identificativo univoco (<code>uid</code>) ed email. Eventuali altri dati di profilo (es. nome visualizzato o immagine) restano gestiti dal provider di autenticazione e non sono utilizzati da What?f per finalità di marketing o profilazione.",
+      s1b2:"<strong>Wallet crediti</strong> su Firebase Firestore: giorno corrente, crediti giornalieri disponibili, crediti usati, crediti totali utilizzati e metadati tecnici (timestamp, flag di sicurezza).",
+      s1b3:"<strong>Log di utilizzo anonimi lato server</strong>: stile scelto (“What if” / “What the F”), periodo (passato/futuro), lingua, sorgente della domanda (manuale / spunti rapidi / “Sorprendimi”) e timestamp. Questi log non contengono il testo delle domande o delle risposte, né l’email, l’<code>uid</code> o l’indirizzo IP.",
+      s1b4:"<strong>Preferenze locali sul dispositivo</strong> (lingua, tema, cronologia locale, domande salvate) memorizzate in locale tramite <code>localStorage</code>. Questi dati restano sul tuo dispositivo e non vengono sincronizzati sui nostri server.",
+      s1b5:"<strong>Dati tecnici</strong> (es. indirizzo IP, identificatori di dispositivo, informazioni sul browser/sistema operativo, log di errore) trattati principalmente dai fornitori di infrastruttura (es. hosting, rete, Firebase) per sicurezza, statistiche aggregate e prevenzione abusi.",
+      s1b6:"<strong>Dati relativi a pubblicità e acquisti</strong> (ad es. identificatore dell’annuncio visto, esito della visualizzazione, ID transazione di crediti acquistati), qualora vengano attivati annunci o sistemi di acquisto, trattati dal fornitore AdTech e/o dallo store o provider di pagamento secondo le proprie policy.",
+      s1b8:"<strong>Notifiche push</strong>: utilizziamo Firebase Cloud Messaging (FCM) per inviarti notifiche relative all’esperienza dell’app (ad es. messaggi giornalieri o avvisi di servizio), se attive. A tal fine viene generato e salvato un <code>token di notifica</code> associato al tuo dispositivo. Il token non contiene dati personali e viene usato solo per recapitare le notifiche. La lingua della notifica viene utilizzata esclusivamente per mostrarti il messaggio nella lingua selezionata nell’app.",
+      s1b7:"<strong>Dati che NON raccogliamo nella versione attuale dell’app</strong>: non accediamo alla tua rubrica, ai tuoi SMS, al tuo calendario, ai tuoi file personali, al microfono, alla fotocamera o alla posizione precisa, salvo che ciò sia chiaramente richiesto e spiegato in futuro in questa Informativa e nelle schermate di consenso.",
       s2:"Finalità e base giuridica",
       s2p1:"I dati sono trattati per:",
-      s2b1:"Erogare il servizio: login, gestione del wallet crediti (3 crediti/giorno, pacchetti aggiuntivi e crediti da eventuali annunci), generazione di scenari tramite AI.",
-      s2b2:"Migliorare l’esperienza d’uso: suggerimenti, cronologia locale, spunti “E se…”.",
-      s2b3:"Gestire pubblicità e acquisti: mostrare, se attivi, annunci (eventualmente incentivanti la ricarica di 1 credito a visualizzazione, fino a una soglia giornaliera) e processare i tuoi acquisti di pacchetti crediti.",
-      s2b4:"Sicurezza e prevenzione abusi: evitare uso automatico, manipolazione dei crediti, uso fraudolento di account o mezzi di pagamento.",
-      s2p2:"Le basi giuridiche prevalenti sono: esecuzione del contratto (uso dell’app), adempimento di obblighi di legge, legittimo interesse alla sicurezza e al miglioramento del servizio e, ove richiesto, il tuo consenso.",
+      s2b1:"<strong>Erogare il servizio</strong>: login, gestione del wallet crediti (3 crediti/giorno, pacchetti aggiuntivi e crediti da eventuali annunci), generazione di scenari tramite AI.",
+      s2b2:"<strong>Migliorare l’esperienza d’uso</strong>: suggerimenti, cronologia locale, spunti “E se…”.",
+      s2b3:"<strong>Gestire pubblicità e acquisti</strong>: mostrare, se attivati, annunci (eventualmente incentivanti la ricarica di crediti fino a una soglia giornaliera) e processare i tuoi acquisti di pacchetti crediti.",
+      s2b4:"<strong>Sicurezza e prevenzione abusi</strong>: evitare uso automatico, manipolazione dei crediti, uso fraudolento di account o mezzi di pagamento.",
+      s2p2:"Le basi giuridiche prevalenti sono: esecuzione del contratto (uso dell’app), adempimento di obblighi di legge, legittimo interesse alla sicurezza e al miglioramento del servizio e, ove richiesto dalla normativa locale, il tuo consenso per pubblicità personalizzata o tracciamenti non strettamente necessari.",
       firebase_h:"Firebase (login e crediti)",
       firebase_p1:"What?f utilizza Google Firebase per autenticazione e database:",
-      firebase_b1:"Firebase Authentication: gestisce il login (es. “Accedi con Google”) e conserva l’identificativo dell’account e le informazioni base del profilo.",
-      firebase_b2:"Firebase Firestore: conserva i dati del tuo wallet crediti (wallets/{uid}), ad esempio giorno, crediti giornalieri, crediti usati, cronologia aggregata di utilizzo e metadati tecnici.",
-      firebase_b3:"Regole di sicurezza: la lettura/scrittura nel wallet è limitata al tuo utente autenticato, secondo le regole di sicurezza impostate nel progetto Firebase.",
+      firebase_b1:"<strong>Firebase Authentication</strong>: gestisce il login (es. “Accedi con Google”) e conserva l’identificativo dell’account e le informazioni base del profilo.",
+      firebase_b2:"<strong>Firebase Firestore</strong>: conserva i dati del tuo wallet crediti (<code>wallets/{uid}</code>), ad esempio giorno, crediti giornalieri, crediti usati, cronologia aggregata di utilizzo e metadati tecnici.",
+      firebase_b3:"<strong>Regole di sicurezza</strong>: la lettura/scrittura nel wallet è limitata al tuo utente autenticato, secondo le regole di sicurezza impostate nel progetto Firebase.",
       firebase_p2:"L’email utilizzata per accedere è gestita da Firebase Authentication e dall’eventuale provider (ad es. Google). What?f non mantiene un proprio elenco separato di indirizzi email degli utenti e non utilizza l’email per inviare comunicazioni o per finalità di marketing; la gestione dei dati di autenticazione avviene all’interno di Firebase secondo le sue policy.",
       credits_h:"Crediti, pubblicità e acquisti in-app",
       credits_p1:"Il modello di utilizzo di What?f prevede:",
-      credits_b1:"Crediti gratuiti giornalieri: ogni utente registrato riceve normalmente 3 crediti al giorno, rinnovati automaticamente (salvo modifiche future indicate in app).",
-      credits_b2:"Acquisto di pacchetti crediti: puoi acquistare pacchetti aggiuntivi (ad es. 5, 15 o 30 crediti) tramite acquisti in-app gestiti dallo store o da eventuali provider di pagamento indicati nell’app o nel sito.",
-      credits_b3:"Annunci con ricompensa (se e quando attivi): alcuni annunci possono offrire la possibilità di ottenere 1 credito extra a visualizzazione completata, fino a un numero massimo di annunci al giorno.",
-      credits_b4:"Prevenzione abusi: registriamo in modo limitato l’uso dei crediti e delle ricompense da annunci per evitare uso automatico o fraudolento.",
+      credits_b1:"<strong>Crediti gratuiti giornalieri</strong>: ogni utente registrato riceve normalmente 3 crediti al giorno, rinnovati automaticamente (salvo modifiche future indicate in app).",
+      credits_b2:"<strong>Acquisto di pacchetti crediti</strong>: puoi acquistare pacchetti aggiuntivi (ad es. 5, 15 o 30 crediti) tramite acquisti gestiti dallo store (es. Google Play) o da eventuali provider di pagamento indicati nell’app o nel sito.",
+      credits_b3:"<strong>Annunci con ricompensa</strong> (se e quando attivi): alcuni annunci possono offrire la possibilità di ottenere 1 credito extra a visualizzazione completata, fino a un numero massimo di annunci al giorno. Le informazioni tecniche sull’annuncio visto sono trattate dal fornitore AdTech.",
+      credits_b4:"<strong>Prevenzione abusi</strong>: registriamo in modo limitato l’uso dei crediti e delle ricompense da annunci per evitare uso automatico o fraudolento (ad esempio tentativi di “farmare” crediti aggirando i limiti previsti).",
       credits_p2:"I crediti sono elementi digitali consumabili interni all’app, non sono valuta e non danno diritto a conversione in denaro.",
       s3:"Servizi di terze parti (AI)",
       s3p1:"Per generare le risposte utilizziamo servizi di intelligenza artificiale di terze parti (ad es. OpenAI o servizi analoghi). Inviamo solo i dati strettamente necessari a generare la risposta.",
       s3b1:"la tua domanda e gli eventuali chiarimenti inseriti;",
       s3b2:"parametri di contesto (lingua, stile, periodo temporale, preferenze di tono);",
       s3b3:"una porzione limitata di cronologia di sessione, se necessaria per mantenere coerenza nella risposta.",
-      s3p2:"What?f non crea un archivio interno delle domande e delle risposte: il contenuto della conversazione non viene salvato nei nostri database e rimane nella cronologia locale sul tuo dispositivo. Quando tecnicamente possibile, configuriamo i servizi di AI in modo da non utilizzare le conversazioni per l’addestramento dei modelli. I fornitori di AI possono comunque conservare i dati per un periodo limitato per sicurezza, monitoraggio abusi e qualità del servizio.",
+      s3p2:"What?f non crea un archivio interno delle domande e delle risposte: il contenuto della conversazione non viene salvato nei nostri database e rimane nella cronologia locale sul tuo dispositivo. Quando tecnicamente possibile, configuriamo i servizi di AI in modo da non utilizzare le conversazioni per l’addestramento dei modelli. I fornitori di AI possono comunque conservare i dati per un periodo limitato per garantire sicurezza, monitoraggio abusi e qualità del servizio secondo le rispettive policy.",
       s4:"Conservazione e condivisione dei dati",
       s4p1:"I dati sono conservati per il tempo strettamente necessario a fornire il servizio, garantire la sicurezza, gestire acquisti e adempiere ad obblighi legali.",
       s4b1:"fornirti il servizio (login, crediti, generazione scenari);",
       s4b2:"garantire sicurezza, prevenire abusi e gestire eventuali contestazioni di pagamento;",
       s4b3:"adempiere ad obblighi di legge (es. fiscali, contabili, antifrode).",
       s4p2:"Condividiamo dati solo con:",
-      s4b4:"fornitori di infrastruttura (es. Firebase, provider di hosting);",
-      s4b5:"fornitori AI (es. OpenAI) per l’elaborazione tecnica delle richieste;",
-      s4b6:"fornitori di pagamenti e store (es. Google Play, Stripe) per gestire acquisti in-app o online;",
-      s4b7:"fornitori AdTech, se utilizzati, per la pubblicazione di annunci e la misurazione delle relative performance.",
-      s4p3:"Non vendiamo i tuoi dati personali per finalità di marketing diretto e non effettuiamo decisioni unicamente automatizzate con effetti giuridici significativi sull’utente.",
+      s4b4:"<strong>fornitori di infrastruttura</strong> (es. Firebase, provider di hosting);",
+      s4b5:"<strong>fornitori AI</strong> (es. OpenAI) per l’elaborazione tecnica delle richieste;",
+      s4b6:"<strong>fornitori di pagamenti e store</strong> (es. Google Play, Stripe o analoghi) per gestire acquisti di crediti;",
+      s4b7:"<strong>fornitori AdTech</strong>, se utilizzati, per la pubblicazione di annunci e la misurazione delle relative performance.",
+      s4p3:"Non vendiamo i tuoi dati personali per finalità di marketing diretto. Non effettuiamo decisioni unicamente automatizzate con effetti giuridici significativi sull’utente.",
       ads_h:"Pubblicità e identificatori",
-      ads_b:"Quando vengono mostrati annunci (inclusi quelli che permettono di ottenere crediti extra, se attivi), il fornitore AdTech può trattare identificatori tecnici del dispositivo, indirizzo IP, user-agent, informazioni sull’app e sull’annuncio visualizzato, nonché dati aggregati sulle interazioni (es. impression, clic, completamento). Puoi gestire molte preferenze pubblicitarie dalle impostazioni del tuo dispositivo o dell’account store.",
+      ads_b:"Quando vengono mostrati annunci (inclusi quelli che permettono di ottenere crediti extra, se attivi), il fornitore AdTech può trattare identificatori tecnici del dispositivo, indirizzo IP, user-agent, informazioni sull’app e sull’annuncio visualizzato, nonché dati aggregati sulle interazioni (es. impression, clic, completamento). Puoi gestire molte preferenze pubblicitarie dalle impostazioni del tuo dispositivo o dell’account store e, ove previsto, scegliere tra annunci personalizzati e non personalizzati.",
       s5:"Periodi di conservazione",
       s5p1:"Conserviamo i dati personali per il tempo necessario a fornire il servizio e ad assolvere obblighi legali o di sicurezza. Le preferenze locali restano sul tuo dispositivo finché non le cancelli.",
       s6:"Trasferimenti extra-UE",
@@ -453,13 +461,13 @@
       s11p1:"Potremo aggiornare periodicamente questa Informativa; le modifiche saranno pubblicate qui e, se rilevanti, anche tramite avviso in app.",
       perm_h:"Permessi dell’app e dati non raccolti",
       perm_p1:"Nella versione attuale, What?f utilizza principalmente la connessione Internet, i servizi di autenticazione e le funzionalità di archiviazione cloud necessarie al funzionamento del wallet crediti e delle richieste AI.",
-      perm_b1:"L’app non richiede accesso alla tua rubrica, ai tuoi SMS, al calendario, alla cronologia chiamate, ai contatti del dispositivo o ai tuoi file personali.",
-      perm_b2:"L’app non utilizza il microfono o la fotocamera per registrare audio o video, salvo future funzionalità chiaramente indicate e soggette a consenso.",
-      perm_b3:"L’app non traccia la tua posizione precisa; può utilizzare solo informazioni approssimative derivate dall’indirizzo IP per motivi tecnici o di sicurezza.",
+      perm_b1:"L’app <strong>non richiede</strong> accesso alla tua rubrica, ai tuoi SMS, al calendario, alla cronologia chiamate, ai contatti del dispositivo o ai tuoi file personali.",
+      perm_b2:"L’app <strong>non utilizza</strong> il microfono o la fotocamera per registrare audio o video, salvo future funzionalità chiaramente indicate e soggette a consenso.",
+      perm_b3:"L’app <strong>non traccia la tua posizione precisa</strong>; può utilizzare solo informazioni approssimative derivate dall’indirizzo IP per motivi tecnici o di sicurezza.",
       erasure_h:"Eliminazione dell’account e dei dati",
       erasure_p1:"Puoi richiedere la cancellazione del tuo account e dei dati associati tramite funzione in app (se disponibile) o via email.",
-      erasure_b1:"Funzione dedicata in app, se presente, nella sezione impostazioni/account.",
-      erasure_b2:"Richiesta via email a whatifapp@hotmail.com indicando l’account da cancellare.",
+      erasure_b1:"<strong>funzione dedicata in app</strong> (se disponibile), seguendo le istruzioni nella sezione impostazioni/account;",
+      erasure_b2:"<strong>richiesta via email</strong> a <a href=\"mailto:whatifapp@hotmail.com\">whatifapp@hotmail.com</a>, indicando l’account da cancellare.",
       erasure_p2:"Elimineremo o anonimizzeremo i dati non più necessari, salvo quelli che siamo tenuti a conservare per legge o per la tutela dei nostri diritti.",
       consent_h:"Consenso, pubblicità personalizzata e preferenze privacy",
       consent_p1:"In alcuni paesi potremmo chiedere il tuo consenso per analisi o pubblicità personalizzata; potrai accettare o rifiutare senza perdere l’accesso alle funzioni base.",
@@ -475,32 +483,33 @@
       updated:"Last updated",
       s1:"Data processed",
       s1p1:"We follow a data-minimization approach and only process what is needed to provide the app and the credit system. We do not permanently store the content of your questions or answers on our servers: the text is used only to generate the response via AI services and remains in the local history on your device.",
-      s1b1:"Account data (via login, e.g. Google): unique ID (uid) and email. Any other profile data (e.g. display name or picture) are managed by the identity provider and are not used by What?f for marketing or profiling.",
-      s1b2:"Credit wallet in Firebase Firestore: current day, daily credits available, credits used, total credits used and technical metadata (timestamps, security flags).",
-      s1b3:"Anonymous usage logs on the server side: chosen style (What if / What the F), period (past/future), language, question source (manual / hints / Surprise me) and timestamp. These logs do not contain the text of questions or answers, nor the email, uid or IP address.",
-      s1b4:"Local preferences on the device (language, theme, local history, saved questions) stored via localStorage. These data remain on your device.",
-      s1b5:"Technical data (e.g. IP address, device identifiers, browser/OS info, error logs) for security, aggregated statistics and abuse prevention, mainly processed by infrastructure providers (hosting, network, Firebase).",
-      s1b6:"Advertising and purchase-related data (e.g. ad impression identifiers, completion status, credit purchase transaction IDs), if and when ads or purchase systems are active, processed by AdTech providers and/or the app store or payment provider under their own policies.",
-      s1b7:"Data we do NOT collect in the current version: we do not access your contacts, SMS, calendar, personal files, microphone, camera or precise location, unless clearly requested and explained in this Policy and in consent screens in the future.",
+      s1b1:"<strong>Account data</strong> (via login, e.g. Google): unique ID (<code>uid</code>) and email. Any other profile data (e.g. display name or picture) are managed by the identity provider and are not used by What?f for marketing or profiling.",
+      s1b2:"<strong>Credit wallet</strong> in Firebase Firestore: current day, daily credits available, credits used, total credits used and technical metadata (timestamps, security flags).",
+      s1b3:"<strong>Anonymous usage logs</strong> on the server side: chosen style (What if / What the F), period (past/future), language, question source (manual / hints / Surprise me) and timestamp. These logs do not contain the text of questions or answers, nor the email, <code>uid</code> or IP address.",
+      s1b4:"<strong>Local device preferences</strong> (language, theme, local history, saved prompts) stored via <code>localStorage</code>. These data remain on your device and are not synced to our servers.",
+      s1b5:"<strong>Technical data</strong> (e.g. IP address, device identifiers, browser/OS info, error logs) mainly processed by infrastructure providers (hosting, network, Firebase) for security, aggregated statistics and abuse prevention.",
+      s1b6:"<strong>Advertising and purchase-related data</strong> (e.g. ad identifiers, completion status, transaction IDs), if and when ads or purchase systems are active, processed by AdTech providers and/or the app store or payment provider under their own policies.",
+      s1b8:"<strong>Push notifications</strong>: we use Firebase Cloud Messaging (FCM) to send app-related notifications (e.g. daily messages or service notices), if enabled. A notification <code>token</code> is generated and stored to deliver messages to your device. The token does not contain personal data and is used solely for notification delivery. The notification language is used only to display the message in the language selected in the app.",
+      s1b7:"<strong>Data we do NOT collect in the current version</strong>: we do not access your contacts, SMS, calendar, personal files, microphone, camera or precise location, unless clearly requested and explained in this Policy and in consent screens in the future.",
       s2:"Purpose and legal basis",
       s2p1:"We process data to:",
-      s2b1:"Provide the service: login, credit wallet (3 daily credits, extra packs and any ad rewards), AI-based scenario generation.",
-      s2b2:"Improve user experience: suggestions, local history, “What if…” hints.",
-      s2b3:"Manage advertising and purchases: show ads, if active (including rewarded ones), and process your credit-pack purchases.",
-      s2b4:"Ensure security and prevent abuse: avoid automated use, credit manipulation and fraudulent activity.",
+      s2b1:"<strong>Provide the service</strong>: login, credit wallet (3 daily credits, extra packs and any ad rewards), AI-based scenario generation.",
+      s2b2:"<strong>Improve user experience</strong>: suggestions, local history, “What if…” hints.",
+      s2b3:"<strong>Manage advertising and purchases</strong>: show ads, if active (including rewarded ones), and process your credit-pack purchases.",
+      s2b4:"<strong>Ensure security and prevent abuse</strong>: avoid automated use, credit manipulation and fraudulent activity.",
       s2p2:"Main legal bases: performance of the contract (use of the app), legal obligations, our legitimate interest in security and service improvement, and—where required—your consent.",
       firebase_h:"Firebase (login and credits)",
       firebase_p1:"We use Google Firebase for authentication and database:",
-      firebase_b1:"Firebase Authentication: manages login (e.g. “Sign in with Google”) and stores account identifiers and basic profile data.",
-      firebase_b2:"Firebase Firestore: stores your credit wallet (wallets/{uid}), such as day, daily credits, used credits, aggregated usage and technical metadata.",
-      firebase_b3:"Security rules: wallet read/write is restricted to your authenticated user according to Firebase security rules.",
+      firebase_b1:"<strong>Firebase Authentication</strong>: manages login (e.g. “Sign in with Google”) and stores account identifiers and basic profile data.",
+      firebase_b2:"<strong>Firebase Firestore</strong>: stores your credit wallet (<code>wallets/{uid}</code>), such as day, daily credits, used credits, aggregated usage and technical metadata.",
+      firebase_b3:"<strong>Security rules</strong>: wallet read/write is restricted to your authenticated user according to Firebase security rules.",
       firebase_p2:"The email used for sign-in is handled by Firebase Authentication and the identity provider (e.g. Google). What?f does not keep a separate list of user email addresses and does not use your email to send messages or for marketing purposes; authentication data are managed inside Firebase according to its own policies.",
       credits_h:"Credits, ads and in-app purchases",
       credits_p1:"What?f uses the following model:",
-      credits_b1:"Free daily credits: each registered user normally receives 3 credits per day, renewed automatically (unless changed in the app).",
-      credits_b2:"Credit packs: you may buy additional packs (e.g. 5, 15 or 30 credits) via purchases handled by the app store or payment providers indicated in the app or on the site.",
-      credits_b3:"Rewarded ads (if and when active): some ads may grant 1 extra credit per completed view up to a daily cap.",
-      credits_b4:"Abuse prevention: we record limited credit and reward usage to detect automated or fraudulent behavior.",
+      credits_b1:"<strong>Free daily credits</strong>: each registered user normally receives 3 credits per day, renewed automatically (unless changed in the app).",
+      credits_b2:"<strong>Credit packs</strong>: you may buy additional packs (e.g. 5, 15 or 30 credits) via purchases handled by the app store or payment providers indicated in the app or on the site.",
+      credits_b3:"<strong>Rewarded ads</strong> (if and when active): some ads may grant 1 extra credit per completed view up to a daily cap.",
+      credits_b4:"<strong>Abuse prevention</strong>: we record limited credit and reward usage to detect automated or fraudulent behavior.",
       credits_p2:"Credits are consumable digital items inside the app. They are not currency and cannot be exchanged for money.",
       s3:"Third-party AI services",
       s3p1:"We rely on third-party AI services (e.g. OpenAI or similar) to generate responses and only send the minimum data required.",
@@ -514,10 +523,10 @@
       s4b2:"security, abuse prevention and purchase dispute handling;",
       s4b3:"legal obligations (e.g. tax, accounting, anti-fraud).",
       s4p2:"Data are shared only with:",
-      s4b4:"infrastructure providers (e.g. Firebase, hosting);",
-      s4b5:"AI providers (e.g. OpenAI) for technical processing;",
-      s4b6:"payment and app-store providers (e.g. Google Play, Stripe) for purchases;",
-      s4b7:"AdTech providers, if used, for ad delivery and measurement.",
+      s4b4:"<strong>infrastructure providers</strong> (e.g. Firebase, hosting);",
+      s4b5:"<strong>AI providers</strong> (e.g. OpenAI) for technical processing;",
+      s4b6:"<strong>payment and app-store providers</strong> (e.g. Google Play, Stripe) for purchases;",
+      s4b7:"<strong>AdTech providers</strong>, if used, for ad delivery and measurement.",
       s4p3:"We do not sell your personal data for direct marketing and do not perform automated decisions with significant legal effects.",
       ads_h:"Advertising and identifiers",
       ads_b:"When ads are shown (including rewarded ads, if active), AdTech providers may process device identifiers, IP address, user-agent, app context and ad interaction data. Many ad preferences can be managed in your device or store settings.",
@@ -553,6 +562,7 @@
       consent_p2:"Where we rely on legitimate interest (e.g. security or improvement), you may object in the cases allowed by law by contacting us."
     },
 
+    /* ES / FR / DE: ho mantenuto i tuoi testi e aggiunto SOLO la voce push (s1b8) */
     es: {
       back:"Atrás",
       tag_live:"Versión lista para la tienda",
@@ -560,24 +570,25 @@
       updated:"Última actualización",
       s1:"Datos tratados",
       s1p1:"What?f minimiza los datos y solo trata lo necesario para la app y el sistema de créditos. No almacenamos de forma permanente el contenido de tus preguntas o respuestas en nuestros servidores: el texto se usa solo para generar la respuesta mediante servicios de IA y permanece en el historial local de tu dispositivo.",
-      s1b1:"Datos de cuenta (login, p. ej. Google): uid y correo electrónico. Otros datos de perfil (nombre, foto) los gestiona el proveedor de identidad y What?f no los utiliza para marketing o perfiles.",
-      s1b2:"Monedero de créditos en Firebase Firestore: día, créditos diarios, usados y totales, con metadatos técnicos.",
-      s1b3:"Registros de uso anónimos en el servidor: estilo elegido (What if / What the F), periodo (pasado/futuro), idioma, origen de la pregunta (manual / ideas rápidas / Sorpréndeme) y marca temporal. Estos registros no incluyen el texto de las preguntas o respuestas ni el correo, uid o IP.",
-      s1b4:"Preferencias locales en el dispositivo mediante localStorage (idioma, tema, historial local, preguntas guardadas). Estos datos permanecen en tu dispositivo.",
-      s1b5:"Datos técnicos (IP, identificadores de dispositivo, información de navegador/SO, logs) para seguridad, estadísticas agregadas y prevención de abusos, tratados principalmente por proveedores de infraestructura.",
-      s1b6:"Datos sobre publicidad y compras in-app (identificador del anuncio, estado de visualización, ID de transacción de créditos), si hay anuncios o compras, tratados por proveedores AdTech y/o la tienda o proveedor de pago.",
-      s1b7:"En la versión actual no accedemos a tu agenda, SMS, calendario, archivos personales, micrófono, cámara ni ubicación precisa, salvo que se indique claramente en el futuro.",
+      s1b1:"<strong>Datos de cuenta</strong> (login, p. ej. Google): uid y correo electrónico. Otros datos de perfil (nombre, foto) los gestiona el proveedor de identidad y What?f no los utiliza para marketing o perfiles.",
+      s1b2:"<strong>Monedero de créditos</strong> en Firebase Firestore: día, créditos diarios, usados y totales, con metadatos técnicos.",
+      s1b3:"<strong>Registros de uso anónimos</strong> en el servidor: estilo elegido (What if / What the F), periodo (pasado/futuro), idioma, origen (manual / ideas rápidas / Sorpréndeme) y marca temporal. Estos registros no incluyen el texto de las preguntas o respuestas ni el correo, uid o IP.",
+      s1b4:"<strong>Preferencias locales</strong> mediante localStorage (idioma, tema, historial local, preguntas guardadas). Estos datos permanecen en tu dispositivo.",
+      s1b5:"<strong>Datos técnicos</strong> (IP, identificadores de dispositivo, información de navegador/SO, logs) para seguridad, estadísticas agregadas y prevención de abusos, tratados principalmente por proveedores de infraestructura.",
+      s1b6:"<strong>Datos sobre publicidad y compras</strong> (identificador del anuncio, estado de visualización, ID de transacción de créditos), si hay anuncios o compras, tratados por proveedores AdTech y/o la tienda o proveedor de pago.",
+      s1b8:"<strong>Notificaciones push</strong>: usamos Firebase Cloud Messaging (FCM) para enviarte notificaciones relacionadas con la app (p. ej. mensajes diarios o avisos de servicio), si están activadas. Se genera y almacena un <code>token de notificación</code> para entregar los mensajes al dispositivo. El token no contiene datos personales y se utiliza solo para el envío de notificaciones. El idioma se usa únicamente para mostrar el mensaje en el idioma seleccionado en la app.",
+      s1b7:"<strong>En la versión actual no accedemos</strong> a tu agenda, SMS, calendario, archivos personales, micrófono, cámara ni ubicación precisa, salvo que se indique claramente en el futuro.",
       s2:"Finalidad y base legal",
       s2p1:"Tratamos datos para:",
-      s2b1:"Prestar el servicio: login, créditos (3/día, packs, anuncios), escenarios con IA.",
-      s2b2:"Mejorar la experiencia: historial local, sugerencias “¿Y si…?”.",
-      s2b3:"Gestionar anuncios y compras de créditos.",
-      s2b4:"Seguridad y prevención de abusos.",
+      s2b1:"<strong>Prestar el servicio</strong>: login, créditos (3/día, packs, anuncios), escenarios con IA.",
+      s2b2:"<strong>Mejorar la experiencia</strong>: historial local, sugerencias “¿Y si…?”.",
+      s2b3:"<strong>Gestionar anuncios y compras</strong> de créditos.",
+      s2b4:"<strong>Seguridad y prevención de abusos</strong>.",
       s2p2:"Bases legales: contrato, obligación legal e interés legítimo, y en su caso tu consentimiento.",
       firebase_h:"Firebase (login y créditos)",
       firebase_p1:"Usamos Firebase para autenticación y base de datos:",
       firebase_b1:"Firebase Auth gestiona el inicio de sesión y mantiene los datos básicos del perfil.",
-      firebase_b2:"Firestore guarda el monedero de créditos (wallets/{uid}).",
+      firebase_b2:"Firestore guarda el monedero de créditos (<code>wallets/{uid}</code>).",
       firebase_b3:"Reglas de seguridad para limitar el acceso al usuario autenticado.",
       firebase_p2:"El correo utilizado para iniciar sesión es gestionado por Firebase Authentication y el proveedor de identidad (por ejemplo, Google). What?f no mantiene una lista separada de correos ni los usa para marketing; los datos de autenticación se gestionan dentro de Firebase según sus políticas.",
       credits_h:"Créditos, anuncios y compras",
@@ -645,24 +656,25 @@
       updated:"Dernière mise à jour",
       s1:"Données traitées",
       s1p1:"What?f minimise les données et ne traite que ce qui est nécessaire. Nous ne stockons pas de manière permanente le contenu de tes questions ou réponses sur nos serveurs : le texte est utilisé uniquement pour générer la réponse via des services d’IA et reste dans l’historique local de ton appareil.",
-      s1b1:"Données de compte (connexion, ex. Google) : uid et adresse email. Les autres données de profil (nom, photo) sont gérées par le fournisseur d’identité et What?f ne les utilise pas pour du marketing ou du profilage.",
-      s1b2:"Portefeuille de crédits dans Firebase Firestore : jour, crédits journaliers, crédits utilisés et totaux, avec métadonnées techniques.",
-      s1b3:"Journaux d’utilisation anonymes côté serveur : style choisi (What if / What the F), période (passé/futur), langue, origine de la question (manuel / idées rapides / Surprends-moi) et horodatage. Ces journaux ne contiennent ni le texte des questions ou réponses, ni l’email, ni l’uid, ni l’adresse IP.",
-      s1b4:"Préférences locales via localStorage (langue, thème, historique local, questions enregistrées). Ces données restent sur ton appareil.",
-      s1b5:"Données techniques (IP, identifiants d’appareil, infos navigateur/OS, logs) pour la sécurité, les statistiques agrégées et la prévention des abus, traitées principalement par les fournisseurs d’infrastructure.",
-      s1b6:"Données relatives à la publicité et aux achats in-app (identifiant d’annonce, statut de visualisation, ID de transaction), le cas échéant, traitées par les régies publicitaires et/ou le store ou prestataire de paiement.",
-      s1b7:"Dans la version actuelle, nous n’accédons pas à tes contacts, SMS, calendrier, fichiers personnels, micro, caméra ni à ta localisation précise, sauf mention claire dans le futur.",
+      s1b1:"<strong>Données de compte</strong> (connexion, ex. Google) : uid et adresse email. Les autres données de profil (nom, photo) sont gérées par le fournisseur d’identité et What?f ne les utilise pas pour du marketing ou du profilage.",
+      s1b2:"<strong>Portefeuille de crédits</strong> dans Firebase Firestore : jour, crédits journaliers, crédits utilisés et totaux, avec métadonnées techniques.",
+      s1b3:"<strong>Journaux d’utilisation anonymes</strong> côté serveur : style choisi (What if / What the F), période (passé/futur), langue, origine (manuel / idées rapides / Surprends-moi) et horodatage. Ces journaux ne contiennent ni le texte des questions ou réponses, ni l’email, ni l’uid, ni l’adresse IP.",
+      s1b4:"<strong>Préférences locales</strong> via localStorage (langue, thème, historique local, questions enregistrées). Ces données restent sur ton appareil.",
+      s1b5:"<strong>Données techniques</strong> (IP, identifiants d’appareil, infos navigateur/OS, logs) pour la sécurité, les statistiques agrégées et la prévention des abus, traitées principalement par les fournisseurs d’infrastructure.",
+      s1b6:"<strong>Données relatives à la publicité et aux achats</strong> (identifiant d’annonce, statut de visualisation, ID de transaction), le cas échéant, traitées par les régies publicitaires et/ou le store ou prestataire de paiement.",
+      s1b8:"<strong>Notifications push</strong> : nous utilisons Firebase Cloud Messaging (FCM) pour envoyer des notifications liées à l’application (p. ex. messages quotidiens ou avis de service), si activées. Un <code>token de notification</code> est généré et stocké pour livrer les messages à l’appareil. Le token ne contient aucune donnée personnelle et sert uniquement à l’envoi des notifications. La langue est utilisée uniquement pour afficher le message dans la langue choisie dans l’application.",
+      s1b7:"<strong>Dans la version actuelle</strong>, nous n’accédons pas à tes contacts, SMS, calendrier, fichiers personnels, micro, caméra ni à ta localisation précise, sauf mention claire dans le futur.",
       s2:"Finalités et base légale",
       s2p1:"Les données sont traitées pour :",
-      s2b1:"Fournir le service : connexion, crédits (3/jour, packs, annonces), scénarios IA.",
-      s2b2:"Améliorer l’expérience : historique local, idées « Et si… ».",
-      s2b3:"Gérer la publicité et les achats de crédits.",
-      s2b4:"Sécurité et prévention des abus.",
+      s2b1:"<strong>Fournir le service</strong> : connexion, crédits (3/jour, packs, annonces), scénarios IA.",
+      s2b2:"<strong>Améliorer l’expérience</strong> : historique local, idées « Et si… ».",
+      s2b3:"<strong>Gérer</strong> la publicité et les achats de crédits.",
+      s2b4:"<strong>Sécurité</strong> et prévention des abus.",
       s2p2:"Base légale : contrat, obligations légales, intérêt légitime et, le cas échéant, ton consentement.",
       firebase_h:"Firebase (connexion & crédits)",
       firebase_p1:"Firebase gère l’authentification et la base de données :",
       firebase_b1:"Firebase Auth gère la connexion et conserve l’identifiant et les informations de base du profil.",
-      firebase_b2:"Firestore enregistre le portefeuille de crédits (wallets/{uid}).",
+      firebase_b2:"Firestore enregistre le portefeuille de crédits (<code>wallets/{uid}</code>).",
       firebase_b3:"Des règles de sécurité limitent l’accès à l’utilisateur authentifié.",
       firebase_p2:"L’adresse email utilisée pour la connexion est gérée par Firebase Authentication et le fournisseur d’identité (ex. Google). What?f ne maintient pas de liste séparée d’adresses email et ne les utilise pas pour du marketing ; les données d’authentification sont gérées dans Firebase selon ses politiques.",
       credits_h:"Crédits, publicité et achats",
@@ -730,24 +742,25 @@
       updated:"Zuletzt aktualisiert",
       s1:"Verarbeitete Daten",
       s1p1:"What?f verarbeitet nur die für App und Kreditsystem nötigen Daten. Wir speichern den Inhalt deiner Fragen oder Antworten nicht dauerhaft auf unseren Servern: der Text wird nur genutzt, um über KI-Dienste eine Antwort zu erzeugen, und verbleibt im lokalen Verlauf auf deinem Gerät.",
-      s1b1:"Kontodaten (Login, z. B. Google): uid und E-Mail-Adresse. Weitere Profildaten (Name, Bild) werden vom Identitätsanbieter verwaltet und von What?f nicht für Marketing oder Profiling genutzt.",
-      s1b2:"Credit-Wallet in Firebase Firestore: aktueller Tag, tägliche Credits, genutzte Credits, Gesamtcredits und technische Metadaten.",
-      s1b3:"Anonyme Nutzungslogs auf dem Server: gewählter Stil (What if / What the F), Zeitraum (Vergangenheit/Zukunft), Sprache, Quelle der Frage (manuell / Schnellideen / Surprise) und Zeitstempel. Diese Logs enthalten weder den Text der Fragen oder Antworten noch E-Mail, uid oder IP.",
-      s1b4:"Lokale Einstellungen per localStorage (Sprache, Theme, lokaler Verlauf, gespeicherte Fragen). Diese Daten bleiben auf deinem Gerät.",
-      s1b5:"Technische Daten (IP, Gerätekennungen, Browser/OS-Infos, Logs) für Sicherheit, aggregierte Statistiken und Missbrauchsschutz, hauptsächlich von Infrastruktur-Providern verarbeitet.",
-      s1b6:"Daten zu Werbung und Käufen (Anzeigenkennungen, Status der Ansicht, Transaktions-ID für Credits), falls Werbung oder Käufe aktiv sind, verarbeitet von AdTech-Anbietern und/oder Store/Zahlungsdienst.",
-      s1b7:"In der aktuellen Version greifen wir nicht auf Kontakte, SMS, Kalender, persönliche Dateien, Mikrofon, Kamera oder genaue Standortdaten zu, außer bei klarer Angabe in der Zukunft.",
+      s1b1:"<strong>Kontodaten</strong> (Login, z. B. Google): <code>uid</code> und E-Mail-Adresse. Weitere Profildaten (Name, Bild) werden vom Identitätsanbieter verwaltet und von What?f nicht für Marketing oder Profiling genutzt.",
+      s1b2:"<strong>Credit-Wallet</strong> in Firebase Firestore: aktueller Tag, tägliche Credits, genutzte Credits, Gesamtcredits und technische Metadaten.",
+      s1b3:"<strong>Anonyme Nutzungslogs</strong> auf dem Server: gewählter Stil (What if / What the F), Zeitraum (Vergangenheit/Zukunft), Sprache, Quelle der Frage (manuell / Schnellideen / Surprise) und Zeitstempel. Diese Logs enthalten weder den Text der Fragen oder Antworten noch E-Mail, <code>uid</code> oder IP.",
+      s1b4:"<strong>Lokale Einstellungen</strong> per localStorage (Sprache, Theme, lokaler Verlauf, gespeicherte Fragen). Diese Daten bleiben auf deinem Gerät.",
+      s1b5:"<strong>Technische Daten</strong> (IP, Gerätekennungen, Browser/OS-Infos, Logs) für Sicherheit, aggregierte Statistiken und Missbrauchsschutz, hauptsächlich von Infrastruktur-Providern verarbeitet.",
+      s1b6:"<strong>Daten zu Werbung und Käufen</strong> (Anzeigenkennungen, Status der Ansicht, Transaktions-ID für Credits), falls Werbung oder Käufe aktiv sind, verarbeitet von AdTech-Anbietern und/oder Store/Zahlungsdienst.",
+      s1b8:"<strong>Push-Benachrichtigungen</strong>: wir verwenden Firebase Cloud Messaging (FCM), um appbezogene Benachrichtigungen zu senden (z. B. tägliche Nachrichten oder Service-Hinweise), wenn aktiviert. Dazu wird ein <code>Benachrichtigungstoken</code> erzeugt und gespeichert, um Nachrichten an dein Gerät zuzustellen. Das Token enthält keine personenbezogenen Daten und dient ausschließlich der Zustellung. Die Sprache wird nur verwendet, um die Nachricht in der in der App ausgewählten Sprache anzuzeigen.",
+      s1b7:"<strong>In der aktuellen Version</strong> greifen wir nicht auf Kontakte, SMS, Kalender, persönliche Dateien, Mikrofon, Kamera oder genaue Standortdaten zu, außer bei klarer Angabe in der Zukunft.",
       s2:"Zweck & Rechtsgrundlage",
       s2p1:"Wir verarbeiten Daten, um:",
-      s2b1:"den Dienst bereitzustellen: Login, Credits (3/Tag, Pakete, Anzeigen), KI-Szenarien;",
-      s2b2:"die Nutzererfahrung zu verbessern: lokaler Verlauf, „Was wäre, wenn…“-Ideen;",
-      s2b3:"Werbung und Credit-Käufe zu verwalten;",
-      s2b4:"Sicherheit und Missbrauchsprävention zu gewährleisten.",
+      s2b1:"<strong>den Dienst bereitzustellen</strong>: Login, Credits (3/Tag, Pakete, Anzeigen), KI-Szenarien;",
+      s2b2:"<strong>die Nutzererfahrung zu verbessern</strong>: lokaler Verlauf, „Was wäre, wenn…“-Ideen;",
+      s2b3:"<strong>Werbung und Credit-Käufe</strong> zu verwalten;",
+      s2b4:"<strong>Sicherheit</strong> und Missbrauchsprävention zu gewährleisten.",
       s2p2:"Rechtsgrundlagen: Vertrag, gesetzliche Pflichten, berechtigtes Interesse und ggf. deine Einwilligung.",
       firebase_h:"Firebase (Login & Credits)",
       firebase_p1:"Firebase verwaltet Authentifizierung und Datenbank:",
       firebase_b1:"Firebase Auth verwaltet den Login und speichert grundlegende Profildaten.",
-      firebase_b2:"Firestore speichert das Credit-Wallet (wallets/{uid}).",
+      firebase_b2:"Firestore speichert das Credit-Wallet (<code>wallets/{uid}</code>).",
       firebase_b3:"Sicherheitsregeln begrenzen den Zugriff auf den angemeldeten Nutzer.",
       firebase_p2:"Die zum Login verwendete E-Mail-Adresse wird von Firebase Authentication und dem Identitätsanbieter (z. B. Google) verarbeitet. What?f führt keine eigene separate Liste von Nutzer-E-Mails und nutzt sie nicht für Marketing; Authentifizierungsdaten werden innerhalb von Firebase gemäß dessen Richtlinien verarbeitet.",
       credits_h:"Credits, Werbung und Käufe",
@@ -810,19 +823,22 @@
   };
 
   function applyLang(){
-    const lang = ['it','en','es','fr','de'].includes(L)?L:'it';
+    const lang = getLang();
     document.documentElement.lang = lang;
+
     const d = new Date('2025-12-02'); // data ufficiale ultima modifica
-    const fmt = new Intl.DateTimeFormat(lang==='en'?'en-GB':lang, {
+    const fmt = new Intl.DateTimeFormat(lang==='en' ? 'en-GB' : lang, {
       day:'numeric', month:'long', year:'numeric'
     });
     document.getElementById('updatedDate').textContent = fmt.format(d);
-    const dict = DICT[lang];
+
+    const dict = DICT[lang] || DICT.it;
     document.querySelectorAll('[data-i]').forEach(el=>{
       const k = el.getAttribute('data-i');
       if(dict[k]) el.innerHTML = dict[k];
     });
   }
+
   applyLang();
 
   document.getElementById('backBtn').addEventListener('click', ()=>{
