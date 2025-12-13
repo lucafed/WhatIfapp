@@ -13,7 +13,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { token, uid } = req.body || {};
+    // 🔹 AGGIUNTO lang
+    const { token, uid, lang } = req.body || {};
 
     if (!token) {
       return res
@@ -24,6 +25,10 @@ export default async function handler(req, res) {
     await db.collection("fcm_tokens").doc(token).set({
       token,
       uid: uid || null,
+
+      // 🔹 NUOVO CAMPO (default "it" se non arriva)
+      lang: (lang || "it").toLowerCase(),
+
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       platform: "android-web",
     });
