@@ -1,1375 +1,1402 @@
-<html lang="it">        
-<head>        
-  <meta charset="utf-8" />        
-  <meta name="viewport" content="width=device-width, initial-scale=1" />        
-  <title>What?f — Home</title>        
-  <!-- PWA -->        
-  <meta name="theme-color" content="#0B0B0C" />        
-  <link rel="manifest" href="/manifest.json" />        
-  <link rel="icon" type="image/png" sizes="32x32" href="/public/icon-192.png" />        
-  <link rel="apple-touch-icon" href="/public/icon-512.png" />        
-  <meta name="mobile-web-app-capable" content="yes" />        
-  <meta name="apple-mobile-web-app-capable" content="yes" />        
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />        
-  <!-- Preload hero -->        
-  <link rel="preload" as="image" href="/public/home-hero.png" />          <style>        
-    :root{        
-      --bg:#0C0F14; --bg2:#0E1724; --fg:#ffffff; --muted:#A0B2BA;        
-      --card:rgba(14,19,28,.55); --card-border:rgba(255,255,255,.10);        
-      --chip:#141C22; --accent:#1C57A0; --accent2:#FFEC01; --ink:#0A0E12; --shadow:rgba(0,0,0,.45);        
-    }        
-    html[data-theme="whatif"]{        
-      --bg:#0B1018; --bg2:#0E1724; --fg:#F4F7FB; --muted:#A7B3C2;        
-      --card:rgba(14,20,28,.55); --card-border:rgba(255,255,255,.12);        
-      --chip:#121A26; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;        
-    }        
-    html[data-theme="wtf"]{        
-      --bg:#0B0B0C; --bg2:#101414; --fg:#EEF5F0; --muted:#A6B6AD;        
-      --card:rgba(16,22,20,.55); --card-border:rgba(255,255,255,.10);        
-      --chip:#0F1714; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;        
-    }        
-    *{box-sizing:border-box}        
-    html,body{        
-      height:100%;margin:0;        
-      background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);        
-      color:var(--fg);        
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;        
-      overflow-x:hidden;        
-    }        
-    @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}        
-    @media (prefers-reduced-motion:no-preference){        
-      body{animation:bgShift 18s ease-in-out infinite alternate}        
-    }        
-    main{        
-      min-height:100%;        
-      display:flex;flex-direction:column;align-items:center;text-align:center;        
-      padding:20px;        
-      padding-bottom:40px;        
-      gap:14px;        
-    }        
-    
-    /* Lingua */        
-    .lang-fab{    
-      position:fixed;    
-      top:calc(env(safe-area-inset-top,0px) + 14px);    
-      right:14px;    
-      z-index:50    
-    }        
-    .lang-btn{        
-      appearance:none;border:1px solid var(--card-border);        
-      background:#141c22;color:var(--fg);        
-      padding:10px 12px;border-radius:999px;cursor:pointer;        
-    }        
-    .lang-menu{        
-      position:absolute;top:46px;right:0;        
-      background:var(--card);border:1px solid var(--card-border);        
-      border-radius:12px;padding:8px;display:none;min-width:170px;        
-      box-shadow:0 12px 28px var(--shadow);backdrop-filter:blur(10px);        
-    }        
-    .lang-menu button{        
-      display:block;width:100%;text-align:left;        
-      background:transparent;border:none;color:#E6F2F5;        
-      padding:10px;border-radius:10px;cursor:pointer;        
-    }        
-    .lang-menu button.active{background:rgba(255,255,255,.06)}        
-    
-    .hero-img{        
-      width:min(92vw,560px);height:auto;display:block;        
-      margin:0 auto 6px;filter:drop-shadow(0 10px 28px var(--shadow));        
-      border-radius:16px;        
-    }        
-    h1{margin:.25rem 0 0;font-size:clamp(28px,5.5vw,44px);line-height:1.1}        
-    h1 span{color:var(--accent)}        
-    .lead{        
-      max-width:720px;font-size:clamp(15px,4vw,18px);        
-      color:var(--muted);line-height:1.55;        
-      margin:4px auto 16px;        
-    }        
-    .group{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:6px}        
-    .chip{        
-      appearance:none;border:1px solid var(--card-border);        
-      background:#141c22;color:#e8f2ec;        
-      padding:12px 16px;border-radius:16px;        
-      font-weight:700;cursor:pointer;transition:.16s;        
-      backdrop-filter:blur(6px);        
-    }        
-    .chip:active{transform:translateY(1px)}        
-    .chip.selected{        
-      background:linear-gradient(180deg,var(--accent),var(--accent2));        
-      color:var(--ink);box-shadow:0 0 0 1px rgba(255,255,255,.15) inset;        
-    }        
-    .cta{        
-      display:inline-block;        
-      background:linear-gradient(180deg,var(--accent),var(--accent2));        
-      color:var(--ink);font-weight:800;        
-      border:none;border-radius:24px;        
-      padding:14px 20px;        
-      box-shadow:0 0 14px rgba(0,0,0,.35),0 0 28px rgba(0,0,0,.15);        
-      cursor:pointer;transition:.2s;        
-    }        
-    .cta[disabled]{opacity:.45;cursor:not-allowed}        
-    
-    footer{        
-      position:static;        
-      text-align:center;        
-      color:var(--muted);        
-      font-size:12px;        
-      padding:16px 14px 28px;        
-      margin-top:16px;            
-    }        
-    footer a{color:var(--accent);text-decoration:none;font-weight:600}        
-    footer .sep{opacity:.6;margin:0 6px}        
-    .foot-links{        
-      display:flex;align-items:center;justify-content:center;        
-      gap:10px;flex-wrap:wrap;margin-top:6px;        
-    }        
-    .info-btn{        
-      background:#141c22;border:1px solid var(--card-border);        
-      color:#E6F2F5;border-radius:999px;        
-      padding:6px 10px;font-weight:700;text-decoration:none;        
-    }        
-    #authError{color:#ffb3b3;font-size:13px;min-height:18px}        
-    
-    /* Debug (solo se ?debug=1) */        
-    #debug{        
-      position:fixed;left:12px;right:12px;bottom:12px;z-index:40;        
-      background:#0b0f14;border:1px solid #223;border-radius:10px;        
-      padding:8px 10px;font:12px/1.4 monospace;color:#a6f3a6;        
-      display:none;max-width:680px;margin:0 auto;white-space:pre-wrap;        
-    }    
-    
-    /* 🔬 Pulsanti test segnali */    
-    .sig-btn{    
-      appearance:none;    
-      border:1px solid var(--card-border);    
-      background:#141c22;    
-      color:#E6F2F5;    
-      border-radius:10px;    
-      padding:6px 8px;    
-      font-size:11px;    
-      font-weight:700;    
-      width:100%;    
-      text-align:left;    
-      cursor:pointer;    
-    }    
-    .sig-btn:active{    
-      transform:translateY(1px);    
-    }    
-    .sig-section-title{    
-      margin-top:6px;    
-      margin-bottom:2px;    
-      font-size:11px;    
-      font-weight:800;    
-      opacity:.9;    
-    }    
-    
-    /* 🔔 Banner frasi del giorno */    
-    .daily-overlay{    
-      position:fixed;    
-      inset:0;    
-      background:rgba(0,0,0,.58);    
-      backdrop-filter:blur(3px);    
-      z-index:80;    
-      display:none;    
-    }    
-    .daily-banner{    
-      position:fixed;    
-      left:50%;    
-      bottom:18px;    
-      transform:translateX(-50%);    
-      max-width:520px;    
-      width:calc(100% - 32px);    
-      background:var(--card);    
-      border:1px solid var(--card-border);    
-      border-radius:18px;    
-      padding:12px 14px 12px;    
-      box-shadow:0 14px 40px var(--shadow);    
-      z-index:81;    
-      display:none;    
-      text-align:left;    
-      font-size:13px;    
-    }    
-    .daily-banner-header{    
-      display:flex;    
-      align-items:flex-start;    
-      gap:10px;    
-      margin-bottom:6px;    
-    }    
-    .daily-icon{    
-      font-size:20px;    
-      margin-top:2px;    
-    }    
-    .daily-texts{    
-      flex:1;    
-      min-width:0;    
-    }    
-    .daily-title{    
-      font-weight:800;    
-      font-size:14px;    
-      margin-bottom:3px;    
-    }    
-    .daily-line-whatif{    
-      font-size:13px;    
-      color:var(--muted);    
-      margin-bottom:4px;    
-    }    
-    .daily-line-wtf{    
-      font-size:13px;    
-      color:#F8F2C4;    
-    }    
-    .daily-actions{    
-      margin-top:8px;    
-      display:flex;    
-      gap:8px;    
-      flex-wrap:wrap;    
-    }    
-    .daily-actions button{    
-      border-radius:999px;    
-      border:1px solid var(--card-border);    
-      padding:7px 12px;    
-      font-size:12px;    
-      font-weight:700;    
-      cursor:pointer;    
-    }    
-    #dailySignalsAccept{    
-      background:linear-gradient(180deg,var(--accent),var(--accent2));    
-      color:var(--ink);    
-      box-shadow:0 0 14px rgba(0,0,0,.35);    
-      border:none;    
-    }    
-    #dailySignalsReject{    
-      background:#141c22;    
-      color:var(--fg);    
-    }    
-    
-    body.daily-blocking .daily-overlay{    
-      display:block;    
-    }    
-    body.daily-blocking .daily-banner{    
-      bottom:auto;    
-      top:50%;    
-      transform:translate(-50%,-50%);    
-    }    
-  </style>      </head>    <body>        
-  <!-- Lingua -->        
-  <div class="lang-fab" id="langFab">        
-    <button class="lang-btn" id="langToggle" aria-haspopup="true" aria-expanded="false" aria-label="Change language">        
-      🌐 <span id="langCode">IT</span>        
-    </button>        
-    <div class="lang-menu" id="langMenu" role="menu" aria-label="language">        
-      <button data-lang="it">Italiano</button>        
-      <button data-lang="en">English</button>        
-      <button data-lang="es">Español</button>        
-      <button data-lang="fr">Français</button>        
-      <button data-lang="de">Deutsch</button>        
-    </div>        
-  </div>          <main>        
-    <!-- Hero -->        
-    <img id="hero" class="hero-img" src="/public/home-hero.png"        
-         alt="Porta luminosa What?f" loading="eager" decoding="async" />      <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>        
-
-<p class="lead" id="leadText">        
-  Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro.        
-  <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili.        
-  <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.        
-</p>        
-
-<div class="group" id="periodGroup">        
-  <button class="chip" data-key="periodo" data-val="past"   data-i18n="past">Passato</button>        
-  <button class="chip" data-key="periodo" data-val="future" data-i18n="future">Futuro</button>        
-</div>        
-
-<div class="group" id="styleGroup">        
-  <button class="chip" data-key="stile" data-val="whatif" data-i18n="whatif">What if</button>        
-  <button class="chip" data-key="stile" data-val="wtf"    data-i18n="wtf">What the F</button>        
-</div>        
-
-<!-- CTA + Auth -->        
-<button id="primaryCta" class="cta">Entra con Google</button>    
-<button id="logoutBtn" class="chip" style="display:none">Esci</button>    
-
-<p id="authError"></p>
-
-  </main>          <footer>        
-    © 2025 What?f        
-    <div class="foot-links">        
-      <a href="privacy.html" data-i18n="privacy">Privacy</a>        
-      <span class="sep">·</span>        
-      <a href="terms.html" data-i18n="terms">Termini</a>        
-      <span class="sep">·</span>        
-      <a href="delete-account.html" data-i18n="delete" style="color:#FF4D4D;font-weight:700;">Elimina il tuo account</a>        
-      <span class="sep">·</span>        
-      <a class="info-btn" href="about.html" id="aboutLink"><span data-i18n="info">Info</span></a>        
-      <span class="sep">·</span>    
-      <!-- Toggle frasi del giorno -->    
-      <button id="dailySignalsToggle" type="button" class="info-btn">    
-        🔔 Frasi del giorno    
-      </button>    
-    </div>        
-  </footer>          <!-- 🔔 Banner frasi del giorno -->      <div id="dailySignalsOverlay" class="daily-overlay"></div>    
-  <div id="dailySignalsBanner" class="daily-banner">    
-    <div class="daily-banner-header">    
-      <div class="daily-icon">🧭</div>    
-      <div class="daily-texts">    
-        <div class="daily-title" id="dailySignalsTitle">    
-          Vuoi le 3 frasi al giorno?    
-        </div>    
-        <div class="daily-line-whatif" id="dailyLineWhatIf">    
-          What if ogni giorno ti manda 3 frasi corte cucite sul tuo umore, per farti alzare la testa dalle notifiche e guardare le cose che contano davvero.    
-        </div>    
-        <div class="daily-line-wtf" id="dailyLineWtf">    
-          What the F: “Apposto. Il collega qua ti spara tre frasi al giorno a tema esistenziale. Io ti direi di lasciarle disattivate… ma poi con chi mi diverto?”    
-        </div>    
-      </div>    
-    </div>    
-    <div class="daily-actions">    
-      <button id="dailySignalsAccept" type="button">    
-        🔔 Attiva le frasi del giorno    
-      </button>    
-      <button id="dailySignalsReject" type="button">    
-        Non ora    
-      </button>    
-    </div>    
-  </div>      <!-- 🔔 Toggle e pannello test segnali (sempre visibile) -->    <button
-id="signalTestToggle"
-style="
-position:fixed;
-bottom:70px;
-right:14px;
-z-index:60;
-border-radius:999px;
-border:1px solid var(--card-border);
-background:#141c22;
-color:var(--fg);
-padding:6px 10px;
-font-size:11px;
-font-weight:700;
-opacity:.9;
-"
-
-> 
-
-⏱ Frase del giorno (test)
-
-  </button>      <div    
-    id="signalTestPanel"    
-    style="    
-      position:fixed;    
-      bottom:118px;    
-      right:14px;    
-      z-index:59;    
-      display:none;    
-      max-width:260px;    
-      background:var(--card);    
-      border:1px solid var(--card-border);    
-      border-radius:14px;    
-      padding:10px 10px 8px;    
-      box-shadow:0 10px 26px var(--shadow);    
-      font-size:12px;    
-      text-align:left;    
-    "    
-  >    
-    <div style="font-weight:800;margin-bottom:4px;">Frasi del giorno (test)</div>    <div class="sig-section-title">☀️ Mattina</div>    
-<button class="sig-btn" data-signal="morning" data-phase="1" data-mood="ok">    
-  What if · mattina (ok)    
-</button>    
-<button class="sig-btn" data-signal="morning" data-phase="2" data-mood="ok">    
-  What the F · mattina (ok)    
-</button>    
-
-<div class="sig-section-title">🌤 Pomeriggio</div>    
-<button class="sig-btn" data-signal="afternoon" data-phase="1" data-mood="meh">    
-  What if · pomeriggio (meh)    
-</button>    
-<button class="sig-btn" data-signal="afternoon" data-phase="2" data-mood="meh">    
-  What the F · pomeriggio (meh)    
-</button>    
-
-<div class="sig-section-title">🌙 Sera</div>    
-<button class="sig-btn" data-signal="evening" data-phase="1" data-mood="tired">    
-  What if · sera (tired)    
-</button>    
-<button class="sig-btn" data-signal="evening" data-phase="2" data-mood="wired">    
-  What the F · sera (wired)    
-</button>
-
-  </div>      <div id="debug"></div>          <!-- i18n + tema + selezioni + lingua -->          <script>        
-    (function initTheme(){        
-      try{        
-        const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');        
-        document.documentElement.setAttribute('data-theme', prefs.stile==='wtf' ? 'wtf' : 'whatif');        
-      }catch{        
-        document.documentElement.setAttribute('data-theme','whatif');        
-      }        
-    })();        
-    
-    const DICT = {        
-      it:{        
-        title:"Scopri il tuo What?f",        
-        lead:"Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili. <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.",        
-        past:"Passato", future:"Futuro", whatif:"What if", wtf:"What the F",        
-        login:"Entra con Google", next:"Avanti",        
-        needChoices:"Seleziona prima Passato/Futuro e What if/WTF",        
-        exit:"Esci",        
-        privacy:"Privacy", terms:"Termini", info:"Info",        
-        delete:"Elimina il tuo account"        
-      },        
-      en:{        
-        title:"Discover your What?f",        
-        lead:"Imagine the choice you didn’t make… and the one you could make. Choose whether to look to the past or the future. <strong>What if</strong> explores realistic, reflective scenarios based on plausible choices. <strong>What the F</strong> lets you experience ironic, creative and unpredictable visions.",        
-        past:"Past", future:"Future", whatif:"What if", wtf:"What the F",        
-        login:"Sign in with Google", next:"Next",        
-        needChoices:"Choose Past/Future and What if/WTF first",        
-        exit:"Sign out",        
-        privacy:"Privacy", terms:"Terms", info:"Info",        
-        delete:"Delete your account"        
-      },        
-      es:{        
-        title:"Descubre tu What?f",        
-        lead:"Imagina la elección que no hiciste… y la que aún podrías hacer. Elige si mirar al pasado o al futuro. <strong>What if</strong> explora escenarios realistas y reflexivos basados en decisiones plausibles. <strong>What the F</strong> te hace vivir visiones irónicas, creativas e impredecibles.",        
-        past:"Pasado", future:"Futuro", whatif:"What if", wtf:"What the F",        
-        login:"Entrar con Google", next:"Siguiente",        
-        needChoices:"Primero elige Pasado/Futuro y What if/WTF",        
-        exit:"Salir",        
-        privacy:"Privacidad", terms:"Términos", info:"Info",        
-        delete:"Eliminar tu cuenta"        
-      },        
-      fr:{        
-        title:"Découvrez votre What?f",        
-        lead:"Imaginez le choix que vous n’avez pas fait… et celui que vous pourriez encore faire. Choisissez de regarder vers le passé ou vers le futur. <strong>What if</strong> explore des scénarios réalistes et réfléchis basés sur des choix plausibles. <strong>What the F</strong> vous fait vivre des visions ironiques, créatives et imprévisibles.",        
-        past:"Passé", future:"Futur", whatif:"What if", wtf:"What the F",        
-        login:"Se connecter avec Google", next:"Suivant",        
-        needChoices:"Choisissez d’abord Passé/Futur et What if/WTF",        
-        exit:"Se déconnecter",        
-        privacy:"Confidentialité", terms:"Conditions", info:"Info",        
-        delete:"Supprimer ton compte"        
-      },        
-      de:{        
-        title:"Entdecke dein What?f",        
-        lead:"Stell dir die Entscheidung vor, die du nicht getroffen hast… und die, die du noch treffen könntest. Wähle, ob du in die Vergangenheit oder in die Zukunft blickst. <strong>What if</strong> erkundet realistische, reflektierte Szenarien auf Basis plausibler Entscheidungen. <strong>What the F</strong> lässt dich ironische, kreative und unvorhersehbare Visionen erleben.",        
-        past:"Vergangenheit", future:"Zukunft", whatif:"What if", wtf:"What the F",        
-        login:"Mit Google anmelden", next:"Weiter",        
-        needChoices:"Wähle zuerst Vergangenheit/Zukunft und What if/WTF",        
-        exit:"Abmelden",        
-        privacy:"Datenschutz", terms:"Nutzungsbedingungen", info:"Info",        
-        delete:"Konto löschen"        
-      }        
-    };    
-    
-    /* 🌡️ MOODS: frasi base per segnali, per lingua / slot / mood */    
-    const MOODS = {    
-      it: {    
-        morning: {    
-          ok: {    
-            q: "Se oggi proteggo l’energia che ho e metto un confine chiaro a una cosa che mi pesa, come cambia la mia giornata?"    
-          },    
-          default: {    
-            q: "Che tipo di giornata viene fuori se oggi mi concedo un piccolo gesto di cura per me, anche se ho poco tempo?"    
-          }    
-        },    
-        afternoon: {    
-          meh: {    
-            q: "Se questo pomeriggio scelgo una sola cosa piccola ma concreta da portare a casa, quale sarebbe e cosa sblocca per i prossimi giorni?"    
-          },    
-          default: {    
-            q: "Come cambia il resto della giornata se smetto di inseguire tutto e mi concentro bene su una sola priorità?"    
-          }    
-        },    
-        evening: {    
-          tired: {    
-            q: "Se stasera rallento, chiudo dignitosamente la giornata e preparo un domani leggermente migliore, cosa faccio concretamente?"    
-          },    
-          wired: {    
-            q: "Se sfrutto l’energia della sera senza bruciarmi, su cosa ha più senso che la scarichi adesso?"    
-          },    
-          default: {    
-            q: "Che cosa posso fare stasera per chiudere il giorno con una sensazione di 'ok, così va bene'?"    
-          }    
-        }    
-      },    
-      en: {    
-        morning: {    
-          ok: {    
-            q: "If today I protect the energy I have and draw one clear boundary, how does my day change?"    
-          },    
-          default: {    
-            q: "What kind of day do I get if I give myself one small act of self-care, even with very little time?"    
-          }    
-        },    
-        afternoon: {    
-          meh: {    
-            q: "If this afternoon I commit to one small but concrete task, which one unlocks the most for the next few days?"    
-          },    
-          default: {    
-            q: "How does the rest of the day change if I stop chasing everything and focus deeply on a single priority?"    
-          }    
-        },    
-        evening: {    
-          tired: {    
-            q: "If tonight I slow down, close the day with dignity and set up a slightly better tomorrow, what do I actually do?"    
-          },    
-          wired: {    
-            q: "If I use tonight’s energy without burning myself out, what’s the best target to pour it into?"    
-          },    
-          default: {    
-            q: "What can I do this evening so that I go to bed with a quiet 'okay, this was enough' feeling?"    
-          }    
-        }    
-      },    
-      es: {    
-        morning: {    
-          ok: {    
-            q: "Si hoy protejo la energía que tengo y marco un límite claro, ¿cómo cambia mi día?"    
-          },    
-          default: {    
-            q: "¿Qué tipo de día sale si hoy me permito un pequeño gesto de autocuidado aunque tenga poco tiempo?"    
-          }    
-        },    
-        afternoon: {    
-          meh: {    
-            q: "Si esta tarde elijo una sola cosa pequeña pero concreta para terminar, ¿cuál desbloquea más para los próximos días?"    
-          },    
-          default: {    
-            q: "¿Cómo cambia el resto del día si dejo de perseguirlo todo y me concentro en una sola prioridad?"    
-          }    
-        },    
-        evening: {    
-          tired: {    
-            q: "Si esta noche bajo el ritmo, cierro el día con dignidad y preparo un mañana un poco mejor, ¿qué hago en concreto?"    
-          },    
-          wired: {    
-            q: "Si aprovecho la energía de la noche sin quemarme, ¿en qué tiene más sentido volcarla ahora?"    
-          },    
-          default: {    
-            q: "¿Qué puedo hacer esta noche para irme a dormir con la sensación de 'ok, así está bien'?"    
-          }    
-        }    
-      },    
-      fr: {    
-        morning: {    
-          ok: {    
-            q: "Si aujourd’hui je protège l’énergie que j’ai et je pose une limite claire, en quoi ma journée change-t-elle?"    
-          },    
-          default: {    
-            q: "À quoi ressemble ma journée si je m’accorde un petit geste de soin pour moi, même avec peu de temps?"    
-          }    
-        },    
-        afternoon: {    
-          meh: {    
-            q: "Si cet après-midi je choisis une seule petite action concrète à accomplir, laquelle débloque le plus pour les prochains jours?"    
-          },    
-          default: {    
-            q: "Comment le reste de la journée change si j’arrête de tout courir et que je me concentre sur une seule priorité?"    
-          }    
-        },    
-        evening: {    
-          tired: {    
-            q: "Si ce soir je ralentis, je clôture la journée correctement et je prépare un demain un peu meilleur, que fais-je concrètement?"    
-          },    
-          wired: {    
-            q: "Si j’utilise l’énergie de ce soir sans me cramer, où est-ce le plus intelligent de la diriger?"    
-          },    
-          default: {    
-            q: "Que puis-je faire ce soir pour me coucher avec un 'ok, ça va comme ça' honnête?"    
-          }    
-        }    
-      },    
-      de: {    
-        morning: {    
-          ok: {    
-            q: "Wenn ich heute meine Energie schütze und eine klare Grenze ziehe, wie verändert sich mein Tag?"    
-          },    
-          default: {    
-            q: "Was für ein Tag entsteht, wenn ich mir heute eine kleine Form von Selbstfürsorge gönne, auch wenn ich wenig Zeit habe?"    
-          }    
-        },    
-        afternoon: {    
-          meh: {    
-            q: "Wenn ich mir heute Nachmittag eine kleine, aber konkrete Aufgabe vornehme, welche bringt in den nächsten Tagen am meisten Bewegung?"    
-          },    
-          default: {    
-            q: "Wie verändert sich der Rest des Tages, wenn ich aufhöre allem hinterherzurennen und mich auf eine einzige Priorität konzentriere?"    
-          }    
-        },    
-        evening: {    
-          tired: {    
-            q: "Wenn ich heute Abend das Tempo rausnehme, den Tag ordentlich abschließe und ein etwas besseres Morgen vorbereite, was tue ich konkret?"    
-          },    
-          wired: {    
-            q: "Wenn ich die Abendenergie nutze ohne mich zu verbrennen, wo setze ich sie am sinnvollsten ein?"    
-          },    
-          default: {    
-            q: "Was kann ich heute Abend tun, damit ich mit einem ehrlichen 'okay, das reicht so' ins Bett gehe?"    
-          }    
-        }    
-      }    
-    };    
-    
-    window.MOODS = MOODS;    
-    
-    const LS = localStorage;        
-    const $  = s => document.querySelector(s);        
-    const $$ = s => document.querySelectorAll(s);        
-    
-    function detectBrowserLang(){        
-      const n=(navigator.language||'it').toLowerCase();        
-      if(n.startsWith('it')) return 'it';        
-      if(n.startsWith('en')) return 'en';        
-      if(n.startsWith('es')) return 'es';        
-      if(n.startsWith('fr')) return 'fr';        
-      if(n.startsWith('de')) return 'de';        
-      return 'it';        
-    }        
-    function getLang(){        
-      return (LS.getItem('lang') || detectBrowserLang()).toLowerCase();        
-    }        
-    function setLang(l){        
-      LS.setItem('lang', l.toLowerCase());        
-      applyLang();        
-    
-      /* ✅ AGGIUNTO: aggiorna lang in Firestore se notifiche attive */    
-      try{    
-        if (localStorage.getItem('dailySignalsChoice') === 'accepted' && window.registerDailyFCM) {    
-          window.registerDailyFCM();    
-        }    
-      }catch{}    
-    }        
-    
-    function applyLang(){        
-      const L = getLang();        
-      const d = DICT[L] || DICT.it;        
-      document.documentElement.lang = L;        
-      const code = $('#langCode'); if(code) code.textContent = L.toUpperCase();        
-    
-      const titleSpan = document.querySelector('[data-i18n="title"]');        
-      if(titleSpan) titleSpan.textContent = d.title;        
-      const lead = document.getElementById('leadText');        
-      if(lead) lead.innerHTML = d.lead;        
-    
-      $$('[data-i18n]').forEach(el=>{        
-        const k = el.getAttribute('data-i18n');        
-        if(!k || k==="title" || k==="lead") return;        
-        if(typeof d[k] === 'string') el.textContent = d[k];        
-      });        
-    
-      const logout = document.getElementById('logoutBtn');        
-      if(logout) logout.textContent = d.exit;        
-      const primary = document.getElementById('primaryCta');        
-      if(primary && !primary.dataset.state){        
-        primary.textContent = d.login;        
-      }        
-    
-      document.querySelectorAll('#langMenu button')        
-        .forEach(b => b.classList.toggle('active', b.dataset.lang === L));        
-    
-      if(window.updatePrimaryCta) window.updatePrimaryCta();        
-    
-      // aggiorna testo banner frasi del giorno se necessario    
-      if(window.dailySignalsApplyText) window.dailySignalsApplyText();    
-      if(window.dailySignalsRefreshToggleLabel) window.dailySignalsRefreshToggleLabel();    
-    }        
-    
-    if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());        
-    applyLang();        
-    
-    window.I18N = DICT;        
-    window.getCurrentLang = getLang;        
-    
-    const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');        
-    function wireGroup(g){        
-      if(!g) return;        
-      g.addEventListener('click', e=>{        
-        const b = e.target.closest('.chip'); if(!b) return;        
-        g.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));        
-        b.classList.add('selected');        
-        state[b.dataset.key] = b.dataset.val;        
-        localStorage.setItem('whatif_prefs', JSON.stringify(state));        
-        if(b.dataset.key==='stile'){        
-          document.documentElement.setAttribute('data-theme', b.dataset.val==='wtf' ? 'wtf' : 'whatif');        
-        }        
-        if(window.updatePrimaryCta) window.updatePrimaryCta();        
-      });        
-    }        
-    wireGroup(document.getElementById('periodGroup'));        
-    wireGroup(document.getElementById('styleGroup'));        
-    
-    (function(){        
-      const toggle = document.getElementById('langToggle');        
-      const menu   = document.getElementById('langMenu');        
-      if(!toggle || !menu) return;        
-    
-      const openMenu = ()=>{        
-        menu.style.display = 'block';        
-        toggle.setAttribute('aria-expanded','true');        
-      };        
-      const closeMenu = ()=>{        
-        menu.style.display = 'none';        
-        toggle.setAttribute('aria-expanded','false');        
-      };        
-    
-      toggle.addEventListener('click', ()=>{        
-        const isOpen = menu.style.display === 'block';        
-        if(isOpen) closeMenu(); else openMenu();        
-      });        
-    
-      menu.addEventListener('click', e=>{        
-        const btn = e.target.closest('button[data-lang]');        
-        if(!btn) return;        
-        setLang(btn.dataset.lang);        
-        closeMenu();        
-      });        
-    
-      document.addEventListener('click', e=>{        
-        if(!menu.contains(e.target) && !toggle.contains(e.target)){        
-          closeMenu();        
-        }        
-      });        
-      document.addEventListener('keydown', e=>{        
-        if(e.key === 'Escape') closeMenu();        
-      });        
-    })();    
-  </script>          <!-- 🔔 Logica banner frasi del giorno -->      <script>    
-    (function(){    
-      const overlay = document.getElementById('dailySignalsOverlay');    
-      const banner  = document.getElementById('dailySignalsBanner');    
-      const titleEl = document.getElementById('dailySignalsTitle');    
-      const lineWI  = document.getElementById('dailyLineWhatIf');    
-      const lineWTF = document.getElementById('dailyLineWtf');    
-      const btnOk   = document.getElementById('dailySignalsAccept');    
-      const btnNo   = document.getElementById('dailySignalsReject');    
-      const toggleBtn = document.getElementById('dailySignalsToggle');    
-    
-      if(!banner || !titleEl || !lineWI || !lineWTF || !btnOk || !btnNo) return;    
-    
-      const LS = window.localStorage;    
-    
-      const TEXT = {    
-        it: {    
-          title: "Vuoi le 3 frasi al giorno?",    
-          whatif: "What if ogni giorno ti manda 3 frasi corte cucite sul tuo umore, per farti alzare la testa dalle notifiche e guardare le cose che contano davvero.",    
-          wtf: "What the F: “Apposto. Il collega qua ti spara tre frasi al giorno a tema esistenziale. Io ti direi di lasciarle disattivate… ma poi con chi mi diverto?”",    
-          btnOn: "🔔 Attiva le frasi del giorno",    
-          btnOff: "Non ora",    
-          toggleOn: "🔔 Frasi del giorno attive",    
-          toggleOff: "🔕 Frasi del giorno disattivate"    
-        },    
-        en: {    
-          title: "Want 3 nudges a day?",    
-          whatif: "What if sends you 3 short check-ins a day tuned to your mood, to lift your eyes from notifications and back to what actually matters.",    
-          wtf: "What the F: “Perfect. The colleague here will spam you with three existential lines a day. I’d say keep them off… but then who do I mess with?”",    
-          btnOn: "🔔 Turn on daily phrases",    
-          btnOff: "Not now",    
-          toggleOn: "🔔 Daily phrases on",    
-          toggleOff: "🔕 Daily phrases off"    
-        },    
-        es: {    
-          title: "¿Quieres 3 frases al día?",    
-          whatif: "What if te envía cada día 3 frases cortas ajustadas a tu ánimo, para sacarte un segundo de las notificaciones y mirar lo que importa.",    
-          wtf: "What the F: “Perfecto. El colega de aquí te dispara tres frases existenciales al día. Yo te diría que las dejes apagadas… pero entonces ¿con quién me divierto?”",    
-          btnOn: "🔔 Activar frases del día",    
-          btnOff: "Ahora no",    
-          toggleOn: "🔔 Frases del día activas",    
-          toggleOff: "🔕 Frases del día desactivadas"    
-        },    
-        fr: {    
-          title: "3 phrases par jour, ça te tente ?",    
-          whatif: "What if t’envoie chaque jour 3 phrases courtes calées sur ton humeur, pour te décrocher une seconde des notifs et regarder ce qui compte.",    
-          wtf: "What the F : « Parfait. Le collègue ici va te balancer trois lignes existentielles par jour. Je te dirais de les laisser coupées… mais après, je me marre avec qui ? »",    
-          btnOn: "🔔 Activer les phrases du jour",    
-          btnOff: "Pas maintenant",    
-          toggleOn: "🔔 Phrases du jour actives",    
-          toggleOff: "🔕 Phrases du jour désactivées"    
-        },    
-        de: {    
-          title: "Lust auf 3 Sätze am Tag?",    
-          whatif: "What if schickt dir jeden Tag 3 kurze Sätze passend zu deiner Stimmung, damit du kurz aus den Notifications auftauchst und auf das Wichtige schaust.",    
-          wtf: "What the F: „Na super. Der Kollege hier ballert dir drei existentielle Sprüche pro Tag raus. Ich würde sagen: lass sie aus… aber mit wem hab ich dann Spaß?“",    
-          btnOn: "🔔 Tägliche Sätze aktivieren",    
-          btnOff: "Nicht jetzt",    
-          toggleOn: "🔔 Tägliche Sätze: an",    
-          toggleOff: "🔕 Tägliche Sätze: aus"    
-        }    
-      };    
-    
-      function lang(){    
-        return (window.getCurrentLang && window.getCurrentLang()) || 'it';    
-      }    
-      function t(){    
-        return TEXT[lang()] || TEXT.it;    
-      }    
-    
-      function getChoice(){    
-        try{    
-          return LS.getItem('dailySignalsChoice') || null;    
-        }catch{ return null; }    
-      }    
-      function setChoice(v){    
-        try{    
-          if(v===null) LS.removeItem('dailySignalsChoice');    
-          else LS.setItem('dailySignalsChoice', v);    
-        }catch{}    
-      }    
-      function setLastPromptToday(){    
-        try{    
-          const today = new Date().toISOString().slice(0,10);    
-          LS.setItem('dailySignalsLastPrompt', today);    
-        }catch{}    
-      }    
-      function shouldShowGentle(){    
-        const choice = getChoice();    
-        if(choice === 'accepted') return false;    
-        try{    
-          const last = LS.getItem('dailySignalsLastPrompt') || '';    
-          const today = new Date().toISOString().slice(0,10);    
-          return last !== today;    
-        }catch{ return false; }    
-      }    
-    
-      function applyText(){    
-        const TT = t();    
-        titleEl.textContent = TT.title;    
-        lineWI.textContent  = TT.whatif;    
-        lineWTF.textContent = TT.wtf;    
-        btnOk.textContent   = TT.btnOn;    
-        btnNo.textContent   = TT.btnOff;    
-      }    
-      window.dailySignalsApplyText = applyText;    
-    
-      function openBlocking(){    
-        applyText();    
-        document.body.classList.add('daily-blocking');    
-        if(overlay) overlay.style.display = 'block';    
-        banner.style.display = 'block';    
-      }    
-      function openGentle(){    
-        applyText();    
-        document.body.classList.remove('daily-blocking');    
-        if(overlay) overlay.style.display = 'none';    
-        banner.style.display = 'block';    
-      }    
-      function closeBanner(){    
-        document.body.classList.remove('daily-blocking');    
-        if(overlay) overlay.style.display = 'none';    
-        banner.style.display = 'none';    
-      }    
-    
-      // etichetta bottone footer    
-      function refreshToggleLabel(){    
-        if(!toggleBtn) return;    
-        const choice = getChoice();    
-        const TT = t();    
-        if(choice === 'accepted'){    
-          toggleBtn.textContent = TT.toggleOn;    
-        }else{    
-          toggleBtn.textContent = TT.toggleOff;    
-        }    
-      }    
-      window.dailySignalsRefreshToggleLabel = refreshToggleLabel;    
-    
-      // scelta utente    
-      btnOk.addEventListener('click', ()=>{    
-        setChoice('accepted');    
-        setLastPromptToday();    
-        closeBanner();    
-        if(window.dailySignalsRefreshToggleLabel) window.dailySignalsRefreshToggleLabel();    
-    
-        // 👉 qui chiediamo permesso (se serve) e salviamo il token FCM    
-        try{    
-          if (window.registerDailyFCM) {    
-            window.registerDailyFCM();    
-          }    
-        }catch{}    
-      });    
-      btnNo.addEventListener('click', ()=>{    
-        setChoice('rejected');    
-        setLastPromptToday();    
-        closeBanner();    
-        if(window.dailySignalsRefreshToggleLabel) window.dailySignalsRefreshToggleLabel();    
-      });    
-    
-      // footer: attiva/disattiva manualmente    
-      if(toggleBtn){    
-        toggleBtn.addEventListener('click', ()=>{    
-          const choice = getChoice();    
-          if(choice === 'accepted'){    
-            // disattiva    
-            setChoice('rejected');    
-            setLastPromptToday();    
-            refreshToggleLabel();    
-          }else{    
-            // mostra banner in modalità gentile    
-            openGentle();    
-          }    
-        });    
-      }    
-    
-      // export helper    
-      window.needsDailyChoice = function(){    
-        return !getChoice();    
-      };    
-    
-      // primo load    
-      if(!getChoice()){    
-        openBlocking();    
-        setLastPromptToday();    
-      }else if(shouldShowGentle()){    
-        openGentle();    
-        setLastPromptToday();    
-      }    
-    
-      // inizializza label footer alla prima apertura    
-      refreshToggleLabel();    
-    })();    
-  </script>      <!-- 🔐 Firebase Auth -->          <script type="module">    
-    const dbg = document.getElementById('debug');    
-    const DO_DEBUG = new URLSearchParams(location.search).get('debug') === '1';    
-    const log = (...a)=>{ if(DO_DEBUG){ dbg.style.display='block'; dbg.textContent += a.join(' ') + '\n'; } };    
-    const showErrText = (t)=>{    
-      const el=document.getElementById('authError');    
-      if(el) el.textContent=t||'';    
-      if(t) log('❌', t);    
-    };    
-    
-    import { auth } from "./firebase.init.js";        
-    
-    import {        
-      GoogleAuthProvider,        
-      onAuthStateChanged,        
-      signInWithPopup,        
-      signInWithRedirect,        
-      getRedirectResult,        
-      signOut        
-    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";        
-    
-    const provider = new GoogleAuthProvider();        
-    
-    const primaryCta = document.getElementById("primaryCta");        
-    const logoutBtn  = document.getElementById("logoutBtn");        
-    
-    const selectionsReady = ()=>{        
-      try{        
-        const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');        
-        return !!(prefs.periodo && prefs.stile);        
-      }catch{ return false; }        
-    };        
-    
-    function getDict(){        
-      const L = (window.getCurrentLang && window.getCurrentLang()) || 'it';        
-      const I = window.I18N || {};        
-      return I[L] || I.it || {        
-        login:"Entra con Google",        
-        next:"Avanti",        
-        needChoices:"Seleziona prima Passato/Futuro e What if/WTF",        
-        exit:"Esci"        
-      };        
-    }        
-    
-    function updatePrimaryCta(){        
-      if(!primaryCta || !logoutBtn) return;        
-      const d = getDict();        
-      const user = auth.currentUser;        
-      if(user){        
-        primaryCta.dataset.state = 'logged-in';        
-        primaryCta.textContent = selectionsReady() ? d.next : d.needChoices;        
-        primaryCta.disabled = !selectionsReady();        
-        logoutBtn.style.display = "inline-block";        
-        logoutBtn.textContent = d.exit;        
-      }else{        
-        primaryCta.dataset.state = 'login';        
-        primaryCta.textContent = d.login;        
-        primaryCta.disabled = false;        
-        logoutBtn.style.display = "none";        
-      }        
-    }        
-    window.updatePrimaryCta = updatePrimaryCta;        
-    
-    const AUTH_FLAG = "whatif_auth_redirect";        
-    
-    try{        
-      const res = await getRedirectResult(auth);        
-      if(res?.user){        
-        log("↩️ Redirect OK:", res.user.uid);        
-        sessionStorage.removeItem(AUTH_FLAG);        
-      }else{        
-        log("↩️ Redirect senza user (ok se popup è riuscito)");        
-      }        
-    }catch(e){        
-      if((e.message||'').toLowerCase().includes('missing initial state')){        
-        showErrText("Impossibile completare l’accesso (manca lo stato). Riprova o usa una finestra in incognito.");        
-      }else{        
-        showErrText("Post-login: " + (e.code || e.message));        
-      }        
-      sessionStorage.removeItem(AUTH_FLAG);        
-    }        
-    
-    onAuthStateChanged(auth, ()=>{        
-      log("👤 onAuthStateChanged");        
-      updatePrimaryCta();        
-    });        
-    
-    updatePrimaryCta();        
-    
-    primaryCta.onclick = async ()=>{        
-      showErrText("");        
-      const user = auth.currentUser;        
-      const d = getDict();        
-    
-      if(user){        
-        if(selectionsReady()){        
-          location.href = "fourth.html";        
-        }else{        
-          showErrText(d.needChoices);        
-        }        
-        return;        
-      }        
-    
-      try{        
-        log("🪟 Apro popup Google…");        
-        await signInWithPopup(auth, provider);        
-        log("✅ Popup OK");        
-      }catch(e){        
-        const code = e.code || '';        
-        log("⚠️ Popup fallito:", code);        
-    
-        const needRedirect = [        
-          'auth/popup-blocked',        
-          'auth/popup-closed-by-user',        
-          'auth/internal-error',        
-          'auth/cancelled-popup-request'        
-        ].some(x => x === code);        
-    
-        if(needRedirect){        
-          try{ sessionStorage.setItem(AUTH_FLAG,'1'); }catch{}        
-          log("➡️ Faccio redirect…");        
-          await signInWithRedirect(auth, provider);        
-          return;        
-        }        
-    
-        const map = {        
-          "auth/unauthorized-domain":"Dominio non autorizzato (Console Firebase → Authentication → Impostazioni → Domini autorizzati).",        
-          "auth/operation-not-allowed":"Provider Google non abilitato (Authentication → Metodi di accesso).",        
-          "auth/network-request-failed":"Problema di rete o HTTPS."        
-        };        
-        showErrText(map[code] || (code || e.message));        
-      }        
-    };        
-    
-    logoutBtn.onclick = async ()=>{ await signOut(auth); };    
-  </script>          <script>    
-  (function(){    
-    const title  = document.getElementById('appTitle');    
-    const pastBtn = document.querySelector('button[data-val="past"]');    
-    if(!title || !pastBtn) return;    
-    let tapTitle=0, tapPast=0, stage=0, timer=null;    
-    function reset(){    
-      tapTitle=0; tapPast=0; stage=0;    
-      if(timer) clearTimeout(timer); timer=null;    
-      pastBtn.classList.remove("unlocking");    
-    }    
-    function flash(){    
-      const f=document.createElement("div");    
-      f.style.position="fixed";f.style.inset="0";    
-      f.style.background="rgba(255,255,255,0.05)";    
-      f.style.backdropFilter="blur(2px)";    
-      f.style.transition="opacity .6s";f.style.opacity="1";    
-      f.style.zIndex="9999";    
-      document.body.appendChild(f);    
-      setTimeout(()=>f.style.opacity="0",150);    
-      setTimeout(()=>f.remove(),800);    
-    }    
-    
-    // 🔐 Verifica il PIN con /api/admin-token    
-    async function success(){    
-      reset();    
-      const pin = prompt("PIN amministratore:");    
-      if (!pin) return;    
-    
-      try {    
-        const resp = await fetch("/api/admin-token", {    
-          method: "POST",    
-          headers: {    
-            "Content-Type": "application/json",    
-            "admin-secret": pin    
-          },    
-          body: JSON.stringify({ pin }),    
-          credentials: "include"    
-        });    
-    
-        const data = await resp.json().catch(() => ({}));    
-    
-        if (!resp.ok || !data.ok) {    
-          alert("PIN errato");    
-          return;    
-        }    
-    
-        try {    
-          localStorage.setItem("admin_token", data.token);    
-        } catch (e) {}    
-    
-        location.href = "admin.html";    
-      } catch (e) {    
-        console.error("Errore login admin", e);    
-        alert("Errore durante la verifica del PIN. Controlla la connessione e riprova.");    
-      }    
-    }    
-    
-    title.addEventListener('click', ()=>{    
-      if(++tapTitle>=3){    
-        stage=1; tapTitle=0; flash();    
-        pastBtn.classList.add("unlocking");    
-        setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);    
-      }    
-      if(timer) clearTimeout(timer);    
-      timer=setTimeout(reset,2000);    
-    });    
-    pastBtn.addEventListener('click', ()=>{    
-      if(stage!==1) return;    
-      if(++tapPast>=5) success();    
-      if(timer) clearTimeout(timer);    
-      timer=setTimeout(reset,2500);    
-    });    
-  })();    
-    
-  if("serviceWorker" in navigator){        
-    window.addEventListener("load", ()=>{        
-      navigator.serviceWorker.register("/sw.js").catch(()=>{});        
-    });        
-  }    
-    
-  // 🔔 Pannello test segnali: SEMPRE visibile, scrive whatif_request e va su fifth.html    
-  (function(){    
-    try{    
-      const toggle = document.getElementById('signalTestToggle');    
-      const panel  = document.getElementById('signalTestPanel');    
-      if(!toggle || !panel) return;    
-    
-      // sempre visibile    
-      toggle.style.display = 'inline-flex';    
-    
-      toggle.addEventListener('click', ()=>{    
-        const open = panel.style.display === 'block';    
-        panel.style.display = open ? 'none' : 'block';    
-      });    
-    
-      panel.addEventListener('click', (e)=>{    
-        const btn = e.target.closest('.sig-btn');    
-        if(!btn) return;    
-    
-        const slot  = btn.dataset.signal || 'morning';      // "morning" | "afternoon" | "evening"    
-        const phase = parseInt(btn.dataset.phase || '1', 10) || 1;    
-        const mood  = btn.dataset.mood || 'default';    
-    
-        const L = (window.getCurrentLang && window.getCurrentLang()) || 'it';    
-        const moodsLang = (window.MOODS && window.MOODS[L]) || (window.MOODS && window.MOODS.it) || {};    
-        const slotObj = moodsLang[slot] || {};    
-        const entry = slotObj[mood] || slotObj.default || null;    
-    
-        let domanda = entry && entry.q;    
-        let clarification = entry && entry.clarification;    
-        if(!domanda){    
-          domanda = (L === 'en')    
-            ? "Give me a short, realistic daily scenario to reset my day."    
-            : "Dammi uno scenario giornaliero sintetico e realistico per rimettere in carreggiata la giornata.";    
-        }    
-        clarification = clarification || "";    
-    
-        // prefs stile/periodo    
-        let prefsRaw = localStorage.getItem('whatif_prefs') || '{}';    
-        let prefs;    
-        try{ prefs = JSON.parse(prefsRaw) || {}; }catch{ prefs = {}; }    
-    
-        let stile = prefs.stile || (phase === 2 ? 'wtf' : 'whatif');    
-        let periodo = prefs.periodo || 'future';    
-    
-        prefs.stile = stile;    
-        prefs.periodo = periodo;    
-        localStorage.setItem('whatif_prefs', JSON.stringify(prefs));    
-    
-        try{    
-          localStorage.setItem('domanda', domanda);    
-          const req = {    
-            source: "signal",    
-            domanda,    
-            clarification,    
-            lang: L,    
-            stile,    
-            periodo,    
-            micro: {    
-              src: "signal",    
-              slot: slot,    
-              time: slot,    
-              timeOfDay: slot,    
-              signal: slot,    
-              phase,    
-              mood,    
-              ts: Date.now()    
-            }    
-          };    
-          localStorage.setItem('whatif_request', JSON.stringify(req));    
-        }catch(err){    
-          console.warn("cannot save signal request", err);    
-        }    
-    
-        location.href = "fifth.html";    
-      });    
-    }catch(e){    
-      console.warn('signal test panel error', e);    
-    }    
-  })();    
-  </script>      <!-- 🔔 FCM: registra token e manda a /api/save-fcm-token -->      <script type="module">    
-    import { messaging, getToken, auth } from "./firebase.init.js";    
-    
-    const VAPID_KEY = "BEoMbKJz69nMPuZJnyqvWoL97ff6sEttr_pc1qiEaFbh2COR7dmHGMa7RmFLPip_gMXQJzVN7fx297mSdZDc1Ac";    
-    
-    const DEBUG = location.search.includes("debug=1");    
-    const dlog = (...a) => {    
-      if (!DEBUG) return;    
-      try {    
-        alert("[FCM] " + a.join(" "));    
-      } catch {}    
-    };    
-    
-    async function registerDailyFCM(force = false){    
-      try{    
-        if(!("Notification" in window)){    
-          dlog("Notification non supportato");    
-          return;    
-        }    
-    
-        const choice = localStorage.getItem("dailySignalsChoice");    
-        if(!force && choice !== "accepted"){    
-          dlog("choice=", choice, "→ niente FCM");    
-          return;    
-        }    
-    
-        let perm = Notification.permission;    
-        dlog("perm iniziale:", perm);    
-    
-        if(perm === "default"){    
-          perm = await Notification.requestPermission();    
-          dlog("perm dopo request:", perm);    
-        }    
-        if(perm !== "granted"){    
-          dlog("perm NON granted:", perm);    
-          return;    
-        }    
-    
-        const token = await getToken(messaging, { vapidKey: VAPID_KEY });    
-        if(!token){    
-          dlog("Nessun token generato");    
-          return;    
-        }    
-    
-        let uid = null;    
-        try{ uid = auth.currentUser?.uid || null; }catch{}    
-    
-        /* ✅ AGGIUNTO: invio anche lang (lingua pagina) */    
-        let lang = "it";    
-        try{    
-          lang = (window.getCurrentLang && window.getCurrentLang()) || localStorage.getItem("lang") || "it";    
-        }catch{}    
-
-        /* ✅ AGGIUNTO: update automatico solo se cambia lingua (senza rompere nulla) */
-        let lastLang = null;
-        try{ lastLang = localStorage.getItem("dailySignalsLastLang"); }catch{}
-        if(!force && lastLang && lastLang === String(lang || "it").toLowerCase()){
-          // stessa lingua già registrata → evita chiamate inutili
-        }
-
-        const resp = await fetch("/api/save-fcm-token",{    
-          method:"POST",    
-          headers:{ "Content-Type":"application/json" },    
-          body: JSON.stringify({ token, uid, lang })    
-        });    
-    
-        let data = {};    
-        try{ data = await resp.json(); }catch{}    
-    
-        if(!resp.ok || !data.ok){    
-          dlog("Errore save-fcm-token:", resp.status, data.error || "");    
-        }else{    
-          dlog("Token salvato OK:", token.slice(0,10) + "…");    
-          try{ localStorage.setItem("dailySignalsLastLang", String(lang || "it").toLowerCase()); }catch{}
-        }    
-    
-        console.log("FCM token:", token);    
-      }catch(e){    
-        console.error("❌ registerDailyFCM error", e);    
-        dlog("Exception:", e && (e.message || e.toString()));    
-      }    
-    }    
-    
-    // chiamata dal banner quando l’utente accetta    
-    window.registerDailyFCM = () => registerDailyFCM(true);    
-    
-    // se aveva già accettato in passato, prova a registrare in automatico    
-    window.addEventListener("load", ()=>{    
-      registerDailyFCM(false);    
-    });    
-  </script>      <!-- 🔔 Quando arrivo da una notifica daily_push → costruisco la richiesta e vado su fifth.html -->      <script>    
-    (function () {    
-      try {    
-        const params = new URLSearchParams(window.location.search);    
-        const src = params.get("src");    
-        if (src !== "daily_push") return;    
-    
-        // lingua corrente    
-        const L = (window.getCurrentLang && window.getCurrentLang()) || "it";    
-    
-        // uso la frase "morning.default" della lingua come base    
-        const moodsLang = (window.MOODS && window.MOODS[L]) || (window.MOODS && window.MOODS.it) || {};    
-        const slotObj   = moodsLang.morning || {};    
-        const entry     = slotObj.default || slotObj.ok || null;    
-    
-        let domanda = entry && entry.q;    
-        let clarification = entry && entry.clarification;    
-    
-        if (!domanda) {    
-          domanda = (L === "en")    
-            ? "Give me a short, realistic daily scenario to reset my day."    
-            : "Dammi uno scenario giornaliero sintetico e realistico per rimettere in carreggiata la giornata.";    
-        }    
-        clarification = clarification || "";    
-    
-        // preferenze stile / periodo dell'utente    
-        let prefs = {};    
-        try {    
-          prefs = JSON.parse(localStorage.getItem("whatif_prefs") || "{}") || {};    
-        } catch { prefs = {}; }    
-    
-        const stile   = prefs.stile   || "whatif";    
-        const periodo = prefs.periodo || "future";    
-    
-        const req = {    
-          source: "daily_push",    
-          domanda,    
-          clarification,    
-          lang: L,    
-          stile,    
-          periodo,    
-          micro: {    
-            src: "daily_push",    
-            slot: "morning",    
-            time: "morning",    
-            timeOfDay: "morning",    
-            signal: "daily_push",    
-            phase: stile === "wtf" ? 2 : 1,    
-            mood: "default",    
-            ts: Date.now()    
-          }    
-        };    
-    
-        try {    
-          localStorage.setItem("whatif_request", JSON.stringify(req));    
-        } catch (e) {    
-          console.warn("cannot save daily_push request", e);    
-        }    
-    
-        // vai direttamente alla pagina del risultato    
-        window.location.replace("fifth.html");    
-      } catch (e) {    
-        console.warn("daily_push redirect error", e);    
-      }    
-    })();    
-  </script>    </body>    
+<html lang="it">      
+<head>      
+  <meta charset="utf-8" />      
+  <meta name="viewport" content="width=device-width, initial-scale=1" />      
+  <title>What?f — Home</title>      
+  <!-- PWA -->      
+  <meta name="theme-color" content="#0B0B0C" />      
+  <link rel="manifest" href="/manifest.json" />      
+  <link rel="icon" type="image/png" sizes="32x32" href="/public/icon-192.png" />      
+  <link rel="apple-touch-icon" href="/public/icon-512.png" />      
+  <meta name="mobile-web-app-capable" content="yes" />      
+  <meta name="apple-mobile-web-app-capable" content="yes" />      
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />      
+  <!-- Preload hero -->      
+  <link rel="preload" as="image" href="/public/home-hero.png" />      
+  
+  <style>      
+    :root{      
+      --bg:#0C0F14; --bg2:#0E1724; --fg:#ffffff; --muted:#A0B2BA;      
+      --card:rgba(14,19,28,.55); --card-border:rgba(255,255,255,.10);      
+      --chip:#141C22; --accent:#1C57A0; --accent2:#FFEC01; --ink:#0A0E12; --shadow:rgba(0,0,0,.45);      
+    }      
+    html[data-theme="whatif"]{      
+      --bg:#0B1018; --bg2:#0E1724; --fg:#F4F7FB; --muted:#A7B3C2;      
+      --card:rgba(14,20,28,.55); --card-border:rgba(255,255,255,.12);      
+      --chip:#121A26; --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;      
+    }      
+    html[data-theme="wtf"]{      
+      --bg:#0B0B0C; --bg2:#101414; --fg:#EEF5F0; --muted:#A6B6AD;      
+      --card:rgba(16,22,20,.55); --card-border:rgba(255,255,255,.10);      
+      --chip:#0F1714; --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;      
+    }      
+    *{box-sizing:border-box}      
+    html,body{      
+      height:100%;margin:0;      
+      background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);      
+      color:var(--fg);      
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;      
+      overflow-x:hidden;      
+    }      
+    @keyframes bgShift{0%{background-position:0% 30%}100%{background-position:100% 70%}}      
+    @media (prefers-reduced-motion:no-preference){      
+      body{animation:bgShift 18s ease-in-out infinite alternate}      
+    }      
+    main{      
+      min-height:100%;      
+      display:flex;flex-direction:column;align-items:center;text-align:center;      
+      padding:20px;      
+      padding-bottom:40px;      
+      gap:14px;      
+    }      
+  
+    /* Lingua */      
+    .lang-fab{  
+      position:fixed;  
+      top:calc(env(safe-area-inset-top,0px) + 14px);  
+      right:14px;  
+      z-index:50  
+    }      
+    .lang-btn{      
+      appearance:none;border:1px solid var(--card-border);      
+      background:#141c22;color:var(--fg);      
+      padding:10px 12px;border-radius:999px;cursor:pointer;      
+    }      
+    .lang-menu{      
+      position:absolute;top:46px;right:0;      
+      background:var(--card);border:1px solid var(--card-border);      
+      border-radius:12px;padding:8px;display:none;min-width:170px;      
+      box-shadow:0 12px 28px var(--shadow);backdrop-filter:blur(10px);      
+    }      
+    .lang-menu button{      
+      display:block;width:100%;text-align:left;      
+      background:transparent;border:none;color:#E6F2F5;      
+      padding:10px;border-radius:10px;cursor:pointer;      
+    }      
+    .lang-menu button.active{background:rgba(255,255,255,.06)}      
+  
+    .hero-img{      
+      width:min(92vw,560px);height:auto;display:block;      
+      margin:0 auto 6px;filter:drop-shadow(0 10px 28px var(--shadow));      
+      border-radius:16px;      
+    }      
+    h1{margin:.25rem 0 0;font-size:clamp(28px,5.5vw,44px);line-height:1.1}      
+    h1 span{color:var(--accent)}      
+    .lead{      
+      max-width:720px;font-size:clamp(15px,4vw,18px);      
+      color:var(--muted);line-height:1.55;      
+      margin:4px auto 16px;      
+    }      
+    .group{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:6px}      
+    .chip{      
+      appearance:none;border:1px solid var(--card-border);      
+      background:#141c22;color:#e8f2ec;      
+      padding:12px 16px;border-radius:16px;      
+      font-weight:700;cursor:pointer;transition:.16s;      
+      backdrop-filter:blur(6px);      
+    }      
+    .chip:active{transform:translateY(1px)}      
+    .chip.selected{      
+      background:linear-gradient(180deg,var(--accent),var(--accent2));      
+      color:var(--ink);box-shadow:0 0 0 1px rgba(255,255,255,.15) inset;      
+    }      
+    .cta{      
+      display:inline-block;      
+      background:linear-gradient(180deg,var(--accent),var(--accent2));      
+      color:var(--ink);font-weight:800;      
+      border:none;border-radius:24px;      
+      padding:14px 20px;      
+      box-shadow:0 0 14px rgba(0,0,0,.35),0 0 28px rgba(0,0,0,.15);      
+      cursor:pointer;transition:.2s;      
+    }      
+    .cta[disabled]{opacity:.45;cursor:not-allowed}      
+  
+    footer{      
+      position:static;      
+      text-align:center;      
+      color:var(--muted);      
+      font-size:12px;      
+      padding:16px 14px 28px;      
+      margin-top:16px;          
+    }      
+    footer a{color:var(--accent);text-decoration:none;font-weight:600}      
+    footer .sep{opacity:.6;margin:0 6px}      
+    .foot-links{      
+      display:flex;align-items:center;justify-content:center;      
+      gap:10px;flex-wrap:wrap;margin-top:6px;      
+    }      
+    .info-btn{      
+      background:#141c22;border:1px solid var(--card-border);      
+      color:#E6F2F5;border-radius:999px;      
+      padding:6px 10px;font-weight:700;text-decoration:none;      
+    }      
+    #authError{color:#ffb3b3;font-size:13px;min-height:18px}      
+  
+    /* Debug (solo se ?debug=1) */      
+    #debug{      
+      position:fixed;left:12px;right:12px;bottom:12px;z-index:40;      
+      background:#0b0f14;border:1px solid #223;border-radius:10px;      
+      padding:8px 10px;font:12px/1.4 monospace;color:#a6f3a6;      
+      display:none;max-width:680px;margin:0 auto;white-space:pre-wrap;      
+    }  
+  
+    /* 🔬 Pulsanti test segnali */  
+    .sig-btn{  
+      appearance:none;  
+      border:1px solid var(--card-border);  
+      background:#141c22;  
+      color:#E6F2F5;  
+      border-radius:10px;  
+      padding:6px 8px;  
+      font-size:11px;  
+      font-weight:700;  
+      width:100%;  
+      text-align:left;  
+      cursor:pointer;  
+    }  
+    .sig-btn:active{  
+      transform:translateY(1px);  
+    }  
+    .sig-section-title{  
+      margin-top:6px;  
+      margin-bottom:2px;  
+      font-size:11px;  
+      font-weight:800;  
+      opacity:.9;  
+    }  
+  
+    /* 🔔 Banner frasi del giorno */  
+    .daily-overlay{  
+      position:fixed;  
+      inset:0;  
+      background:rgba(0,0,0,.58);  
+      backdrop-filter:blur(3px);  
+      z-index:80;  
+      display:none;  
+    }  
+    .daily-banner{  
+      position:fixed;  
+      left:50%;  
+      bottom:18px;  
+      transform:translateX(-50%);  
+      max-width:520px;  
+      width:calc(100% - 32px);  
+      background:var(--card);  
+      border:1px solid var(--card-border);  
+      border-radius:18px;  
+      padding:12px 14px 12px;  
+      box-shadow:0 14px 40px var(--shadow);  
+      z-index:81;  
+      display:none;  
+      text-align:left;  
+      font-size:13px;  
+    }  
+    .daily-banner-header{  
+      display:flex;  
+      align-items:flex-start;  
+      gap:10px;  
+      margin-bottom:6px;  
+    }  
+    .daily-icon{  
+      font-size:20px;  
+      margin-top:2px;  
+    }  
+    .daily-texts{  
+      flex:1;  
+      min-width:0;  
+    }  
+    .daily-title{  
+      font-weight:800;  
+      font-size:14px;  
+      margin-bottom:3px;  
+    }  
+    .daily-line-whatif{  
+      font-size:13px;  
+      color:var(--muted);  
+      margin-bottom:4px;  
+    }  
+    .daily-line-wtf{  
+      font-size:13px;  
+      color:#F8F2C4;  
+    }  
+    .daily-actions{  
+      margin-top:8px;  
+      display:flex;  
+      gap:8px;  
+      flex-wrap:wrap;  
+    }  
+    .daily-actions button{  
+      border-radius:999px;  
+      border:1px solid var(--card-border);  
+      padding:7px 12px;  
+      font-size:12px;  
+      font-weight:700;  
+      cursor:pointer;  
+    }  
+    #dailySignalsAccept{  
+      background:linear-gradient(180deg,var(--accent),var(--accent2));  
+      color:var(--ink);  
+      box-shadow:0 0 14px rgba(0,0,0,.35);  
+      border:none;  
+    }  
+    #dailySignalsReject{  
+      background:#141c22;  
+      color:var(--fg);  
+    }  
+  
+    body.daily-blocking .daily-overlay{  
+      display:block;  
+    }  
+    body.daily-blocking .daily-banner{  
+      bottom:auto;  
+      top:50%;  
+      transform:translate(-50%,-50%);  
+    }  
+  </style>    
+</head>  
+  
+<body>      
+  <!-- Lingua -->      
+  <div class="lang-fab" id="langFab">      
+    <button class="lang-btn" id="langToggle" aria-haspopup="true" aria-expanded="false" aria-label="Change language">      
+      🌐 <span id="langCode">IT</span>      
+    </button>      
+    <div class="lang-menu" id="langMenu" role="menu" aria-label="language">      
+      <button data-lang="it">Italiano</button>      
+      <button data-lang="en">English</button>      
+      <button data-lang="es">Español</button>      
+      <button data-lang="fr">Français</button>      
+      <button data-lang="de">Deutsch</button>      
+    </div>      
+  </div>      
+  
+  <main>      
+    <!-- Hero -->      
+    <img id="hero" class="hero-img" src="/public/home-hero.png"      
+         alt="Porta luminosa What?f" loading="eager" decoding="async" />    
+  
+    <h1 id="appTitle"><span data-i18n="title">Scopri il tuo What?f</span></h1>      
+  
+    <p class="lead" id="leadText">      
+      Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro.      
+      <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili.      
+      <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.      
+    </p>      
+  
+    <div class="group" id="periodGroup">      
+      <button class="chip" data-key="periodo" data-val="past"   data-i18n="past">Passato</button>      
+      <button class="chip" data-key="periodo" data-val="future" data-i18n="future">Futuro</button>      
+    </div>      
+  
+    <div class="group" id="styleGroup">      
+      <button class="chip" data-key="stile" data-val="whatif" data-i18n="whatif">What if</button>      
+      <button class="chip" data-key="stile" data-val="wtf"    data-i18n="wtf">What the F</button>      
+    </div>      
+  
+    <!-- CTA + Auth -->      
+    <button id="primaryCta" class="cta">Entra con Google</button>  
+    <button id="logoutBtn" class="chip" style="display:none">Esci</button>  
+  
+    <p id="authError"></p>      
+  </main>      
+  
+  <footer>      
+    © 2025 What?f      
+    <div class="foot-links">      
+      <a href="privacy.html" data-i18n="privacy">Privacy</a>      
+      <span class="sep">·</span>      
+      <a href="terms.html" data-i18n="terms">Termini</a>      
+      <span class="sep">·</span>      
+      <a href="delete-account.html" data-i18n="delete" style="color:#FF4D4D;font-weight:700;">Elimina il tuo account</a>      
+      <span class="sep">·</span>      
+      <a class="info-btn" href="about.html" id="aboutLink"><span data-i18n="info">Info</span></a>      
+      <span class="sep">·</span>  
+      <!-- Toggle frasi del giorno -->  
+      <button id="dailySignalsToggle" type="button" class="info-btn">  
+        🔔 Frasi del giorno  
+      </button>  
+    </div>      
+  </footer>      
+  
+  <!-- 🔔 Banner frasi del giorno -->  
+  <div id="dailySignalsOverlay" class="daily-overlay"></div>  
+  <div id="dailySignalsBanner" class="daily-banner">  
+    <div class="daily-banner-header">  
+      <div class="daily-icon">🧭</div>  
+      <div class="daily-texts">  
+        <div class="daily-title" id="dailySignalsTitle">  
+          Vuoi le 3 frasi al giorno?  
+        </div>  
+        <div class="daily-line-whatif" id="dailyLineWhatIf">  
+          What if ogni giorno ti manda 3 frasi corte cucite sul tuo umore, per farti alzare la testa dalle notifiche e guardare le cose che contano davvero.  
+        </div>  
+        <div class="daily-line-wtf" id="dailyLineWtf">  
+          What the F: “Apposto. Il collega qua ti spara tre frasi al giorno a tema esistenziale. Io ti direi di lasciarle disattivate… ma poi con chi mi diverto?”  
+        </div>  
+      </div>  
+    </div>  
+    <div class="daily-actions">  
+      <button id="dailySignalsAccept" type="button">  
+        🔔 Attiva le frasi del giorno  
+      </button>  
+      <button id="dailySignalsReject" type="button">  
+        Non ora  
+      </button>  
+    </div>  
+  </div>  
+  
+  <!-- 🔔 Toggle e pannello test segnali (sempre visibile) -->  
+  <button  
+    id="signalTestToggle"  
+    style="  
+      position:fixed;  
+      bottom:70px;  
+      right:14px;  
+      z-index:60;  
+      border-radius:999px;  
+      border:1px solid var(--card-border);  
+      background:#141c22;  
+      color:var(--fg);  
+      padding:6px 10px;  
+      font-size:11px;  
+      font-weight:700;  
+      opacity:.9;  
+    "  
+  >  
+    ⏱ Frase del giorno (test)  
+  </button>  
+  
+  <div  
+    id="signalTestPanel"  
+    style="  
+      position:fixed;  
+      bottom:118px;  
+      right:14px;  
+      z-index:59;  
+      display:none;  
+      max-width:260px;  
+      background:var(--card);  
+      border:1px solid var(--card-border);  
+      border-radius:14px;  
+      padding:10px 10px 8px;  
+      box-shadow:0 10px 26px var(--shadow);  
+      font-size:12px;  
+      text-align:left;  
+    "  
+  >  
+    <div style="font-weight:800;margin-bottom:4px;">Frasi del giorno (test)</div>  
+  
+    <div class="sig-section-title">☀️ Mattina</div>  
+    <button class="sig-btn" data-signal="morning" data-phase="1" data-mood="ok">  
+      What if · mattina (ok)  
+    </button>  
+    <button class="sig-btn" data-signal="morning" data-phase="2" data-mood="ok">  
+      What the F · mattina (ok)  
+    </button>  
+  
+    <div class="sig-section-title">🌤 Pomeriggio</div>  
+    <button class="sig-btn" data-signal="afternoon" data-phase="1" data-mood="meh">  
+      What if · pomeriggio (meh)  
+    </button>  
+    <button class="sig-btn" data-signal="afternoon" data-phase="2" data-mood="meh">  
+      What the F · pomeriggio (meh)  
+    </button>  
+  
+    <div class="sig-section-title">🌙 Sera</div>  
+    <button class="sig-btn" data-signal="evening" data-phase="1" data-mood="tired">  
+      What if · sera (tired)  
+    </button>  
+    <button class="sig-btn" data-signal="evening" data-phase="2" data-mood="wired">  
+      What the F · sera (wired)  
+    </button>  
+  </div>  
+  
+  <div id="debug"></div>      
+  
+  <!-- i18n + tema + selezioni + lingua -->      
+  <script>      
+    (function initTheme(){      
+      try{      
+        const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');      
+        document.documentElement.setAttribute('data-theme', prefs.stile==='wtf' ? 'wtf' : 'whatif');      
+      }catch{      
+        document.documentElement.setAttribute('data-theme','whatif');      
+      }      
+    })();      
+  
+    const DICT = {      
+      it:{      
+        title:"Scopri il tuo What?f",      
+        lead:"Immagina la scelta che non hai fatto… e quella che potresti fare. Scegli se guardare al passato o al futuro. <strong>What if</strong> esplora scenari realistici e riflessivi, basati su scelte plausibili. <strong>What the F</strong> ti fa vivere visioni ironiche, creative e imprevedibili.",      
+        past:"Passato", future:"Futuro", whatif:"What if", wtf:"What the F",      
+        login:"Entra con Google", next:"Avanti",      
+        needChoices:"Seleziona prima Passato/Futuro e What if/WTF",      
+        exit:"Esci",      
+        privacy:"Privacy", terms:"Termini", info:"Info",      
+        delete:"Elimina il tuo account"      
+      },      
+      en:{      
+        title:"Discover your What?f",      
+        lead:"Imagine the choice you didn’t make… and the one you could make. Choose whether to look to the past or the future. <strong>What if</strong> explores realistic, reflective scenarios based on plausible choices. <strong>What the F</strong> lets you experience ironic, creative and unpredictable visions.",      
+        past:"Past", future:"Future", whatif:"What if", wtf:"What the F",      
+        login:"Sign in with Google", next:"Next",      
+        needChoices:"Choose Past/Future and What if/WTF first",      
+        exit:"Sign out",      
+        privacy:"Privacy", terms:"Terms", info:"Info",      
+        delete:"Delete your account"      
+      },      
+      es:{      
+        title:"Descubre tu What?f",      
+        lead:"Imagina la elección que no hiciste… y la que aún podrías hacer. Elige si mirar al pasado o al futuro. <strong>What if</strong> explora escenarios realistas y reflexivos basados en decisiones plausibles. <strong>What the F</strong> te hace vivir visiones irónicas, creativas e impredecibles.",      
+        past:"Pasado", future:"Futuro", whatif:"What if", wtf:"What the F",      
+        login:"Entrar con Google", next:"Siguiente",      
+        needChoices:"Primero elige Pasado/Futuro y What if/WTF",      
+        exit:"Salir",      
+        privacy:"Privacidad", terms:"Términos", info:"Info",      
+        delete:"Eliminar tu cuenta"      
+      },      
+      fr:{      
+        title:"Découvrez votre What?f",      
+        lead:"Imaginez le choix que vous n’avez pas fait… et celui que vous pourriez encore faire. Choisissez de regarder vers le passé ou vers le futur. <strong>What if</strong> explore des scénarios réalistes et réfléchis basés sur des choix plausibles. <strong>What the F</strong> vous fait vivre des visions ironiques, créatives et imprévisibles.",      
+        past:"Passé", future:"Futur", whatif:"What if", wtf:"What the F",      
+        login:"Se connecter avec Google", next:"Suivant",      
+        needChoices:"Choisissez d’abord Passé/Futur et What if/WTF",      
+        exit:"Se déconnecter",      
+        privacy:"Confidentialité", terms:"Conditions", info:"Info",      
+        delete:"Supprimer ton compte"      
+      },      
+      de:{      
+        title:"Entdecke dein What?f",      
+        lead:"Stell dir die Entscheidung vor, die du nicht getroffen hast… und die, die du noch treffen könntest. Wähle, ob du in die Vergangenheit oder in die Zukunft blickst. <strong>What if</strong> erkundet realistische, reflektierte Szenarien auf Basis plausibler Entscheidungen. <strong>What the F</strong> lässt dich ironische, kreative und unvorhersehbare Visionen erleben.",      
+        past:"Vergangenheit", future:"Zukunft", whatif:"What if", wtf:"What the F",      
+        login:"Mit Google anmelden", next:"Weiter",      
+        needChoices:"Wähle zuerst Vergangenheit/Zukunft und What if/WTF",      
+        exit:"Abmelden",      
+        privacy:"Datenschutz", terms:"Nutzungsbedingungen", info:"Info",      
+        delete:"Konto löschen"      
+      }      
+    };  
+  
+    /* 🌡️ MOODS: frasi base per segnali, per lingua / slot / mood */  
+    const MOODS = {  
+      it: {  
+        morning: {  
+          ok: {  
+            q: "Se oggi proteggo l’energia che ho e metto un confine chiaro a una cosa che mi pesa, come cambia la mia giornata?"  
+          },  
+          default: {  
+            q: "Che tipo di giornata viene fuori se oggi mi concedo un piccolo gesto di cura per me, anche se ho poco tempo?"  
+          }  
+        },  
+        afternoon: {  
+          meh: {  
+            q: "Se questo pomeriggio scelgo una sola cosa piccola ma concreta da portare a casa, quale sarebbe e cosa sblocca per i prossimi giorni?"  
+          },  
+          default: {  
+            q: "Come cambia il resto della giornata se smetto di inseguire tutto e mi concentro bene su una sola priorità?"  
+          }  
+        },  
+        evening: {  
+          tired: {  
+            q: "Se stasera rallento, chiudo dignitosamente la giornata e preparo un domani leggermente migliore, cosa faccio concretamente?"  
+          },  
+          wired: {  
+            q: "Se sfrutto l’energia della sera senza bruciarmi, su cosa ha più senso che la scarichi adesso?"  
+          },  
+          default: {  
+            q: "Che cosa posso fare stasera per chiudere il giorno con una sensazione di 'ok, così va bene'?"  
+          }  
+        }  
+      },  
+      en: {  
+        morning: {  
+          ok: {  
+            q: "If today I protect the energy I have and draw one clear boundary, how does my day change?"  
+          },  
+          default: {  
+            q: "What kind of day do I get if I give myself one small act of self-care, even with very little time?"  
+          }  
+        },  
+        afternoon: {  
+          meh: {  
+            q: "If this afternoon I commit to one small but concrete task, which one unlocks the most for the next few days?"  
+          },  
+          default: {  
+            q: "How does the rest of the day change if I stop chasing everything and focus deeply on a single priority?"  
+          }  
+        },  
+        evening: {  
+          tired: {  
+            q: "If tonight I slow down, close the day with dignity and set up a slightly better tomorrow, what do I actually do?"  
+          },  
+          wired: {  
+            q: "If I use tonight’s energy without burning myself out, what’s the best target to pour it into?"  
+          },  
+          default: {  
+            q: "What can I do this evening so that I go to bed with a quiet 'okay, this was enough' feeling?"  
+          }  
+        }  
+      },  
+      es: {  
+        morning: {  
+          ok: {  
+            q: "Si hoy protejo la energía que tengo y marco un límite claro, ¿cómo cambia mi día?"  
+          },  
+          default: {  
+            q: "¿Qué tipo de día sale si hoy me permito un pequeño gesto de autocuidado aunque tenga poco tiempo?"  
+          }  
+        },  
+        afternoon: {  
+          meh: {  
+            q: "Si esta tarde elijo una sola cosa pequeña pero concreta para terminar, ¿cuál desbloquea más para los próximos días?"  
+          },  
+          default: {  
+            q: "¿Cómo cambia el resto del día si dejo de perseguirlo todo y me concentro en una sola prioridad?"  
+          }  
+        },  
+        evening: {  
+          tired: {  
+            q: "Si esta noche bajo el ritmo, cierro el día con dignidad y preparo un mañana un poco mejor, ¿qué hago en concreto?"  
+          },  
+          wired: {  
+            q: "Si aprovecho la energía de la noche sin quemarme, ¿en qué tiene más sentido volcarla ahora?"  
+          },  
+          default: {  
+            q: "¿Qué puedo hacer esta noche para irme a dormir con la sensación de 'ok, así está bien'?"  
+          }  
+        }  
+      },  
+      fr: {  
+        morning: {  
+          ok: {  
+            q: "Si aujourd’hui je protège l’énergie que j’ai et je pose une limite claire, en quoi ma journée change-t-elle?"  
+          },  
+          default: {  
+            q: "À quoi ressemble ma journée si je m’accorde un petit geste de soin pour moi, même avec peu de temps?"  
+          }  
+        },  
+        afternoon: {  
+          meh: {  
+            q: "Si cet après-midi je choisis une seule petite action concrète à accomplir, laquelle débloque le plus pour les prochains jours?"  
+          },  
+          default: {  
+            q: "Comment le reste de la journée change si j’arrête de tout courir et que je me concentre sur une seule priorité?"  
+          }  
+        },  
+        evening: {  
+          tired: {  
+            q: "Si ce soir je ralentis, je clôture la journée correctement et je prépare un demain un peu meilleur, que fais-je concrètement?"  
+          },  
+          wired: {  
+            q: "Si j’utilise l’énergie de ce soir sans me cramer, où est-ce le plus intelligent de la diriger?"  
+          },  
+          default: {  
+            q: "Que puis-je faire ce soir pour me coucher avec un 'ok, ça va comme ça' honnête?"  
+          }  
+        }  
+      },  
+      de: {  
+        morning: {  
+          ok: {  
+            q: "Wenn ich heute meine Energie schütze und eine klare Grenze ziehe, wie verändert sich mein Tag?"  
+          },  
+          default: {  
+            q: "Was für ein Tag entsteht, wenn ich mir heute eine kleine Form von Selbstfürsorge gönne, auch wenn ich wenig Zeit habe?"  
+          }  
+        },  
+        afternoon: {  
+          meh: {  
+            q: "Wenn ich mir heute Nachmittag eine kleine, aber konkrete Aufgabe vornehme, welche bringt in den nächsten Tagen am meisten Bewegung?"  
+          },  
+          default: {  
+            q: "Wie verändert sich der Rest des Tages, wenn ich aufhöre allem hinterherzurennen und mich auf eine einzige Priorität konzentriere?"  
+          }  
+        },  
+        evening: {  
+          tired: {  
+            q: "Wenn ich heute Abend das Tempo rausnehme, den Tag ordentlich abschließe und ein etwas besseres Morgen vorbereite, was tue ich konkret?"  
+          },  
+          wired: {  
+            q: "Wenn ich die Abendenergie nutze ohne mich zu verbrennen, wo setze ich sie am sinnvollsten ein?"  
+          },  
+          default: {  
+            q: "Was kann ich heute Abend tun, damit ich mit einem ehrlichen 'okay, das reicht so' ins Bett gehe?"  
+          }  
+        }  
+      }  
+    };  
+  
+    window.MOODS = MOODS;  
+  
+    const LS = localStorage;      
+    const $  = s => document.querySelector(s);      
+    const $$ = s => document.querySelectorAll(s);      
+  
+    function detectBrowserLang(){      
+      const n=(navigator.language||'it').toLowerCase();      
+      if(n.startsWith('it')) return 'it';      
+      if(n.startsWith('en')) return 'en';      
+      if(n.startsWith('es')) return 'es';      
+      if(n.startsWith('fr')) return 'fr';      
+      if(n.startsWith('de')) return 'de';      
+      return 'it';      
+    }      
+    function getLang(){      
+      return (LS.getItem('lang') || detectBrowserLang()).toLowerCase();      
+    }      
+    function setLang(l){      
+      LS.setItem('lang', l.toLowerCase());      
+      applyLang();      
+  
+      /* ✅ AGGIUNTO: aggiorna lang in Firestore se notifiche attive */  
+      try{  
+        if (localStorage.getItem('dailySignalsChoice') === 'accepted' && window.registerDailyFCM) {  
+          window.registerDailyFCM();  
+        }  
+      }catch{}  
+    }      
+  
+    function applyLang(){      
+      const L = getLang();      
+      const d = DICT[L] || DICT.it;      
+      document.documentElement.lang = L;      
+      const code = $('#langCode'); if(code) code.textContent = L.toUpperCase();      
+  
+      const titleSpan = document.querySelector('[data-i18n="title"]');      
+      if(titleSpan) titleSpan.textContent = d.title;      
+      const lead = document.getElementById('leadText');      
+      if(lead) lead.innerHTML = d.lead;      
+  
+      $$('[data-i18n]').forEach(el=>{      
+        const k = el.getAttribute('data-i18n');      
+        if(!k || k==="title" || k==="lead") return;      
+        if(typeof d[k] === 'string') el.textContent = d[k];      
+      });      
+  
+      const logout = document.getElementById('logoutBtn');      
+      if(logout) logout.textContent = d.exit;      
+      const primary = document.getElementById('primaryCta');      
+      if(primary && !primary.dataset.state){      
+        primary.textContent = d.login;      
+      }      
+  
+      document.querySelectorAll('#langMenu button')      
+        .forEach(b => b.classList.toggle('active', b.dataset.lang === L));      
+  
+      if(window.updatePrimaryCta) window.updatePrimaryCta();      
+  
+      // aggiorna testo banner frasi del giorno se necessario  
+      if(window.dailySignalsApplyText) window.dailySignalsApplyText();  
+      if(window.dailySignalsRefreshToggleLabel) window.dailySignalsRefreshToggleLabel();  
+    }      
+  
+    if(!LS.getItem('lang')) LS.setItem('lang', detectBrowserLang());      
+    applyLang();      
+  
+    window.I18N = DICT;      
+    window.getCurrentLang = getLang;      
+  
+    const state = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');      
+    function wireGroup(g){      
+      if(!g) return;      
+      g.addEventListener('click', e=>{      
+        const b = e.target.closest('.chip'); if(!b) return;      
+        g.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));      
+        b.classList.add('selected');      
+        state[b.dataset.key] = b.dataset.val;      
+        localStorage.setItem('whatif_prefs', JSON.stringify(state));      
+        if(b.dataset.key==='stile'){      
+          document.documentElement.setAttribute('data-theme', b.dataset.val==='wtf' ? 'wtf' : 'whatif');      
+        }      
+        if(window.updatePrimaryCta) window.updatePrimaryCta();      
+      });      
+    }      
+    wireGroup(document.getElementById('periodGroup'));      
+    wireGroup(document.getElementById('styleGroup'));      
+  
+    (function(){      
+      const toggle = document.getElementById('langToggle');      
+      const menu   = document.getElementById('langMenu');      
+      if(!toggle || !menu) return;      
+  
+      const openMenu = ()=>{      
+        menu.style.display = 'block';      
+        toggle.setAttribute('aria-expanded','true');      
+      };      
+      const closeMenu = ()=>{      
+        menu.style.display = 'none';      
+        toggle.setAttribute('aria-expanded','false');      
+      };      
+  
+      toggle.addEventListener('click', ()=>{      
+        const isOpen = menu.style.display === 'block';      
+        if(isOpen) closeMenu(); else openMenu();      
+      });      
+  
+      menu.addEventListener('click', e=>{      
+        const btn = e.target.closest('button[data-lang]');      
+        if(!btn) return;      
+        setLang(btn.dataset.lang);      
+        closeMenu();      
+      });      
+  
+      document.addEventListener('click', e=>{      
+        if(!menu.contains(e.target) && !toggle.contains(e.target)){      
+          closeMenu();      
+        }      
+      });      
+      document.addEventListener('keydown', e=>{      
+        if(e.key === 'Escape') closeMenu();      
+      });      
+    })();  
+  </script>      
+  
+  <!-- 🔔 Logica banner frasi del giorno -->  
+  <script>  
+    (function(){  
+      const overlay = document.getElementById('dailySignalsOverlay');  
+      const banner  = document.getElementById('dailySignalsBanner');  
+      const titleEl = document.getElementById('dailySignalsTitle');  
+      const lineWI  = document.getElementById('dailyLineWhatIf');  
+      const lineWTF = document.getElementById('dailyLineWtf');  
+      const btnOk   = document.getElementById('dailySignalsAccept');  
+      const btnNo   = document.getElementById('dailySignalsReject');  
+      const toggleBtn = document.getElementById('dailySignalsToggle');  
+  
+      if(!banner || !titleEl || !lineWI || !lineWTF || !btnOk || !btnNo) return;  
+  
+      const LS = window.localStorage;  
+  
+      const TEXT = {  
+        it: {  
+          title: "Vuoi le 3 frasi al giorno?",  
+          whatif: "What if ogni giorno ti manda 3 frasi corte cucite sul tuo umore, per farti alzare la testa dalle notifiche e guardare le cose che contano davvero.",  
+          wtf: "What the F: “Apposto. Il collega qua ti spara tre frasi al giorno a tema esistenziale. Io ti direi di lasciarle disattivate… ma poi con chi mi diverto?”",  
+          btnOn: "🔔 Attiva le frasi del giorno",  
+          btnOff: "Non ora",  
+          toggleOn: "🔔 Frasi del giorno attive",  
+          toggleOff: "🔕 Frasi del giorno disattivate"  
+        },  
+        en: {  
+          title: "Want 3 nudges a day?",  
+          whatif: "What if sends you 3 short check-ins a day tuned to your mood, to lift your eyes from notifications and back to what actually matters.",  
+          wtf: "What the F: “Perfect. The colleague here will spam you with three existential lines a day. I’d say keep them off… but then who do I mess with?”",  
+          btnOn: "🔔 Turn on daily phrases",  
+          btnOff: "Not now",  
+          toggleOn: "🔔 Daily phrases on",  
+          toggleOff: "🔕 Daily phrases off"  
+        },  
+        es: {  
+          title: "¿Quieres 3 frases al día?",  
+          whatif: "What if te envía cada día 3 frases cortas ajustadas a tu ánimo, para sacarte un segundo de las notificaciones y mirar lo que importa.",  
+          wtf: "What the F: “Perfecto. El colega de aquí te dispara tres frases existenciales al día. Yo te diría que las dejes apagadas… pero entonces ¿con quién me divierto?”",  
+          btnOn: "🔔 Activar frases del día",  
+          btnOff: "Ahora no",  
+          toggleOn: "🔔 Frases del día activas",  
+          toggleOff: "🔕 Frases del día desactivadas"  
+        },  
+        fr: {  
+          title: "3 phrases par jour, ça te tente ?",  
+          whatif: "What if t’envoie chaque jour 3 phrases courtes calées sur ton humeur, pour te décrocher une seconde des notifs et regarder ce qui compte.",  
+          wtf: "What the F : « Parfait. Le collègue ici va te balancer trois lignes existentielles par jour. Je te dirais de les laisser coupées… mais après, je me marre avec qui ? »",  
+          btnOn: "🔔 Activer les phrases du jour",  
+          btnOff: "Pas maintenant",  
+          toggleOn: "🔔 Phrases du jour actives",  
+          toggleOff: "🔕 Phrases du jour désactivées"  
+        },  
+        de: {  
+          title: "Lust auf 3 Sätze am Tag?",  
+          whatif: "What if schickt dir jeden Tag 3 kurze Sätze passend zu deiner Stimmung, damit du kurz aus den Notifications auftauchst und auf das Wichtige schaust.",  
+          wtf: "What the F: „Na super. Der Kollege hier ballert dir drei existentielle Sprüche pro Tag raus. Ich würde sagen: lass sie aus… aber mit wem hab ich dann Spaß?“",  
+          btnOn: "🔔 Tägliche Sätze aktivieren",  
+          btnOff: "Nicht jetzt",  
+          toggleOn: "🔔 Tägliche Sätze: an",  
+          toggleOff: "🔕 Tägliche Sätze: aus"  
+        }  
+      };  
+  
+      function lang(){  
+        return (window.getCurrentLang && window.getCurrentLang()) || 'it';  
+      }  
+      function t(){  
+        return TEXT[lang()] || TEXT.it;  
+      }  
+  
+      function getChoice(){  
+        try{  
+          return LS.getItem('dailySignalsChoice') || null;  
+        }catch{ return null; }  
+      }  
+      function setChoice(v){  
+        try{  
+          if(v===null) LS.removeItem('dailySignalsChoice');  
+          else LS.setItem('dailySignalsChoice', v);  
+        }catch{}  
+      }  
+      function setLastPromptToday(){  
+        try{  
+          const today = new Date().toISOString().slice(0,10);  
+          LS.setItem('dailySignalsLastPrompt', today);  
+        }catch{}  
+      }  
+      function shouldShowGentle(){  
+        const choice = getChoice();  
+        if(choice === 'accepted') return false;  
+        try{  
+          const last = LS.getItem('dailySignalsLastPrompt') || '';  
+          const today = new Date().toISOString().slice(0,10);  
+          return last !== today;  
+        }catch{ return false; }  
+      }  
+  
+      function applyText(){  
+        const TT = t();  
+        titleEl.textContent = TT.title;  
+        lineWI.textContent  = TT.whatif;  
+        lineWTF.textContent = TT.wtf;  
+        btnOk.textContent   = TT.btnOn;  
+        btnNo.textContent   = TT.btnOff;  
+      }  
+      window.dailySignalsApplyText = applyText;  
+  
+      function openBlocking(){  
+        applyText();  
+        document.body.classList.add('daily-blocking');  
+        if(overlay) overlay.style.display = 'block';  
+        banner.style.display = 'block';  
+      }  
+      function openGentle(){  
+        applyText();  
+        document.body.classList.remove('daily-blocking');  
+        if(overlay) overlay.style.display = 'none';  
+        banner.style.display = 'block';  
+      }  
+      function closeBanner(){  
+        document.body.classList.remove('daily-blocking');  
+        if(overlay) overlay.style.display = 'none';  
+        banner.style.display = 'none';  
+      }  
+  
+      // etichetta bottone footer  
+      function refreshToggleLabel(){  
+        if(!toggleBtn) return;  
+        const choice = getChoice();  
+        const TT = t();  
+        if(choice === 'accepted'){  
+          toggleBtn.textContent = TT.toggleOn;  
+        }else{  
+          toggleBtn.textContent = TT.toggleOff;  
+        }  
+      }  
+      window.dailySignalsRefreshToggleLabel = refreshToggleLabel;  
+  
+      // scelta utente  
+      btnOk.addEventListener('click', ()=>{  
+        setChoice('accepted');  
+        setLastPromptToday();  
+        closeBanner();  
+        if(window.dailySignalsRefreshToggleLabel) window.dailySignalsRefreshToggleLabel();  
+  
+        // 👉 qui chiediamo permesso (se serve) e salviamo il token FCM  
+        try{  
+          if (window.registerDailyFCM) {  
+            window.registerDailyFCM();  
+          }  
+        }catch{}  
+      });  
+      btnNo.addEventListener('click', ()=>{  
+        setChoice('rejected');  
+        setLastPromptToday();  
+        closeBanner();  
+        if(window.dailySignalsRefreshToggleLabel) window.dailySignalsRefreshToggleLabel();  
+      });  
+  
+      // footer: attiva/disattiva manualmente  
+      if(toggleBtn){  
+        toggleBtn.addEventListener('click', ()=>{  
+          const choice = getChoice();  
+          if(choice === 'accepted'){  
+            // disattiva  
+            setChoice('rejected');  
+            setLastPromptToday();  
+            refreshToggleLabel();  
+          }else{  
+            // mostra banner in modalità gentile  
+            openGentle();  
+          }  
+        });  
+      }  
+  
+      // export helper  
+      window.needsDailyChoice = function(){  
+        return !getChoice();  
+      };  
+  
+      // primo load  
+      if(!getChoice()){  
+        openBlocking();  
+        setLastPromptToday();  
+      }else if(shouldShowGentle()){  
+        openGentle();  
+        setLastPromptToday();  
+      }  
+  
+      // inizializza label footer alla prima apertura  
+      refreshToggleLabel();  
+    })();  
+  </script>  
+  
+  <!-- 🔐 Firebase Auth -->      
+  <script type="module">  
+    const dbg = document.getElementById('debug');  
+    const DO_DEBUG = new URLSearchParams(location.search).get('debug') === '1';  
+    const log = (...a)=>{ if(DO_DEBUG){ dbg.style.display='block'; dbg.textContent += a.join(' ') + '\n'; } };  
+    const showErrText = (t)=>{  
+      const el=document.getElementById('authError');  
+      if(el) el.textContent=t||'';  
+      if(t) log('❌', t);  
+    };  
+  
+    import { auth } from "./firebase.init.js";      
+  
+    import {      
+      GoogleAuthProvider,      
+      onAuthStateChanged,      
+      signInWithPopup,      
+      signInWithRedirect,      
+      getRedirectResult,      
+      signOut      
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";      
+  
+    const provider = new GoogleAuthProvider();      
+  
+    const primaryCta = document.getElementById("primaryCta");      
+    const logoutBtn  = document.getElementById("logoutBtn");      
+  
+    const selectionsReady = ()=>{      
+      try{      
+        const prefs = JSON.parse(localStorage.getItem('whatif_prefs')||'{}');      
+        return !!(prefs.periodo && prefs.stile);      
+      }catch{ return false; }      
+    };      
+  
+    function getDict(){      
+      const L = (window.getCurrentLang && window.getCurrentLang()) || 'it';      
+      const I = window.I18N || {};      
+      return I[L] || I.it || {      
+        login:"Entra con Google",      
+        next:"Avanti",      
+        needChoices:"Seleziona prima Passato/Futuro e What if/WTF",      
+        exit:"Esci"      
+      };      
+    }      
+  
+    function updatePrimaryCta(){      
+      if(!primaryCta || !logoutBtn) return;      
+      const d = getDict();      
+      const user = auth.currentUser;      
+      if(user){      
+        primaryCta.dataset.state = 'logged-in';      
+        primaryCta.textContent = selectionsReady() ? d.next : d.needChoices;      
+        primaryCta.disabled = !selectionsReady();      
+        logoutBtn.style.display = "inline-block";      
+        logoutBtn.textContent = d.exit;      
+      }else{      
+        primaryCta.dataset.state = 'login';      
+        primaryCta.textContent = d.login;      
+        primaryCta.disabled = false;      
+        logoutBtn.style.display = "none";      
+      }      
+    }      
+    window.updatePrimaryCta = updatePrimaryCta;      
+  
+    const AUTH_FLAG = "whatif_auth_redirect";      
+  
+    try{      
+      const res = await getRedirectResult(auth);      
+      if (res?.user) {      
+        log("↩️ Redirect OK:", res.user.uid);      
+        sessionStorage.removeItem(AUTH_FLAG);      
+      }else{      
+        log("↩️ Redirect senza user (ok se popup è riuscito)");      
+      }      
+    }catch(e){      
+      if((e.message||'').toLowerCase().includes('missing initial state')){      
+        showErrText("Impossibile completare l’accesso (manca lo stato). Riprova o usa una finestra in incognito.");      
+      }else{      
+        showErrText("Post-login: " + (e.code || e.message));      
+      }      
+      sessionStorage.removeItem(AUTH_FLAG);      
+    }      
+  
+    onAuthStateChanged(auth, ()=>{      
+      log("👤 onAuthStateChanged");      
+      updatePrimaryCta();      
+    });      
+  
+    updatePrimaryCta();      
+  
+    primaryCta.onclick = async ()=>{      
+      showErrText("");      
+      const user = auth.currentUser;      
+      const d = getDict();      
+  
+      if(user){      
+        if(selectionsReady()){      
+          location.href = "fourth.html";      
+        }else{      
+          showErrText(d.needChoices);      
+        }      
+        return;      
+      }      
+  
+      try{      
+        log("🪟 Apro popup Google…");      
+        await signInWithPopup(auth, provider);      
+        log("✅ Popup OK");      
+      }catch(e){      
+        const code = e.code || '';      
+        log("⚠️ Popup fallito:", code);      
+  
+        const needRedirect = [      
+          'auth/popup-blocked',      
+          'auth/popup-closed-by-user',      
+          'auth/internal-error',      
+          'auth/cancelled-popup-request'      
+        ].some(x => x === code);      
+  
+        if(needRedirect){      
+          try{ sessionStorage.setItem(AUTH_FLAG,'1'); }catch{}      
+          log("➡️ Faccio redirect…");      
+          await signInWithRedirect(auth, provider);      
+          return;      
+        }      
+  
+        const map = {      
+          "auth/unauthorized-domain":"Dominio non autorizzato (Console Firebase → Authentication → Impostazioni → Domini autorizzati).",      
+          "auth/operation-not-allowed":"Provider Google non abilitato (Authentication → Metodi di accesso).",      
+          "auth/network-request-failed":"Problema di rete o HTTPS."      
+        };      
+        showErrText(map[code] || (code || e.message));      
+      }      
+    };      
+  
+    logoutBtn.onclick = async ()=>{ await signOut(auth); };  
+  </script>      
+  
+  <script>  
+  (function(){  
+    const title  = document.getElementById('appTitle');  
+    const pastBtn = document.querySelector('button[data-val="past"]');  
+    if(!title || !pastBtn) return;  
+    let tapTitle=0, tapPast=0, stage=0, timer=null;  
+    function reset(){  
+      tapTitle=0; tapPast=0; stage=0;  
+      if(timer) clearTimeout(timer); timer=null;  
+      pastBtn.classList.remove("unlocking");  
+    }  
+    function flash(){  
+      const f=document.createElement("div");  
+      f.style.position="fixed";f.style.inset="0";  
+      f.style.background="rgba(255,255,255,0.05)";  
+      f.style.backdropFilter="blur(2px)";  
+      f.style.transition="opacity .6s";f.style.opacity="1";  
+      f.style.zIndex="9999";  
+      document.body.appendChild(f);  
+      setTimeout(()=>f.style.opacity="0",150);  
+      setTimeout(()=>f.remove(),800);  
+    }  
+  
+    // 🔐 Verifica il PIN con /api/admin-token  
+    async function success(){  
+      reset();  
+      const pin = prompt("PIN amministratore:");  
+      if (!pin) return;  
+  
+      try {  
+        const resp = await fetch("/api/admin-token", {  
+          method: "POST",  
+          headers: {  
+            "Content-Type": "application/json",  
+            "admin-secret": pin  
+          },  
+          body: JSON.stringify({ pin }),  
+          credentials: "include"  
+        });  
+  
+        const data = await resp.json().catch(() => ({}));  
+  
+        if (!resp.ok || !data.ok) {  
+          alert("PIN errato");  
+          return;  
+        }  
+  
+        try {  
+          localStorage.setItem("admin_token", data.token);  
+        } catch (e) {}  
+  
+        location.href = "admin.html";  
+      } catch (e) {  
+        console.error("Errore login admin", e);  
+        alert("Errore durante la verifica del PIN. Controlla la connessione e riprova.");  
+      }  
+    }  
+  
+    title.addEventListener('click', ()=>{  
+      if(++tapTitle>=3){  
+        stage=1; tapTitle=0; flash();  
+        pastBtn.classList.add("unlocking");  
+        setTimeout(()=>{ if(stage!==1) pastBtn.classList.remove("unlocking"); },2500);  
+      }  
+      if(timer) clearTimeout(timer);  
+      timer=setTimeout(reset,2000);  
+    });  
+    pastBtn.addEventListener('click', ()=>{  
+      if(stage!==1) return;  
+      if(++tapPast>=5) success();  
+      if(timer) clearTimeout(timer);  
+      timer=setTimeout(reset,2500);  
+    });  
+  })();  
+  
+  if("serviceWorker" in navigator){      
+    window.addEventListener("load", ()=>{      
+      navigator.serviceWorker.register("/sw.js").catch(()=>{});      
+    });      
+  }  
+  
+  // 🔔 Pannello test segnali: SEMPRE visibile, scrive whatif_request e va su fifth.html  
+  (function(){  
+    try{  
+      const toggle = document.getElementById('signalTestToggle');  
+      const panel  = document.getElementById('signalTestPanel');  
+      if(!toggle || !panel) return;  
+  
+      // sempre visibile  
+      toggle.style.display = 'inline-flex';  
+  
+      toggle.addEventListener('click', ()=>{  
+        const open = panel.style.display === 'block';  
+        panel.style.display = open ? 'none' : 'block';  
+      });  
+  
+      panel.addEventListener('click', (e)=>{  
+        const btn = e.target.closest('.sig-btn');  
+        if(!btn) return;  
+  
+        const slot  = btn.dataset.signal || 'morning';      // "morning" | "afternoon" | "evening"  
+        const phase = parseInt(btn.dataset.phase || '1', 10) || 1;  
+        const mood  = btn.dataset.mood || 'default';  
+  
+        const L = (window.getCurrentLang && window.getCurrentLang()) || 'it';  
+        const moodsLang = (window.MOODS && window.MOODS[L]) || (window.MOODS && window.MOODS.it) || {};  
+        const slotObj = moodsLang[slot] || {};  
+        const entry = slotObj[mood] || slotObj.default || null;  
+  
+        let domanda = entry && entry.q;  
+        let clarification = entry && entry.clarification;  
+        if(!domanda){  
+          domanda = (L === 'en')  
+            ? "Give me a short, realistic daily scenario to reset my day."  
+            : "Dammi uno scenario giornaliero sintetico e realistico per rimettere in carreggiata la giornata.";  
+        }  
+        clarification = clarification || "";  
+  
+        // prefs stile/periodo  
+        let prefsRaw = localStorage.getItem('whatif_prefs') || '{}';  
+        let prefs;  
+        try{ prefs = JSON.parse(prefsRaw) || {}; }catch{ prefs = {}; }  
+  
+        let stile = prefs.stile || (phase === 2 ? 'wtf' : 'whatif');  
+        let periodo = prefs.periodo || 'future';  
+  
+        prefs.stile = stile;  
+        prefs.periodo = periodo;  
+        localStorage.setItem('whatif_prefs', JSON.stringify(prefs));  
+  
+        try{  
+          localStorage.setItem('domanda', domanda);  
+          const req = {  
+            source: "signal",  
+            domanda,  
+            clarification,  
+            lang: L,  
+            stile,  
+            periodo,  
+            micro: {  
+              src: "signal",  
+              slot: slot,  
+              time: slot,  
+              timeOfDay: slot,  
+              signal: slot,  
+              phase,  
+              mood,  
+              ts: Date.now()  
+            }  
+          };  
+          localStorage.setItem('whatif_request', JSON.stringify(req));  
+        }catch(err){  
+          console.warn("cannot save signal request", err);  
+        }  
+  
+        location.href = "fifth.html";  
+      });  
+    }catch(e){  
+      console.warn('signal test panel error', e);  
+    }  
+  })();  
+  </script>  
+  
+  <!-- 🔔 FCM: registra token e manda a /api/save-fcm-token -->  
+  <script type="module">  
+    import { messaging, getToken, auth } from "./firebase.init.js";  
+  
+    const VAPID_KEY = "BEoMbKJz69nMPuZJnyqvWoL97ff6sEttr_pc1qiEaFbh2COR7dmHGMa7RmFLPip_gMXQJzVN7fx297mSdZDc1Ac";  
+  
+    const DEBUG = location.search.includes("debug=1");  
+    const dlog = (...a) => {  
+      if (!DEBUG) return;  
+      try {  
+        alert("[FCM] " + a.join(" "));  
+      } catch {}  
+    };  
+  
+    async function registerDailyFCM(force = false){  
+      try{  
+        if(!("Notification" in window)){  
+          dlog("Notification non supportato");  
+          return;  
+        }  
+  
+        const choice = localStorage.getItem("dailySignalsChoice");  
+        if(!force && choice !== "accepted"){  
+          dlog("choice=", choice, "→ niente FCM");  
+          return;  
+        }  
+  
+        let perm = Notification.permission;  
+        dlog("perm iniziale:", perm);  
+  
+        if(perm === "default"){  
+          perm = await Notification.requestPermission();  
+          dlog("perm dopo request:", perm);  
+        }  
+        if(perm !== "granted"){  
+          dlog("perm NON granted:", perm);  
+          return;  
+        }  
+  
+        const token = await getToken(messaging, { vapidKey: VAPID_KEY });  
+        if(!token){  
+          dlog("Nessun token generato");  
+          return;  
+        }  
+  
+        let uid = null;  
+        try{ uid = auth.currentUser?.uid || null; }catch{}  
+  
+        /* ✅ AGGIUNTO: invio anche lang (lingua pagina) */  
+        let lang = "it";  
+        try{  
+          lang = (window.getCurrentLang && window.getCurrentLang()) || localStorage.getItem("lang") || "it";  
+        }catch{}  
+  
+        const resp = await fetch("/api/save-fcm-token",{  
+          method:"POST",  
+          headers:{ "Content-Type":"application/json" },  
+          body: JSON.stringify({ token, uid, lang })  
+        });  
+  
+        let data = {};  
+        try{ data = await resp.json(); }catch{}  
+  
+        if(!resp.ok || !data.ok){  
+          dlog("Errore save-fcm-token:", resp.status, data.error || "");  
+        }else{  
+          dlog("Token salvato OK:", token.slice(0,10) + "…");  
+        }  
+  
+        console.log("FCM token:", token);  
+      }catch(e){  
+        console.error("❌ registerDailyFCM error", e);  
+        dlog("Exception:", e && (e.message || e.toString()));  
+      }  
+    }  
+  
+    // chiamata dal banner quando l’utente accetta  
+    window.registerDailyFCM = () => registerDailyFCM(true);  
+  
+    // se aveva già accettato in passato, prova a registrare in automatico  
+    window.addEventListener("load", ()=>{  
+      registerDailyFCM(false);  
+    });  
+  </script>  
+  <!-- 🔔 Quando arrivo da una notifica daily_push → costruisco la richiesta e vado su fifth.html -->  
+  <script>  
+    (function () {  
+      try {  
+        const params = new URLSearchParams(window.location.search);  
+        const src = params.get("src");  
+        if (src !== "daily_push") return;  
+  
+        // lingua corrente  
+        const L = (window.getCurrentLang && window.getCurrentLang()) || "it";  
+  
+        // uso la frase "morning.default" della lingua come base  
+        const moodsLang = (window.MOODS && window.MOODS[L]) || (window.MOODS && window.MOODS.it) || {};  
+        const slotObj   = moodsLang.morning || {};  
+        const entry     = slotObj.default || slotObj.ok || null;  
+  
+        let domanda = entry && entry.q;  
+        let clarification = entry && entry.clarification;  
+  
+        if (!domanda) {  
+          domanda = (L === "en")  
+            ? "Give me a short, realistic daily scenario to reset my day."  
+            : "Dammi uno scenario giornaliero sintetico e realistico per rimettere in carreggiata la giornata.";  
+        }  
+        clarification = clarification || "";  
+  
+        // preferenze stile / periodo dell'utente  
+        let prefs = {};  
+        try {  
+          prefs = JSON.parse(localStorage.getItem("whatif_prefs") || "{}") || {};  
+        } catch { prefs = {}; }  
+  
+        const stile   = prefs.stile   || "whatif";  
+        const periodo = prefs.periodo || "future";  
+  
+        const req = {  
+          source: "daily_push",  
+          domanda,  
+          clarification,  
+          lang: L,  
+          stile,  
+          periodo,  
+          micro: {  
+            src: "daily_push",  
+            slot: "morning",  
+            time: "morning",  
+            timeOfDay: "morning",  
+            signal: "daily_push",  
+            phase: stile === "wtf" ? 2 : 1,  
+            mood: "default",  
+            ts: Date.now()  
+          }  
+        };  
+  
+        try {  
+          localStorage.setItem("whatif_request", JSON.stringify(req));  
+        } catch (e) {  
+          console.warn("cannot save daily_push request", e);  
+        }  
+  
+        // vai direttamente alla pagina del risultato  
+        window.location.replace("fifth.html");  
+      } catch (e) {  
+        console.warn("daily_push redirect error", e);  
+      }  
+    })();  
+  </script>  
+</body>  
 </html>
