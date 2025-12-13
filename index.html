@@ -1182,15 +1182,29 @@
     });      
   }  
   
-  // 🔔 Pannello test segnali: SEMPRE visibile, scrive whatif_request e va su fifth.html  
-  (function(){  
-    try{  
-      const toggle = document.getElementById('signalTestToggle');  
-      const panel  = document.getElementById('signalTestPanel');  
-      if(!toggle || !panel) return;  
-  
-      // sempre visibile  
-      toggle.style.display = 'inline-flex';  
+(function(){
+  try{
+    const toggle = document.getElementById('signalTestToggle');
+    const panel  = document.getElementById('signalTestPanel');
+    if(!toggle || !panel) return;
+
+    const isAdmin = (() => {
+      try {
+        return !!localStorage.getItem("admin_token");
+      } catch {
+        return false;
+      }
+    })();
+
+    // 🔒 nascosto di default
+    toggle.style.display = "none";
+    panel.style.display  = "none";
+
+    // ❌ se non admin → esci
+    if (!isAdmin) return;
+
+    // ✅ admin → mostra
+    toggle.style.display = "inline-flex";
   
       toggle.addEventListener('click', ()=>{  
         const open = panel.style.display === 'block';  
