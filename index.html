@@ -1268,7 +1268,14 @@ opacity:.9;
         try{    
           lang = (window.getCurrentLang && window.getCurrentLang()) || localStorage.getItem("lang") || "it";    
         }catch{}    
-    
+
+        /* ✅ AGGIUNTO: update automatico solo se cambia lingua (senza rompere nulla) */
+        let lastLang = null;
+        try{ lastLang = localStorage.getItem("dailySignalsLastLang"); }catch{}
+        if(!force && lastLang && lastLang === String(lang || "it").toLowerCase()){
+          // stessa lingua già registrata → evita chiamate inutili
+        }
+
         const resp = await fetch("/api/save-fcm-token",{    
           method:"POST",    
           headers:{ "Content-Type":"application/json" },    
@@ -1282,6 +1289,7 @@ opacity:.9;
           dlog("Errore save-fcm-token:", resp.status, data.error || "");    
         }else{    
           dlog("Token salvato OK:", token.slice(0,10) + "…");    
+          try{ localStorage.setItem("dailySignalsLastLang", String(lang || "it").toLowerCase()); }catch{}
         }    
     
         console.log("FCM token:", token);    
