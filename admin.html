@@ -185,7 +185,7 @@
     <div>
       <h1>What?f — Admin</h1>
       <p class="sub">
-        Totali <strong>veri</strong> (giorno/mese/all-time) da <span class="mono">/api/admin-stats</span>.
+        Totali <strong>veri</strong> (giorno/mese/all-time) da <span class="mono">/api/admin-logs?stats=1</span>.
         Lista “recenti” (max 200) da <span class="mono">/api/admin-logs</span>.
         Timezone conteggi: <strong>Europe/Rome</strong>.
       </p>
@@ -255,6 +255,12 @@
             <input id="dayPicker" type="date" style="max-width:210px">
             <span class="chip">Mese:</span>
             <input id="monthPicker" type="month" style="max-width:190px">
+            <span class="chip">Range stats:</span>
+            <select id="rangePreset" style="max-width:220px">
+              <option value="31,12">31 giorni · 12 mesi</option>
+              <option value="60,18">60 giorni · 18 mesi</option>
+              <option value="120,36">120 giorni · 36 mesi (max)</option>
+            </select>
           </div>
           <div class="row">
             <button class="btn" id="btnReloadStats" disabled>🔄 Ricarica totali</button>
@@ -263,6 +269,8 @@
         </div>
         <div class="mini">
           I totali vengono da Redis hash (non dalla lista da 200). Quindi se fai 10.000 chiamate in un mese, qui le vedi tutte.
+          <br>
+          Nota: giorno/mese selezionati devono rientrare nel range caricato (es. 31/12 o 120/36).
         </div>
       </div>
 
@@ -512,7 +520,7 @@
     if(el) el.textContent = text || "—";
   }
 
-  // ===== API calls =====
+  // ===== Verify token using admin-logs =====
   async function verifyTokenWithAdminLogs(){
     const tok = getToken();
     if(!tok){
@@ -550,14 +558,27 @@
     }
   }
 
-  async function fetchStats(scope, dayOrMonth){
+  // ===== STATS cache (from /api/admin-logs?stats=1) =====
+  let statsCache = null; // { stats: {...} }
+  let statsDays = 31;
+  let statsMonths = 12;
+
+  function getRangePreset(){
+    const v = ($('rangePreset').value || "31,12").split(",");
+    const d = parseInt(v[0],10) || 31;
+    const m = parseInt(v[1],10) || 12;
+    return { days: Math.min(Math.max(d,1),120), months: Math.min(Math.max(m,1),36) };
+  }
+
+  async function fetchStats(days, months){
     const tok = getToken();
     const qs = new URLSearchParams();
-    qs.set("scope", scope);
-    if(scope === "day") qs.set("day", dayOrMonth);
-    if(scope === "month") qs.set("month", dayOrMonth);
+    qs.set("stats","1");
+    qs.set("tz","Europe/Rome");
+    qs.set("days", String(days));
+    qs.set("months", String(months));
 
-    const res = await fetch(`/api/admin-stats?${qs.toString()}`,{
+    const res = await fetch(`/api/admin-logs?${qs.toString()}`,{
       headers:{ "x-admin-token": tok }
     });
 
@@ -565,48 +586,55 @@
     if(!res.ok) throw new Error("http_" + res.status);
 
     const data = await res.json().catch(()=>null);
-    return data && data.stats ? data : { stats:{} };
+    if(!data || !data.ok || !data.stats) throw new Error("bad_stats_response");
+    return data.stats;
   }
 
-  function getStat(h, key){
-    const v = h && typeof h === "object" ? Number(h[key]||0) : 0;
-    return Number.isFinite(v) ? v : 0;
+  function num(x){
+    const n = Number(x);
+    return Number.isFinite(n) ? n : 0;
   }
 
-  function renderMatrix(prefix, h){
-    const wiF = getStat(h,"style:whatif|periodo:future");
-    const wiP = getStat(h,"style:whatif|periodo:past");
-    const wfF = getStat(h,"style:wtf|periodo:future");
-    const wfP = getStat(h,"style:wtf|periodo:past");
-
-    $(prefix+"WiFuture").textContent = wiF;
-    $(prefix+"WiPast").textContent   = wiP;
-    $(prefix+"WiTotal").textContent  = wiF + wiP;
-
-    $(prefix+"WtfFuture").textContent = wfF;
-    $(prefix+"WtfPast").textContent   = wfP;
-    $(prefix+"WtfTotal").textContent  = wfF + wfP;
-
-    $(prefix+"AllFuture").textContent = wiF + wfF;
-    $(prefix+"AllPast").textContent   = wiP + wfP;
-    $(prefix+"AllTotal").textContent  = getStat(h,"total");
+  function setText(id, v){
+    const el = $(id);
+    if(el) el.textContent = (v == null ? "—" : String(v));
   }
 
-  function renderSources(tbodyId, h){
+  function renderMatrix(prefix, summary){
+    const m = summary && summary.matrix ? summary.matrix : null;
+    if(!m){
+      setText(prefix+"WiFuture", 0); setText(prefix+"WiPast", 0); setText(prefix+"WiTotal", 0);
+      setText(prefix+"WtfFuture", 0); setText(prefix+"WtfPast", 0); setText(prefix+"WtfTotal", 0);
+      setText(prefix+"AllFuture", 0); setText(prefix+"AllPast", 0); setText(prefix+"AllTotal", 0);
+      return;
+    }
+
+    setText(prefix+"WiFuture", num(m.whatif?.future));
+    setText(prefix+"WiPast",   num(m.whatif?.past));
+    setText(prefix+"WiTotal",  num(m.whatif?.total));
+
+    setText(prefix+"WtfFuture", num(m.wtf?.future));
+    setText(prefix+"WtfPast",   num(m.wtf?.past));
+    setText(prefix+"WtfTotal",  num(m.wtf?.total));
+
+    setText(prefix+"AllFuture", num(m.all?.future));
+    setText(prefix+"AllPast",   num(m.all?.past));
+    setText(prefix+"AllTotal",  num(m.all?.total));
+  }
+
+  function renderSources(tbodyId, summary){
     const body = $(tbodyId);
     if(!body) return;
 
-    const entries = [];
-    for(const [k,v] of Object.entries(h||{})){
-      if(!k.startsWith("source:")) continue;
-      entries.push([k.slice("source:".length), Number(v)||0]);
-    }
+    const bySource = (summary && summary.bySource) ? summary.bySource : {};
+    const entries = Object.entries(bySource).map(([k,v]) => [k, num(v)]);
     entries.sort((a,b)=>b[1]-a[1]);
 
     if(!entries.length){
       body.innerHTML = `<tr><td class="muted">—</td><td class="right muted">—</td></tr>`;
       return;
     }
+
     body.innerHTML = entries.map(([src,count])=>`
       <tr>
         <td class="td-big">${esc(src)}</td>
@@ -615,39 +643,80 @@
     `).join("");
   }
 
+  function getDaySummary(dayKey){
+    const byDay = statsCache && statsCache.by_day ? statsCache.by_day : {};
+    return byDay[dayKey] || null;
+  }
+
+  function getMonthSummary(monthKey){
+    const byMonth = statsCache && statsCache.by_month ? statsCache.by_month : {};
+    return byMonth[monthKey] || null;
+  }
+
+  function inCacheDay(dayKey){
+    const byDay = statsCache && statsCache.by_day ? statsCache.by_day : {};
+    return !!byDay[dayKey];
+  }
+
+  function inCacheMonth(monthKey){
+    const byMonth = statsCache && statsCache.by_month ? statsCache.by_month : {};
+    return !!byMonth[monthKey];
+  }
+
+  function renderKpis(dayKey, monthKey){
+    const dayS = getDaySummary(dayKey);
+    const monthS = getMonthSummary(monthKey);
+    const allS = statsCache && statsCache.all ? statsCache.all : null;
+
+    setText("kpiDayTotal", dayS ? num(dayS.total) : 0);
+    setText("kpiMonthTotal", monthS ? num(monthS.total) : 0);
+    setText("kpiAllTotal", allS ? num(allS.total) : 0);
+
+    setText("kpiDayKey", `stats:ask:day:${dayKey}`);
+    setText("kpiMonthKey", `stats:ask:month:${monthKey}`);
+  }
+
+  function renderAll(dayKey, monthKey){
+    const dayS = getDaySummary(dayKey);
+    const monthS = getMonthSummary(monthKey);
+    const allS = statsCache && statsCache.all ? statsCache.all : null;
+
+    renderKpis(dayKey, monthKey);
+
+    renderMatrix("d", dayS);
+    renderMatrix("m", monthS);
+    renderMatrix("a", allS);
+
+    renderSources("srcDayBody", dayS);
+    renderSources("srcMonthBody", monthS);
+    renderSources("srcAllBody", allS);
+
+    setLastRefreshNow();
+
+    // avviso se selezioni fuori range
+    if(!inCacheDay(dayKey)){
+      toast(`⚠️ Giorno ${dayKey} fuori range (stats=${statsDays} giorni). Aumenta il range e ricarica.`);
+    } else if(!inCacheMonth(monthKey)){
+      toast(`⚠️ Mese ${monthKey} fuori range (stats=${statsMonths} mesi). Aumenta il range e ricarica.`);
+    }
+  }
+
   async function reloadStats(){
     if(!isAdminVerified){
       toast("Devi essere admin (token verificato).");
       return;
     }
 
-    const day = $('dayPicker').value || romeDayStr(new Date());
-    const month = $('monthPicker').value || romeMonthStr(new Date());
+    const { days, months } = getRangePreset();
+    statsDays = days;
+    statsMonths = months;
+
+    const dayKey = $('dayPicker').value || romeDayStr(new Date());
+    const monthKey = $('monthPicker').value || romeMonthStr(new Date());
 
     try{
-      const dayData   = await fetchStats("day", day);
-      const monthData = await fetchStats("month", month);
-      const allData   = await fetchStats("all", "");
-
-      // KPI totals + keys
-      $('kpiDayTotal').textContent   = getStat(dayData.stats,"total");
-      $('kpiMonthTotal').textContent = getStat(monthData.stats,"total");
-      $('kpiAllTotal').textContent   = getStat(allData.stats,"total");
-
-      $('kpiDayKey').textContent   = dayData.key || `stats:ask:day:${day}`;
-      $('kpiMonthKey').textContent = monthData.key || `stats:ask:month:${month}`;
-
-      // Matrici
-      renderMatrix("d", dayData.stats);
-      renderMatrix("m", monthData.stats);
-      renderMatrix("a", allData.stats);
-
-      // Sorgenti
-      renderSources("srcDayBody", dayData.stats);
-      renderSources("srcMonthBody", monthData.stats);
-      renderSources("srcAllBody", allData.stats);
-
-      setLastRefreshNow();
+      statsCache = await fetchStats(days, months);
+      renderAll(dayKey, monthKey);
       toast("Totali aggiornati.");
     }catch(e){
       console.error("reloadStats error", e);
@@ -661,6 +730,15 @@
     }
   }
 
+  // Aggiorna UI quando cambi i picker (senza refetch, se in cache)
+  function refreshFromCacheOnly(){
+    if(!statsCache) return;
+    const dayKey = $('dayPicker').value || romeDayStr(new Date());
+    const monthKey = $('monthPicker').value || romeMonthStr(new Date());
+    renderAll(dayKey, monthKey);
+  }
+
+  // ===== Recent logs (max 200) =====
   async function reloadRecent(){
     if(!isAdminVerified){
       toast("Devi essere admin (token verificato).");
@@ -682,6 +760,7 @@
       if(!body) return;
       if(!items.length){
         body.innerHTML = `<tr><td class="muted" colspan="6">—</td></tr>`;
+        toast("Recenti: lista vuota.");
         return;
       }
 
@@ -721,6 +800,7 @@
     renderAdminBadge();
     renderTokenStatus("— rimosso");
     $('adminTokenInput').value = "";
+    statsCache = null;
     toast("Uscito da admin.");
     location.href = "index.html";
   }
@@ -730,6 +810,10 @@
   $('btnAdminLogout').onclick = adminLogout;
   $('btnReloadStats').onclick = reloadStats;
   $('btnReloadRecent').onclick = reloadRecent;
+
+  $('dayPicker').addEventListener("change", refreshFromCacheOnly);
+  $('monthPicker').addEventListener("change", refreshFromCacheOnly);
+  $('rangePreset').addEventListener("change", ()=>{ if(isAdminVerified) reloadStats(); });
 
   $('btnSaveToken').onclick = async ()=>{
     const v = ($('adminTokenInput').value || "").trim();
@@ -752,12 +836,13 @@
     renderAdminBadge();
     renderTokenStatus("— rimosso");
     $('adminTokenInput').value = "";
+    statsCache = null;
     toast("Token rimosso.");
   };
 
   // ===== Boot =====
   (function init(){
-    // imposta picker su oggi/mese corrente (Rome)
+    // picker su oggi/mese corrente (Rome)
     const todayRome = romeDayStr(new Date());
     const monthRome = romeMonthStr(new Date());
     $('dayPicker').value = todayRome;
