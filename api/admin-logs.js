@@ -117,6 +117,37 @@ function toNumberMap(obj) {
   return out;
 }
 
+/* =======================================================================
+   ✅ MODIFICA: arricchisce i contatori "piatti" (HGETALL) in:
+   - summary.matrix.whatif.future/past/total + wtf + all
+   - summary.bySource.manual/hint/surprise
+   così la tua admin.html smette di mostrare 0.
+   ======================================================================= */
+function enrichSummary(flat = {}) {
+  const get = (k) => Number(flat[k] || 0) || 0;
+
+  const wiF = get("matrix:whatif:future");
+  const wiP = get("matrix:whatif:past");
+  const wfF = get("matrix:wtf:future");
+  const wfP = get("matrix:wtf:past");
+
+  const total = get("total") || (wiF + wiP + wfF + wfP);
+
+  const bySource = {
+    manual:   get("source:manual"),
+    hint:     get("source:hint"),
+    surprise: get("source:surprise"),
+  };
+
+  const matrix = {
+    whatif: { future: wiF, past: wiP, total: wiF + wiP },
+    wtf:    { future: wfF, past: wfP, total: wfF + wfP },
+    all:    { future: wiF + wfF, past: wiP + wfP, total },
+  };
+
+  return { ...flat, total, bySource, matrix };
+}
+
 async function buildStats({ tz, days, months }) {
   const dayKeys = [];
   for (let i = 0; i < days; i++) dayKeys.push(dayKeyAgo(tz, i));
@@ -143,19 +174,19 @@ async function buildStats({ tz, days, months }) {
   for (const dk of dayKeys) {
     const r = results[idx++] || {};
     const raw = (r.result && typeof r.result === "object") ? r.result : {};
-    by_day[dk] = toNumberMap(raw);
+    by_day[dk] = enrichSummary(toNumberMap(raw)); // ✅
   }
 
   const by_month = {};
   for (const mk of monthKeys) {
     const r = results[idx++] || {};
     const raw = (r.result && typeof r.result === "object") ? r.result : {};
-    by_month[mk] = toNumberMap(raw);
+    by_month[mk] = enrichSummary(toNumberMap(raw)); // ✅
   }
 
   const allRes = results[idx++] || {};
   const allRaw = (allRes.result && typeof allRes.result === "object") ? allRes.result : {};
-  const all = toNumberMap(allRaw);
+  const all = enrichSummary(toNumberMap(allRaw)); // ✅
 
   const last_ts = Number((results[idx++] || {}).result || 0) || 0;
   const last_day = String((results[idx++] || {}).result || "");
