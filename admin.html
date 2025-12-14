@@ -479,6 +479,12 @@
     return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   }
 
+  // ✅ FILTRO: solo manual / surprise / hint (NO signal)
+  const ALLOWED_SOURCES = new Set(["manual","surprise","hint"]);
+  function isAllowedSource(src){
+    return ALLOWED_SOURCES.has(String(src||"").toLowerCase());
+  }
+
   // ===== Rome date helpers =====
   function romeDayStr(date = new Date()){
     const s = new Intl.DateTimeFormat("en-CA",{
@@ -559,7 +565,7 @@
   }
 
   // ===== STATS cache (from /api/admin-logs?stats=1) =====
-  let statsCache = null; // { stats: {...} }
+  let statsCache = null;
   let statsDays = 31;
   let statsMonths = 12;
 
@@ -600,47 +606,38 @@
     if(el) el.textContent = (v == null ? "—" : String(v));
   }
 
-  /* ==========================================================
-     ✅ MODIFICA CHE CI SERVE: “adapter” Redis hash -> summary
-     - admin-logs.js ritorna mappe tipo { total: "12", "matrix:whatif:future":"7", "source:manual":"5", ... }
-     - la UI invece si aspetta summary.matrix e summary.bySource
-  ========================================================== */
+  // ✅ Adapter Redis hash -> summary, filtrando SOLO manual/surprise/hint
   function summarizeFromRedisMap(raw){
-    const m = raw && typeof raw === "object" ? raw : {};
-    const get = (k)=>num(m[k]);
+    const r = raw && typeof raw === "object" ? raw : {};
+    const get = (k)=> num(r[k]);
 
     const wiF = get("matrix:whatif:future");
     const wiP = get("matrix:whatif:past");
     const wF  = get("matrix:wtf:future");
     const wP  = get("matrix:wtf:past");
 
-    const styleWi = get("style:whatif");
-    const styleW  = get("style:wtf");
-    const pF      = get("periodo:future");
-    const pP      = get("periodo:past");
-
-    const total = get("total");
+    // Totale: SOLO manual/surprise/hint, quindi lo ricaviamo dalla matrix
+    // (così anche se in Redis “total” includes altro, qui non ci interessa)
+    const total = wiF + wiP + wF + wP;
 
     const bySource = {};
-    for(const [k,v] of Object.entries(m)){
+    for(const [k,v] of Object.entries(r)){
       if(!k.startsWith("source:")) continue;
       const src = k.slice("source:".length) || "unknown";
-      bySource[src] = num(v);
+      if(isAllowedSource(src)){
+        bySource[src] = num(v);
+      }
     }
 
     return {
       total,
-      // matrix calcolata dai campi "matrix:*"
       matrix: {
         whatif: { future: wiF, past: wiP, total: wiF + wiP },
         wtf:    { future: wF,  past: wP,  total: wF + wP  },
-        all:    { future: pF,  past: pP,  total: total || (pF + pP) },
+        all:    { future: wiF + wF, past: wiP + wP, total },
       },
-      // fallback utili (se vuoi mostrarli in futuro)
-      style: { whatif: styleWi, wtf: styleW },
-      periodo: { future: pF, past: pP },
       bySource,
-      raw: m,
+      raw: r,
     };
   }
 
@@ -802,7 +799,11 @@
       if(!res.ok) throw new Error("http_" + res.status);
 
       const data = await res.json().catch(()=>null);
-      const items = (data && Array.isArray(data.items)) ? data.items : [];
+      const rawItems = (data && Array.isArray(data.items)) ? data.items : [];
+
+      // ✅ FILTRO: solo manual / surprise / hint (NO signal)
+      const items = rawItems.filter(it => isAllowedSource(it?.source));
+
       $('recentCount').textContent = String(items.length);
 
       const body = $('recentBody');
