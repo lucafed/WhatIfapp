@@ -22,7 +22,7 @@ function weekdayRome(d = new Date()) {
     timeZone: "Europe/Rome",
     weekday: "short",
   }).format(d);
-  return ({ Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[wd] ?? 0);
+  return ({ Sun:0, Mon:1, Tue:2, Wed:3, Thu:4, Fri:5, Sat:6 }[wd] ?? 0);
 }
 
 function hashStr(str = "") {
@@ -48,14 +48,14 @@ function chunk(arr, size = 500) {
 }
 
 /* ========= lingua ========= */
-const SUP_LANGS = ["it", "en", "es", "fr", "de"];
+const SUP_LANGS = ["it","en","es","fr","de"];
 function normLang(l = "it") {
-  const s = String(l || "it").toLowerCase().slice(0, 2);
+  const s = String(l || "it").toLowerCase().slice(0,2);
   return SUP_LANGS.includes(s) ? s : "it";
 }
 
 /* ========= copy notifiche (ROTANTI) ========= */
-/* ✅ IT: NON TOCCATE (le tue originali) */
+/* ✅ IT: le tue originali (NON TOCCATE) */
 const PUSH_TITLES_IT = [
   "What?f · frase del giorno",
   "What?f · due righe per te",
@@ -154,7 +154,7 @@ const WTF_SUNDAY_EVENING_IT = [
   "Il lunedì è dietro l’angolo come un creditore: apri qua e preparati senza piangere, ecchecazz!!!",
 ];
 
-/* ✅ Altre lingue */
+/* ✅ Titoli per lingua (se mancano, fallback IT) */
 const PUSH_TITLES = {
   it: PUSH_TITLES_IT,
   en: [
@@ -168,7 +168,7 @@ const PUSH_TITLES = {
   es: [
     "What?f · frase del día",
     "What?f · dos líneas para ti",
-    "What?f · hoy va così",
+    "What?f · hoy va así",
     "What?f · abre un segundo",
     "What?f · micro-oráculo",
     "What?f · mensaje rápido",
@@ -191,6 +191,7 @@ const PUSH_TITLES = {
   ],
 };
 
+/* ✅ Copy per lingua (IT = completa; altre lingue = set minimo ma funziona) */
 const COPY = {
   it: {
     WHATIF_MORNING: WHATIF_MORNING_IT,
@@ -209,10 +210,10 @@ const COPY = {
     ],
     WHATIF_EVENING: [
       "Close the day with one line that settles your mind—open it.",
-      "Before you shut the brain off, read this—open it.",
       "Two lines to take the day off your shoulders—open this.",
       "Open this and go to sleep with less noise in your head.",
-      "Tonight doesn’t need perfection—just open this and let go better.",
+      "Tonight doesn’t need perfection—open this and let go better.",
+      "Before you shut the brain off, read this—open it.",
     ],
     WTF_EVENING: [
       "Still awake? Open this and go to bed—tomorrow won’t spare you, what the f.",
@@ -224,16 +225,16 @@ const COPY = {
     WTF_POST_SBRONZA_MORNING: [
       "Post-hangover mode: open this—let’s recover your dignity in installments, what the f.",
       "Saturday morning, face like “never again”: open this and reboot the brain, what the f.",
-      "If your mouth is cement and your memory has holes, open this—bar karma repair, what the f.",
       "Eyes half-shut, soul in hangover: open this before you do damage, what the f.",
       "Open this, then water, coffee, dignity—in that order, what the f.",
+      "If your mouth is cement and your memory has holes, open this—bar karma repair, what the f.",
     ],
     WTF_SUNDAY_EVENING: [
-      "Sunday night: weekend’s dead and Monday is already knocking. Open this and make peace with the mess, what the f.",
-      "It’s Sunday night: tomorrow the carousel restarts. Open this, what the f.",
-      "Monday is around the corner like a creditor. Open this and brace without crying, what the f.",
+      "Sunday night: weekend’s dead and Monday is already knocking. Open this, what the f.",
+      "Monday is around the corner like a creditor. Open this and brace, what the f.",
       "Sunday night emptiness? That’s Monday approaching. Open this, what the f.",
-      "Tomorrow we go back to pretending to be adults. Open this and put the helmet on, what the f.",
+      "Tomorrow we go back to pretending to be adults. Open this, what the f.",
+      "It’s Sunday night: tomorrow the carousel restarts. Open this, what the f.",
     ],
   },
   es: {
@@ -246,31 +247,31 @@ const COPY = {
     ],
     WHATIF_EVENING: [
       "Cierra el día con una frase que te deja en paz: ábrela.",
-      "Antes de apagar el cerebro, lee esto: te hace bien.",
       "Dos líneas para quitarte el día de encima: abre aquí.",
       "Abre esto y duerme con menos ruido en la cabeza.",
       "Esta noche no hace falta arreglarlo todo: abre esto y suelta mejor.",
+      "Antes de apagar el cerebro, lee esto: te hace bien.",
     ],
     WTF_EVENING: [
-      "¿Sigues despierto? Abre esto y a la cama, que mañana no te salva nadie, qué carajo.",
+      "¿Sigues despierto? Abre esto y a la cama, qué carajo.",
       "¿Viste la hora? Abre aquí y luego duerme, qué carajo.",
-      "Basta de películas mentales: abre aquí y cerramos el día con sonrisa torcida, qué carajo.",
+      "Basta de películas mentales: abre aquí y cerramos el día, qué carajo.",
       "Abre esto y apaga todo: hasta el cerebro necesita mantenimiento, qué carajo.",
       "Última cosa: abre esto y desaparece bajo las mantas, qué carajo.",
     ],
     WTF_POST_SBRONZA_MORNING: [
-      "Modo resaca: abre aquí, que la dignidad la recuperamos a plazos, qué carajo.",
-      "Sábado por la mañana y cara de “nunca más”: abre esto y reinicia el cerebro, qué carajo.",
-      "Si tienes la boca pastosa y la memoria con agujeros: abre aquí, qué carajo.",
-      "Ojos a medias y alma en resaca: abre esto antes de hacer líos, qué carajo.",
+      "Modo resaca: abre aquí, qué carajo.",
+      "Sábado por la mañana y cara de “nunca más”: abre esto, qué carajo.",
+      "Ojos a medias y alma en resaca: abre esto, qué carajo.",
       "Abre esto y luego agua, café y dignidad: en ese orden, qué carajo.",
+      "Si tienes la boca pastosa y la memoria con agujeros: abre aquí, qué carajo.",
     ],
     WTF_SUNDAY_EVENING: [
-      "Domingo por la noche: el finde murió y el lunes ya llama. Abre aquí y haz las paces con el desastre, qué carajo.",
-      "Es domingo por la noche: mañana vuelve la rueda. Abre esto, qué carajo.",
-      "El lunes está a la vuelta como un cobrador: abre aquí y prepárate, qué carajo.",
+      "Domingo por la noche: el finde murió y el lunes ya llama. Abre aquí, qué carajo.",
+      "El lunes está a la vuelta como un cobrador: abre aquí, qué carajo.",
       "¿Vacío de domingo? Es el lunes acercándose. Abre esto, qué carajo.",
-      "Mañana toca fingir ser adulto otra vez: abre esto y ponte el casco, qué carajo.",
+      "Mañana toca fingir ser adulto otra vez: abre esto, qué carajo.",
+      "Es domingo por la noche: mañana vuelve la rueda. Abre esto, qué carajo.",
     ],
   },
   fr: {
@@ -283,31 +284,31 @@ const COPY = {
     ],
     WHATIF_EVENING: [
       "Ferme ta journée avec une phrase qui apaise : ouvre-la.",
-      "Avant d’éteindre le cerveau, lis ça : ouvre.",
       "Deux lignes pour enlever la journée des épaules : ouvre ici.",
       "Ouvre ça et dors avec moins de bruit dans la tête.",
       "Ce soir, pas besoin de tout réparer : ouvre ça et lâche mieux.",
+      "Avant d’éteindre le cerveau, lis ça : ouvre.",
     ],
     WTF_EVENING: [
-      "Encore debout ? Ouvre ça et au lit, demain ne te fera pas de cadeau, bordel.",
+      "Encore debout ? Ouvre ça et au lit, bordel.",
       "T’as vu l’heure ? Ouvre ici et dors, bordel.",
-      "Stop les films mentaux : ouvre ici et on ferme la journée, bordel.",
+      "Stop les films mentaux : ouvre ici, bordel.",
       "Ouvre ça puis éteins tout : ton cerveau aussi a besoin de maintenance, bordel.",
       "Dernière chose : ouvre ça et disparais sous la couette, bordel.",
     ],
     WTF_POST_SBRONZA_MORNING: [
-      "Mode gueule de bois : ouvre ici, on récupère la dignité par tranches, bordel.",
-      "Samedi matin, tête de “plus jamais” : ouvre ça et redémarre le cerveau, bordel.",
-      "Bouche pâteuse, mémoire trouée : ouvre ici, bordel.",
-      "Yeux mi-clos, âme en hangover : ouvre ça avant de faire des dégâts, bordel.",
+      "Mode gueule de bois : ouvre ici, bordel.",
+      "Samedi matin, tête de “plus jamais” : ouvre ça, bordel.",
+      "Yeux mi-clos, âme en hangover : ouvre ça, bordel.",
       "Ouvre ça, puis eau, café, dignité : dans cet ordre, bordel.",
+      "Bouche pâteuse, mémoire trouée : ouvre ici, bordel.",
     ],
     WTF_SUNDAY_EVENING: [
-      "Dimanche soir : le week-end est mort et lundi frappe déjà. Ouvre ça et fais la paix avec le bazar, bordel.",
-      "C’est dimanche soir : demain ça recommence. Ouvre ça, bordel.",
-      "Lundi est au coin comme un créancier : ouvre ici et prépare-toi, bordel.",
+      "Dimanche soir : le week-end est mort et lundi frappe déjà. Ouvre ça, bordel.",
+      "Lundi est au coin comme un créancier : ouvre ici, bordel.",
       "Le vide du dimanche ? C’est lundi qui approche. Ouvre ça, bordel.",
-      "Demain on rejoue aux adultes : ouvre ça et mets le casque, bordel.",
+      "Demain on rejoue aux adultes : ouvre ça, bordel.",
+      "C’est dimanche soir : demain ça recommence. Ouvre ça, bordel.",
     ],
   },
   de: {
@@ -320,38 +321,38 @@ const COPY = {
     ],
     WHATIF_EVENING: [
       "Schließe den Tag mit einem Satz, der dich beruhigt: öffne ihn.",
-      "Bevor du den Kopf ausschaltest: lies das, öffne es.",
       "Zwei Zeilen, um den Tag abzulegen: hier öffnen.",
       "Öffne das und schlaf mit weniger Lärm im Kopf.",
       "Heute Abend musst du nicht alles fixen: öffne das und lass besser los.",
+      "Bevor du den Kopf ausschaltest: lies das, öffne es.",
     ],
     WTF_EVENING: [
-      "Noch wach? Öffne das und ab ins Bett—morgen schont dich keiner, verdammt nochmal.",
-      "Hast du die Uhr gesehen? Öffnen, dann schlafen, verdammt nochmal.",
-      "Schluss mit Kopfkino: öffnen und wir machen den Tag zu, verdammt nochmal.",
+      "Noch wach? Öffne das und ab ins Bett—verdammt nochmal.",
+      "Hast du die Uhr gesehen? Öffnen, dann schlafen—verdammt nochmal.",
+      "Schluss mit Kopfkino: öffnen—verdammt nochmal.",
       "Öffne das, dann alles aus—auch dein Gehirn braucht Wartung, verdammt nochmal.",
-      "Letztes Ding: öffnen und unter die Decke verschwinden, verdammt nochmal.",
+      "Letztes Ding: öffnen und unter die Decke verschwinden—verdammt nochmal.",
     ],
     WTF_POST_SBRONZA_MORNING: [
-      "Kater-Modus: öffnen—wir holen die Würde in Raten zurück, verdammt nochmal.",
-      "Samstagmorgen, Gesicht wie „nie wieder“: öffnen und Hirn neu starten, verdammt nochmal.",
-      "Mund wie Zement, Gedächtnis mit Löchern: öffnen, verdammt nochmal.",
-      "Halbe Augen, Seele im Hangover: öffnen bevor du Schaden anrichtest, verdammt nochmal.",
+      "Kater-Modus: öffnen—verdammt nochmal.",
+      "Samstagmorgen, Gesicht wie „nie wieder“: öffnen—verdammt nochmal.",
+      "Halbe Augen, Seele im Hangover: öffnen—verdammt nochmal.",
       "Öffnen, dann Wasser, Kaffee, Würde—in der Reihenfolge, verdammt nochmal.",
+      "Mund wie Zement, Gedächtnis mit Löchern: öffnen—verdammt nochmal.",
     ],
     WTF_SUNDAY_EVENING: [
-      "Sonntagabend: Wochenende tot, Montag klopft schon. Öffne das und mach Frieden mit dem Chaos, verdammt nochmal.",
-      "Es ist Sonntagabend: morgen geht’s wieder los. Öffne das, verdammt nochmal.",
-      "Montag steht um die Ecke wie ein Gläubiger: öffnen und vorbereiten, verdammt nochmal.",
-      "Sonntagabend-Leere? Das ist Montag im Anmarsch. Öffne das, verdammt nochmal.",
-      "Morgen tun wir wieder so, als wären wir Erwachsene: öffnen und Helm auf, verdammt nochmal.",
+      "Sonntagabend: Wochenende tot, Montag klopft schon. Öffne das—verdammt nochmal.",
+      "Montag steht um die Ecke wie ein Gläubiger: öffnen—verdammt nochmal.",
+      "Sonntagabend-Leere? Das ist Montag im Anmarsch. Öffne das—verdammt nochmal.",
+      "Morgen tun wir wieder so, als wären wir Erwachsene: öffnen—verdammt nochmal.",
+      "Es ist Sonntagabend: morgen geht’s wieder los. Öffne das—verdammt nochmal.",
     ],
   },
 };
 
 /* ========= handler ========= */
 export default async function handler(req, res) {
-  // ✅ IMPORTANTISSIMO: evita 304 / cache Vercel (cron e prove)
+  // ✅ evita cache/304 (Vercel + browser + edge)
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Expires", "0");
@@ -385,14 +386,20 @@ export default async function handler(req, res) {
     const isSundayNightCattiva = isSunday && isEvening;
     if (isSundayNightCattiva) safePhase = "2";
 
+    const day = ymdRome(new Date());
+    const seedBase = `${day}|${safeSlot}|${safePhase}|${safeMood}`;
+
     // ✅ prende TUTTI i token (non solo 200)
-    const snap = await db.collection("fcm_tokens").orderBy("createdAt", "desc").get();
+    const snap = await db
+      .collection("fcm_tokens")
+      .orderBy("createdAt", "desc")
+      .get();
 
     if (snap.empty) {
       return res.status(200).json({ ok: false, error: "no_tokens" });
     }
 
-    // ✅ lingua dal doc
+    // ✅ token + lingua dal doc
     const users = snap.docs.map((d) => {
       const data = d.data() || {};
       return {
@@ -408,12 +415,10 @@ export default async function handler(req, res) {
       byLang[u.lang].push(u.token);
     }
 
-    const day = ymdRome(new Date());
-    const seedBase = `${day}|${safeSlot}|${safePhase}|${safeMood}`;
-
     let totalSent = 0;
     let totalFailed = 0;
 
+    // ✅ per ogni lingua → crea copy giusta + manda a chunk 500
     for (const langKey of Object.keys(byLang)) {
       const lang = normLang(langKey);
       const tokens = byLang[lang] || [];
@@ -428,29 +433,24 @@ export default async function handler(req, res) {
 
       const title =
         pickDaily(PUSH_TITLES[lang] || PUSH_TITLES.it, `${seedBase}|${lang}|title`) ||
-        (PUSH_TITLES.it && PUSH_TITLES.it[0]) ||
         "What?f · frase del giorno";
 
-      // ✅ fallback body localizzato
-      let body =
-        ({
-          it: "La tua frase di oggi è pronta 🔔",
-          en: "Your daily message is ready 🔔",
-          es: "Tu frase de hoy está lista 🔔",
-          fr: "Ta phrase du jour est prête 🔔",
-          de: "Deine tägliche Nachricht ist bereit 🔔",
-        }[lang] || "La tua frase di oggi è pronta 🔔");
+      let body = ({
+        it: "La tua frase di oggi è pronta 🔔",
+        en: "Your daily message is ready 🔔",
+        es: "Tu frase de hoy está lista 🔔",
+        fr: "Ta phrase du jour est prête 🔔",
+        de: "Deine tägliche Nachricht ist bereit 🔔",
+      }[lang] || "La tua frase di oggi è pronta 🔔");
 
       const lib = COPY[lang] || COPY.it;
 
       if (safePhase === "1") {
-        // WHAT IF
         body =
           safeSlot === "evening"
             ? pickDaily(lib.WHATIF_EVENING, `${seedBase}|${lang}`)
             : pickDaily(lib.WHATIF_MORNING, `${seedBase}|${lang}`);
       } else {
-        // WTF
         if (isSundayNightCattiva) {
           body = pickDaily(lib.WTF_SUNDAY_EVENING, `${seedBase}|${lang}`);
         } else if (isSaturdayPostSbronza) {
@@ -460,11 +460,10 @@ export default async function handler(req, res) {
         }
       }
 
-      // ✅ MODIFICA CHE SERVE: non solo "data-only"
-      // -> mettiamo anche notification + webpush + android
+      // ✅ MODIFICA CHIAVE: non solo data-message
+      //    (così la notifica è “visibile” su web/android)
       const baseMessage = {
         notification: { title, body },
-
         data: {
           title,
           body,
@@ -476,7 +475,6 @@ export default async function handler(req, res) {
           url: signalPath,
           click_action: CLICK_LINK,
         },
-
         webpush: {
           headers: { Urgency: "high" },
           notification: {
@@ -486,7 +484,6 @@ export default async function handler(req, res) {
           },
           fcmOptions: { link: CLICK_LINK },
         },
-
         android: { priority: "high" },
       };
 
