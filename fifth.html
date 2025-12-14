@@ -1896,14 +1896,66 @@ qs('#againBtn').onclick=()=>{ location.href='fourth.html'; };
 if(saveBtn){ saveBtn.onclick = saveCurrentQuestion; }  
 if(videoBtn){ videoBtn.onclick = generateVideoClip; }  
   
-/* CTA frase del giorno → fourth.html?from=daily */  
-if (signalAskBtn) {  
-  signalAskBtn.onclick = ()=>{  
-    const url = new URL('fourth.html', location.origin);  
-    url.searchParams.set('from','daily');  
-    location.href = url.toString();  
-  };  
-}  
+/* CTA frase del giorno → fourth.html precompilata */
+function extractQuestionFromDailyText(text){
+  const s = String(text || "").trim();
+  if(!s) return "";
+
+  // prova a prendere l’ultima domanda che termina con ?
+  const m = s.match(/([^?]*\?)\s*$/);
+  if(m && m[1]) return m[1].trim();
+
+  // fallback: se non c’è "?" usa tutta la frase come domanda (aggiunge ?)
+  const cleaned = s.replace(/\s+/g," ").trim();
+  if(!cleaned) return "";
+  return /[.!?…]$/.test(cleaned) ? cleaned : (cleaned + "?");
+}
+
+function buildDailyPrefillQuestion(){
+  // In signal-mode la frase sta in #answer
+  const dailyText = (answerEl?.innerText || answerEl?.textContent || "").trim();
+
+  // Se vuoi trasformarla in domanda “WHAT IF / WTF” mantenendo stile:
+  // - WHAT IF (mattina): spesso già finisce con una domanda (Ti sei mai chiesto se...)
+  // - WTF (sera): spesso è invito a raccontare → la trasformiamo in domanda semplice
+  let q = extractQuestionFromDailyText(dailyText);
+
+  // Piccolo “aiutino” per WTF quando non c’è una domanda chiara:
+  if(style === "wtf" && (!q.includes("?") || q.length < 8)){
+    const base = dailyText.slice(0, 160).replace(/\s+/g," ").trim();
+    q = base
+      ? `Ok, dimmi: ${base.replace(/[.!…]+$/,"")}?`
+      : "Ok, dimmi: com’è andata davvero oggi?";
+  }
+
+  // Garantisco che sia una stringa sensata
+  q = String(q || "").replace(/\s+/g," ").trim();
+  if(q.length > 220) q = q.slice(0, 220).trim();
+  return q;
+}
+
+/* CTA frase del giorno */
+if (signalAskBtn) {
+  signalAskBtn.onclick = ()=>{
+    try{
+      // salvo prefill + contesto minimo (stile/lingua), così la quarta ricostruisce tutto
+      const prefill = buildDailyPrefillQuestion();
+
+      localStorage.setItem("daily_prefill_question", prefill);
+      localStorage.setItem("daily_prefill_style", style);  // whatif | wtf
+      localStorage.setItem("daily_prefill_lang", lang);    // it/en/es/fr/de
+
+      // opzionale: così in quarta sai che vieni dal daily
+      localStorage.setItem("daily_prefill_ts", String(Date.now()));
+    }catch(e){
+      console.warn("daily prefill save failed:", e);
+    }
+
+    const url = new URL('fourth.html', location.origin);
+    url.searchParams.set('from','daily');
+    location.href = url.toString();
+  };
+    }
   
 /* pulsanti social Android */  
 if(openTikTokBtn){  
