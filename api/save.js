@@ -6,6 +6,10 @@ const REDIS_URL   = process.env.UPSTASH_REDIS_REST_URL;
 const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || process.env.ADMIN_API_TOKEN;
 
+/* =======================
+   Helpers
+======================= */
+
 function getBody(req) {
   if (req.body && typeof req.body === "object") return req.body;
   try { return JSON.parse(req.body || "{}"); } catch { return {}; }
@@ -21,7 +25,7 @@ function normEnum(x, allowed, fallback) {
   return allowed.includes(s) ? s : fallback;
 }
 
-// Date key in Europe/Rome (non UTC)
+// Date key in Europe/Rome (NON UTC)
 function getRomeDayMonthKeys(ts = Date.now()) {
   const d = new Date(ts);
 
@@ -41,7 +45,7 @@ function getRomeDayMonthKeys(ts = Date.now()) {
 
 async function redisPipeline(commands) {
   if (!REDIS_URL || !REDIS_TOKEN) {
-    console.error("Redis env vars mancanti (UPSTASH_REDIS_REST_URL / _TOKEN).");
+    console.error("Redis env vars mancanti.");
     throw new Error("redis_env_missing");
   }
 
@@ -63,6 +67,10 @@ async function redisPipeline(commands) {
   return res.json().catch(() => null);
 }
 
+/* =======================
+   Handler
+======================= */
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -72,15 +80,15 @@ export default async function handler(req, res) {
   try {
     const body = getBody(req);
 
-    // Metadati base
+    // === Metadati base ===
     const style   = normEnum(body.stile || body.style, ["whatif", "wtf"], "whatif");
     const periodo = normEnum(body.periodo, ["future", "past"], "future");
     const lang    = norm2(body.lang, "it");
 
-    // Origine domanda: manual | hint | surprise
+    // === Origine domanda ===
     let source = (body.source || "").toString().toLowerCase();
     if (!source) {
-      if (body.surprise === true || body.surprise === "true" || (body.micro && body.micro.surprise)) {
+      if (body.surprise === true || (body.micro && body.micro.surprise)) {
         source = "surprise";
       } else {
         source = "manual";
@@ -91,20 +99,15 @@ export default async function handler(req, res) {
     const surprise = !!(body.surprise || (body.micro && body.micro.surprise));
     const usedHint = source === "hint" || body.usedHint === true || (body.micro && body.micro.hints === true);
 
-    // 🔒 user_type: NON fidarti solo della presenza dell'header.
+    // === User type (verifica SERIA admin) ===
     const adminHeader = (req.headers["x-admin-token"] || "").toString();
     const isAdmin = !!(ADMIN_TOKEN && adminHeader && adminHeader === ADMIN_TOKEN);
-
     const isPro = req.headers["x-pro"] === "1";
+
     const user_type = isAdmin ? "admin" : (isPro ? "pro" : "free");
 
     const ts = Date.now();
     const { day, month } = getRomeDayMonthKeys(ts);
-
-    // Se non c'è nulla, skip
-    if (!style && !periodo && !lang) {
-      return res.status(200).json({ ok: true, skipped: true });
-    }
 
     const logItem = {
       ts,
@@ -117,47 +120,37 @@ export default async function handler(req, res) {
       usedHint,
     };
 
-    // ====== STRATEGIA REDIS ======
-    // 1) Lista "recente" (ultimi 200) per UI
-    // 2) Contatori per giorno/mese/all-time (sempre corretti anche >200)
+    /* =======================
+       STRATEGIA REDIS
+       1) logs:ask:recent  → ultimi 200 (UI)
+       2) stats:ask:*      → contatori reali (∞)
+    ======================= */
 
     const recentKey = "logs:ask:recent";
-
-    // Hash stats:
-    // stats:ask:day:YYYY-MM-DD
-    // stats:ask:month:YYYY-MM
-    // stats:ask:all
     const dayKey   = `stats:ask:day:${day}`;
     const monthKey = `stats:ask:month:${month}`;
     const allKey   = `stats:ask:all`;
 
-    // campi (hash) — così poi l’admin può fare breakdown super veloce
     const fields = [
       ["total", 1],
-
       [`style:${style}`, 1],
       [`periodo:${periodo}`, 1],
       [`source:${source}`, 1],
       [`lang:${lang}`, 1],
       [`user_type:${user_type}`, 1],
-
-      // combinazioni utili per dashboard
       [`style:${style}|source:${source}`, 1],
       [`style:${style}|periodo:${periodo}`, 1],
       [`style:${style}|periodo:${periodo}|source:${source}`, 1],
     ];
 
     const commands = [
-      // recent list (max 200)
       ["LPUSH", recentKey, JSON.stringify(logItem)],
       ["LTRIM", recentKey, "0", "199"],
 
-      // counters day/month/all
       ...fields.map(([f, inc]) => ["HINCRBY", dayKey,   f, String(inc)]),
       ...fields.map(([f, inc]) => ["HINCRBY", monthKey, f, String(inc)]),
       ...fields.map(([f, inc]) => ["HINCRBY", allKey,   f, String(inc)]),
 
-      // metadati utili per UI (non obbligatori)
       ["SET", "stats:ask:last_ts", String(ts)],
       ["SET", "stats:ask:last_day", day],
       ["SET", "stats:ask:last_month", month],
