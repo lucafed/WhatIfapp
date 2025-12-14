@@ -1,6 +1,5 @@
 {
   "version": 2,
-
   "headers": [
     {
       "source": "/(.*)",
@@ -12,11 +11,10 @@
       ]
     }
   ],
-
   "crons": [
     {
       "path": "/api/push?slot=morning&phase=1",
-      "schedule": "40 11 * * *"
+      "schedule": "45 13 * * *"
     }
   ]
 }
