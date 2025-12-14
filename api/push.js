@@ -493,8 +493,36 @@ export default async function handler(req, res) {
           ...baseMessage,
           tokens: c,
         });
+
         totalSent += resp.successCount || 0;
         totalFailed += resp.failureCount || 0;
+
+        /* ======================================================
+           🧹 UNICA AGGIUNTA: CANCELLA TOKEN INVALIDI
+           (così domani non fallisce più e non “spariscono” le push)
+        ====================================================== */
+        const invalid = [];
+        (resp.responses || []).forEach((r, idx) => {
+          if (r.success) return;
+          const code = r.error?.code || "";
+          if (
+            code === "messaging/registration-token-not-registered" ||
+            code === "messaging/invalid-registration-token" ||
+            code.includes("registration-token-not-registered") ||
+            code.includes("invalid-registration-token")
+          ) {
+            invalid.push(c[idx]);
+          }
+        });
+
+        if (invalid.length) {
+          const batch = db.batch();
+          invalid.forEach((tok) => {
+            batch.delete(db.collection("fcm_tokens").doc(tok));
+          });
+          await batch.commit();
+        }
+        /* ====================================================== */
       }
     }
 
@@ -512,4 +540,4 @@ export default async function handler(req, res) {
     console.error("push error", err);
     return res.status(500).json({ ok: false, error: "server_error" });
   }
-}
+          }
