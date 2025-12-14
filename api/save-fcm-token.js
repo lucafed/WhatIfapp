@@ -22,16 +22,24 @@ export default async function handler(req, res) {
         .json({ ok: false, error: "missing_token" });
     }
 
-    await db.collection("fcm_tokens").doc(token).set({
-      token,
-      uid: uid || null,
+    await db.collection("fcm_tokens").doc(token).set(
+      {
+        token,
+        uid: uid || null,
 
-      // 🔹 NUOVO CAMPO (default "it" se non arriva)
-      lang: (lang || "it").toLowerCase(),
+        // 🔹 NUOVO CAMPO (default "it" se non arriva)
+        lang: (lang || "it").toLowerCase(),
 
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      platform: "android-web",
-    });
+        // ✅ NON sovrascrivo createdAt se già c'è (merge)
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+
+        // ✅ aggiungo un "ping" utile
+        lastSeenAt: admin.firestore.FieldValue.serverTimestamp(),
+
+        platform: "android-web",
+      },
+      { merge: true } // ✅ evita overwrite totale del doc
+    );
 
     return res.status(200).json({ ok: true });
   } catch (err) {
