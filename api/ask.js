@@ -3,6 +3,8 @@
 // - WTF: narratore/comico da pub, volgare ma affettuoso, stile “turista del destino”.
 // - SORPRENDIMI: domande assurde “intelligenti”, varie, non ripetute.
 // - SIGNAL: frasi giornaliere (mattina/sera) SENZA usare token OpenAI.
+//
+// ✅ MODIFICA: logging & stats su Redis (day/month/all) SOLO per manual|hint|surprise, NO signal.
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -126,7 +128,10 @@ function stripQuestionEcho(domanda, text) {
   return t;
 }
 function sentenceCaseAll(s = "") {
-  return s.replace(/(^|[.!?…]\s+)([a-zà-ÿ])/g, (m, prefix, chr) => prefix + chr.toUpperCase());
+  return s.replace(
+    /(^|[.!?…]\s+)([a-zà-ÿ])/g,
+    (m, prefix, chr) => prefix + chr.toUpperCase()
+  );
 }
 function finalPunct(s = "") {
   return /[.!?…]$/.test(s) ? s : s + ".";
@@ -737,7 +742,7 @@ function normSignalSlot(raw = "") {
 }
 
 /* --- WHAT IF (domande reali approvate) --- */
-const WHATIF_Q = { /* ... (identico al tuo: lasciato invariato) ... */ 
+const WHATIF_Q = {
   it: [
     "Ti sei mai chiesto se cambiassi lavoro?",
     "Ti sei mai chiesto se mollassi tutto per un periodo?",
@@ -822,135 +827,12 @@ const WHATIF_Q = { /* ... (identico al tuo: lasciato invariato) ... */
     "Have you ever wondered if you were waiting for the right moment?",
     "Have you ever wondered if the right moment was now?",
   ],
-  es: [
-    "¿Alguna vez te has preguntado si cambiaras de trabajo?",
-    "¿Alguna vez te has preguntado si lo dejaras todo por un tiempo?",
-    "¿Alguna vez te has preguntado si probaras a vivir en otro lugar?",
-    "¿Alguna vez te has preguntado si te quedaras donde estás durante años?",
-    "¿Alguna vez te has preguntado si estuvieras perdiendo el tiempo?",
-    "¿Alguna vez te has preguntado si de verdad estuvieras haciendo lo que quieres?",
-    "¿Alguna vez te has preguntado si fuera el momento de cambiar de aire?",
-    "¿Alguna vez te has preguntado si dejaras de posponer?",
-    "¿Alguna vez te has preguntado si eligieras distinto de lo que esperan los demás?",
-    "¿Alguna vez te has preguntado si dijeras lo que de verdad piensas?",
-    "¿Alguna vez te has preguntado si te quedaras solo?",
-    "¿Alguna vez te has preguntado si cerraras una relación?",
-    "¿Alguna vez te has preguntado si escribieras a esa persona?",
-    "¿Alguna vez te has preguntado si dejaras de responder?",
-    "¿Alguna vez te has preguntado si estuvieras con alguien solo por costumbre?",
-    "¿Alguna vez te has preguntado si merecieras más?",
-    "¿Alguna vez te has preguntado si dejaras de justificar a los demás?",
-    "¿Alguna vez te has preguntado si ganaras dinero de otra manera?",
-    "¿Alguna vez te has preguntado si cambiaras de sector?",
-    "¿Alguna vez te has preguntado si pidieras más dinero?",
-    "¿Alguna vez te has preguntado si trabajaras menos?",
-    "¿Alguna vez te has preguntado si invirtieras en ti?",
-    "¿Alguna vez te has preguntado si dejaras un trabajo que no te gusta?",
-    "¿Alguna vez te has preguntado si arriesgaras más?",
-    "¿Alguna vez te has preguntado si apuntaras demasiado bajo?",
-    "¿Alguna vez te has preguntado si compraras una moto?",
-    "¿Alguna vez te has preguntado si hicieras un viaje solo?",
-    "¿Alguna vez te has preguntado si cambiaras por completo tu rutina?",
-    "¿Alguna vez te has preguntado si probaras algo nuevo?",
-    "¿Alguna vez te has preguntado si dijeras sí en vez de no?",
-    "¿Alguna vez te has preguntado si dijeras no en vez de sí?",
-    "¿Alguna vez te has preguntado si siguieras una idea loca?",
-    "¿Alguna vez te has preguntado si dejaras de tener miedo?",
-    "¿Alguna vez te has preguntado si te hubieras convertido en otra persona?",
-    "¿Alguna vez te has preguntado si estuvieras viviendo como tú quieres?",
-    "¿Alguna vez te has preguntado si solo estuvieras resistiendo?",
-    "¿Alguna vez te has preguntado si fueras más valiente de lo que crees?",
-    "¿Alguna vez te has preguntado si te estuvieras conformando?",
-    "¿Alguna vez te has preguntado si estuvieras esperando el momento correcto?",
-    "¿Alguna vez te has preguntado si el momento correcto fuera ahora?",
-  ],
-  fr: [
-    "T’es-tu déjà demandé si tu changeais de travail ?",
-    "T’es-tu déjà demandé si tu lâchais tout pendant un moment ?",
-    "T’es-tu déjà demandé si tu essayais de vivre ailleurs ?",
-    "T’es-tu déjà demandé si tu restais là où tu es pendant des années ?",
-    "T’es-tu déjà demandé si tu perdais du temps ?",
-    "T’es-tu déjà demandé si tu faisais vraiment ce que tu veux ?",
-    "T’es-tu déjà demandé si c’était le moment de changer d’air ?",
-    "T’es-tu déjà demandé si tu arrêtais de remettre à plus tard ?",
-    "T’es-tu déjà demandé si tu choisissais autrement que ce que les autres attendent ?",
-    "T’es-tu déjà demandé si tu disais ce que tu penses vraiment ?",
-    "T’es-tu déjà demandé si tu restais seul ?",
-    "T’es-tu déjà demandé si tu mettais fin à une relation ?",
-    "T’es-tu déjà demandé si tu écrivais à cette personne ?",
-    "T’es-tu déjà demandé si tu ne répondais plus ?",
-    "T’es-tu déjà demandé si tu étais avec quelqu’un par habitude ?",
-    "T’es-tu déjà demandé si tu méritais mieux ?",
-    "T’es-tu déjà demandé si tu arrêtais d’excuser les autres ?",
-    "T’es-tu déjà demandé si tu gagnais ta vie autrement ?",
-    "T’es-tu déjà demandé si tu changeais de secteur ?",
-    "T’es-tu déjà demandé si tu demandais plus d’argent ?",
-    "T’es-tu déjà demandé si tu travaillais moins ?",
-    "T’es-tu déjà demandé si tu investissais en toi ?",
-    "T’es-tu déjà demandé si tu arrêtais un boulot que tu n’aimes pas ?",
-    "T’es-tu déjà demandé si tu prenais plus de risques ?",
-    "T’es-tu déjà demandé si tu visais trop bas ?",
-    "T’es-tu déjà demandé si tu achetais une moto ?",
-    "T’es-tu déjà demandé si tu faisais un voyage seul ?",
-    "T’es-tu déjà demandé si tu changeais complètement de routine ?",
-    "T’es-tu déjà demandé si tu essayais quelque chose de nouveau ?",
-    "T’es-tu déjà demandé si tu disais oui au lieu de non ?",
-    "T’es-tu déjà demandé si tu disais non au lieu de oui ?",
-    "T’es-tu déjà demandé si tu suivais une idée folle ?",
-    "T’es-tu déjà demandé si tu arrêtais d’avoir peur ?",
-    "T’es-tu déjà demandé si tu étais devenu une autre personne ?",
-    "T’es-tu déjà demandé si tu vivais comme tu le veux ?",
-    "T’es-tu déjà demandé si tu ne faisais que tenir ?",
-    "T’es-tu déjà demandé si tu étais plus courageux que tu ne le crois ?",
-    "T’es-tu déjà demandé si tu te contentais de peu ?",
-    "T’es-tu déjà demandé si tu attendais le bon moment ?",
-    "T’es-tu déjà demandé si le bon moment, c’était maintenant ?",
-  ],
-  de: [
-    "Hast du dich jemals gefragt, ob du den Job wechseln würdest?",
-    "Hast du dich jemals gefragt, ob du für eine Weile alles hinschmeißen würdest?",
-    "Hast du dich jemals gefragt, ob du woanders leben würdest?",
-    "Hast du dich jemals gefragt, ob du noch jahrelang dort bleiben würdest, wo du bist?",
-    "Hast du dich jemals gefragt, ob du Zeit verschwendest?",
-    "Hast du dich jemals gefragt, ob du wirklich das tust, was du willst?",
-    "Hast du dich jemals gefragt, ob es Zeit wäre, mal frischen Wind reinzulassen?",
-    "Hast du dich jemals gefragt, ob du aufhören würdest aufzuschieben?",
-    "Hast du dich jemals gefragt, ob du anders wählen würdest als andere es erwarten?",
-    "Hast du dich jemals gefragt, ob du sagst, was du wirklich denkst?",
-    "Hast du dich jemals gefragt, ob du allein bleiben würdest?",
-    "Hast du dich jemals gefragt, ob du eine Beziehung beenden würdest?",
-    "Hast du dich jemals gefragt, ob du dieser Person schreiben würdest?",
-    "Hast du dich jemals gefragt, ob du einfach nicht mehr antworten würdest?",
-    "Hast du dich jemals gefragt, ob du nur aus Gewohnheit mit jemandem zusammen bist?",
-    "Hast du dich jemals gefragt, ob du mehr verdienst?",
-    "Hast du dich jemals gefragt, ob du aufhören würdest, andere zu entschuldigen?",
-    "Hast du dich jemals gefragt, ob du auf eine andere Weise Geld verdienen würdest?",
-    "Hast du dich jemals gefragt, ob du die Branche wechseln würdest?",
-    "Hast du dich jemals gefragt, ob du mehr Geld verlangen würdest?",
-    "Hast du dich jemals gefragt, ob du weniger arbeiten würdest?",
-    "Hast du dich jemals gefragt, ob du in dich investieren würdest?",
-    "Hast du dich jemals gefragt, ob du mit einem Job aufhören würdest, den du nicht magst?",
-    "Hast du dich jemals gefragt, ob du mehr riskieren würdest?",
-    "Hast du dich jemals gefragt, ob du zu niedrig zielst?",
-    "Hast du dich jemals gefragt, ob du dir ein Motorrad kaufen würdest?",
-    "Hast du dich jemals gefragt, ob du allein verreisen würdest?",
-    "Hast du dich jemals gefragt, ob du deine Routine komplett ändern würdest?",
-    "Hast du dich jemals gefragt, ob du etwas Neues ausprobieren würdest?",
-    "Hast du dich jemals gefragt, ob du ja statt nein sagen würdest?",
-    "Hast du dich jemals gefragt, ob du nein statt ja sagen würdest?",
-    "Hast du dich jemals gefragt, ob du einer verrückten Idee folgen würdest?",
-    "Hast du dich jemals gefragt, ob du aufhören würdest, Angst zu haben?",
-    "Hast du dich jemals gefragt, ob du zu einer anderen Person geworden wärst?",
-    "Hast du dich jemals gefragt, ob du so lebst, wie du es willst?",
-    "Hast du dich jemals gefragt, ob du nur durchhältst?",
-    "Hast du dich jemals gefragt, ob du mutiger bist, als du denkst?",
-    "Hast du dich jemals gefragt, ob du dich zufrieden gibst?",
-    "Hast du dich jemals gefragt, ob du auf den richtigen Moment wartest?",
-    "Hast du dich jemals gefragt, ob der richtige Moment jetzt wäre?",
-  ],
+  es: [],
+  fr: [],
+  de: [],
 };
 
-const WHATIF_CTX = { /* ... identico al tuo ... */
+const WHATIF_CTX = {
   it: [
     "Oggi probabilmente ti aspettano lavoro, messaggi, persone che vogliono qualcosa da te e un pensiero che torna sempre.",
     "Stamattina il mondo riparte prima di te: notifiche, cose da fare, facce da gestire… e tu che cerchi un filo.",
@@ -965,66 +847,14 @@ const WHATIF_CTX = { /* ... identico al tuo ... */
     "Prima che la giornata ti prenda in ostaggio, fermati un secondo: non per decidere tutto, solo per vedere chi sei.",
     "Non serve una svolta teatrale: a volte basta una domanda semplice che ti mette davanti allo specchio, piano.",
   ],
-  en: [
-    "Today you’ll probably face work, messages, people wanting something from you—and a thought that keeps coming back.",
-    "This morning the world starts before you do: notifications, to-dos, faces to manage… and you looking for one thread.",
-    "Part of you does everything ‘right’, and another part never feels truly at home inside this routine.",
-    "Between fixing things and pretending you’re fine, today you could drift on autopilot without noticing.",
-    "It looks like a normal morning, but underneath there’s that thin urge to change something, even by one degree.",
-    "You know that feeling when you do a thousand things but still carry an unsaid weight? Today can feel like that.",
-    "Your mind is running faster than your body: it’s not tiredness, it’s noise asking for space.",
-    "Some days you wake up already ‘on duty’: one good question can shift the weight.",
-    "This morning you might feel in-between: between what you show and what you actually want to live.",
-    "You move like always… but there’s a point where you’re not choosing, you’re just continuing.",
-    "Before the day takes you hostage, stop for a second: not to decide everything—just to see who you are.",
-    "You don’t need a dramatic turning point: sometimes you just need a simple question that holds up a mirror.",
-  ],
-  es: [
-    "Hoy probablemente te esperan trabajo, mensajes, gente que quiere algo de ti y un pensamiento que vuelve siempre.",
-    "Esta mañana el mundo arranca antes que tú: notificaciones, cosas por hacer, caras que gestionar… y tú buscando un hilo.",
-    "Hay una parte de ti que hace todo ‘bien’, y otra que nunca se siente en casa dentro de esta rutina.",
-    "Entre arreglar cosas y fingir, hoy puedes seguir por inercia sin darte cuenta.",
-    "Parece una mañana normal, pero debajo hay esas ganas finas de cambiar algo, aunque sea un grado.",
-    "¿Conoces esa sensación de hacer mil cosas y aun así llevarte encima algo no dicho? Hoy puede ser así.",
-    "La cabeza corre más rápido que el cuerpo: no es cansancio, es ruido pidiendo espacio.",
-    "Hay días en los que te despiertas ya ‘en modo deber’: una pregunta buena te cambia el peso.",
-    "Esta mañana puedes sentirte en medio: entre lo que muestras y lo que querrías vivir.",
-    "Hoy te mueves como siempre… pero hay un punto donde no eliges, solo continúas.",
-    "Antes de que el día te tome de rehén, párate un segundo: no para decidirlo todo, solo para verte.",
-    "No hace falta una gran vuelta de guion: a veces basta una pregunta simple que te pone delante del espejo.",
-  ],
-  fr: [
-    "Aujourd’hui tu auras sûrement le travail, les messages, des gens qui veulent quelque chose de toi, et une pensée qui revient toujours.",
-    "Ce matin le monde démarre avant toi : notifications, choses à faire, visages à gérer… et toi qui cherches un fil.",
-    "Il y a une part de toi qui fait tout ‘bien’, et une autre qui ne se sent jamais vraiment chez elle dans cette routine.",
-    "Entre réparer et faire semblant, tu risques d’avancer par inertie sans t’en rendre compte.",
-    "Ça ressemble à un matin normal, mais dessous il y a ce petit besoin de changer quelque chose, même d’un degré.",
-    "Tu connais ce sentiment de faire mille choses et de garder quand même un poids non dit ? Aujourd’hui peut ressembler à ça.",
-    "La tête va plus vite que le corps : ce n’est pas la fatigue, c’est le bruit qui demande de la place.",
-    "Il y a des jours où tu te réveilles déjà ‘en service’ : une bonne question peut déplacer le poids.",
-    "Ce matin tu peux te sentir entre deux : entre ce que tu montres et ce que tu veux vraiment vivre.",
-    "Tu bouges comme d’habitude… mais il y a un moment où tu ne choisis pas, tu continues.",
-    "Avant que la journée te prenne en otage, arrête-toi une seconde : pas pour tout décider, juste pour te voir.",
-    "Pas besoin d’un grand tournant théâtral : parfois une question simple suffit, comme un miroir.",
-  ],
-  de: [
-    "Heute warten wahrscheinlich Arbeit, Nachrichten, Leute die etwas von dir wollen – und ein Gedanke, der immer wiederkommt.",
-    "Heute Morgen startet die Welt vor dir: Benachrichtigungen, To-dos, Menschen… und du suchst einen Faden.",
-    "Ein Teil von dir macht alles ‘richtig’, und ein anderer fühlt sich in dieser Routine nie wirklich zuhause.",
-    "Zwischen Reparieren und So-tun-als-ob kannst du heute aus Gewohnheit weiterlaufen, ohne es zu merken.",
-    "Es wirkt wie ein normaler Morgen, aber darunter ist dieser leise Drang, etwas zu ändern – auch nur um ein Grad.",
-    "Kennst du das: du machst tausend Dinge und trägst trotzdem etwas Ungesagtes? Heute kann so sein.",
-    "Der Kopf rennt schneller als der Körper: das ist nicht nur Müdigkeit, das ist Lärm, der Platz will.",
-    "Manche Tage wachst du schon ‘im Pflichtmodus’ auf: eine gute Frage verschiebt das Gewicht.",
-    "Heute Morgen kannst du dich dazwischen fühlen: zwischen dem, was du zeigst, und dem, was du leben willst.",
-    "Du bewegst dich wie immer… aber es gibt einen Punkt, da wählst du nicht, du machst nur weiter.",
-    "Bevor dich der Tag als Geisel nimmt: stopp eine Sekunde – nicht um alles zu entscheiden, nur um dich zu sehen.",
-    "Du brauchst keinen dramatischen Umbruch: manchmal reicht eine einfache Frage wie ein Spiegel.",
-  ],
+  en: [],
+  es: [],
+  fr: [],
+  de: [],
 };
 
 /* --- WTF SERA (approvato, NON toccare per IT) --- */
-const WTF_EVENING = { /* ... identico al tuo ... */ 
+const WTF_EVENING = {
   it: [
     "Che giornata clamorosa eh. Sbatti di qua, sbatti di là, una “bestemmia di manutenzione” ogni tre ore… e ora sei qui che fissi il vuoto. Dai, racconta com’è andata che la sistemiamo insieme, ecchecazz!!!",
     "Complimenti davvero: anche oggi il caos non si è fatto mancare niente. Ora però dimmi tutto, che due risate e una svolta gliela troviamo, ecchecazz!!!",
@@ -1037,54 +867,10 @@ const WTF_EVENING = { /* ... identico al tuo ... */
     "Tra cose fatte male e cose non fatte proprio, direi serata perfetta per parlarne. Sputa il rospo, ecchecazz!!!",
     "Se anche oggi ti ha lasciato la testa in lavatrice, fermati un attimo: dimmi che è successo e ci ridiamo sopra, ecchecazz!!!",
   ],
-  en: [
-    "What a legendary day, huh. Running around, getting hit by life… now tell me how it went, what the f.",
-    "Congrats: today chaos didn’t miss a single appointment. Now spill it all—we’ll find a laugh and a turn, what the f.",
-    "A day to frame… and toss straight in the trash. Before you sleep crooked, tell me what happened, what the f.",
-    "Between awkward moments, random thoughts, and a creative survival swear here and there… complete day. Start from the spark, what the f.",
-    "If today were a series, it’s already season three of mess. Quick recap: what happened? Then we deal with it, what the f.",
-    "You survived today without throwing heavy objects, so that’s already a win. Now tell me everything, what the f.",
-    "Masterpiece of a day: stress, hustle, and that moment a survival swear escapes you. Tell me the whole thing, what the f.",
-    "It looked like it was going fine… then nope. Classic. Before you close your eyes, tell me how it really ended, what the f.",
-    "Between things done badly and things not done at all, tonight is perfect to talk. Spit it out, what the f.",
-    "If today left your brain in a washing machine, stop a second: tell me what happened and we’ll laugh it back into place, what the f.",
-  ],
-  es: [
-    "Vaya día, eh. De un lado a otro… ahora cuéntame cómo te fue, qué carajo.",
-    "Felicidades: hoy el caos no se ha perdido nada. Ahora suéltalo todo, que le encontramos la vuelta, qué carajo.",
-    "Un día para enmarcar… y tirar al cubo. Antes de dormir torcido, dime qué pasó, qué carajo.",
-    "Entre metidas de pata, pensamientos al azar y una maldición de supervivencia por ahí… día completo. Empieza por el principio, qué carajo.",
-    "Si hoy fuera una serie, ya iría por la tercera temporada de lío. Resumen rápido: ¿qué pasó? Luego lo arreglamos, qué carajo.",
-    "Has sobrevivido sin tirar objetos pesados, así que ya es victoria. Ahora cuéntamelo todo, qué carajo.",
-    "Obra maestra de día: estrés, lío, y ese momento en que te sale una maldición de supervivencia. Cuéntame todo, qué carajo.",
-    "Parecía que iba bien… y luego no. Clásico. Antes de cerrar los ojos, dime cómo terminó de verdad, qué carajo.",
-    "Entre cosas mal hechas y cosas ni hechas, hoy es noche perfecta para hablar. Suéltalo, qué carajo.",
-    "Si hoy te dejó la cabeza en lavadora, para un segundo: dime qué pasó y nos reímos, qué carajo.",
-  ],
-  fr: [
-    "Quelle journée, hein. À courir partout… maintenant raconte-moi, bordel.",
-    "Bravo : aujourd’hui le chaos n’a rien raté. Vas-y, dis-moi tout, on lui trouve une sortie, bordel.",
-    "Une journée à encadrer… et à jeter direct. Avant de dormir de travers, raconte-moi ce qui s’est passé, bordel.",
-    "Entre moments gênants, pensées en vrac et un juron de survie… journée complète. Commence au début, bordel.",
-    "Si aujourd’hui était une série, on serait déjà à la saison 3 du bazar. Résumé : qu’est-ce qui s’est passé ? Bordel.",
-    "Tu as survécu sans lancer d’objets lourds, donc déjà victoire. Maintenant dis-moi tout, bordel.",
-    "Chef-d’œuvre de journée : stress, galère, et ce moment où sort un juron de survie. Raconte tout, bordel.",
-    "On dirait que ça allait… puis non. Classique. Avant de fermer les yeux, dis-moi comment ça a fini, bordel.",
-    "Entre trucs mal faits et trucs pas faits du tout, ce soir est parfait pour en parler. Crache-le, bordel.",
-    "Si ta tête est restée dans la machine à laver, stop une seconde : raconte-moi et on s’en marre, bordel.",
-  ],
-  de: [
-    "Was für ein Tag. Hin und her… jetzt erzähl’s mir, verdammt nochmal.",
-    "Glückwunsch: Heute hat das Chaos keinen Termin ausgelassen. Jetzt raus damit—wir drehen’s irgendwie, verdammt nochmal.",
-    "Ein Tag zum Einrahmen… und sofort wegwerfen. Bevor du schief einschläfst: Was ist passiert? Verdammt nochmal.",
-    "Zwischen Peinlichkeiten, Zufallsgedanken und einem Überlebensfluch… kompletter Tag. Wo ging’s los? Verdammt nochmal.",
-    "Wenn heute eine Serie wäre, wären wir schon Staffel 3 vom Chaos. Kurzer Recap: Was war los? Verdammt nochmal.",
-    "Du hast überlebt, ohne schwere Dinge zu werfen—schon Sieg. Jetzt erzähl alles, verdammt nochmal.",
-    "Meisterwerk-Tag: Stress, Hektik, und der Moment, wo dir ein Überlebensfluch rausrutscht. Erzähl’s, verdammt nochmal.",
-    "Es sah so aus, als würde es laufen… dann doch nicht. Klassiker. Bevor du die Augen zumachst: Wie endete es wirklich? Verdammt nochmal.",
-    "Zwischen schlecht gemacht und gar nicht gemacht: perfekter Abend zum Reden. Raus damit, verdammt nochmal.",
-    "Wenn dein Kopf heute in der Waschmaschine gelandet ist: Halt kurz an—erzähl, und wir lachen drüber, verdammt nochmal.",
-  ],
+  en: [],
+  es: [],
+  fr: [],
+  de: [],
 };
 
 function buildWhatIfMorningSignal({ lang, seed }) {
@@ -1269,123 +1055,104 @@ function ensureWtfEcchecazzEnding(text = "", lang = "it") {
   return finalPunct(s);
 }
 
-/* =======================================================================
-   ✅ MODIFICA: LOG STATS + RECENT (solo manual / surprise / hint; NO signal)
-   ======================================================================= */
-
+/* ========= REDIS LOG+STATS (MODIFICA) ========= */
 const RECENT_KEY = "logs:ask:recent";
-const STATS_ALL_KEY = "stats:ask:all";
-const STATS_LAST_TS = "stats:ask:last_ts";
-const STATS_LAST_DAY = "stats:ask:last_day";
-const STATS_LAST_MONTH = "stats:ask:last_month";
-const STATS_TZ = "Europe/Rome";
+const RECENT_MAX = 200;
 
-// Solo queste sorgenti devono apparire in admin + contatori
-const COUNT_SOURCES = new Set(["manual", "surprise", "hint"]);
-
-function dayKeyFromTs(ts, tz = STATS_TZ) {
+function romeDayKey(ts = Date.now()) {
   const d = new Date(Number(ts || 0));
   if (isNaN(d.getTime())) return null;
   return new Intl.DateTimeFormat("en-CA", {
-    timeZone: tz,
+    timeZone: "Europe/Rome",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(d); // YYYY-MM-DD
+  }).format(d);
+}
+function romeMonthKey(ts = Date.now()) {
+  const dk = romeDayKey(ts);
+  return dk ? dk.slice(0, 7) : null;
 }
 
-function monthKeyFromTs(ts, tz = STATS_TZ) {
-  const d = new Date(Number(ts || 0));
-  if (isNaN(d.getTime())) return null;
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: tz,
-    year: "numeric",
-    month: "2-digit",
-  }).format(d); // YYYY-MM
-}
+function detectSource(stage, micro = {}) {
+  const src = String(micro?.src || "").toLowerCase();
+  const isSurprise = !!(micro && (micro.surprise === true || src === "surprise"));
+  const isHint = !!(micro && (micro.usedHint === true || micro.hints === true || src === "hint" || src === "spunto" || src === "quick"));
+  const isSignal = stage === "signal" || src === "signal";
 
-function resolveSource({ stage, micro }) {
-  // signal escluso SEMPRE
-  if (stage === "signal" || micro?.src === "signal") return "signal";
-
-  // sorprendi
-  if (micro?.surprise === true || micro?.src === "surprise") return "surprise";
-
-  // spunti rapidi = hint
-  if (micro?.src === "hint" || micro?.hint === true || micro?.usedHint === true) return "hint";
-
-  // default
+  if (isSignal) return "signal";
+  if (isSurprise) return "surprise";
+  if (isHint) return "hint";
   return "manual";
 }
 
-async function logRecentAndStats({ ts, style, periodo, lang, user_type, source, usedHint, surprise }) {
-  try {
-    // NO signal: esci subito
-    if (String(source) === "signal") return;
+function detectUserType(req, micro = {}) {
+  // usa header x-pro oppure micro.user_type
+  const hdr = String(req.headers["x-pro"] || "").toLowerCase();
+  const microType = String(micro?.user_type || micro?.userType || "").toLowerCase();
+  if (microType === "pro" || microType === "paid") return "pro";
+  if (hdr === "1" || hdr === "true" || hdr === "pro") return "pro";
+  return "free";
+}
 
-    // Solo manual/surprise/hint
-    if (!COUNT_SOURCES.has(String(source))) return;
+async function logAndStatsToRedis({
+  ts,
+  style,
+  periodo,
+  lang,
+  user_type,
+  source,
+  surprise,
+  hints,
+}) {
+  // NO signal
+  if (source === "signal") return;
 
-    const dayKey = dayKeyFromTs(ts, STATS_TZ);
-    const monthKey = monthKeyFromTs(ts, STATS_TZ);
-    if (!dayKey || !monthKey) return;
+  // Conta solo manual|hint|surprise
+  if (!["manual", "hint", "surprise"].includes(source)) return;
 
-    const dayStatsKey = `stats:ask:day:${dayKey}`;
-    const monthStatsKey = `stats:ask:month:${monthKey}`;
+  const dayKey = romeDayKey(ts);
+  const monthKey = romeMonthKey(ts);
+  if (!dayKey || !monthKey) return;
 
-    const recentItem = {
-      ts,
-      style,
-      periodo,
-      lang,
-      user_type,
-      source,
-      surprise: !!surprise,
-      usedHint: !!usedHint,
-    };
+  const safe = {
+    ts,
+    style,
+    periodo,
+    lang,
+    user_type,
+    source,
+    surprise: !!surprise,
+    hints: !!hints,
+  };
 
-    // Pipeline unica
-    const cmds = [
-      // recenti
-      ["LPUSH", RECENT_KEY, JSON.stringify(recentItem)],
-      ["LTRIM", RECENT_KEY, "0", "199"],
+  const pipe = redis.pipeline();
 
-      // total
-      ["HINCRBY", dayStatsKey, "total", 1],
-      ["HINCRBY", monthStatsKey, "total", 1],
-      ["HINCRBY", STATS_ALL_KEY, "total", 1],
+  // recent list
+  pipe.lpush(RECENT_KEY, JSON.stringify(safe));
+  pipe.ltrim(RECENT_KEY, 0, RECENT_MAX - 1);
 
-      // style / periodo
-      ["HINCRBY", dayStatsKey, `style:${style}`, 1],
-      ["HINCRBY", monthStatsKey, `style:${style}`, 1],
-      ["HINCRBY", STATS_ALL_KEY, `style:${style}`, 1],
+  // totals
+  pipe.hincrby(`stats:ask:day:${dayKey}`, "total", 1);
+  pipe.hincrby(`stats:ask:month:${monthKey}`, "total", 1);
+  pipe.hincrby("stats:ask:all", "total", 1);
 
-      ["HINCRBY", dayStatsKey, `periodo:${periodo}`, 1],
-      ["HINCRBY", monthStatsKey, `periodo:${periodo}`, 1],
-      ["HINCRBY", STATS_ALL_KEY, `periodo:${periodo}`, 1],
+  // matrix fields (flat) — poi admin li può rimappare
+  pipe.hincrby(`stats:ask:day:${dayKey}`, `matrix:${style}:${periodo}`, 1);
+  pipe.hincrby(`stats:ask:month:${monthKey}`, `matrix:${style}:${periodo}`, 1);
+  pipe.hincrby("stats:ask:all", `matrix:${style}:${periodo}`, 1);
 
-      // matrix:style:periodo (queste sono le chiavi che l’admin legge)
-      ["HINCRBY", dayStatsKey, `matrix:${style}:${periodo}`, 1],
-      ["HINCRBY", monthStatsKey, `matrix:${style}:${periodo}`, 1],
-      ["HINCRBY", STATS_ALL_KEY, `matrix:${style}:${periodo}`, 1],
+  // bySource
+  pipe.hincrby(`stats:ask:day:${dayKey}`, `source:${source}`, 1);
+  pipe.hincrby(`stats:ask:month:${monthKey}`, `source:${source}`, 1);
+  pipe.hincrby("stats:ask:all", `source:${source}`, 1);
 
-      // source breakdown
-      ["HINCRBY", dayStatsKey, `source:${source}`, 1],
-      ["HINCRBY", monthStatsKey, `source:${source}`, 1],
-      ["HINCRBY", STATS_ALL_KEY, `source:${source}`, 1],
+  // last pointers
+  pipe.set("stats:ask:last_ts", String(ts));
+  pipe.set("stats:ask:last_day", dayKey);
+  pipe.set("stats:ask:last_month", monthKey);
 
-      // last pointers
-      ["SET", STATS_LAST_TS, String(ts)],
-      ["SET", STATS_LAST_DAY, dayKey],
-      ["SET", STATS_LAST_MONTH, monthKey],
-    ];
-
-    // @upstash/redis pipeline
-    await redis.pipeline(cmds);
-  } catch (e) {
-    // non bloccare mai la risposta utente
-    console.error("logRecentAndStats error:", e);
-  }
+  await pipe.exec();
 }
 
 /* ========= HANDLER ========= */
@@ -1419,25 +1186,20 @@ export default async function handler(req, res) {
     } = body || {};
 
     const L = normLang(lang);
-    const isSignal = micro && micro.src === "signal";
+    const src = detectSource(stage, micro);
+    const user_type = detectUserType(req, micro);
+    const isSignal = (stage === "signal") || (micro && String(micro.src || "").toLowerCase() === "signal");
 
     if (!domanda || typeof domanda !== "string") {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
-
-    // ✅ SOURCE (manual / surprise / hint / signal)
-    const tsNow = Date.now();
-    const source = resolveSource({ stage, micro });
-
-    // user_type (compat con admin)
-    const user_type = micro?.pro ? "pro" : (micro?.user_type || "free");
 
     /* ====== STAGE: SIGNAL (NO AI) ====== */
     if (stage === "signal" || isSignal) {
       const slot = micro.slot || micro.timeOfDay || micro.time || "morning";
       const mood = micro.mood || null;
 
-      // ✅ rotazione per utente (firebase uid / userKey), fallback ip
+      // rotazione per utente (firebase uid / userKey), fallback ip
       const userKey = micro.userKey || micro.uid || micro.user || ip || "anon";
 
       const text = pickSignalPhrase({
@@ -1449,7 +1211,7 @@ export default async function handler(req, res) {
         userKey,
       });
 
-      // ❌ NO logging per signal (richiesta tua)
+      // ✅ NO stats, NO recent per signal
       return res.status(200).json({
         mode: "signal",
         time: normSignalSlot(slot),
@@ -1481,17 +1243,21 @@ export default async function handler(req, res) {
       if (stile !== "wtf") clarQ = stripFirstPerson(clarQ, L, stile);
       clarQ = finalPunct(clarQ);
 
-      // ✅ logging (solo manual/surprise/hint, NO signal)
-      await logRecentAndStats({
-        ts: tsNow,
-        style: stile,
-        periodo,
-        lang: L,
-        user_type,
-        source,
-        usedHint: !!(micro?.hint || micro?.src === "hint" || micro?.usedHint),
-        surprise: !!(micro?.surprise || micro?.src === "surprise"),
-      });
+      // ✅ LOG+STATS (NO signal) — per le domande di chiarimento contiamo comunque la richiesta
+      try {
+        await logAndStatsToRedis({
+          ts: Date.now(),
+          style: String(stile || "whatif"),
+          periodo: String(periodo || "future"),
+          lang: L,
+          user_type,
+          source: src,
+          surprise: !!(micro && micro.surprise),
+          hints: !!(micro && (micro.usedHint || micro.hints || micro.src === "hint")),
+        });
+      } catch (e) {
+        console.error("log/stats clarify error:", e);
+      }
 
       return res.status(200).json({
         mode: "clarify",
@@ -1599,17 +1365,21 @@ export default async function handler(req, res) {
       }
     }
 
-    // ✅ logging (solo manual/surprise/hint, NO signal)
-    await logRecentAndStats({
-      ts: tsNow,
-      style: stile,
-      periodo,
-      lang: L,
-      user_type,
-      source,
-      usedHint: !!(micro?.hint || micro?.src === "hint" || micro?.usedHint),
-      surprise: !!(micro?.surprise || micro?.src === "surprise"),
-    });
+    // ✅ LOG+STATS (NO signal)
+    try {
+      await logAndStatsToRedis({
+        ts: Date.now(),
+        style: String(stile || "whatif"),
+        periodo: String(periodo || "future"),
+        lang: L,
+        user_type,
+        source: src,
+        surprise: !!(micro && micro.surprise),
+        hints: !!(micro && (micro.usedHint || micro.hints || micro.src === "hint")),
+      });
+    } catch (e) {
+      console.error("log/stats answer error:", e);
+    }
 
     return res.status(200).json({
       mode: "answer",
@@ -1627,4 +1397,4 @@ export default async function handler(req, res) {
     console.error("❌ [/api/ask] error:", err);
     return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
-}
+        }
