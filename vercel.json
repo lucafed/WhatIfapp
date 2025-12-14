@@ -14,7 +14,7 @@
   "crons": [
     {
       "path": "/api/push?slot=evening&phase=1",
-      "schedule": "50 17 * * *"
+      "schedule": "55 17 * * *"
     }
   ]
 }
