@@ -22,7 +22,7 @@ function weekdayRome(d = new Date()) {
     timeZone: "Europe/Rome",
     weekday: "short",
   }).format(d);
-  return ({ Sun:0, Mon:1, Tue:2, Wed:3, Thu:4, Fri:5, Sat:6 }[wd] ?? 0);
+  return ({ Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[wd] ?? 0);
 }
 
 function hashStr(str = "") {
@@ -40,10 +40,17 @@ function pickDaily(arr, seedStr) {
   return arr[seed % arr.length];
 }
 
+/* ✅ CHUNK TOKENS (FCM max 500) */
+function chunk(arr, size = 500) {
+  const out = [];
+  for (let i = 0; i < (arr?.length || 0); i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
 /* ========= lingua ========= */
-const SUP_LANGS = ["it","en","es","fr","de"];
+const SUP_LANGS = ["it", "en", "es", "fr", "de"];
 function normLang(l = "it") {
-  const s = String(l || "it").toLowerCase().slice(0,2);
+  const s = String(l || "it").toLowerCase().slice(0, 2);
   return SUP_LANGS.includes(s) ? s : "it";
 }
 
@@ -147,7 +154,7 @@ const WTF_SUNDAY_EVENING_IT = [
   "Il lunedì è dietro l’angolo come un creditore: apri qua e preparati senza piangere, ecchecazz!!!",
 ];
 
-/* ✅ Altre lingue: SOLO per far uscire la notifica nella lingua giusta */
+/* ✅ Altre lingue */
 const PUSH_TITLES = {
   it: PUSH_TITLES_IT,
   en: [
@@ -373,10 +380,10 @@ export default async function handler(req, res) {
     const isSundayNightCattiva = isSunday && isEvening;
     if (isSundayNightCattiva) safePhase = "2";
 
+    // ✅ MODIFICA: prende TUTTI i token (non solo 200)
     const snap = await db
       .collection("fcm_tokens")
       .orderBy("createdAt", "desc")
-      .limit(200)
       .get();
 
     if (snap.empty) {
@@ -403,7 +410,7 @@ export default async function handler(req, res) {
     const day = ymdRome(new Date());
     const seedBase = `${day}|${safeSlot}|${safePhase}|${safeMood}`;
 
-    // ✅ Invia una push per lingua
+    // ✅ Invia una push per lingua (a TUTTI i token, a chunk da 500)
     let totalSent = 0;
     let totalFailed = 0;
 
@@ -424,7 +431,7 @@ export default async function handler(req, res) {
         (PUSH_TITLES.it && PUSH_TITLES.it[0]) ||
         "What?f · frase del giorno";
 
-      // ✅ MODIFICA MINIMA: fallback body localizzato (se per qualsiasi motivo non entra nelle lib)
+      // ✅ fallback body localizzato
       let body =
         ({
           it: "La tua frase di oggi è pronta 🔔",
@@ -453,7 +460,7 @@ export default async function handler(req, res) {
         }
       }
 
-      const message = {
+      const baseMessage = {
         data: {
           title,
           body,
@@ -461,16 +468,22 @@ export default async function handler(req, res) {
           slot: safeSlot,
           phase: safePhase,
           mood: safeMood,
-          lang,              // ✅ aggiunto
+          lang,
           url: signalPath,
           click_action: CLICK_LINK,
         },
-        tokens,
       };
 
-      const resp = await admin.messaging().sendEachForMulticast(message);
-      totalSent += resp.successCount || 0;
-      totalFailed += resp.failureCount || 0;
+      // ✅ invia a chunk da 500 (FCM limit)
+      const chunks = chunk(tokens, 500);
+      for (const c of chunks) {
+        const resp = await admin.messaging().sendEachForMulticast({
+          ...baseMessage,
+          tokens: c,
+        });
+        totalSent += resp.successCount || 0;
+        totalFailed += resp.failureCount || 0;
+      }
     }
 
     return res.status(200).json({
@@ -480,9 +493,13 @@ export default async function handler(req, res) {
       phase: safePhase,
       sent: totalSent,
       failed: totalFailed,
+      totalTokens: users.length,
+      langs: Object.fromEntries(
+        Object.entries(byLang).map(([k, v]) => [k, v.length])
+      ),
     });
   } catch (err) {
     console.error("push error", err);
     return res.status(500).json({ ok: false, error: "server_error" });
   }
-    }
+}
