@@ -27,7 +27,7 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       -webkit-font-smoothing:antialiased;
     }
-    main{max-width:1080px;margin:0 auto;padding:18px 14px 44px}
+    main{max-width:1100px;margin:0 auto;padding:18px 14px 44px}
     .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
     h1{margin:4px 0 2px;font-size:clamp(22px,5vw,32px);color:var(--accent2);text-shadow:0 0 18px rgba(255,236,1,.22)}
     .sub{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.5}
@@ -40,6 +40,7 @@
       margin-top:12px;
       box-shadow:0 10px 30px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.03);
       backdrop-filter: blur(10px);
+      overflow:hidden;
     }
     .label{
       font-size:12px;font-weight:900;color:var(--accent2);
@@ -62,6 +63,8 @@
       padding:6px 10px;
       font-size:12px;
       color:#d7e8ec;
+      max-width:100%;
+      white-space:nowrap;
     }
     .badge{
       border-radius:999px;
@@ -71,6 +74,8 @@
       border:1px solid var(--line);
       background:rgba(255,255,255,.04);
       display:inline-flex;align-items:center;gap:8px;
+      max-width:100%;
+      white-space:nowrap;
     }
     .badge.ok{border-color:rgba(73,227,154,.5); background:rgba(73,227,154,.08); color:#dfffea}
     .badge.no{border-color:rgba(255,88,88,.55); background:rgba(255,88,88,.08); color:#ffe3e3}
@@ -94,7 +99,7 @@
     .btn.danger{border-color:rgba(255,88,88,.65); color:#ffd4d4}
     .btn[disabled]{opacity:.45;cursor:not-allowed}
 
-    input{
+    input, select{
       background:rgba(255,255,255,.04);
       border-radius:12px;
       border:1px solid var(--line);
@@ -103,7 +108,9 @@
       min-width:0;
       font-size:14px;
       width:100%;
+      outline:none;
     }
+    select{padding-right:38px}
     .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
 
     .kpi{
@@ -112,15 +119,18 @@
       border-radius:16px;
       padding:12px 12px;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,.03), 0 10px 28px rgba(0,0,0,.35);
+      min-width:0;
     }
     .kpi-title{font-size:12px;color:var(--muted);font-weight:900;letter-spacing:.04em;text-transform:uppercase}
     .kpi-val{
       margin-top:6px;
-      font-size:28px;
+      font-size:30px;
       font-weight:1000;
       letter-spacing:.3px;
       color:var(--accent2);
       text-shadow:0 0 18px rgba(255,236,1,.18);
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
     .kpi-sub{margin-top:4px;font-size:12px;color:var(--muted)}
     .kpi-val.small{font-size:22px}
@@ -128,10 +138,11 @@
     .matrix{
       border:1px solid var(--line);
       border-radius:16px;
-      overflow:hidden;
+      overflow:auto;
       background:rgba(255,255,255,.03);
+      max-width:100%;
     }
-    table{width:100%;border-collapse:collapse}
+    table{width:100%;border-collapse:collapse;min-width:520px}
     th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px}
     th{color:#fff;font-weight:1000;background:rgba(255,255,255,.04);text-align:left}
     td{color:#dfeaf0}
@@ -148,9 +159,9 @@
       color:#061017;
       box-shadow:0 8px 18px rgba(0,0,0,.35), 0 0 18px rgba(255,236,1,.12);
     }
-    .mini{
-      font-size:12px;color:var(--muted);line-height:1.5;margin-top:6px
-    }
+    .mini{font-size:12px;color:var(--muted);line-height:1.5;margin-top:6px}
+    .split{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+    .split > *{min-width:0}
 
     details summary{cursor:pointer;list-style:none}
     details summary::-webkit-details-marker{display:none}
@@ -162,6 +173,7 @@
       background:rgba(10,15,20,.96);border-radius:12px;border:1px solid var(--line);
       padding:8px 14px;font-size:13px;font-weight:800;z-index:9999;
       opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;
+      max-width:calc(100% - 24px);
     }
     .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
   </style>
@@ -173,8 +185,9 @@
     <div>
       <h1>What?f — Admin</h1>
       <p class="sub">
-        Admin “pulito”: sei admin <strong>solo</strong> se il token viene verificato con <span class="mono">/api/admin-logs</span>.
-        Niente più “∞” solo perché esiste un valore in localStorage.
+        Totali <strong>veri</strong> (giorno/mese/all-time) da <span class="mono">/api/admin-stats</span>.
+        Lista “recenti” (max 200) da <span class="mono">/api/admin-logs</span>.
+        Timezone conteggi: <strong>Europe/Rome</strong>.
       </p>
     </div>
     <div class="row">
@@ -192,7 +205,7 @@
       <div class="col-6">
         <input id="adminTokenInput" type="text" placeholder="Incolla il token admin qui…">
         <div class="mini">
-          Il token viene salvato in <span class="mono">localStorage.admin_token</span> e poi <strong>verificato</strong> chiamando
+          Il token viene salvato in <span class="mono">localStorage.admin_token</span> e poi verificato con
           <span class="mono">/api/admin-logs</span>. Se non è valido → admin OFF.
         </div>
       </div>
@@ -208,53 +221,87 @@
     </div>
   </div>
 
-  <!-- DASHBOARD KPI (LOG SERVER) -->
+  <!-- STATS -->
   <div class="card">
-    <div class="label">Dashboard chiamate server</div>
-
-    <div class="row" style="justify-content:space-between;margin-bottom:8px">
-      <div class="row">
-        <button class="btn" id="btnReloadLogs" disabled>🔄 Ricarica log</button>
-        <span class="chip">Fonte: <span class="mono">/api/admin-logs</span></span>
-        <span class="chip">Max: <span class="mono">200</span></span>
-      </div>
-      <div class="row">
-        <span class="chip">Ultimo refresh: <span id="lastRefresh" class="mono">—</span></span>
-      </div>
-    </div>
+    <div class="label">Totali (no limite) — giorno / mese / all-time</div>
 
     <div class="grid">
-      <div class="col-3">
+      <div class="col-4">
         <div class="kpi">
-          <div class="kpi-title">Totale chiamate (log)</div>
-          <div class="kpi-val" id="kpiTotal">—</div>
-          <div class="kpi-sub">Tutte le voci ricevute dal server (max 200)</div>
+          <div class="kpi-title">Oggi (Rome)</div>
+          <div class="kpi-val" id="kpiDayTotal">—</div>
+          <div class="kpi-sub">Chiave: <span class="mono" id="kpiDayKey">—</span></div>
         </div>
       </div>
-      <div class="col-3">
+      <div class="col-4">
         <div class="kpi">
-          <div class="kpi-title">Oggi</div>
-          <div class="kpi-val" id="kpiToday">—</div>
-          <div class="kpi-sub">Conteggio per data UTC</div>
+          <div class="kpi-title">Questo mese (Rome)</div>
+          <div class="kpi-val" id="kpiMonthTotal">—</div>
+          <div class="kpi-sub">Chiave: <span class="mono" id="kpiMonthKey">—</span></div>
         </div>
       </div>
-      <div class="col-3">
+      <div class="col-4">
         <div class="kpi">
-          <div class="kpi-title">What if</div>
-          <div class="kpi-val small" id="kpiWhatif">—</div>
-          <div class="kpi-sub">Stile = whatif</div>
-        </div>
-      </div>
-      <div class="col-3">
-        <div class="kpi">
-          <div class="kpi-title">What the F</div>
-          <div class="kpi-val small" id="kpiWtf">—</div>
-          <div class="kpi-sub">Stile = wtf</div>
+          <div class="kpi-title">All-time</div>
+          <div class="kpi-val" id="kpiAllTotal">—</div>
+          <div class="kpi-sub">Sempre aggiornato</div>
         </div>
       </div>
 
       <div class="col-12">
-        <div class="label" style="margin-top:6px">Stile × Modo (periodo) — super in evidenza</div>
+        <div class="split" style="margin-top:6px">
+          <div class="row">
+            <span class="chip">Giorno:</span>
+            <input id="dayPicker" type="date" style="max-width:210px">
+            <span class="chip">Mese:</span>
+            <input id="monthPicker" type="month" style="max-width:190px">
+          </div>
+          <div class="row">
+            <button class="btn" id="btnReloadStats" disabled>🔄 Ricarica totali</button>
+            <span class="chip">Ultimo refresh: <span id="lastRefresh" class="mono">—</span></span>
+          </div>
+        </div>
+        <div class="mini">
+          I totali vengono da Redis hash (non dalla lista da 200). Quindi se fai 10.000 chiamate in un mese, qui le vedi tutte.
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="label" style="margin-top:8px">Stile × Periodo (giorno selezionato)</div>
+        <div class="matrix">
+          <table>
+            <thead>
+              <tr>
+                <th>Stile</th>
+                <th class="right">Future</th>
+                <th class="right">Past</th>
+                <th class="right">Totale</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="td-big">whatif</td>
+                <td class="right"><span class="pill" id="dWiFuture">—</span></td>
+                <td class="right"><span class="pill" id="dWiPast">—</span></td>
+                <td class="right"><span class="pill" id="dWiTotal">—</span></td>
+              </tr>
+              <tr>
+                <td class="td-big">wtf</td>
+                <td class="right"><span class="pill" id="dWtfFuture">—</span></td>
+                <td class="right"><span class="pill" id="dWtfPast">—</span></td>
+                <td class="right"><span class="pill" id="dWtfTotal">—</span></td>
+              </tr>
+              <tr>
+                <td class="td-big">Totale</td>
+                <td class="right"><span class="pill" id="dAllFuture">—</span></td>
+                <td class="right"><span class="pill" id="dAllPast">—</span></td>
+                <td class="right"><span class="pill" id="dAllTotal">—</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="label" style="margin-top:12px">Stile × Periodo (mese selezionato)</div>
         <div class="matrix">
           <table>
             <thead>
@@ -288,37 +335,90 @@
           </table>
         </div>
 
+        <div class="label" style="margin-top:12px">Stile × Periodo (all-time)</div>
+        <div class="matrix">
+          <table>
+            <thead>
+              <tr>
+                <th>Stile</th>
+                <th class="right">Future</th>
+                <th class="right">Past</th>
+                <th class="right">Totale</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="td-big">whatif</td>
+                <td class="right"><span class="pill" id="aWiFuture">—</span></td>
+                <td class="right"><span class="pill" id="aWiPast">—</span></td>
+                <td class="right"><span class="pill" id="aWiTotal">—</span></td>
+              </tr>
+              <tr>
+                <td class="td-big">wtf</td>
+                <td class="right"><span class="pill" id="aWtfFuture">—</span></td>
+                <td class="right"><span class="pill" id="aWtfPast">—</span></td>
+                <td class="right"><span class="pill" id="aWtfTotal">—</span></td>
+              </tr>
+              <tr>
+                <td class="td-big">Totale</td>
+                <td class="right"><span class="pill" id="aAllFuture">—</span></td>
+                <td class="right"><span class="pill" id="aAllPast">—</span></td>
+                <td class="right"><span class="pill" id="aAllTotal">—</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <div class="mini">
-          “Modo” = <span class="mono">periodo</span> (future/past). Questa tabella ti dà subito il numero chiamate per stile e modo.
+          Le celle arrivano da contatori Redis (HINCRBY). Nessun limite 200.
         </div>
       </div>
 
       <div class="col-12">
         <details open>
-          <summary class="label">Breakdown per sorgente</summary>
-          <div class="matrix">
-            <table>
-              <thead>
-                <tr>
-                  <th>Sorgente</th>
-                  <th class="right">Conteggio</th>
-                </tr>
-              </thead>
-              <tbody id="sourceTableBody">
-                <tr><td class="muted">—</td><td class="right muted">—</td></tr>
-              </tbody>
-            </table>
+          <summary class="label">Breakdown sorgenti (giorno / mese / all-time)</summary>
+          <div class="grid">
+            <div class="col-4">
+              <div class="label" style="margin-bottom:6px">Giorno</div>
+              <div class="matrix"><table>
+                <thead><tr><th>Sorgente</th><th class="right">Conteggio</th></tr></thead>
+                <tbody id="srcDayBody"><tr><td class="muted">—</td><td class="right muted">—</td></tr></tbody>
+              </table></div>
+            </div>
+            <div class="col-4">
+              <div class="label" style="margin-bottom:6px">Mese</div>
+              <div class="matrix"><table>
+                <thead><tr><th>Sorgente</th><th class="right">Conteggio</th></tr></thead>
+                <tbody id="srcMonthBody"><tr><td class="muted">—</td><td class="right muted">—</td></tr></tbody>
+              </table></div>
+            </div>
+            <div class="col-4">
+              <div class="label" style="margin-bottom:6px">All-time</div>
+              <div class="matrix"><table>
+                <thead><tr><th>Sorgente</th><th class="right">Conteggio</th></tr></thead>
+                <tbody id="srcAllBody"><tr><td class="muted">—</td><td class="right muted">—</td></tr></tbody>
+              </table></div>
+            </div>
           </div>
           <div class="mini">
-            Usa <span class="mono">item.source</span> se presente (manual/hint/surprise/signal/daily_push ecc.).
-            Se il server non invia source, verrà mostrato “manual”.
+            Qui leggiamo campi tipo <span class="mono">source:manual</span>, <span class="mono">source:hint</span>, <span class="mono">source:surprise</span>, ecc.
           </div>
         </details>
       </div>
 
       <div class="col-12">
         <details>
-          <summary class="label">Lista log (solo metadati)</summary>
+          <summary class="label">Recenti (max 200) — /api/admin-logs</summary>
+          <div class="row" style="justify-content:space-between;margin-bottom:8px">
+            <div class="row">
+              <button class="btn" id="btnReloadRecent" disabled>🔄 Ricarica recenti</button>
+              <span class="chip">Max: <span class="mono">200</span></span>
+            </div>
+            <div class="row">
+              <span class="chip">Totale recenti: <span class="mono" id="recentCount">0</span></span>
+            </div>
+          </div>
+
           <div class="matrix">
             <table>
               <thead>
@@ -327,15 +427,17 @@
                   <th>Stile</th>
                   <th>Periodo</th>
                   <th>Sorgente</th>
+                  <th>User</th>
+                  <th>Lang</th>
                 </tr>
               </thead>
-              <tbody id="logsListBody">
-                <tr><td class="muted" colspan="4">—</td></tr>
+              <tbody id="recentBody">
+                <tr><td class="muted" colspan="6">—</td></tr>
               </tbody>
             </table>
           </div>
           <div class="mini">
-            Nessun testo domanda/risposta. Solo metadati.
+            Questa lista è solo “ultime chiamate” e può troncare se superi 200. I totali veri stanno sopra.
           </div>
         </details>
       </div>
@@ -349,7 +451,6 @@
   const LS = localStorage;
   const $ = (id)=>document.getElementById(id);
 
-  // ===== Toast =====
   function toast(msg){
     const t = $('toast'); if(!t) return;
     t.textContent = msg;
@@ -357,26 +458,36 @@
     setTimeout(()=>t.classList.remove('show'),1500);
   }
 
-  // ===== Token storage =====
   const TOKEN_KEY = "admin_token";
-
-  function getToken(){
-    try { return (LS.getItem(TOKEN_KEY) || "").trim(); } catch { return ""; }
-  }
-  function setToken(v){
-    try { LS.setItem(TOKEN_KEY, v); } catch {}
-  }
-  function clearToken(){
-    try { LS.removeItem(TOKEN_KEY); } catch {}
-  }
+  function getToken(){ try { return (LS.getItem(TOKEN_KEY) || "").trim(); } catch { return ""; } }
+  function setToken(v){ try { LS.setItem(TOKEN_KEY, v); } catch {} }
+  function clearToken(){ try { LS.removeItem(TOKEN_KEY); } catch {} }
   function mask(tok){
     if(!tok) return "—";
     if(tok.length <= 8) return "•••";
     return tok.slice(0,4) + "…" + tok.slice(-3);
   }
+  function esc(s){
+    return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
 
-  // ===== Admin verified state (IMPORTANT) =====
-  // Sei admin SOLO se token verificato da /api/admin-logs (200).
+  // ===== Rome date helpers =====
+  function romeDayStr(date = new Date()){
+    const s = new Intl.DateTimeFormat("en-CA",{
+      timeZone:"Europe/Rome", year:"numeric", month:"2-digit", day:"2-digit"
+    }).format(date);
+    return s; // YYYY-MM-DD
+  }
+  function romeMonthStr(date = new Date()){
+    return romeDayStr(date).slice(0,7); // YYYY-MM
+  }
+  function setLastRefreshNow(){
+    const el = $('lastRefresh');
+    if(!el) return;
+    el.textContent = new Date().toLocaleString("it-IT",{hour12:false});
+  }
+
+  // ===== Admin verified =====
   let isAdminVerified = false;
 
   function renderAdminBadge(){
@@ -386,236 +497,253 @@
       b.classList.remove('no'); b.classList.add('ok');
       b.textContent = "✅ Admin: ON (token verificato)";
       $('btnAdminLogout').disabled = false;
-      $('btnReloadLogs').disabled = false;
+      $('btnReloadStats').disabled = false;
+      $('btnReloadRecent').disabled = false;
     }else{
       b.classList.remove('ok'); b.classList.add('no');
       b.textContent = "🔒 Admin: OFF";
       $('btnAdminLogout').disabled = true;
-      $('btnReloadLogs').disabled = true;
+      $('btnReloadStats').disabled = true;
+      $('btnReloadRecent').disabled = true;
     }
   }
-
   function renderTokenStatus(text){
     const el = $('tokenStatus');
     if(el) el.textContent = text || "—";
   }
 
-  function fmtLocal(ts){
-    try{
-      const d = new Date(ts);
-      if(isNaN(d.getTime())) return "—";
-      return d.toLocaleString("it-IT",{hour12:false});
-    }catch{ return "—"; }
-  }
-
-  function setLastRefreshNow(){
-    const el = $('lastRefresh');
-    if(!el) return;
-    const d = new Date();
-    el.textContent = d.toLocaleString("it-IT",{hour12:false});
-  }
-
-  // ===== KPI helpers =====
-  function safeStyle(it){
-    return (it.style || it.stile || "whatif").toLowerCase();
-  }
-  function safePeriodo(it){
-    return (it.periodo || it.mode || "future").toLowerCase(); // mode fallback
-  }
-  function safeSource(it){
-    return (it.source || it.src || "manual").toLowerCase();
-  }
-
-  function updateDashboard(items){
-    const total = items.length;
-
-    const todayStr = new Date().toISOString().slice(0,10); // UTC
-    let today = 0;
-
-    let wi = 0, wtf = 0;
-
-    let wiFuture = 0, wiPast = 0;
-    let wtfFuture = 0, wtfPast = 0;
-
-    const sources = new Map(); // source -> count
-
-    for(const it of items){
-      const ts = Number(it.ts || 0);
-      if(ts){
-        const d = new Date(ts);
-        if(!isNaN(d.getTime()) && d.toISOString().slice(0,10) === todayStr) today++;
-      }
-
-      const st = safeStyle(it);
-      const per = safePeriodo(it);
-      const src = safeSource(it);
-
-      sources.set(src, (sources.get(src)||0) + 1);
-
-      if(st === "wtf"){
-        wtf++;
-        if(per === "past") wtfPast++; else wtfFuture++;
-      }else{
-        wi++;
-        if(per === "past") wiPast++; else wiFuture++;
-      }
-    }
-
-    // KPIs
-    $('kpiTotal').textContent = total;
-    $('kpiToday').textContent = today;
-    $('kpiWhatif').textContent = wi;
-    $('kpiWtf').textContent = wtf;
-
-    // Matrix Stile x Periodo
-    $('mWiFuture').textContent  = wiFuture;
-    $('mWiPast').textContent    = wiPast;
-    $('mWiTotal').textContent   = (wiFuture + wiPast);
-
-    $('mWtfFuture').textContent = wtfFuture;
-    $('mWtfPast').textContent   = wtfPast;
-    $('mWtfTotal').textContent  = (wtfFuture + wtfPast);
-
-    $('mAllFuture').textContent = (wiFuture + wtfFuture);
-    $('mAllPast').textContent   = (wiPast + wtfPast);
-    $('mAllTotal').textContent  = total;
-
-    // Sources table
-    const body = $('sourceTableBody');
-    if(body){
-      const rows = Array.from(sources.entries()).sort((a,b)=>b[1]-a[1]);
-      if(!rows.length){
-        body.innerHTML = `<tr><td class="muted">—</td><td class="right muted">—</td></tr>`;
-      }else{
-        body.innerHTML = rows.map(([k,v])=>`
-          <tr>
-            <td class="td-big">${escapeHtml(k)}</td>
-            <td class="right td-big">${v}</td>
-          </tr>
-        `).join("");
-      }
-    }
-
-    // Logs list
-    const listBody = $('logsListBody');
-    if(listBody){
-      if(!items.length){
-        listBody.innerHTML = `<tr><td class="muted" colspan="4">—</td></tr>`;
-      }else{
-        const top = items.slice(0,200).sort((a,b)=>(b.ts||0)-(a.ts||0));
-        listBody.innerHTML = top.map(it=>{
-          const ts = fmtLocal(it.ts || 0);
-          const st = escapeHtml(safeStyle(it));
-          const per = escapeHtml(safePeriodo(it));
-          const src = escapeHtml(safeSource(it));
-          return `<tr><td>${ts}</td><td class="td-big">${st}</td><td>${per}</td><td>${src}</td></tr>`;
-        }).join("");
-      }
-    }
-  }
-
-  function escapeHtml(s){
-    return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  }
-
-  // ===== API fetch (verifica token + logs) =====
-  async function fetchAdminLogs(){
+  // ===== API calls =====
+  async function verifyTokenWithAdminLogs(){
     const tok = getToken();
     if(!tok){
       isAdminVerified = false;
       renderAdminBadge();
       renderTokenStatus("— nessun token");
-      toast("Inserisci un token admin.");
-      return [];
+      return false;
     }
-
     try{
-      const res = await fetch("/api/admin-logs?limit=200&order=desc",{
+      const res = await fetch("/api/admin-logs?limit=1&order=desc",{
         headers:{ "x-admin-token": tok }
       });
-
       if(res.status === 401){
         isAdminVerified = false;
         renderAdminBadge();
         renderTokenStatus(`${mask(tok)} (NON valido)`);
-        toast("Token non valido o scaduto.");
-        return [];
+        return false;
       }
-
       if(!res.ok){
         isAdminVerified = false;
         renderAdminBadge();
         renderTokenStatus(`${mask(tok)} (errore HTTP ${res.status})`);
-        toast("Errore nel recuperare i log.");
-        return [];
+        return false;
       }
-
-      const data = await res.json().catch(()=>null);
-      const items = (data && Array.isArray(data.items)) ? data.items : [];
-
-      // ✅ token verificato
       isAdminVerified = true;
       renderAdminBadge();
       renderTokenStatus(`${mask(tok)} (OK)`);
-
-      return items;
+      return true;
     }catch(e){
-      console.error("fetchAdminLogs error:", e);
+      console.error("verify token error", e);
       isAdminVerified = false;
       renderAdminBadge();
       renderTokenStatus(`${mask(tok)} (errore rete)`);
-      toast("Errore rete o server.");
-      return [];
+      return false;
     }
   }
 
-  async function reloadLogs(){
-    const items = await fetchAdminLogs();
-    updateDashboard(items);
-    setLastRefreshNow();
-    if(isAdminVerified) toast("Dashboard aggiornata.");
-  }
-
-  // ===== Admin logout (pulito) =====
-  async function adminLogout(){
+  async function fetchStats(scope, dayOrMonth){
     const tok = getToken();
+    const qs = new URLSearchParams();
+    qs.set("scope", scope);
+    if(scope === "day") qs.set("day", dayOrMonth);
+    if(scope === "month") qs.set("month", dayOrMonth);
 
-    // opzionale: revoca lato server se hai endpoint (non blocca se non esiste)
-    if(tok){
-      try{
-        await fetch("/api/admin-token?action=revoke",{
-          method:"POST",
-          headers:{ "x-admin-token": tok }
-        });
-      }catch{}
+    const res = await fetch(`/api/admin-stats?${qs.toString()}`,{
+      headers:{ "x-admin-token": tok }
+    });
+
+    if(res.status === 401) throw new Error("unauthorized");
+    if(!res.ok) throw new Error("http_" + res.status);
+
+    const data = await res.json().catch(()=>null);
+    return data && data.stats ? data : { stats:{} };
+  }
+
+  function getStat(h, key){
+    const v = h && typeof h === "object" ? Number(h[key]||0) : 0;
+    return Number.isFinite(v) ? v : 0;
+  }
+
+  function renderMatrix(prefix, h){
+    const wiF = getStat(h,"style:whatif|periodo:future");
+    const wiP = getStat(h,"style:whatif|periodo:past");
+    const wfF = getStat(h,"style:wtf|periodo:future");
+    const wfP = getStat(h,"style:wtf|periodo:past");
+
+    $(prefix+"WiFuture").textContent = wiF;
+    $(prefix+"WiPast").textContent   = wiP;
+    $(prefix+"WiTotal").textContent  = wiF + wiP;
+
+    $(prefix+"WtfFuture").textContent = wfF;
+    $(prefix+"WtfPast").textContent   = wfP;
+    $(prefix+"WtfTotal").textContent  = wfF + wfP;
+
+    $(prefix+"AllFuture").textContent = wiF + wfF;
+    $(prefix+"AllPast").textContent   = wiP + wfP;
+    $(prefix+"AllTotal").textContent  = getStat(h,"total");
+  }
+
+  function renderSources(tbodyId, h){
+    const body = $(tbodyId);
+    if(!body) return;
+
+    const entries = [];
+    for(const [k,v] of Object.entries(h||{})){
+      if(!k.startsWith("source:")) continue;
+      entries.push([k.slice("source:".length), Number(v)||0]);
+    }
+    entries.sort((a,b)=>b[1]-a[1]);
+
+    if(!entries.length){
+      body.innerHTML = `<tr><td class="muted">—</td><td class="right muted">—</td></tr>`;
+      return;
+    }
+    body.innerHTML = entries.map(([src,count])=>`
+      <tr>
+        <td class="td-big">${esc(src)}</td>
+        <td class="right td-big">${count}</td>
+      </tr>
+    `).join("");
+  }
+
+  async function reloadStats(){
+    if(!isAdminVerified){
+      toast("Devi essere admin (token verificato).");
+      return;
     }
 
+    const day = $('dayPicker').value || romeDayStr(new Date());
+    const month = $('monthPicker').value || romeMonthStr(new Date());
+
+    try{
+      const dayData   = await fetchStats("day", day);
+      const monthData = await fetchStats("month", month);
+      const allData   = await fetchStats("all", "");
+
+      // KPI totals + keys
+      $('kpiDayTotal').textContent   = getStat(dayData.stats,"total");
+      $('kpiMonthTotal').textContent = getStat(monthData.stats,"total");
+      $('kpiAllTotal').textContent   = getStat(allData.stats,"total");
+
+      $('kpiDayKey').textContent   = dayData.key || `stats:ask:day:${day}`;
+      $('kpiMonthKey').textContent = monthData.key || `stats:ask:month:${month}`;
+
+      // Matrici
+      renderMatrix("d", dayData.stats);
+      renderMatrix("m", monthData.stats);
+      renderMatrix("a", allData.stats);
+
+      // Sorgenti
+      renderSources("srcDayBody", dayData.stats);
+      renderSources("srcMonthBody", monthData.stats);
+      renderSources("srcAllBody", allData.stats);
+
+      setLastRefreshNow();
+      toast("Totali aggiornati.");
+    }catch(e){
+      console.error("reloadStats error", e);
+      if(String(e.message||"") === "unauthorized"){
+        isAdminVerified = false;
+        renderAdminBadge();
+        toast("Token non valido (401).");
+      }else{
+        toast("Errore nel leggere i totali (vedi console).");
+      }
+    }
+  }
+
+  async function reloadRecent(){
+    if(!isAdminVerified){
+      toast("Devi essere admin (token verificato).");
+      return;
+    }
+    const tok = getToken();
+    try{
+      const res = await fetch("/api/admin-logs?limit=200&order=desc",{
+        headers:{ "x-admin-token": tok }
+      });
+      if(res.status === 401) throw new Error("unauthorized");
+      if(!res.ok) throw new Error("http_" + res.status);
+
+      const data = await res.json().catch(()=>null);
+      const items = (data && Array.isArray(data.items)) ? data.items : [];
+      $('recentCount').textContent = String(items.length);
+
+      const body = $('recentBody');
+      if(!body) return;
+      if(!items.length){
+        body.innerHTML = `<tr><td class="muted" colspan="6">—</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = items.slice(0,200).map(it=>{
+        const ts = it.ts ? new Date(it.ts).toLocaleString("it-IT",{hour12:false}) : "—";
+        const style = esc((it.style||"whatif").toLowerCase());
+        const periodo = esc((it.periodo||"future").toLowerCase());
+        const source = esc((it.source||"manual").toLowerCase());
+        const ut = esc((it.user_type||"free").toLowerCase());
+        const lang = esc((it.lang||"it").toLowerCase());
+        return `<tr>
+          <td>${ts}</td>
+          <td class="td-big">${style}</td>
+          <td>${periodo}</td>
+          <td>${source}</td>
+          <td>${ut}</td>
+          <td>${lang}</td>
+        </tr>`;
+      }).join("");
+
+      toast("Recenti aggiornati.");
+    }catch(e){
+      console.error("reloadRecent error", e);
+      if(String(e.message||"") === "unauthorized"){
+        isAdminVerified = false;
+        renderAdminBadge();
+        toast("Token non valido (401).");
+      }else{
+        toast("Errore nel leggere i recenti (vedi console).");
+      }
+    }
+  }
+
+  async function adminLogout(){
     clearToken();
     isAdminVerified = false;
     renderAdminBadge();
     renderTokenStatus("— rimosso");
     $('adminTokenInput').value = "";
-
-    // reset dashboard UI
-    updateDashboard([]);
-    setLastRefreshNow();
-
     toast("Uscito da admin.");
     location.href = "index.html";
   }
 
-  // ===== Wiring UI =====
+  // ===== Wiring =====
   $('btnHome').onclick = ()=> location.href = "index.html";
+  $('btnAdminLogout').onclick = adminLogout;
+  $('btnReloadStats').onclick = reloadStats;
+  $('btnReloadRecent').onclick = reloadRecent;
 
   $('btnSaveToken').onclick = async ()=>{
     const v = ($('adminTokenInput').value || "").trim();
-    if(!v){
-      toast("Incolla un token.");
-      return;
-    }
+    if(!v){ toast("Incolla un token."); return; }
     setToken(v);
     renderTokenStatus(`${mask(v)} (da verificare…)`);
-    await reloadLogs();
+    const ok = await verifyTokenWithAdminLogs();
+    if(ok){
+      toast("Token verificato.");
+      await reloadStats();
+      await reloadRecent();
+    }else{
+      toast("Token NON valido.");
+    }
   };
 
   $('btnClearToken').onclick = ()=>{
@@ -624,26 +752,31 @@
     renderAdminBadge();
     renderTokenStatus("— rimosso");
     $('adminTokenInput').value = "";
-    updateDashboard([]);
     toast("Token rimosso.");
   };
 
-  $('btnAdminLogout').onclick = adminLogout;
-  $('btnReloadLogs').onclick = reloadLogs;
-
   // ===== Boot =====
   (function init(){
+    // imposta picker su oggi/mese corrente (Rome)
+    const todayRome = romeDayStr(new Date());
+    const monthRome = romeMonthStr(new Date());
+    $('dayPicker').value = todayRome;
+    $('monthPicker').value = monthRome;
+
     renderAdminBadge();
 
     const tok = getToken();
     if(tok){
       $('adminTokenInput').value = tok;
       renderTokenStatus(`${mask(tok)} (da verificare…)`);
-      // prova verifica+dashboard subito
-      reloadLogs();
+      verifyTokenWithAdminLogs().then(async ok=>{
+        if(ok){
+          await reloadStats();
+          await reloadRecent();
+        }
+      });
     }else{
       renderTokenStatus("— nessun token");
-      updateDashboard([]);
     }
   })();
 </script>
