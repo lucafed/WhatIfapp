@@ -99,15 +99,6 @@ function monthKeyAgo(tz, monthsAgo) {
   return monthKey(d.getTime(), tz);
 }
 
-// ===== Stats from hashes =====
-async function hgetall(key) {
-  const out = await redisPipeline([["HGETALL", key]]);
-  const first = out[0];
-  const obj = (first && first.result && typeof first.result === "object") ? first.result : {};
-  // Upstash può tornare {} oppure null
-  return obj || {};
-}
-
 function toNumberMap(obj) {
   const out = {};
   for (const [k, v] of Object.entries(obj || {})) {
@@ -117,35 +108,40 @@ function toNumberMap(obj) {
   return out;
 }
 
-/* =======================================================================
-   ✅ MODIFICA: arricchisce i contatori "piatti" (HGETALL) in:
-   - summary.matrix.whatif.future/past/total + wtf + all
-   - summary.bySource.manual/hint/surprise
-   così la tua admin.html smette di mostrare 0.
-   ======================================================================= */
-function enrichSummary(flat = {}) {
-  const get = (k) => Number(flat[k] || 0) || 0;
+// ✅ FIX: converte hash piatto -> struttura che la pagina Admin si aspetta
+function summarizeStatsMap(map = {}) {
+  const m = map || {};
+  const n = (k) => Number(m[k] || 0) || 0;
 
-  const wiF = get("matrix:whatif:future");
-  const wiP = get("matrix:whatif:past");
-  const wfF = get("matrix:wtf:future");
-  const wfP = get("matrix:wtf:past");
-
-  const total = get("total") || (wiF + wiP + wfF + wfP);
-
-  const bySource = {
-    manual:   get("source:manual"),
-    hint:     get("source:hint"),
-    surprise: get("source:surprise"),
-  };
+  const wi_f = n("matrix:whatif:future");
+  const wi_p = n("matrix:whatif:past");
+  const wtf_f = n("matrix:wtf:future");
+  const wtf_p = n("matrix:wtf:past");
 
   const matrix = {
-    whatif: { future: wiF, past: wiP, total: wiF + wiP },
-    wtf:    { future: wfF, past: wfP, total: wfF + wfP },
-    all:    { future: wiF + wfF, past: wiP + wfP, total },
+    whatif: { future: wi_f, past: wi_p, total: wi_f + wi_p },
+    wtf:    { future: wtf_f, past: wtf_p, total: wtf_f + wtf_p },
+    all:    { future: wi_f + wtf_f, past: wi_p + wtf_p, total: (wi_f + wi_p + wtf_f + wtf_p) },
   };
 
-  return { ...flat, total, bySource, matrix };
+  const bySource = {};
+  for (const [k, v] of Object.entries(m)) {
+    if (k.startsWith("source:")) {
+      bySource[k.slice("source:".length)] = Number(v) || 0;
+    }
+  }
+
+  return {
+    // compat: la tua UI legge total
+    total: n("total"),
+
+    // ✅ quello che ti mancava
+    matrix,
+    bySource,
+
+    // utile per debug: vedi cosa c'è davvero nel Redis hash
+    raw: m,
+  };
 }
 
 async function buildStats({ tz, days, months }) {
@@ -157,7 +153,6 @@ async function buildStats({ tz, days, months }) {
   for (let i = 0; i < months; i++) monthKeys.push(monthKeyAgo(tz, i));
   monthKeys.reverse(); // asc
 
-  // Pipeline: HGETALL per tutti i giorni/mesi + all
   const commands = [
     ...dayKeys.map(k => ["HGETALL", `stats:ask:day:${k}`]),
     ...monthKeys.map(k => ["HGETALL", `stats:ask:month:${k}`]),
@@ -170,23 +165,27 @@ async function buildStats({ tz, days, months }) {
   const results = await redisPipeline(commands);
 
   let idx = 0;
+
   const by_day = {};
   for (const dk of dayKeys) {
     const r = results[idx++] || {};
     const raw = (r.result && typeof r.result === "object") ? r.result : {};
-    by_day[dk] = enrichSummary(toNumberMap(raw)); // ✅
+    const flat = toNumberMap(raw);
+    by_day[dk] = summarizeStatsMap(flat);
   }
 
   const by_month = {};
   for (const mk of monthKeys) {
     const r = results[idx++] || {};
     const raw = (r.result && typeof r.result === "object") ? r.result : {};
-    by_month[mk] = enrichSummary(toNumberMap(raw)); // ✅
+    const flat = toNumberMap(raw);
+    by_month[mk] = summarizeStatsMap(flat);
   }
 
   const allRes = results[idx++] || {};
   const allRaw = (allRes.result && typeof allRes.result === "object") ? allRes.result : {};
-  const all = enrichSummary(toNumberMap(allRaw)); // ✅
+  const allFlat = toNumberMap(allRaw);
+  const all = summarizeStatsMap(allFlat);
 
   const last_ts = Number((results[idx++] || {}).result || 0) || 0;
   const last_day = String((results[idx++] || {}).result || "");
@@ -254,7 +253,6 @@ export default async function handler(req, res) {
 
     let items = await readRecentLogs(limit);
 
-    // di default i recent sono già “desc” perché LPUSH
     if (String(order).toLowerCase() === "asc") items = items.slice().reverse();
 
     return res.status(200).json({ ok: true, items });
