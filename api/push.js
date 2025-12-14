@@ -168,7 +168,7 @@ const PUSH_TITLES = {
   es: [
     "What?f · frase del día",
     "What?f · dos líneas para ti",
-    "What?f · hoy va así",
+    "What?f · hoy va così",
     "What?f · abre un segundo",
     "What?f · micro-oráculo",
     "What?f · mensaje rápido",
@@ -351,6 +351,11 @@ const COPY = {
 
 /* ========= handler ========= */
 export default async function handler(req, res) {
+  // ✅ IMPORTANTISSIMO: evita 304 / cache Vercel (cron e prove)
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+
   if (req.method !== "GET") {
     return res.status(405).json({ ok: false, error: "method_not_allowed" });
   }
@@ -380,17 +385,14 @@ export default async function handler(req, res) {
     const isSundayNightCattiva = isSunday && isEvening;
     if (isSundayNightCattiva) safePhase = "2";
 
-    // ✅ MODIFICA: prende TUTTI i token (non solo 200)
-    const snap = await db
-      .collection("fcm_tokens")
-      .orderBy("createdAt", "desc")
-      .get();
+    // ✅ prende TUTTI i token (non solo 200)
+    const snap = await db.collection("fcm_tokens").orderBy("createdAt", "desc").get();
 
     if (snap.empty) {
       return res.status(200).json({ ok: false, error: "no_tokens" });
     }
 
-    // ✅ Ora leggiamo anche la lingua dal doc
+    // ✅ lingua dal doc
     const users = snap.docs.map((d) => {
       const data = d.data() || {};
       return {
@@ -399,18 +401,16 @@ export default async function handler(req, res) {
       };
     });
 
-    // ✅ Raggruppa token per lingua
+    // ✅ raggruppa per lingua
     const byLang = {};
     for (const u of users) {
       if (!byLang[u.lang]) byLang[u.lang] = [];
       byLang[u.lang].push(u.token);
     }
 
-    // 🔁 Seed giornaliero (Roma) + slot + phase → rotazione 1/giorno per mattina e 1/giorno per sera
     const day = ymdRome(new Date());
     const seedBase = `${day}|${safeSlot}|${safePhase}|${safeMood}`;
 
-    // ✅ Invia una push per lingua (a TUTTI i token, a chunk da 500)
     let totalSent = 0;
     let totalFailed = 0;
 
@@ -460,7 +460,11 @@ export default async function handler(req, res) {
         }
       }
 
+      // ✅ MODIFICA CHE SERVE: non solo "data-only"
+      // -> mettiamo anche notification + webpush + android
       const baseMessage = {
+        notification: { title, body },
+
         data: {
           title,
           body,
@@ -472,9 +476,20 @@ export default async function handler(req, res) {
           url: signalPath,
           click_action: CLICK_LINK,
         },
+
+        webpush: {
+          headers: { Urgency: "high" },
+          notification: {
+            title,
+            body,
+            data: { url: CLICK_LINK },
+          },
+          fcmOptions: { link: CLICK_LINK },
+        },
+
+        android: { priority: "high" },
       };
 
-      // ✅ invia a chunk da 500 (FCM limit)
       const chunks = chunk(tokens, 500);
       for (const c of chunks) {
         const resp = await admin.messaging().sendEachForMulticast({
@@ -494,9 +509,7 @@ export default async function handler(req, res) {
       sent: totalSent,
       failed: totalFailed,
       totalTokens: users.length,
-      langs: Object.fromEntries(
-        Object.entries(byLang).map(([k, v]) => [k, v.length])
-      ),
+      langs: Object.fromEntries(Object.entries(byLang).map(([k, v]) => [k, v.length])),
     });
   } catch (err) {
     console.error("push error", err);
