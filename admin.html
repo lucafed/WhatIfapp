@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="it" data-theme="whatif">
+<html lang="it">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>What?f — Admin</title>
+  <title>What?f — Admin (Recenti + Reset)</title>
   <meta name="theme-color" content="#0A0F14"/>
   <style>
     :root{
@@ -110,7 +110,6 @@
       width:100%;
       outline:none;
     }
-    select{padding-right:38px}
     .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
 
     .kpi{
@@ -142,31 +141,14 @@
       background:rgba(255,255,255,.03);
       max-width:100%;
     }
-    table{width:100%;border-collapse:collapse;min-width:520px}
+    table{width:100%;border-collapse:collapse;min-width:680px}
     th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.08);font-size:13px}
     th{color:#fff;font-weight:1000;background:rgba(255,255,255,.04);text-align:left}
     td{color:#dfeaf0}
     .td-big{font-weight:1000;font-size:15px;color:#fff}
     .right{text-align:right}
     .muted{color:var(--muted)}
-    .pill{
-      display:inline-flex;align-items:center;justify-content:center;
-      min-width:54px;
-      padding:5px 10px;
-      border-radius:999px;
-      font-weight:1000;
-      background:linear-gradient(180deg,var(--accent),var(--accent2));
-      color:#061017;
-      box-shadow:0 8px 18px rgba(0,0,0,.35), 0 0 18px rgba(255,236,1,.12);
-    }
     .mini{font-size:12px;color:var(--muted);line-height:1.5;margin-top:6px}
-    .split{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-    .split > *{min-width:0}
-
-    details summary{cursor:pointer;list-style:none}
-    details summary::-webkit-details-marker{display:none}
-    details summary::after{content:"▶";margin-left:6px;font-size:10px;opacity:.7}
-    details[open] summary::after{content:"▼"}
 
     .toast{
       position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
@@ -185,14 +167,14 @@
     <div>
       <h1>What?f — Admin</h1>
       <p class="sub">
-        Totali <strong>veri</strong> (giorno/mese/all-time) da <span class="mono">/api/admin-logs?stats=1</span>.
-        Lista “recenti” (max 200) da <span class="mono">/api/admin-logs</span>.
-        Timezone conteggi: <strong>Europe/Rome</strong>.
+        Qui vedi <strong>solo</strong> richieste <span class="mono">manual</span> / <span class="mono">surprise</span> / <span class="mono">hint</span>.
+        <strong>Escluse</strong> le frasi giornaliere (<span class="mono">signal</span>).
+        <br>
+        Contatori “Oggi/Mese” calcolati dai <strong>200 recenti</strong> + pulsante reset per contarteli tu.
       </p>
     </div>
     <div class="row">
       <span id="adminStatusBadge" class="badge no">🔒 Admin: OFF</span>
-      <button class="btn" id="btnHome">🏠 Home</button>
       <button class="btn danger" id="btnAdminLogout" disabled>🚪 Esci admin</button>
     </div>
   </div>
@@ -200,255 +182,104 @@
   <!-- TOKEN -->
   <div class="card">
     <div class="label">Token admin</div>
-
     <div class="grid">
       <div class="col-6">
         <input id="adminTokenInput" type="text" placeholder="Incolla il token admin qui…">
         <div class="mini">
-          Il token viene salvato in <span class="mono">localStorage.admin_token</span> e poi verificato con
-          <span class="mono">/api/admin-logs</span>. Se non è valido → admin OFF.
+          Salvato in <span class="mono">localStorage.admin_token</span>. Se non valido → Admin OFF.
         </div>
       </div>
       <div class="col-6">
         <div class="row" style="justify-content:flex-end">
           <button class="btn primary" id="btnSaveToken">💾 Salva & Verifica</button>
+          <button class="btn" id="btnReload" disabled>🔄 Ricarica</button>
           <button class="btn danger" id="btnClearToken">🗑 Rimuovi token</button>
         </div>
+        <div class="mini">Stato token: <span id="tokenStatus" class="mono">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRIMA LINEA: CONTATORI -->
+  <div class="card">
+    <div class="label">Prima linea — Totali dai 200 recenti + reset</div>
+
+    <div class="grid">
+      <div class="col-4">
+        <div class="kpi">
+          <div class="kpi-title">Oggi (Rome) — totale nei recenti</div>
+          <div class="kpi-val" id="kpiTodayTotal">—</div>
+          <div class="kpi-sub">Da reset: <span class="mono" id="kpiTodaySinceReset">—</span></div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn danger" id="btnResetToday" disabled>♻️ RESET OGGI</button>
+            <span class="chip">Key: <span class="mono" id="todayKey">—</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-4">
+        <div class="kpi">
+          <div class="kpi-title">Questo mese (Rome) — totale nei recenti</div>
+          <div class="kpi-val" id="kpiMonthTotal">—</div>
+          <div class="kpi-sub">Da reset: <span class="mono" id="kpiMonthSinceReset">—</span></div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn danger" id="btnResetMonth" disabled>♻️ RESET MESE</button>
+            <span class="chip">Key: <span class="mono" id="monthKey">—</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-4">
+        <div class="kpi">
+          <div class="kpi-title">Totale recenti caricati</div>
+          <div class="kpi-val small"><span id="kpiRecentCount">—</span> / 200</div>
+          <div class="kpi-sub">Filtrati (manual/surprise/hint)</div>
+          <div class="mini">Ultimo refresh: <span class="mono" id="lastRefresh">—</span></div>
+        </div>
+      </div>
+
+      <div class="col-12">
         <div class="mini">
-          Stato token: <span id="tokenStatus" class="mono">—</span>
+          Reset = “mi segno il punto zero”. Da quel momento il contatore “Da reset” ti mostra quante richieste sono entrate (dentro i 200 recenti).
         </div>
       </div>
     </div>
   </div>
 
-  <!-- STATS -->
+  <!-- RECENTI SEMPRE VISIBILI -->
   <div class="card">
-    <div class="label">Totali (no limite) — giorno / mese / all-time</div>
+    <div class="label">Recenti (max 200) — solo manual / surprise / hint</div>
 
-    <div class="grid">
-      <div class="col-4">
-        <div class="kpi">
-          <div class="kpi-title">Oggi (Rome)</div>
-          <div class="kpi-val" id="kpiDayTotal">—</div>
-          <div class="kpi-sub">Chiave: <span class="mono" id="kpiDayKey">—</span></div>
-        </div>
+    <div class="row" style="justify-content:space-between;margin-bottom:8px">
+      <div class="row">
+        <button class="btn" id="btnReloadRecent" disabled>🔄 Ricarica recenti</button>
+        <span class="chip">Endpoint: <span class="mono">/api/admin-logs?limit=200</span></span>
       </div>
-      <div class="col-4">
-        <div class="kpi">
-          <div class="kpi-title">Questo mese (Rome)</div>
-          <div class="kpi-val" id="kpiMonthTotal">—</div>
-          <div class="kpi-sub">Chiave: <span class="mono" id="kpiMonthKey">—</span></div>
-        </div>
+      <div class="row">
+        <span class="chip">Mostrati: <span class="mono" id="recentShown">0</span></span>
       </div>
-      <div class="col-4">
-        <div class="kpi">
-          <div class="kpi-title">All-time</div>
-          <div class="kpi-val" id="kpiAllTotal">—</div>
-          <div class="kpi-sub">Sempre aggiornato</div>
-        </div>
-      </div>
+    </div>
 
-      <div class="col-12">
-        <div class="split" style="margin-top:6px">
-          <div class="row">
-            <span class="chip">Giorno:</span>
-            <input id="dayPicker" type="date" style="max-width:210px">
-            <span class="chip">Mese:</span>
-            <input id="monthPicker" type="month" style="max-width:190px">
-            <span class="chip">Range stats:</span>
-            <select id="rangePreset" style="max-width:220px">
-              <option value="31,12">31 giorni · 12 mesi</option>
-              <option value="60,18">60 giorni · 18 mesi</option>
-              <option value="120,36">120 giorni · 36 mesi (max)</option>
-            </select>
-          </div>
-          <div class="row">
-            <button class="btn" id="btnReloadStats" disabled>🔄 Ricarica totali</button>
-            <span class="chip">Ultimo refresh: <span id="lastRefresh" class="mono">—</span></span>
-          </div>
-        </div>
-        <div class="mini">
-          I totali vengono da Redis hash (non dalla lista da 200). Quindi se fai 10.000 chiamate in un mese, qui le vedi tutte.
-          <br>
-          Nota: giorno/mese selezionati devono rientrare nel range caricato (es. 31/12 o 120/36).
-        </div>
-      </div>
+    <div class="matrix">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Stile</th>
+            <th>Periodo</th>
+            <th>Sorgente</th>
+            <th>User</th>
+            <th>Lang</th>
+          </tr>
+        </thead>
+        <tbody id="recentBody">
+          <tr><td class="muted" colspan="6">—</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-      <div class="col-12">
-        <div class="label" style="margin-top:8px">Stile × Periodo (giorno selezionato)</div>
-        <div class="matrix">
-          <table>
-            <thead>
-              <tr>
-                <th>Stile</th>
-                <th class="right">Future</th>
-                <th class="right">Past</th>
-                <th class="right">Totale</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="td-big">whatif</td>
-                <td class="right"><span class="pill" id="dWiFuture">—</span></td>
-                <td class="right"><span class="pill" id="dWiPast">—</span></td>
-                <td class="right"><span class="pill" id="dWiTotal">—</span></td>
-              </tr>
-              <tr>
-                <td class="td-big">wtf</td>
-                <td class="right"><span class="pill" id="dWtfFuture">—</span></td>
-                <td class="right"><span class="pill" id="dWtfPast">—</span></td>
-                <td class="right"><span class="pill" id="dWtfTotal">—</span></td>
-              </tr>
-              <tr>
-                <td class="td-big">Totale</td>
-                <td class="right"><span class="pill" id="dAllFuture">—</span></td>
-                <td class="right"><span class="pill" id="dAllPast">—</span></td>
-                <td class="right"><span class="pill" id="dAllTotal">—</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="label" style="margin-top:12px">Stile × Periodo (mese selezionato)</div>
-        <div class="matrix">
-          <table>
-            <thead>
-              <tr>
-                <th>Stile</th>
-                <th class="right">Future</th>
-                <th class="right">Past</th>
-                <th class="right">Totale</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="td-big">whatif</td>
-                <td class="right"><span class="pill" id="mWiFuture">—</span></td>
-                <td class="right"><span class="pill" id="mWiPast">—</span></td>
-                <td class="right"><span class="pill" id="mWiTotal">—</span></td>
-              </tr>
-              <tr>
-                <td class="td-big">wtf</td>
-                <td class="right"><span class="pill" id="mWtfFuture">—</span></td>
-                <td class="right"><span class="pill" id="mWtfPast">—</span></td>
-                <td class="right"><span class="pill" id="mWtfTotal">—</span></td>
-              </tr>
-              <tr>
-                <td class="td-big">Totale</td>
-                <td class="right"><span class="pill" id="mAllFuture">—</span></td>
-                <td class="right"><span class="pill" id="mAllPast">—</span></td>
-                <td class="right"><span class="pill" id="mAllTotal">—</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="label" style="margin-top:12px">Stile × Periodo (all-time)</div>
-        <div class="matrix">
-          <table>
-            <thead>
-              <tr>
-                <th>Stile</th>
-                <th class="right">Future</th>
-                <th class="right">Past</th>
-                <th class="right">Totale</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="td-big">whatif</td>
-                <td class="right"><span class="pill" id="aWiFuture">—</span></td>
-                <td class="right"><span class="pill" id="aWiPast">—</span></td>
-                <td class="right"><span class="pill" id="aWiTotal">—</span></td>
-              </tr>
-              <tr>
-                <td class="td-big">wtf</td>
-                <td class="right"><span class="pill" id="aWtfFuture">—</span></td>
-                <td class="right"><span class="pill" id="aWtfPast">—</span></td>
-                <td class="right"><span class="pill" id="aWtfTotal">—</span></td>
-              </tr>
-              <tr>
-                <td class="td-big">Totale</td>
-                <td class="right"><span class="pill" id="aAllFuture">—</span></td>
-                <td class="right"><span class="pill" id="aAllPast">—</span></td>
-                <td class="right"><span class="pill" id="aAllTotal">—</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="mini">
-          Le celle arrivano da contatori Redis (HINCRBY). Nessun limite 200.
-        </div>
-      </div>
-
-      <div class="col-12">
-        <details open>
-          <summary class="label">Breakdown sorgenti (giorno / mese / all-time)</summary>
-          <div class="grid">
-            <div class="col-4">
-              <div class="label" style="margin-bottom:6px">Giorno</div>
-              <div class="matrix"><table>
-                <thead><tr><th>Sorgente</th><th class="right">Conteggio</th></tr></thead>
-                <tbody id="srcDayBody"><tr><td class="muted">—</td><td class="right muted">—</td></tr></tbody>
-              </table></div>
-            </div>
-            <div class="col-4">
-              <div class="label" style="margin-bottom:6px">Mese</div>
-              <div class="matrix"><table>
-                <thead><tr><th>Sorgente</th><th class="right">Conteggio</th></tr></thead>
-                <tbody id="srcMonthBody"><tr><td class="muted">—</td><td class="right muted">—</td></tr></tbody>
-              </table></div>
-            </div>
-            <div class="col-4">
-              <div class="label" style="margin-bottom:6px">All-time</div>
-              <div class="matrix"><table>
-                <thead><tr><th>Sorgente</th><th class="right">Conteggio</th></tr></thead>
-                <tbody id="srcAllBody"><tr><td class="muted">—</td><td class="right muted">—</td></tr></tbody>
-              </table></div>
-            </div>
-          </div>
-          <div class="mini">
-            Qui leggiamo campi tipo <span class="mono">source:manual</span>, <span class="mono">source:hint</span>, <span class="mono">source:surprise</span>, ecc.
-          </div>
-        </details>
-      </div>
-
-      <div class="col-12">
-        <details>
-          <summary class="label">Recenti (max 200) — /api/admin-logs</summary>
-          <div class="row" style="justify-content:space-between;margin-bottom:8px">
-            <div class="row">
-              <button class="btn" id="btnReloadRecent" disabled>🔄 Ricarica recenti</button>
-              <span class="chip">Max: <span class="mono">200</span></span>
-            </div>
-            <div class="row">
-              <span class="chip">Totale recenti: <span class="mono" id="recentCount">0</span></span>
-            </div>
-          </div>
-
-          <div class="matrix">
-            <table>
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Stile</th>
-                  <th>Periodo</th>
-                  <th>Sorgente</th>
-                  <th>User</th>
-                  <th>Lang</th>
-                </tr>
-              </thead>
-              <tbody id="recentBody">
-                <tr><td class="muted" colspan="6">—</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="mini">
-            Questa lista è solo “ultime chiamate” e può troncare se superi 200. I totali veri stanno sopra.
-          </div>
-        </details>
-      </div>
+    <div class="mini">
+      Nota: la lista è le “ultime chiamate”. Se superi 200, le più vecchie spariscono.
     </div>
   </div>
 
@@ -479,12 +310,11 @@
     return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   }
 
-  // ===== Rome date helpers =====
+  // ===== Rome helpers =====
   function romeDayStr(date = new Date()){
-    const s = new Intl.DateTimeFormat("en-CA",{
+    return new Intl.DateTimeFormat("en-CA",{
       timeZone:"Europe/Rome", year:"numeric", month:"2-digit", day:"2-digit"
-    }).format(date);
-    return s; // YYYY-MM-DD
+    }).format(date); // YYYY-MM-DD
   }
   function romeMonthStr(date = new Date()){
     return romeDayStr(date).slice(0,7); // YYYY-MM
@@ -497,7 +327,6 @@
 
   // ===== Admin verified =====
   let isAdminVerified = false;
-
   function renderAdminBadge(){
     const b = $('adminStatusBadge');
     if(!b) return;
@@ -505,14 +334,18 @@
       b.classList.remove('no'); b.classList.add('ok');
       b.textContent = "✅ Admin: ON (token verificato)";
       $('btnAdminLogout').disabled = false;
-      $('btnReloadStats').disabled = false;
+      $('btnReload').disabled = false;
       $('btnReloadRecent').disabled = false;
+      $('btnResetToday').disabled = false;
+      $('btnResetMonth').disabled = false;
     }else{
       b.classList.remove('ok'); b.classList.add('no');
       b.textContent = "🔒 Admin: OFF";
       $('btnAdminLogout').disabled = true;
-      $('btnReloadStats').disabled = true;
+      $('btnReload').disabled = true;
       $('btnReloadRecent').disabled = true;
+      $('btnResetToday').disabled = true;
+      $('btnResetMonth').disabled = true;
     }
   }
   function renderTokenStatus(text){
@@ -520,8 +353,22 @@
     if(el) el.textContent = text || "—";
   }
 
+  // ===== Filter only manual/surprise/hint =====
+  const ALLOWED_SOURCES = new Set(["manual","surprise","hint"]);
+
+  // ===== Reset storage (per key) =====
+  const RESET_DAY_KEY   = "admin_reset_day";   // JSON: { key, baseCount, at }
+  const RESET_MONTH_KEY = "admin_reset_month"; // JSON: { key, baseCount, at }
+
+  function getResetObj(lsKey){
+    try{ return JSON.parse(LS.getItem(lsKey) || "null"); }catch{ return null; }
+  }
+  function setResetObj(lsKey, obj){
+    try{ LS.setItem(lsKey, JSON.stringify(obj)); }catch{}
+  }
+
   // ===== Verify token using admin-logs =====
-  async function verifyTokenWithAdminLogs(){
+  async function verifyToken(){
     const tok = getToken();
     if(!tok){
       isAdminVerified = false;
@@ -558,236 +405,77 @@
     }
   }
 
-  // ===== STATS cache (from /api/admin-logs?stats=1) =====
-  let statsCache = null; // { stats: {...} }
-  let statsDays = 31;
-  let statsMonths = 12;
+  // ===== Recent cache =====
+  let recentItems = []; // already filtered (manual/surprise/hint)
 
-  function getRangePreset(){
-    const v = ($('rangePreset').value || "31,12").split(",");
-    const d = parseInt(v[0],10) || 31;
-    const m = parseInt(v[1],10) || 12;
-    return { days: Math.min(Math.max(d,1),120), months: Math.min(Math.max(m,1),36) };
-  }
+  function computeCountsFromRecent(){
+    const todayKey = romeDayStr(new Date());
+    const monthKey = romeMonthStr(new Date());
 
-  async function fetchStats(days, months){
-    const tok = getToken();
-    const qs = new URLSearchParams();
-    qs.set("stats","1");
-    qs.set("tz","Europe/Rome");
-    qs.set("days", String(days));
-    qs.set("months", String(months));
+    const todayCount = recentItems.filter(it=>{
+      if(!it.ts) return false;
+      const d = romeDayStr(new Date(Number(it.ts)));
+      return d === todayKey;
+    }).length;
 
-    const res = await fetch(`/api/admin-logs?${qs.toString()}`,{
-      headers:{ "x-admin-token": tok }
-    });
+    const monthCount = recentItems.filter(it=>{
+      if(!it.ts) return false;
+      const m = romeMonthStr(new Date(Number(it.ts)));
+      return m === monthKey;
+    }).length;
 
-    if(res.status === 401) throw new Error("unauthorized");
-    if(!res.ok) throw new Error("http_" + res.status);
-
-    const data = await res.json().catch(()=>null);
-    if(!data || !data.ok || !data.stats) throw new Error("bad_stats_response");
-    return data.stats;
-  }
-
-  function num(x){
-    const n = Number(x);
-    return Number.isFinite(n) ? n : 0;
-  }
-
-  function setText(id, v){
-    const el = $(id);
-    if(el) el.textContent = (v == null ? "—" : String(v));
-  }
-
-  /* ==========================================================
-     ✅ MODIFICA CHE CI SERVE: “adapter” Redis hash -> summary
-     - admin-logs.js ritorna mappe tipo { total: "12", "matrix:whatif:future":"7", "source:manual":"5", ... }
-     - la UI invece si aspetta summary.matrix e summary.bySource
-  ========================================================== */
-  function summarizeFromRedisMap(raw){
-    const m = raw && typeof raw === "object" ? raw : {};
-    const get = (k)=>num(m[k]);
-
-    const wiF = get("matrix:whatif:future");
-    const wiP = get("matrix:whatif:past");
-    const wF  = get("matrix:wtf:future");
-    const wP  = get("matrix:wtf:past");
-
-    const styleWi = get("style:whatif");
-    const styleW  = get("style:wtf");
-    const pF      = get("periodo:future");
-    const pP      = get("periodo:past");
-
-    const total = get("total");
-
-    const bySource = {};
-    for(const [k,v] of Object.entries(m)){
-      if(!k.startsWith("source:")) continue;
-      const src = k.slice("source:".length) || "unknown";
-      bySource[src] = num(v);
+    // since reset
+    const dayReset = getResetObj(RESET_DAY_KEY);
+    let todaySinceReset = todayCount;
+    if(dayReset && dayReset.key === todayKey){
+      todaySinceReset = Math.max(0, todayCount - (Number(dayReset.baseCount)||0));
     }
 
-    return {
-      total,
-      // matrix calcolata dai campi "matrix:*"
-      matrix: {
-        whatif: { future: wiF, past: wiP, total: wiF + wiP },
-        wtf:    { future: wF,  past: wP,  total: wF + wP  },
-        all:    { future: pF,  past: pP,  total: total || (pF + pP) },
-      },
-      // fallback utili (se vuoi mostrarli in futuro)
-      style: { whatif: styleWi, wtf: styleW },
-      periodo: { future: pF, past: pP },
-      bySource,
-      raw: m,
-    };
-  }
-
-  function getDaySummary(dayKey){
-    const byDay = statsCache && statsCache.by_day ? statsCache.by_day : {};
-    const raw = byDay[dayKey] || null;
-    return raw ? summarizeFromRedisMap(raw) : null;
-  }
-
-  function getMonthSummary(monthKey){
-    const byMonth = statsCache && statsCache.by_month ? statsCache.by_month : {};
-    const raw = byMonth[monthKey] || null;
-    return raw ? summarizeFromRedisMap(raw) : null;
-  }
-
-  function getAllSummary(){
-    const raw = statsCache && statsCache.all ? statsCache.all : null;
-    return raw ? summarizeFromRedisMap(raw) : null;
-  }
-
-  function inCacheDay(dayKey){
-    const byDay = statsCache && statsCache.by_day ? statsCache.by_day : {};
-    return !!byDay[dayKey];
-  }
-
-  function inCacheMonth(monthKey){
-    const byMonth = statsCache && statsCache.by_month ? statsCache.by_month : {};
-    return !!byMonth[monthKey];
-  }
-
-  function renderMatrix(prefix, summary){
-    const m = summary && summary.matrix ? summary.matrix : null;
-    if(!m){
-      setText(prefix+"WiFuture", 0); setText(prefix+"WiPast", 0); setText(prefix+"WiTotal", 0);
-      setText(prefix+"WtfFuture", 0); setText(prefix+"WtfPast", 0); setText(prefix+"WtfTotal", 0);
-      setText(prefix+"AllFuture", 0); setText(prefix+"AllPast", 0); setText(prefix+"AllTotal", 0);
-      return;
+    const monthReset = getResetObj(RESET_MONTH_KEY);
+    let monthSinceReset = monthCount;
+    if(monthReset && monthReset.key === monthKey){
+      monthSinceReset = Math.max(0, monthCount - (Number(monthReset.baseCount)||0));
     }
 
-    setText(prefix+"WiFuture", num(m.whatif?.future));
-    setText(prefix+"WiPast",   num(m.whatif?.past));
-    setText(prefix+"WiTotal",  num(m.whatif?.total));
-
-    setText(prefix+"WtfFuture", num(m.wtf?.future));
-    setText(prefix+"WtfPast",   num(m.wtf?.past));
-    setText(prefix+"WtfTotal",  num(m.wtf?.total));
-
-    setText(prefix+"AllFuture", num(m.all?.future));
-    setText(prefix+"AllPast",   num(m.all?.past));
-    setText(prefix+"AllTotal",  num(m.all?.total));
+    // render KPIs
+    $('kpiTodayTotal').textContent = String(todayCount);
+    $('kpiMonthTotal').textContent = String(monthCount);
+    $('kpiTodaySinceReset').textContent = String(todaySinceReset);
+    $('kpiMonthSinceReset').textContent = String(monthSinceReset);
+    $('kpiRecentCount').textContent = String(recentItems.length);
+    $('recentShown').textContent = String(recentItems.length);
+    $('todayKey').textContent = todayKey;
+    $('monthKey').textContent = monthKey;
+    setLastRefreshNow();
   }
 
-  function renderSources(tbodyId, summary){
-    const body = $(tbodyId);
+  function renderRecentTable(){
+    const body = $('recentBody');
     if(!body) return;
 
-    const bySource = (summary && summary.bySource) ? summary.bySource : {};
-    const entries = Object.entries(bySource).map(([k,v]) => [k, num(v)]);
-    entries.sort((a,b)=>b[1]-a[1]);
-
-    if(!entries.length){
-      body.innerHTML = `<tr><td class="muted">—</td><td class="right muted">—</td></tr>`;
+    if(!recentItems.length){
+      body.innerHTML = `<tr><td class="muted" colspan="6">—</td></tr>`;
       return;
     }
 
-    body.innerHTML = entries.map(([src,count])=>`
-      <tr>
-        <td class="td-big">${esc(src)}</td>
-        <td class="right td-big">${count}</td>
-      </tr>
-    `).join("");
+    body.innerHTML = recentItems.slice(0,200).map(it=>{
+      const ts = it.ts ? new Date(it.ts).toLocaleString("it-IT",{hour12:false}) : "—";
+      const style = esc((it.style||"whatif").toLowerCase());
+      const periodo = esc((it.periodo||"future").toLowerCase());
+      const source = esc((it.source||"manual").toLowerCase());
+      const ut = esc((it.user_type||"free").toLowerCase());
+      const lang = esc((it.lang||"it").toLowerCase());
+      return `<tr>
+        <td>${ts}</td>
+        <td class="td-big">${style}</td>
+        <td>${periodo}</td>
+        <td class="td-big">${source}</td>
+        <td>${ut}</td>
+        <td>${lang}</td>
+      </tr>`;
+    }).join("");
   }
 
-  function renderKpis(dayKey, monthKey){
-    const dayS = getDaySummary(dayKey);
-    const monthS = getMonthSummary(monthKey);
-    const allS = getAllSummary();
-
-    setText("kpiDayTotal", dayS ? num(dayS.total) : 0);
-    setText("kpiMonthTotal", monthS ? num(monthS.total) : 0);
-    setText("kpiAllTotal", allS ? num(allS.total) : 0);
-
-    setText("kpiDayKey", `stats:ask:day:${dayKey}`);
-    setText("kpiMonthKey", `stats:ask:month:${monthKey}`);
-  }
-
-  function renderAll(dayKey, monthKey){
-    const dayS = getDaySummary(dayKey);
-    const monthS = getMonthSummary(monthKey);
-    const allS = getAllSummary();
-
-    renderKpis(dayKey, monthKey);
-
-    renderMatrix("d", dayS);
-    renderMatrix("m", monthS);
-    renderMatrix("a", allS);
-
-    renderSources("srcDayBody", dayS);
-    renderSources("srcMonthBody", monthS);
-    renderSources("srcAllBody", allS);
-
-    setLastRefreshNow();
-
-    if(!inCacheDay(dayKey)){
-      toast(`⚠️ Giorno ${dayKey} fuori range (stats=${statsDays} giorni). Aumenta il range e ricarica.`);
-    } else if(!inCacheMonth(monthKey)){
-      toast(`⚠️ Mese ${monthKey} fuori range (stats=${statsMonths} mesi). Aumenta il range e ricarica.`);
-    }
-  }
-
-  async function reloadStats(){
-    if(!isAdminVerified){
-      toast("Devi essere admin (token verificato).");
-      return;
-    }
-
-    const { days, months } = getRangePreset();
-    statsDays = days;
-    statsMonths = months;
-
-    const dayKey = $('dayPicker').value || romeDayStr(new Date());
-    const monthKey = $('monthPicker').value || romeMonthStr(new Date());
-
-    try{
-      statsCache = await fetchStats(days, months);
-      renderAll(dayKey, monthKey);
-      toast("Totali aggiornati.");
-    }catch(e){
-      console.error("reloadStats error", e);
-      if(String(e.message||"") === "unauthorized"){
-        isAdminVerified = false;
-        renderAdminBadge();
-        toast("Token non valido (401).");
-      }else{
-        toast("Errore nel leggere i totali (vedi console).");
-      }
-    }
-  }
-
-  function refreshFromCacheOnly(){
-    if(!statsCache) return;
-    const dayKey = $('dayPicker').value || romeDayStr(new Date());
-    const monthKey = $('monthPicker').value || romeMonthStr(new Date());
-    renderAll(dayKey, monthKey);
-  }
-
-  // ===== Recent logs (max 200) =====
   async function reloadRecent(){
     if(!isAdminVerified){
       toast("Devi essere admin (token verificato).");
@@ -803,33 +491,15 @@
 
       const data = await res.json().catch(()=>null);
       const items = (data && Array.isArray(data.items)) ? data.items : [];
-      $('recentCount').textContent = String(items.length);
 
-      const body = $('recentBody');
-      if(!body) return;
-      if(!items.length){
-        body.innerHTML = `<tr><td class="muted" colspan="6">—</td></tr>`;
-        toast("Recenti: lista vuota.");
-        return;
-      }
+      // filter allowed sources only
+      recentItems = items.filter(it=>{
+        const src = String(it?.source || "manual").toLowerCase();
+        return ALLOWED_SOURCES.has(src);
+      });
 
-      body.innerHTML = items.slice(0,200).map(it=>{
-        const ts = it.ts ? new Date(it.ts).toLocaleString("it-IT",{hour12:false}) : "—";
-        const style = esc((it.style||"whatif").toLowerCase());
-        const periodo = esc((it.periodo||"future").toLowerCase());
-        const source = esc((it.source||"manual").toLowerCase());
-        const ut = esc((it.user_type||"free").toLowerCase());
-        const lang = esc((it.lang||"it").toLowerCase());
-        return `<tr>
-          <td>${ts}</td>
-          <td class="td-big">${style}</td>
-          <td>${periodo}</td>
-          <td>${source}</td>
-          <td>${ut}</td>
-          <td>${lang}</td>
-        </tr>`;
-      }).join("");
-
+      renderRecentTable();
+      computeCountsFromRecent();
       toast("Recenti aggiornati.");
     }catch(e){
       console.error("reloadRecent error", e);
@@ -843,36 +513,58 @@
     }
   }
 
+  function resetToday(){
+    const todayKey = romeDayStr(new Date());
+    const todayCount = recentItems.filter(it=>{
+      if(!it.ts) return false;
+      return romeDayStr(new Date(Number(it.ts))) === todayKey;
+    }).length;
+
+    setResetObj(RESET_DAY_KEY, { key: todayKey, baseCount: todayCount, at: Date.now() });
+    computeCountsFromRecent();
+    toast("Reset OGGI salvato.");
+  }
+
+  function resetMonth(){
+    const monthKey = romeMonthStr(new Date());
+    const monthCount = recentItems.filter(it=>{
+      if(!it.ts) return false;
+      return romeMonthStr(new Date(Number(it.ts))) === monthKey;
+    }).length;
+
+    setResetObj(RESET_MONTH_KEY, { key: monthKey, baseCount: monthCount, at: Date.now() });
+    computeCountsFromRecent();
+    toast("Reset MESE salvato.");
+  }
+
   async function adminLogout(){
     clearToken();
     isAdminVerified = false;
     renderAdminBadge();
     renderTokenStatus("— rimosso");
     $('adminTokenInput').value = "";
-    statsCache = null;
+    recentItems = [];
+    renderRecentTable();
+    computeCountsFromRecent();
     toast("Uscito da admin.");
     location.href = "index.html";
   }
 
   // ===== Wiring =====
-  $('btnHome').onclick = ()=> location.href = "index.html";
   $('btnAdminLogout').onclick = adminLogout;
-  $('btnReloadStats').onclick = reloadStats;
+  $('btnReload').onclick = reloadRecent;
   $('btnReloadRecent').onclick = reloadRecent;
-
-  $('dayPicker').addEventListener("change", refreshFromCacheOnly);
-  $('monthPicker').addEventListener("change", refreshFromCacheOnly);
-  $('rangePreset').addEventListener("change", ()=>{ if(isAdminVerified) reloadStats(); });
+  $('btnResetToday').onclick = resetToday;
+  $('btnResetMonth').onclick = resetMonth;
 
   $('btnSaveToken').onclick = async ()=>{
     const v = ($('adminTokenInput').value || "").trim();
     if(!v){ toast("Incolla un token."); return; }
     setToken(v);
     renderTokenStatus(`${mask(v)} (da verificare…)`);
-    const ok = await verifyTokenWithAdminLogs();
+    const ok = await verifyToken();
     if(ok){
       toast("Token verificato.");
-      await reloadStats();
       await reloadRecent();
     }else{
       toast("Token NON valido.");
@@ -885,28 +577,23 @@
     renderAdminBadge();
     renderTokenStatus("— rimosso");
     $('adminTokenInput').value = "";
-    statsCache = null;
+    recentItems = [];
+    renderRecentTable();
+    computeCountsFromRecent();
     toast("Token rimosso.");
   };
 
   // ===== Boot =====
   (function init(){
-    const todayRome = romeDayStr(new Date());
-    const monthRome = romeMonthStr(new Date());
-    $('dayPicker').value = todayRome;
-    $('monthPicker').value = monthRome;
-
     renderAdminBadge();
+    computeCountsFromRecent();
 
     const tok = getToken();
     if(tok){
       $('adminTokenInput').value = tok;
       renderTokenStatus(`${mask(tok)} (da verificare…)`);
-      verifyTokenWithAdminLogs().then(async ok=>{
-        if(ok){
-          await reloadStats();
-          await reloadRecent();
-        }
+      verifyToken().then(async ok=>{
+        if(ok) await reloadRecent();
       });
     }else{
       renderTokenStatus("— nessun token");
