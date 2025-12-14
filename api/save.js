@@ -6,9 +6,11 @@ const REDIS_URL   = process.env.UPSTASH_REDIS_REST_URL;
 const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || process.env.ADMIN_API_TOKEN;
 
-/* =======================
-   Helpers
-======================= */
+const RECENT_KEY = "logs:ask:recent"; // ✅ chiave unica per lista recenti (max 200)
+
+// TTL per evitare crescita infinita (facoltativo ma consigliato)
+const TTL_DAY_SECONDS   = 60 * 60 * 24 * 400;   // ~400 giorni
+const TTL_MONTH_SECONDS = 60 * 60 * 24 * 2000;  // ~5+ anni
 
 function getBody(req) {
   if (req.body && typeof req.body === "object") return req.body;
@@ -25,7 +27,7 @@ function normEnum(x, allowed, fallback) {
   return allowed.includes(s) ? s : fallback;
 }
 
-// Date key in Europe/Rome (NON UTC)
+// Date key in Europe/Rome (non UTC)
 function getRomeDayMonthKeys(ts = Date.now()) {
   const d = new Date(ts);
 
@@ -45,7 +47,7 @@ function getRomeDayMonthKeys(ts = Date.now()) {
 
 async function redisPipeline(commands) {
   if (!REDIS_URL || !REDIS_TOKEN) {
-    console.error("Redis env vars mancanti.");
+    console.error("Redis env vars mancanti (UPSTASH_REDIS_REST_URL / _TOKEN).");
     throw new Error("redis_env_missing");
   }
 
@@ -67,10 +69,6 @@ async function redisPipeline(commands) {
   return res.json().catch(() => null);
 }
 
-/* =======================
-   Handler
-======================= */
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -80,15 +78,15 @@ export default async function handler(req, res) {
   try {
     const body = getBody(req);
 
-    // === Metadati base ===
+    // Metadati base (normalizzati)
     const style   = normEnum(body.stile || body.style, ["whatif", "wtf"], "whatif");
     const periodo = normEnum(body.periodo, ["future", "past"], "future");
     const lang    = norm2(body.lang, "it");
 
-    // === Origine domanda ===
+    // Origine: manual | hint | surprise
     let source = (body.source || "").toString().toLowerCase();
     if (!source) {
-      if (body.surprise === true || (body.micro && body.micro.surprise)) {
+      if (body.surprise === true || body.surprise === "true" || (body.micro && body.micro.surprise)) {
         source = "surprise";
       } else {
         source = "manual";
@@ -99,11 +97,11 @@ export default async function handler(req, res) {
     const surprise = !!(body.surprise || (body.micro && body.micro.surprise));
     const usedHint = source === "hint" || body.usedHint === true || (body.micro && body.micro.hints === true);
 
-    // === User type (verifica SERIA admin) ===
+    // 🔒 user_type: admin SOLO se header === ADMIN_TOKEN
     const adminHeader = (req.headers["x-admin-token"] || "").toString();
     const isAdmin = !!(ADMIN_TOKEN && adminHeader && adminHeader === ADMIN_TOKEN);
-    const isPro = req.headers["x-pro"] === "1";
 
+    const isPro = req.headers["x-pro"] === "1";
     const user_type = isAdmin ? "admin" : (isPro ? "pro" : "free");
 
     const ts = Date.now();
@@ -117,40 +115,48 @@ export default async function handler(req, res) {
       user_type,
       source,
       surprise,
-      usedHint,
+      usedHint
     };
 
-    /* =======================
-       STRATEGIA REDIS
-       1) logs:ask:recent  → ultimi 200 (UI)
-       2) stats:ask:*      → contatori reali (∞)
-    ======================= */
-
-    const recentKey = "logs:ask:recent";
+    // Hash stats:
+    // stats:ask:day:YYYY-MM-DD
+    // stats:ask:month:YYYY-MM
+    // stats:ask:all
     const dayKey   = `stats:ask:day:${day}`;
     const monthKey = `stats:ask:month:${month}`;
     const allKey   = `stats:ask:all`;
 
+    // campi contatori
     const fields = [
       ["total", 1],
+
       [`style:${style}`, 1],
       [`periodo:${periodo}`, 1],
       [`source:${source}`, 1],
       [`lang:${lang}`, 1],
       [`user_type:${user_type}`, 1],
-      [`style:${style}|source:${source}`, 1],
+
+      // combinazioni utili
       [`style:${style}|periodo:${periodo}`, 1],
+      [`style:${style}|source:${source}`, 1],
       [`style:${style}|periodo:${periodo}|source:${source}`, 1],
     ];
 
     const commands = [
-      ["LPUSH", recentKey, JSON.stringify(logItem)],
-      ["LTRIM", recentKey, "0", "199"],
+      // recent list (max 200)
+      ["LPUSH", RECENT_KEY, JSON.stringify(logItem)],
+      ["LTRIM", RECENT_KEY, "0", "199"],
 
+      // counters day/month/all
       ...fields.map(([f, inc]) => ["HINCRBY", dayKey,   f, String(inc)]),
       ...fields.map(([f, inc]) => ["HINCRBY", monthKey, f, String(inc)]),
       ...fields.map(([f, inc]) => ["HINCRBY", allKey,   f, String(inc)]),
 
+      // TTL (così non crescono per sempre)
+      ["EXPIRE", dayKey, String(TTL_DAY_SECONDS)],
+      ["EXPIRE", monthKey, String(TTL_MONTH_SECONDS)],
+
+      // metadati utili
       ["SET", "stats:ask:last_ts", String(ts)],
       ["SET", "stats:ask:last_day", day],
       ["SET", "stats:ask:last_month", month],
