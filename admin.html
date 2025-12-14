@@ -600,6 +600,77 @@
     if(el) el.textContent = (v == null ? "—" : String(v));
   }
 
+  /* ==========================================================
+     ✅ MODIFICA CHE CI SERVE: “adapter” Redis hash -> summary
+     - admin-logs.js ritorna mappe tipo { total: "12", "matrix:whatif:future":"7", "source:manual":"5", ... }
+     - la UI invece si aspetta summary.matrix e summary.bySource
+  ========================================================== */
+  function summarizeFromRedisMap(raw){
+    const m = raw && typeof raw === "object" ? raw : {};
+    const get = (k)=>num(m[k]);
+
+    const wiF = get("matrix:whatif:future");
+    const wiP = get("matrix:whatif:past");
+    const wF  = get("matrix:wtf:future");
+    const wP  = get("matrix:wtf:past");
+
+    const styleWi = get("style:whatif");
+    const styleW  = get("style:wtf");
+    const pF      = get("periodo:future");
+    const pP      = get("periodo:past");
+
+    const total = get("total");
+
+    const bySource = {};
+    for(const [k,v] of Object.entries(m)){
+      if(!k.startsWith("source:")) continue;
+      const src = k.slice("source:".length) || "unknown";
+      bySource[src] = num(v);
+    }
+
+    return {
+      total,
+      // matrix calcolata dai campi "matrix:*"
+      matrix: {
+        whatif: { future: wiF, past: wiP, total: wiF + wiP },
+        wtf:    { future: wF,  past: wP,  total: wF + wP  },
+        all:    { future: pF,  past: pP,  total: total || (pF + pP) },
+      },
+      // fallback utili (se vuoi mostrarli in futuro)
+      style: { whatif: styleWi, wtf: styleW },
+      periodo: { future: pF, past: pP },
+      bySource,
+      raw: m,
+    };
+  }
+
+  function getDaySummary(dayKey){
+    const byDay = statsCache && statsCache.by_day ? statsCache.by_day : {};
+    const raw = byDay[dayKey] || null;
+    return raw ? summarizeFromRedisMap(raw) : null;
+  }
+
+  function getMonthSummary(monthKey){
+    const byMonth = statsCache && statsCache.by_month ? statsCache.by_month : {};
+    const raw = byMonth[monthKey] || null;
+    return raw ? summarizeFromRedisMap(raw) : null;
+  }
+
+  function getAllSummary(){
+    const raw = statsCache && statsCache.all ? statsCache.all : null;
+    return raw ? summarizeFromRedisMap(raw) : null;
+  }
+
+  function inCacheDay(dayKey){
+    const byDay = statsCache && statsCache.by_day ? statsCache.by_day : {};
+    return !!byDay[dayKey];
+  }
+
+  function inCacheMonth(monthKey){
+    const byMonth = statsCache && statsCache.by_month ? statsCache.by_month : {};
+    return !!byMonth[monthKey];
+  }
+
   function renderMatrix(prefix, summary){
     const m = summary && summary.matrix ? summary.matrix : null;
     if(!m){
@@ -643,30 +714,10 @@
     `).join("");
   }
 
-  function getDaySummary(dayKey){
-    const byDay = statsCache && statsCache.by_day ? statsCache.by_day : {};
-    return byDay[dayKey] || null;
-  }
-
-  function getMonthSummary(monthKey){
-    const byMonth = statsCache && statsCache.by_month ? statsCache.by_month : {};
-    return byMonth[monthKey] || null;
-  }
-
-  function inCacheDay(dayKey){
-    const byDay = statsCache && statsCache.by_day ? statsCache.by_day : {};
-    return !!byDay[dayKey];
-  }
-
-  function inCacheMonth(monthKey){
-    const byMonth = statsCache && statsCache.by_month ? statsCache.by_month : {};
-    return !!byMonth[monthKey];
-  }
-
   function renderKpis(dayKey, monthKey){
     const dayS = getDaySummary(dayKey);
     const monthS = getMonthSummary(monthKey);
-    const allS = statsCache && statsCache.all ? statsCache.all : null;
+    const allS = getAllSummary();
 
     setText("kpiDayTotal", dayS ? num(dayS.total) : 0);
     setText("kpiMonthTotal", monthS ? num(monthS.total) : 0);
@@ -679,7 +730,7 @@
   function renderAll(dayKey, monthKey){
     const dayS = getDaySummary(dayKey);
     const monthS = getMonthSummary(monthKey);
-    const allS = statsCache && statsCache.all ? statsCache.all : null;
+    const allS = getAllSummary();
 
     renderKpis(dayKey, monthKey);
 
@@ -693,7 +744,6 @@
 
     setLastRefreshNow();
 
-    // avviso se selezioni fuori range
     if(!inCacheDay(dayKey)){
       toast(`⚠️ Giorno ${dayKey} fuori range (stats=${statsDays} giorni). Aumenta il range e ricarica.`);
     } else if(!inCacheMonth(monthKey)){
@@ -730,7 +780,6 @@
     }
   }
 
-  // Aggiorna UI quando cambi i picker (senza refetch, se in cache)
   function refreshFromCacheOnly(){
     if(!statsCache) return;
     const dayKey = $('dayPicker').value || romeDayStr(new Date());
@@ -842,7 +891,6 @@
 
   // ===== Boot =====
   (function init(){
-    // picker su oggi/mese corrente (Rome)
     const todayRome = romeDayStr(new Date());
     const monthRome = romeMonthStr(new Date());
     $('dayPicker').value = todayRome;
