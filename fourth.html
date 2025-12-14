@@ -288,9 +288,43 @@
         LS.setItem("from_hint", "0");
       }
 
+      /* ================================
+         ✅ DAILY PREFILL (INSERITO)
+         - quando arrivi da fifth con ?from=daily
+         - ricrea automaticamente la domanda in textarea
+         - imposta LS.domanda e whatif_request coerente
+         - non rompe nient’altro
+         ================================ */
+      const __URLP = new URLSearchParams(window.location.search);
+      const __FROM_DAILY = (__URLP.get("from") || "").toLowerCase() === "daily";
+
+      const __DAILY_Q     = (LS.getItem("daily_prefill_question") || "").trim();
+      const __DAILY_STYLE = (LS.getItem("daily_prefill_style") || "").trim(); // "whatif" | "wtf" (opzionale)
+      const __DAILY_LANG  = (LS.getItem("daily_prefill_lang") || "").trim();  // "it" | "en" | ... (opzionale)
+
+      function __cleanupDailyPrefill(){
+        try{
+          LS.removeItem("daily_prefill_question");
+          LS.removeItem("daily_prefill_style");
+          LS.removeItem("daily_prefill_lang");
+          LS.removeItem("daily_prefill_ts");
+        }catch{}
+      }
+      /* ================================ */
+
       // ===== i18n =====
       const SUP_LANG = ["it", "en", "es", "fr", "de"];
       let lang = (LS.getItem("lang") || "it").toLowerCase();
+
+      // ✅ override lingua (solo se arrivo dal daily e ho un lang salvato)
+      if (__FROM_DAILY && __DAILY_LANG) {
+        const dl = __DAILY_LANG.toLowerCase().slice(0,2);
+        if (SUP_LANG.includes(dl)) {
+          lang = dl;
+          LS.setItem("lang", lang);
+        }
+      }
+
       if (!SUP_LANG.includes(lang)) lang = "it";
       document.documentElement.lang = lang;
       $("langSelect").value = lang;
@@ -524,6 +558,15 @@
         pro: false
       });
 
+      // ✅ override stile (solo se arrivo dal daily e ho uno stile salvato)
+      if (__FROM_DAILY && __DAILY_STYLE) {
+        const ds = __DAILY_STYLE.toLowerCase();
+        if (ds === "wtf" || ds === "whatif") {
+          prefs.stile = ds;
+          writeJSON("whatif_prefs", prefs);
+        }
+      }
+
       document.documentElement.setAttribute(
         "data-theme",
         prefs.stile === "wtf" ? "wtf" : "whatif"
@@ -539,6 +582,62 @@
         $("clarifyInput").value = "";
         $("clarifyQuestion").textContent = "";
       }
+
+      /* ================================
+         ✅ APPLY DAILY PREFILL (INSERITO)
+         ================================ */
+      function applyDailyPrefillIfNeeded(){
+        if(!__FROM_DAILY) return;
+
+        // se non ho domanda, pulisco e stop
+        if(!__DAILY_Q){
+          __cleanupDailyPrefill();
+          return;
+        }
+
+        try{
+          // la domanda è manuale (non hint/surprise)
+          LS.setItem("from_hint", "0");
+          LS.setItem("absurd_prompt", "0");
+          LS.setItem("surprise_mode", "0");
+
+          resetClarifyUI();
+
+          // prefill textarea + storage
+          $("qInput").value = __DAILY_Q;
+          LS.setItem("domanda", __DAILY_Q);
+
+          // preparo whatif_request coerente (così fifth ha sempre un contesto giusto)
+          const reqMeta = {
+            stage: (prefs.stile === "wtf") ? "answer" : "clarify",
+            domanda: __DAILY_Q,
+            stile: prefs.stile,
+            lang,
+            periodo: prefs.periodo,
+            clarification: "",
+            clarifyingQuestion: "",
+            answer: "",
+            pct: null,
+            motivation: null,
+            scientific: null,
+            extra: "",
+            fantasy_mode: false,
+            absurd: false,
+            surprise: false,
+            source: "daily",
+            micro: { surprise: false, source: "daily", from: "daily" }
+          };
+          writeJSON("whatif_request", reqMeta);
+
+          // UX: focus
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          setTimeout(()=>{ try{ $("qInput").focus(); }catch{} }, 120);
+        } finally {
+          // IMPORTANTISSIMO: pulisco per evitare “riuso” su aperture successive
+          __cleanupDailyPrefill();
+        }
+      }
+      /* ================================ */
 
       function renderBadges() {
         $("styleBadge").textContent =
@@ -943,6 +1042,9 @@
       renderNext();
       renderStories();
       attachStylePeriodListeners();
+
+      // ✅ applica prefill quando arrivi da frase del giorno
+      applyDailyPrefillIfNeeded();
 
       $("clearSavedBtn").onclick = () => {
         LS.removeItem("next_prompts");
@@ -1669,21 +1771,13 @@
       $("surpriseBtn").onclick = () => {
         slotSurprise();
       };
+
       // ====== SEGNALE MATTINA / POMERIGGIO / SERA -> quinta pagina ======
-      /**
-       * startSignalFlow:
-       * - slot: "morning" | "afternoon" | "evening"
-       * - phase: 1 = WHAT IF, 2 = WHAT THE F
-       * - mood: opzionale (es. "ok", "meh", "bad") per pomeriggio/sera
-       *
-       * Non passa dalla UI di questa pagina:
-       * prepara whatif_request e manda direttamente a fifth.html.
-       */
       function startSignalFlow({ slot = "morning", phase = 1, mood = null } = {}) {
         const sigLang = lang || "it";
         const stileSignal = phase === 2 ? "wtf" : "whatif";
-        const periodoSignal = "future"; // tutti i segnali lavorano sul "come prosegue da qui"
-        const domanda = `__signal_${slot}_${phase}__`; // placeholder solo per avere una stringa non vuota
+        const periodoSignal = "future";
+        const domanda = `__signal_${slot}_${phase}__`;
 
         const req = {
           stage: "answer",
@@ -1704,23 +1798,18 @@
           source: "signal",
           micro: {
             src: "signal",
-            slot,          // "morning" | "afternoon" | "evening"
-            time: slot,    // compat con /api/ask buildSignalMessages
+            slot,
+            time: slot,
             timeOfDay: slot,
-            phase,         // 1 = WHAT IF, 2 = WTF
+            phase,
             mood: mood || null
           }
         };
 
         writeJSON("whatif_request", req);
-        // opzionale: puoi usare ?src=signal per distinguere in fifth
         location.href = "fifth.html?src=signal";
       }
 
-      /**
-       * Espongo le funzioni sul window per poterle richiamare
-       * da service worker / app shell / bottoni di test.
-       */
       window.WhatIfSignals = {
         startSignalFlow,
         morningWhatIf: () => startSignalFlow({ slot: "morning", phase: 1 }),
@@ -1735,22 +1824,15 @@
           startSignalFlow({ slot: "evening", phase: 2, mood })
       };
 
-      /**
-       * Auto-trigger: se arrivi su fourth.html con query tipo:
-       *   ?signal=morning&phase=1
-       *   ?signal=afternoon&phase=1&mood=ok
-       * non mostriamo nulla: prepariamo il segnale e andiamo a fifth.
-       */
       (function autoSignalFromURL() {
         const params = new URLSearchParams(window.location.search);
-        const sig = params.get("signal"); // "morning" | "afternoon" | "evening"
+        const sig = params.get("signal");
         if (!sig) return;
 
         const slot = sig;
         const phase = Number(params.get("phase") || "1");
         const mood = params.get("mood") || null;
 
-        // pulisco la query per evitare loop strani
         params.delete("signal");
         params.delete("phase");
         params.delete("mood");
@@ -1764,4 +1846,4 @@
       renderCredits();
     </script>
   </body>
-  </html>
+</html>
