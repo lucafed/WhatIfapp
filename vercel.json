@@ -13,8 +13,12 @@
   ],
   "crons": [
     {
-      "path": "/api/push?slot=evening&phase=1",
-      "schedule": "20 19 * * *"
+      "path": "/api/push?slot=morning&phase=1",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/push?slot=evening&phase=2",
+      "schedule": "0 20 * * *"
     }
   ]
 }
