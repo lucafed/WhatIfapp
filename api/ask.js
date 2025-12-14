@@ -560,7 +560,7 @@ COMPITO (PASSATO):
 FORMATO:
 - 3–5 frasi, un solo paragrafo, circa 90–130 parole.
 - Niente elenchi, niente emoji.
-- L’ULTIMA frase finisce con “ecchecazz!!!”.`;
+- L’ULTIMA frase finisce con “ecchecazz!!!".`;
 
 const WTF_RULE_EN_FUT = `You are “WHAT THE F”: a rough, foul-mouthed but very cultured narrator.
 You roast every decision with love and swear words, but never attack identities or groups.
@@ -710,7 +710,7 @@ function buildMessages({ domanda, clarification, lang, periodo, stile }) {
     if (L === "fr") {
       return hasClar
         ? `Question originale (ne la répète pas) : « ${domanda} ». Détail : « ${c} ». Donne UNE réponse en FRANÇAIS, concrète, avec un angle non évident.`
-        : `Question (ne la répète pas) : « ${domanda} ». Donne UNE réponse en FRANÇAIS, avec un angle non évident.`;
+        : `Question (ne la répète pas) : « ${domanda} ». Donne UNE réponse en FRANÇAIS, concrète, avec un angle non évident.`;
     }
     return hasClar
       ? `Ursprüngliche Frage (nicht wiederholen): „${domanda}“. Zusatz: „${c}“. Gib EINE Antwort auf DEUTSCH, konkret, mit einem nicht offensichtlichen Punkt.`
@@ -737,8 +737,8 @@ function normSignalSlot(raw = "") {
 }
 
 /* --- WHAT IF (domande reali approvate) --- */
-const WHATIF_Q = {
-  it: [
+const WHATIF_Q = { /* ... (IDENTICO AL TUO) ... */ 
+  it: [ /* (lista identica) */ 
     "Ti sei mai chiesto se cambiassi lavoro?",
     "Ti sei mai chiesto se mollassi tutto per un periodo?",
     "Ti sei mai chiesto se provassi a vivere da un’altra parte?",
@@ -780,7 +780,7 @@ const WHATIF_Q = {
     "Ti sei mai chiesto se stessi aspettando il momento giusto?",
     "Ti sei mai chiesto se il momento giusto fosse adesso?",
   ],
-  en: [
+  en: [ /* (lista identica) */ 
     "Have you ever wondered if you changed jobs?",
     "Have you ever wondered if you dropped everything for a while?",
     "Have you ever wondered if you tried living somewhere else?",
@@ -822,7 +822,7 @@ const WHATIF_Q = {
     "Have you ever wondered if you were waiting for the right moment?",
     "Have you ever wondered if the right moment was now?",
   ],
-  es: [
+  es: [ /* (lista identica) */ 
     "¿Alguna vez te has preguntado si cambiaras de trabajo?",
     "¿Alguna vez te has preguntado si lo dejaras todo por un tiempo?",
     "¿Alguna vez te has preguntado si probaras a vivir en otro lugar?",
@@ -864,7 +864,7 @@ const WHATIF_Q = {
     "¿Alguna vez te has preguntado si estuvieras esperando el momento correcto?",
     "¿Alguna vez te has preguntado si el momento correcto fuera ahora?",
   ],
-  fr: [
+  fr: [ /* (lista identica) */ 
     "T’es-tu déjà demandé si tu changeais de travail ?",
     "T’es-tu déjà demandé si tu lâchais tout pendant un moment ?",
     "T’es-tu déjà demandé si tu essayais de vivre ailleurs ?",
@@ -906,7 +906,7 @@ const WHATIF_Q = {
     "T’es-tu déjà demandé si tu attendais le bon moment ?",
     "T’es-tu déjà demandé si le bon moment, c’était maintenant ?",
   ],
-  de: [
+  de: [ /* (lista identica) */ 
     "Hast du dich jemals gefragt, ob du den Job wechseln würdest?",
     "Hast du dich jemals gefragt, ob du für eine Weile alles hinschmeißen würdest?",
     "Hast du dich jemals gefragt, ob du woanders leben würdest?",
@@ -950,7 +950,7 @@ const WHATIF_Q = {
   ],
 };
 
-const WHATIF_CTX = {
+const WHATIF_CTX = { /* ... (IDENTICO AL TUO) ... */ 
   it: [
     "Oggi probabilmente ti aspettano lavoro, messaggi, persone che vogliono qualcosa da te e un pensiero che torna sempre.",
     "Stamattina il mondo riparte prima di te: notifiche, cose da fare, facce da gestire… e tu che cerchi un filo.",
@@ -1024,7 +1024,7 @@ const WHATIF_CTX = {
 };
 
 /* --- WTF SERA (approvato, NON toccare per IT) --- */
-const WTF_EVENING = {
+const WTF_EVENING = { /* ... (IDENTICO AL TUO) ... */ 
   it: [
     "Che giornata clamorosa eh. Sbatti di qua, sbatti di là, una “bestemmia di manutenzione” ogni tre ore… e ora sei qui che fissi il vuoto. Dai, racconta com’è andata che la sistemiamo insieme, ecchecazz!!!",
     "Complimenti davvero: anche oggi il caos non si è fatto mancare niente. Ora però dimmi tutto, che due risate e una svolta gliela troviamo, ecchecazz!!!",
@@ -1269,6 +1269,109 @@ function ensureWtfEcchecazzEnding(text = "", lang = "it") {
   return finalPunct(s);
 }
 
+/* =======================================================================
+   ✅ MODIFICA AGGIUNTA: LOG + CONTATORI SU REDIS (compat admin-logs.js)
+   ======================================================================= */
+
+const RECENT_KEY = "logs:ask:recent";
+
+function romeDayKey(ts = Date.now()) {
+  const d = new Date(Number(ts));
+  if (isNaN(d.getTime())) return null;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d); // YYYY-MM-DD
+}
+function romeMonthKey(ts = Date.now()) {
+  const d = new Date(Number(ts));
+  if (isNaN(d.getTime())) return null;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+  }).format(d); // YYYY-MM
+}
+
+function inferSource({ stage, micro, clarification }) {
+  const src = micro && micro.src ? String(micro.src) : "";
+  if (stage === "signal" || src === "signal") return "signal";
+  if (src === "surprise" || (micro && micro.surprise === true)) return "surprise";
+  if (clarification && String(clarification).trim()) return "hint";
+  return "manual";
+}
+
+async function logAskToRedis({
+  ts,
+  style,
+  periodo,
+  lang,
+  user_type,
+  source,
+  surprise,
+  hints,
+  mode,
+}) {
+  try {
+    // best-effort: se redis non è configurato/non risponde, non bloccare mai
+    if (!redis) return;
+
+    const day = romeDayKey(ts);
+    const month = romeMonthKey(ts);
+    if (!day || !month) return;
+
+    const dayKey = `stats:ask:day:${day}`;
+    const monthKey = `stats:ask:month:${month}`;
+    const allKey = `stats:ask:all`;
+
+    // Oggetto "safe" per RECENT (compat toSafeItem in admin-logs.js)
+    const item = {
+      ts,
+      style: String(style || "whatif"),
+      periodo: String(periodo || "future"),
+      lang: String(lang || "it").slice(0, 2),
+      user_type: String(user_type || "free"),
+      source: String(source || "manual"),
+      surprise: !!surprise,
+      usedHint: !!hints, // admin-logs legge usedHint || hints
+      mode: String(mode || "answer"),
+    };
+
+    const p = redis.pipeline();
+
+    // recent list
+    p.lpush(RECENT_KEY, JSON.stringify(item));
+    p.ltrim(RECENT_KEY, 0, 199);
+
+    const bump = (key) => {
+      p.hincrby(key, "total", 1);
+      p.hincrby(key, `style:${item.style}`, 1);
+      p.hincrby(key, `periodo:${item.periodo}`, 1);
+      p.hincrby(key, `matrix:${item.style}:${item.periodo}`, 1);
+      p.hincrby(key, `source:${item.source}`, 1);
+      p.hincrby(key, `lang:${item.lang}`, 1);
+      p.hincrby(key, `mode:${item.mode}`, 1);
+      p.hincrby(key, `user_type:${item.user_type}`, 1);
+      if (item.surprise) p.hincrby(key, "surprise", 1);
+      if (item.usedHint) p.hincrby(key, "hints", 1);
+    };
+
+    bump(dayKey);
+    bump(monthKey);
+    bump(allKey);
+
+    p.set("stats:ask:last_ts", String(ts));
+    p.set("stats:ask:last_day", day);
+    p.set("stats:ask:last_month", month);
+
+    await p.exec();
+  } catch (e) {
+    console.error("⚠️ [/api/ask] redis stats log failed:", e?.message || e);
+  }
+}
+
 /* ========= HANDLER ========= */
 export default async function handler(req, res) {
   cors(req, res);
@@ -1306,6 +1409,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "bad_request", detail: "domanda_required" });
     }
 
+    // user_type best-effort (non cambia nulla al tuo flusso)
+    const user_type = req.headers["x-pro"] ? "pro" : "free";
+
     /* ====== STAGE: SIGNAL (NO AI) ====== */
     if (stage === "signal" || isSignal) {
       const slot = micro.slot || micro.timeOfDay || micro.time || "morning";
@@ -1321,6 +1427,19 @@ export default async function handler(req, res) {
         mood,
         domanda,
         userKey,
+      });
+
+      // ✅ LOG STATS (best-effort)
+      logAskToRedis({
+        ts: Date.now(),
+        style: stile,
+        periodo,
+        lang: L,
+        user_type,
+        source: inferSource({ stage: "signal", micro, clarification }),
+        surprise: !!(micro && micro.surprise),
+        hints: false,
+        mode: "signal",
       });
 
       return res.status(200).json({
@@ -1353,6 +1472,19 @@ export default async function handler(req, res) {
       clarQ = sentenceCaseAll(clarQ);
       if (stile !== "wtf") clarQ = stripFirstPerson(clarQ, L, stile);
       clarQ = finalPunct(clarQ);
+
+      // ✅ LOG STATS (best-effort)
+      logAskToRedis({
+        ts: Date.now(),
+        style: stile,
+        periodo,
+        lang: L,
+        user_type,
+        source: inferSource({ stage: "clarify", micro, clarification }),
+        surprise: !!(micro && micro.surprise),
+        hints: false,
+        mode: "clarify",
+      });
 
       return res.status(200).json({
         mode: "clarify",
@@ -1459,6 +1591,19 @@ export default async function handler(req, res) {
         scientific = scientificReportDemenziale(domanda, L);
       }
     }
+
+    // ✅ LOG STATS (best-effort)
+    logAskToRedis({
+      ts: Date.now(),
+      style: stile,
+      periodo,
+      lang: L,
+      user_type,
+      source: inferSource({ stage: "answer", micro, clarification }),
+      surprise: !!(micro && (micro.surprise === true || micro.src === "surprise")),
+      hints: !!(clarification && String(clarification).trim()),
+      mode: "answer",
+    });
 
     return res.status(200).json({
       mode: "answer",
