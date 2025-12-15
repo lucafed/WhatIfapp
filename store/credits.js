@@ -14,7 +14,7 @@ import {
   updateDoc,
 } from "../firebase.init.js";
 
-// 🔢 limite base (se il doc non esiste o è invalido)
+// 🔢 crediti FREE giornalieri
 const DEFAULT_DAILY_LIMIT = 3;
 
 // YYYY-MM-DD
@@ -41,13 +41,93 @@ function walletRef(uid) {
   return doc(db, "wallets", uid);
 }
 
+/**
+ * Normalizza il wallet al nuovo schema:
+ * - creditsFree: crediti FREE (max 3) che ogni giorno tornano a 3 (non si cumulano)
+ * - creditsPaid: crediti acquistati/aggiunti (persistenti, non si resetta ogni giorno)
+ * - day / usedToday: contatore giornaliero (solo statistica/compatibilità)
+ * - lastFreeReset: YYYY-MM-DD dell’ultimo reset dei free
+ *
+ * Migrazione automatica (senza rompere nulla):
+ * se troviamo il vecchio schema (dailyLimit/usedToday) e mancano creditsFree/creditsPaid,
+ * convertiamo il saldo residuo di oggi in (free + paid) mantenendo i crediti rimasti.
+ */
+function normalizeWalletData(data = {}, today) {
+  const out = { ...(data || {}) };
+
+  // Vecchi campi (se presenti)
+  const oldDailyLimit = Number.isFinite(+out.dailyLimit) ? +out.dailyLimit : DEFAULT_DAILY_LIMIT;
+  const oldUsedToday = Number.isFinite(+out.usedToday) ? +out.usedToday : 0;
+
+  // Nuovi campi (se presenti)
+  const hasNew =
+    typeof out.creditsFree !== "undefined" ||
+    typeof out.creditsPaid !== "undefined" ||
+    typeof out.lastFreeReset !== "undefined";
+
+  // Se è il vecchio schema → migra mantenendo il saldo residuo di oggi
+  if (!hasNew) {
+    const oldBalance = Math.max(0, oldDailyLimit - oldUsedToday);
+
+    // free massimo 3, il resto diventa paid (così non si perde niente)
+    const creditsFree = Math.max(0, Math.min(DEFAULT_DAILY_LIMIT, oldBalance));
+    const creditsPaid = Math.max(0, oldBalance - creditsFree);
+
+    out.creditsFree = creditsFree;
+    out.creditsPaid = creditsPaid;
+    out.lastFreeReset = today;
+
+    // Manteniamo day/usedToday per compatibilità UI/statistiche
+    out.day = typeof out.day === "string" ? out.day : today;
+    out.usedToday = oldUsedToday;
+  }
+
+  // Normalizza i nuovi campi
+  let creditsFree = Number.isFinite(+out.creditsFree) ? +out.creditsFree : DEFAULT_DAILY_LIMIT;
+  let creditsPaid = Number.isFinite(+out.creditsPaid) ? +out.creditsPaid : 0;
+  if (creditsPaid < 0) creditsPaid = 0;
+  if (creditsFree < 0) creditsFree = 0;
+  if (creditsFree > DEFAULT_DAILY_LIMIT) creditsFree = DEFAULT_DAILY_LIMIT;
+
+  let day = typeof out.day === "string" ? out.day : today;
+  let usedToday = Number.isFinite(+out.usedToday) ? +out.usedToday : 0;
+  if (usedToday < 0) usedToday = 0;
+
+  let lastFreeReset = typeof out.lastFreeReset === "string" ? out.lastFreeReset : today;
+
+  // Cambio giorno: reset statistica + reset FREE a 3 (non cumulano)
+  if (day !== today) {
+    day = today;
+    usedToday = 0;
+  }
+  if (lastFreeReset !== today) {
+    creditsFree = DEFAULT_DAILY_LIMIT;
+    lastFreeReset = today;
+  }
+
+  out.day = day;
+  out.usedToday = usedToday;
+  out.creditsFree = creditsFree;
+  out.creditsPaid = creditsPaid;
+  out.lastFreeReset = lastFreeReset;
+
+  // totalUsed (se esiste) normalizza
+  let totalUsed = Number.isFinite(+out.totalUsed) ? +out.totalUsed : 0;
+  if (totalUsed < 0) totalUsed = 0;
+  out.totalUsed = totalUsed;
+
+  return out;
+}
+
 // ==== BOOT / LETTURA UTENTE CORRENTE ==== //
 
 /**
  * bootCredits()
  * - crea il doc se non esiste
- * - se è cambiato il giorno → resetta usedToday = 0 (ma lascia dailyLimit)
- * - se dailyLimit è nullo/0 → lo porta a DEFAULT_DAILY_LIMIT
+ * - migra dal vecchio schema se necessario
+ * - ogni nuovo giorno: usedToday = 0
+ * - ogni nuovo giorno: creditsFree torna a 3 (non si cumulano)
+ * - creditsPaid resta invariato
  */
 export async function bootCredits() {
   if (isAdminMode()) {
@@ -62,12 +142,16 @@ export async function bootCredits() {
   const snap = await getDoc(ref);
 
   if (!snap.exists()) {
-    // Primo accesso: wallet FREE di default
+    // Primo accesso: FREE di default + paid 0
     await setDoc(ref, {
       day: today,
-      dailyLimit: DEFAULT_DAILY_LIMIT,
       usedToday: 0,
       totalUsed: 0,
+
+      creditsFree: DEFAULT_DAILY_LIMIT,
+      creditsPaid: 0,
+      lastFreeReset: today,
+
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
@@ -75,29 +159,13 @@ export async function bootCredits() {
   }
 
   const data = snap.data() || {};
-  const prevDay = typeof data.day === "string" ? data.day : today;
+  const normalized = normalizeWalletData(data, today);
 
-  let dailyLimit = Number.isFinite(+data.dailyLimit)
-    ? +data.dailyLimit
-    : DEFAULT_DAILY_LIMIT;
-  // 🛠 se qualcuno ha scritto 0 o valore non valido, torna al default
-  if (dailyLimit <= 0) dailyLimit = DEFAULT_DAILY_LIMIT;
-
-  let usedToday = Number.isFinite(+data.usedToday) ? +data.usedToday : 0;
-
-  const isNewDay = prevDay !== today;
-  if (isNewDay) {
-    usedToday = 0;
-  }
-
-  // Aggiorna solo se serve
+  // Scrive solo merge (così non rompiamo eventuali campi extra)
   await setDoc(
     ref,
     {
-      ...data,
-      day: today,
-      dailyLimit,
-      usedToday,
+      ...normalized,
       updatedAt: serverTimestamp(),
     },
     { merge: true },
@@ -107,7 +175,8 @@ export async function bootCredits() {
 /**
  * getBalance()
  * - se admin_token → ∞
- * - altrimenti: dailyLimit - usedToday (mai < 0)
+ * - altrimenti: creditsFree + creditsPaid
+ *   (creditsFree si resetta ogni giorno a 3, creditsPaid resta)
  *   se il doc non esiste o è rotto → lo inizializza come FREE (3 crediti)
  */
 export async function getBalance() {
@@ -129,12 +198,15 @@ export async function getBalance() {
     let snap = await getDoc(ref);
 
     if (!snap.exists()) {
-      // se non esiste, inizializza il wallet e ritorna il default
       await setDoc(ref, {
         day: today,
-        dailyLimit: DEFAULT_DAILY_LIMIT,
         usedToday: 0,
         totalUsed: 0,
+
+        creditsFree: DEFAULT_DAILY_LIMIT,
+        creditsPaid: 0,
+        lastFreeReset: today,
+
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -142,26 +214,19 @@ export async function getBalance() {
     }
 
     const data = snap.data() || {};
-    let day = typeof data.day === "string" ? data.day : today;
+    const normalized = normalizeWalletData(data, today);
 
-    let dailyLimit = Number.isFinite(+data.dailyLimit)
-      ? +data.dailyLimit
-      : DEFAULT_DAILY_LIMIT;
-    if (dailyLimit <= 0) dailyLimit = DEFAULT_DAILY_LIMIT;
+    // Se normalizzazione ha fatto cambi (giorno/free reset/migrazione), sincronizza
+    await setDoc(
+      ref,
+      {
+        ...normalized,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
 
-    let usedToday = Number.isFinite(+data.usedToday) ? +data.usedToday : 0;
-    if (day !== today) {
-      usedToday = 0;
-      day = today;
-      // piccolo fix: sincronizza anche su Firestore
-      await setDoc(
-        ref,
-        { day, usedToday, dailyLimit, updatedAt: serverTimestamp() },
-        { merge: true },
-      );
-    }
-
-    const balance = Math.max(0, dailyLimit - usedToday);
+    const balance = Math.max(0, (normalized.creditsFree || 0) + (normalized.creditsPaid || 0));
     return balance;
   } catch (e) {
     console.error("getBalance error:", e);
@@ -172,11 +237,13 @@ export async function getBalance() {
 /**
  * consumeCredit()
  * - se admin_token → TRUE e non tocca Firestore
- * - altrimenti scala 1 da usedToday, se c'è saldo
+ * - altrimenti consuma:
+ *   1) prima i FREE (creditsFree)
+ *   2) poi i PAID (creditsPaid)
+ * - usedToday e totalUsed aumentano (solo statistica)
  */
 export async function consumeCredit() {
   if (isAdminMode()) {
-    // Admin: non consumiamo niente, ritorna sempre ok
     return true;
   }
 
@@ -195,12 +262,16 @@ export async function consumeCredit() {
       const snap = await tx.get(ref);
 
       if (!snap.exists()) {
-        // se non esiste, parte dal default FREE e consuma il primo credito
+        // wallet nuovo: consuma 1 free
         const base = {
           day: today,
-          dailyLimit: DEFAULT_DAILY_LIMIT,
           usedToday: 1,
           totalUsed: 1,
+
+          creditsFree: Math.max(0, DEFAULT_DAILY_LIMIT - 1),
+          creditsPaid: 0,
+          lastFreeReset: today,
+
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         };
@@ -209,37 +280,39 @@ export async function consumeCredit() {
       }
 
       const data = snap.data() || {};
-      const prevDay = typeof data.day === "string" ? data.day : today;
+      const normalized = normalizeWalletData(data, today);
 
-      let dailyLimit = Number.isFinite(+data.dailyLimit)
-        ? +data.dailyLimit
-        : DEFAULT_DAILY_LIMIT;
-      if (dailyLimit <= 0) dailyLimit = DEFAULT_DAILY_LIMIT;
+      const creditsFree = Number.isFinite(+normalized.creditsFree) ? +normalized.creditsFree : 0;
+      const creditsPaid = Number.isFinite(+normalized.creditsPaid) ? +normalized.creditsPaid : 0;
 
-      let usedToday = Number.isFinite(+data.usedToday) ? +data.usedToday : 0;
+      const balance = creditsFree + creditsPaid;
+      if (balance <= 0) return false;
 
-      if (prevDay !== today) {
-        usedToday = 0;
+      let newFree = creditsFree;
+      let newPaid = creditsPaid;
+
+      if (newFree > 0) {
+        newFree -= 1;
+      } else {
+        newPaid -= 1;
       }
 
-      const balance = dailyLimit - usedToday;
-      if (balance <= 0) {
-        return false;
-      }
-
+      let usedToday = Number.isFinite(+normalized.usedToday) ? +normalized.usedToday : 0;
+      let totalUsed = Number.isFinite(+normalized.totalUsed) ? +normalized.totalUsed : 0;
       usedToday += 1;
-      const totalUsed = Number.isFinite(+data.totalUsed)
-        ? +data.totalUsed + 1
-        : 1;
+      totalUsed += 1;
 
       tx.set(
         ref,
         {
-          ...data,
+          ...normalized,
           day: today,
-          dailyLimit,
           usedToday,
           totalUsed,
+
+          creditsFree: newFree,
+          creditsPaid: newPaid,
+
           updatedAt: serverTimestamp(),
         },
         { merge: true },
@@ -268,13 +341,29 @@ export async function getWalletRaw() {
     if (!snap.exists()) return null;
   }
 
+  // Normalizza per mostrare valori corretti anche da admin
+  const today = todayISO();
+  const data = snap.data() || {};
+  const normalized = normalizeWalletData(data, today);
+
+  // sincronizza se serve
+  await setDoc(ref, { ...normalized, updatedAt: serverTimestamp() }, { merge: true });
+
   return {
     uid: user.uid,
     email: user.email || null,
-    ...snap.data(),
+    ...normalized,
   };
 }
 
+/**
+ * adminSetDailyLimit(limit)
+ * Manteniamo il nome funzione per NON rompere admin.html.
+ * Nuovo significato:
+ * - imposta il TOTALE disponibile (FREE + PAID) a "limit" (oggi)
+ * - FREE resta max 3, il resto diventa PAID
+ * - Non crea “ricariche infinite”: domani FREE torna a 3, PAID resta quello impostato
+ */
 export async function adminSetDailyLimit(limit) {
   const user = getUserOrThrow();
   const ref = walletRef(user.uid);
@@ -283,34 +372,42 @@ export async function adminSetDailyLimit(limit) {
 
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
-    if (!snap.exists()) {
-      tx.set(ref, {
-        day: today,
-        dailyLimit: lim,
-        usedToday: 0,
-        totalUsed: 0,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-      return;
-    }
-    const data = snap.data() || {};
-    let usedToday = Number.isFinite(+data.usedToday) ? +data.usedToday : 0;
+    const data = snap.exists() ? (snap.data() || {}) : {};
+
+    const normalized = normalizeWalletData(data, today);
+
+    const free = Math.min(DEFAULT_DAILY_LIMIT, lim);
+    const paid = Math.max(0, lim - free);
+
+    // usedToday resta statistica; se è > lim la clampiamo (solo per coerenza UI)
+    let usedToday = Number.isFinite(+normalized.usedToday) ? +normalized.usedToday : 0;
     if (usedToday > lim) usedToday = lim;
+
     tx.set(
       ref,
       {
-        ...data,
+        ...normalized,
         day: today,
-        dailyLimit: lim,
         usedToday,
+
+        creditsFree: free,
+        creditsPaid: paid,
+        lastFreeReset: today,
+
         updatedAt: serverTimestamp(),
+        createdAt: normalized.createdAt || serverTimestamp(),
       },
       { merge: true },
     );
   });
 }
 
+/**
+ * adminAddCredits(delta)
+ * Manteniamo il nome funzione per NON rompere admin.html.
+ * Nuovo significato:
+ * - aggiunge crediti PAID (persistenti)
+ */
 export async function adminAddCredits(delta) {
   const user = getUserOrThrow();
   const ref = walletRef(user.uid);
@@ -320,29 +417,21 @@ export async function adminAddCredits(delta) {
 
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
-    if (!snap.exists()) {
-      tx.set(ref, {
-        day: today,
-        dailyLimit: d,
-        usedToday: 0,
-        totalUsed: 0,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-      return;
-    }
-    const data = snap.data() || {};
-    const oldLimit = Number.isFinite(+data.dailyLimit)
-      ? +data.dailyLimit
-      : DEFAULT_DAILY_LIMIT;
-    const newLimit = Math.max(0, oldLimit + d);
+    const data = snap.exists() ? (snap.data() || {}) : {};
+
+    const normalized = normalizeWalletData(data, today);
+
+    const oldPaid = Number.isFinite(+normalized.creditsPaid) ? +normalized.creditsPaid : 0;
+    const newPaid = Math.max(0, oldPaid + d);
+
     tx.set(
       ref,
       {
-        ...data,
+        ...normalized,
         day: today,
-        dailyLimit: newLimit,
+        creditsPaid: newPaid,
         updatedAt: serverTimestamp(),
+        createdAt: normalized.createdAt || serverTimestamp(),
       },
       { merge: true },
     );
@@ -353,17 +442,26 @@ export async function adminResetToday() {
   const user = getUserOrThrow();
   const ref = walletRef(user.uid);
   const today = todayISO();
+
   await updateDoc(ref, {
     day: today,
     usedToday: 0,
+
+    creditsFree: DEFAULT_DAILY_LIMIT,
+    lastFreeReset: today,
+
     updatedAt: serverTimestamp(),
   }).catch(async (e) => {
     if (e.code === "not-found") {
       await setDoc(ref, {
         day: today,
-        dailyLimit: DEFAULT_DAILY_LIMIT,
         usedToday: 0,
         totalUsed: 0,
+
+        creditsFree: DEFAULT_DAILY_LIMIT,
+        creditsPaid: 0,
+        lastFreeReset: today,
+
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -377,12 +475,17 @@ export async function adminWipeWallet() {
   const user = getUserOrThrow();
   const ref = walletRef(user.uid);
   const today = todayISO();
+
   await setDoc(ref, {
     day: today,
-    dailyLimit: DEFAULT_DAILY_LIMIT,
     usedToday: 0,
     totalUsed: 0,
+
+    creditsFree: DEFAULT_DAILY_LIMIT,
+    creditsPaid: 0,
+    lastFreeReset: today,
+
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
-}
+  }
