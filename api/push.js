@@ -460,10 +460,8 @@ export default async function handler(req, res) {
         }
       }
 
-      // ✅ MODIFICA CHIAVE: non solo data-message
-      //    (così la notifica è “visibile” su web/android)
+      // ✅ MODIFICA CHIAVE: solo data-message (service worker mostra lui la notifica)
       const baseMessage = {
-        notification: { title, body },
         data: {
           title,
           body,
@@ -477,11 +475,6 @@ export default async function handler(req, res) {
         },
         webpush: {
           headers: { Urgency: "high" },
-          notification: {
-            title,
-            body,
-            data: { url: CLICK_LINK },
-          },
           fcmOptions: { link: CLICK_LINK },
         },
         android: { priority: "high" },
@@ -540,4 +533,4 @@ export default async function handler(req, res) {
     console.error("push error", err);
     return res.status(500).json({ ok: false, error: "server_error" });
   }
-          }
+}
