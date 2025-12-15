@@ -17,8 +17,17 @@ import {
 // 🔢 crediti FREE giornalieri
 const DEFAULT_DAILY_LIMIT = 3;
 
-// YYYY-MM-DD
-const todayISO = () => new Date().toISOString().slice(0, 10);
+// YYYY-MM-DD (EUROPE/ROME) ✅ FIX TIMEZONE
+const todayISO = () => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Rome",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const get = (t) => parts.find((p) => p.type === t)?.value || "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+};
 
 // ==== Helper ====
 
@@ -488,4 +497,4 @@ export async function adminWipeWallet() {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
-  }
+}
