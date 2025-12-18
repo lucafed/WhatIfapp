@@ -48,6 +48,9 @@
       background:linear-gradient(180deg,var(--accent),var(--accent2));
       color:var(--ink);border:none;box-shadow:0 10px 26px var(--shadow);
     }
+    .btn.ghost{
+      background:transparent;
+    }
     .btn[disabled]{opacity:.4;cursor:not-allowed}
 
     .badge{
@@ -100,6 +103,48 @@
 
     .err{color:#ffb3b3;font-size:13px;font-weight:800;min-height:18px;margin-top:10px}
     a.link{color:var(--accent2);text-decoration:none;font-weight:800}
+
+    /* ===== Share modal / preview ===== */
+    .modal{
+      position:fixed; inset:0; z-index:9999;
+      display:none;
+      align-items:center; justify-content:center;
+      background:rgba(0,0,0,.55);
+      padding:14px;
+    }
+    .modal.open{display:flex}
+    .modalCard{
+      width:min(520px, 100%);
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:16px;
+      box-shadow:0 30px 80px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
+    .modalHead{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 12px;
+      border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+    }
+    .modalTitle{font-weight:900}
+    .modalBody{padding:12px}
+    .previewWrap{
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+      background:#000;
+    }
+    .previewImg{width:100%; display:block}
+    .modalActions{
+      display:flex; gap:10px; flex-wrap:wrap;
+      padding:12px;
+      border-top:1px solid var(--line);
+      background:rgba(255,255,255,.02);
+    }
+    .hint{
+      font-size:12px;color:var(--muted);margin-top:10px;line-height:1.35
+    }
   </style>
 </head>
 
@@ -152,23 +197,47 @@
           <div class="small" id="tagLine" style="margin-top:8px;font-weight:800"></div>
           <div class="actions">
             <button class="btn" id="copyBtn" type="button">📋 Copia</button>
-            <button class="btn" id="shareBtn" type="button">📤 Condividi</button>
+            <button class="btn" id="shareBtn" type="button">🖼️ Card</button>
             <button class="btn" id="againBtn" type="button">🔁 Ancora</button>
+          </div>
+          <div class="hint">
+            Tip: con “Card” crei un’immagine pronta da postare. Su Instagram/TikTok: salva la card e caricala come post/storia.
           </div>
         </div>
       </div>
     </div>
   </main>
 
+  <!-- Share modal -->
+  <div class="modal" id="shareModal" role="dialog" aria-modal="true" aria-label="Condividi card">
+    <div class="modalCard">
+      <div class="modalHead">
+        <div class="modalTitle">🖼️ Card Battle</div>
+        <button class="btn ghost" id="closeModalBtn" type="button">✕</button>
+      </div>
+      <div class="modalBody">
+        <div class="previewWrap">
+          <img class="previewImg" id="cardPreview" alt="Anteprima card"/>
+        </div>
+        <div class="hint" id="shareHint">
+          Se “Condividi” non manda l’immagine, usa “Salva” e caricala su Instagram/TikTok.
+        </div>
+      </div>
+      <div class="modalActions">
+        <button class="btn primary" id="nativeShareBtn" type="button">📤 Condividi</button>
+        <button class="btn" id="downloadBtn" type="button">⬇️ Salva</button>
+        <button class="btn" id="igBtn" type="button">📸 Instagram</button>
+        <button class="btn" id="ttBtn" type="button">🎵 TikTok</button>
+        <button class="btn" id="copyCaptionBtn" type="button">📋 Copia caption</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { auth } from "./firebase.init.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-    import {
-      bootCredits,
-      getBalance,
-      consumeCredit
-    } from "./store/credits.js";
+    import { bootCredits, getBalance, consumeCredit } from "./store/credits.js";
 
     const LS = localStorage;
     const $ = (id)=>document.getElementById(id);
@@ -178,8 +247,9 @@
     try{ prefs = JSON.parse(LS.getItem("whatif_prefs")||"{}") || {}; }catch{ prefs = {}; }
 
     // tema coerente
-    document.documentElement.setAttribute("data-theme", (prefs.stile === "wtf") ? "wtf" : "whatif");
-    $("styleBadge").textContent = "🎭 " + (prefs.stile === "wtf" ? "What the F" : "What if");
+    const theme = (prefs.stile === "wtf") ? "wtf" : "whatif";
+    document.documentElement.setAttribute("data-theme", theme);
+    $("styleBadge").textContent = "🎭 " + (theme === "wtf" ? "What the F" : "What if");
 
     // nav
     $("homeBtn").onclick = ()=> location.href = "index.html";
@@ -244,7 +314,6 @@
 
     async function guardCredits(){
       if(IS_ADMIN) return true;
-
       if(!auth.currentUser){
         alert("Per usare i crediti devi essere loggato.");
         return false;
@@ -258,10 +327,249 @@
     }
 
     function shareText(d){
-      return `⚔️ Battle\nA: ${d.a}\nB: ${d.b}\n🏆 Vince: ${d.winner}\n${d.reason}\n${d.tagline ? "— " + d.tagline : ""}`;
+      return `⚔️ Battle\nA: ${d.a}\nB: ${d.b}\n🏆 Vince: ${d.winner}\n${d.reason}\n${d.tagline ? "— " + d.tagline : ""}`.trim();
     }
 
+    function shareCaption(d){
+      const t = `⚔️ Battle: ${d.winner}\n${d.reason}${d.tagline ? "\n“" + d.tagline + "”" : ""}\n\n#whatif #battle`;
+      return t.trim();
+    }
+
+    // ====== Card generator (Canvas) ======
+    function wrapLines(ctx, text, maxWidth){
+      const words = String(text||"").split(/\s+/).filter(Boolean);
+      const lines = [];
+      let line = "";
+      for (const w of words){
+        const test = line ? (line + " " + w) : w;
+        if (ctx.measureText(test).width <= maxWidth){
+          line = test;
+        } else {
+          if (line) lines.push(line);
+          line = w;
+        }
+      }
+      if (line) lines.push(line);
+      return lines;
+    }
+
+    function roundRect(ctx, x,y,w,h,r){
+      const rr = Math.min(r, w/2, h/2);
+      ctx.beginPath();
+      ctx.moveTo(x+rr,y);
+      ctx.arcTo(x+w,y, x+w,y+h, rr);
+      ctx.arcTo(x+w,y+h, x,y+h, rr);
+      ctx.arcTo(x,y+h, x,y, rr);
+      ctx.arcTo(x,y, x+w,y, rr);
+      ctx.closePath();
+    }
+
+    async function makeBattleCardPNG(d){
+      // 1080x1350 (IG portrait)
+      const W = 1080, H = 1350;
+      const c = document.createElement("canvas");
+      c.width = W; c.height = H;
+      const ctx = c.getContext("2d");
+
+      // theme colors (match page)
+      const isWtf = document.documentElement.getAttribute("data-theme") === "wtf";
+      const bg1 = isWtf ? "#101414" : "#0E1724";
+      const bg2 = isWtf ? "#0B0B0C" : "#0B1018";
+      const card = isWtf ? "#111713" : "#141C22";
+      const line = isWtf ? "#21322A" : "#1B2A34";
+      const fg = isWtf ? "#EEF5F0" : "#F4F7FB";
+      const muted = isWtf ? "#A6B6AD" : "#A7B3C2";
+      const accent = isWtf ? "#3A6B56" : "#1C57A0";
+      const accent2 = isWtf ? "#5A8C75" : "#FFEC01";
+      const ink = isWtf ? "#06110B" : "#11110A";
+
+      // background gradient
+      const grd = ctx.createRadialGradient(W*0.25,H*0.18, 40, W*0.25,H*0.18, Math.max(W,H));
+      grd.addColorStop(0, bg1);
+      grd.addColorStop(1, bg2);
+      ctx.fillStyle = grd;
+      ctx.fillRect(0,0,W,H);
+
+      // header pill
+      const pad = 70;
+      const boxX = pad, boxY = 110, boxW = W - pad*2, boxH = H - pad*2;
+
+      // outer card
+      ctx.save();
+      roundRect(ctx, boxX, boxY, boxW, boxH, 42);
+      ctx.fillStyle = card;
+      ctx.globalAlpha = 0.92;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = line;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
+
+      // top brand row
+      ctx.font = "800 44px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillStyle = fg;
+      ctx.fillText("What?f ⚔️ Battle", boxX+52, boxY+92);
+
+      // style chip
+      const styleText = isWtf ? "What the F" : "What if";
+      ctx.font = "800 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      const chipW = ctx.measureText(styleText).width + 44;
+      const chipX = boxX + boxW - chipW - 52;
+      const chipY = boxY + 55;
+      ctx.save();
+      roundRect(ctx, chipX, chipY, chipW, 46, 23);
+      const chipGrad = ctx.createLinearGradient(chipX, chipY, chipX, chipY+46);
+      chipGrad.addColorStop(0, accent);
+      chipGrad.addColorStop(1, accent2);
+      ctx.fillStyle = chipGrad;
+      ctx.fill();
+      ctx.fillStyle = ink;
+      ctx.fillText(styleText, chipX+22, chipY+33);
+      ctx.restore();
+
+      // divider
+      ctx.strokeStyle = line;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(boxX+52, boxY+140);
+      ctx.lineTo(boxX+boxW-52, boxY+140);
+      ctx.stroke();
+
+      // A vs B block
+      const leftX = boxX+52;
+      const rightX = boxX+boxW-52;
+      let y = boxY + 210;
+
+      ctx.font = "700 26px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillStyle = muted;
+      ctx.fillText("A", leftX, y);
+      ctx.fillText("B", leftX, y+140);
+
+      ctx.font = "900 44px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillStyle = fg;
+
+      const maxTextW = (rightX - (leftX+40));
+      const aLines = wrapLines(ctx, d.a || "", maxTextW).slice(0,2);
+      const bLines = wrapLines(ctx, d.b || "", maxTextW).slice(0,2);
+
+      let yy = y-10;
+      for (const ln of aLines){
+        ctx.fillText(ln, leftX+40, yy+50);
+        yy += 52;
+      }
+      yy = y+130;
+      for (const ln of bLines){
+        ctx.fillText(ln, leftX+40, yy+50);
+        yy += 52;
+      }
+
+      // VS badge
+      const vsX = boxX + boxW/2;
+      const vsY = boxY + 388;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(vsX, vsY, 46, 0, Math.PI*2);
+      ctx.fillStyle = "rgba(255,255,255,.06)";
+      ctx.fill();
+      ctx.strokeStyle = line;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.font = "900 30px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillStyle = accent2;
+      ctx.textAlign = "center";
+      ctx.fillText("VS", vsX, vsY+10);
+      ctx.restore();
+      ctx.textAlign = "left";
+
+      // winner banner
+      y = boxY + 520;
+      ctx.save();
+      roundRect(ctx, boxX+52, y, boxW-104, 112, 28);
+      const winGrad = ctx.createLinearGradient(boxX+52, y, boxX+52, y+112);
+      winGrad.addColorStop(0, accent);
+      winGrad.addColorStop(1, accent2);
+      ctx.fillStyle = winGrad;
+      ctx.fill();
+      ctx.restore();
+
+      ctx.font = "900 34px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillStyle = ink;
+      ctx.fillText("🏆 Vince", boxX+92, y+52);
+
+      ctx.font = "900 46px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      const winName = String(d.winner || "").trim();
+      const winLines = wrapLines(ctx, winName, boxW-240).slice(0,1);
+      ctx.fillText(winLines[0] || "—", boxX+92, y+98);
+
+      // reason block
+      y = boxY + 680;
+      ctx.font = "800 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillStyle = muted;
+      ctx.fillText("Motivo", boxX+52, y);
+
+      ctx.font = "650 34px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillStyle = fg;
+      const reason = String(d.reason || "").trim();
+      const rLines = wrapLines(ctx, reason, boxW-104).slice(0,5);
+      let ry = y+50;
+      for (const ln of rLines){
+        ctx.fillText(ln, boxX+52, ry);
+        ry += 44;
+      }
+
+      // tagline
+      const tagline = String(d.tagline || "").trim();
+      if (tagline){
+        const ty = Math.max(ry+20, boxY+980);
+        ctx.font = "800 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+        ctx.fillStyle = muted;
+        ctx.fillText("Tagline", boxX+52, ty);
+
+        ctx.font = "900 38px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+        ctx.fillStyle = accent2;
+        const tLines = wrapLines(ctx, "“" + tagline + "”", boxW-104).slice(0,2);
+        let tty = ty+54;
+        for (const ln of tLines){
+          ctx.fillText(ln, boxX+52, tty);
+          tty += 46;
+        }
+      }
+
+      // footer
+      ctx.font = "700 24px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillStyle = "rgba(255,255,255,.55)";
+      ctx.fillText("what-ifapp.vercel.app", boxX+52, boxY+boxH-54);
+
+      const dataUrl = c.toDataURL("image/png");
+      const blob = await new Promise((resolve)=> c.toBlob(resolve, "image/png", 1.0));
+      return { dataUrl, blob };
+    }
+
+    function downloadBlob(blob, filename){
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1200);
+    }
+
+    function openModal(){
+      $("shareModal").classList.add("open");
+    }
+    function closeModal(){
+      $("shareModal").classList.remove("open");
+    }
+    $("closeModalBtn").onclick = closeModal;
+    $("shareModal").addEventListener("click", (e)=>{
+      if(e.target === $("shareModal")) closeModal();
+    });
+
     let last = null;
+    let lastCard = null; // {dataUrl, blob}
 
     async function runBattle(){
       setErr("");
@@ -304,12 +612,12 @@
         const data = await res.json().catch(()=>({}));
 
         if(!res.ok){
-          // se vuoi: qui potresti rimborsare credito (server-side) ma serve endpoint apposito.
           setErr("Errore Battle. Riprova.");
           return;
         }
 
         last = { ...data, a, b };
+        lastCard = null; // reset cache card
 
         $("winnerLine").textContent = "🏆 Vince: " + (data.winner || "—");
         $("reasonLine").textContent  = data.reason || "";
@@ -335,18 +643,98 @@
       }catch{ setErr("Impossibile copiare."); }
     };
 
+    // ====== Card + Share flow ======
+    async function ensureCard(){
+      if(!last) return null;
+      if(lastCard?.blob && lastCard?.dataUrl) return lastCard;
+      lastCard = await makeBattleCardPNG({
+        a: last.a, b: last.b,
+        winner: last.winner,
+        reason: last.reason,
+        tagline: last.tagline
+      });
+      return lastCard;
+    }
+
     $("shareBtn").onclick = async ()=>{
       if(!last) return;
-      const text = shareText(last);
-      if(navigator.share){
-        try{ await navigator.share({ text }); }catch{}
-      }else{
-        try{
-          await navigator.clipboard.writeText(text);
-          setErr("Testo copiato (incolla dove vuoi).");
-          setTimeout(()=>setErr(""),1200);
-        }catch{ setErr("Condivisione non supportata."); }
+      setErr("");
+      try{
+        const card = await ensureCard();
+        $("cardPreview").src = card.dataUrl;
+        openModal();
+      }catch(e){
+        console.error(e);
+        setErr("Impossibile creare la card. Riprova.");
       }
+    };
+
+    $("downloadBtn").onclick = async ()=>{
+      if(!last) return;
+      const card = await ensureCard();
+      const safe = (String(last.winner||"battle").slice(0,18) || "battle").replace(/[^\w\-]+/g, "_");
+      downloadBlob(card.blob, `battle_${safe}.png`);
+      setErr("Card salvata!");
+      setTimeout(()=>setErr(""),900);
+    };
+
+    $("nativeShareBtn").onclick = async ()=>{
+      if(!last) return;
+      const card = await ensureCard();
+      const text = shareCaption(last);
+
+      // prova share con file immagine
+      try{
+        const file = new File([card.blob], "battle.png", { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files:[file] }) && navigator.share){
+          await navigator.share({ files:[file], text, title:"What?f — Battle" });
+          return;
+        }
+      }catch{}
+
+      // fallback: share testo
+      if (navigator.share){
+        try{ await navigator.share({ text, title:"What?f — Battle" }); return; }catch{}
+      }
+
+      // fallback 2: copia testo + download
+      try{
+        await navigator.clipboard.writeText(text);
+        setErr("Caption copiata. Ora salva la card.");
+        const safe = (String(last.winner||"battle").slice(0,18) || "battle").replace(/[^\w\-]+/g, "_");
+        downloadBlob(card.blob, `battle_${safe}.png`);
+      }catch{
+        setErr("Condivisione non supportata qui.");
+      }
+    };
+
+    $("copyCaptionBtn").onclick = async ()=>{
+      if(!last) return;
+      try{
+        await navigator.clipboard.writeText(shareCaption(last));
+        setErr("Caption copiata!");
+        setTimeout(()=>setErr(""),900);
+      }catch{
+        setErr("Impossibile copiare la caption.");
+      }
+    };
+
+    // Instagram / TikTok helper: apri app/sito e istruzioni
+    $("igBtn").onclick = async ()=>{
+      if(!last) return;
+      await ensureCard();
+      setErr("Salva la card e caricala su Instagram.");
+      // prova deep link (può fallire in molti browser, ok)
+      location.href = "instagram://app";
+      setTimeout(()=>{ window.open("https://www.instagram.com/", "_blank"); }, 500);
+    };
+
+    $("ttBtn").onclick = async ()=>{
+      if(!last) return;
+      await ensureCard();
+      setErr("Salva la card e caricala su TikTok.");
+      location.href = "tiktok://";
+      setTimeout(()=>{ window.open("https://www.tiktok.com/upload", "_blank"); }, 500);
     };
 
     $("againBtn").onclick = ()=>{
@@ -354,6 +742,8 @@
       $("aInput").value = "";
       $("bInput").value = "";
       setErr("");
+      last = null;
+      lastCard = null;
       $("aInput").focus();
     };
 
