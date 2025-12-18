@@ -48,9 +48,7 @@
       background:linear-gradient(180deg,var(--accent),var(--accent2));
       color:var(--ink);border:none;box-shadow:0 10px 26px var(--shadow);
     }
-    .btn.ghost{
-      background:transparent;
-    }
+    .btn.ghost{ background:transparent; }
     .btn[disabled]{opacity:.4;cursor:not-allowed}
 
     .badge{
@@ -236,7 +234,6 @@
   <script type="module">
     import { auth } from "./firebase.init.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-
     import { bootCredits, getBalance, consumeCredit } from "./store/credits.js";
 
     const LS = localStorage;
@@ -293,10 +290,7 @@
     }
 
     async function syncCredits(){
-      if(IS_ADMIN){
-        renderCredits();
-        return;
-      }
+      if(IS_ADMIN){ renderCredits(); return; }
       if(!auth.currentUser){
         currentBalance = 0;
         renderCredits();
@@ -329,13 +323,14 @@
     function shareText(d){
       return `⚔️ Battle\nA: ${d.a}\nB: ${d.b}\n🏆 Vince: ${d.winner}\n${d.reason}\n${d.tagline ? "— " + d.tagline : ""}`.trim();
     }
-
     function shareCaption(d){
-      const t = `⚔️ Battle: ${d.winner}\n${d.reason}${d.tagline ? "\n“" + d.tagline + "”" : ""}\n\n#whatif #battle`;
-      return t.trim();
+      return `⚔️ Battle: ${d.winner}\n${d.reason}${d.tagline ? "\n“" + d.tagline + "”" : ""}\n\n#whatif #battle`.trim();
     }
 
-    // ====== Card generator (Canvas) ======
+    /* =======================
+       CARD GENERATOR (Canvas)
+       ======================= */
+
     function wrapLines(ctx, text, maxWidth){
       const words = String(text||"").split(/\s+/).filter(Boolean);
       const lines = [];
@@ -364,6 +359,8 @@
       ctx.closePath();
     }
 
+    function measureLinesHeight(lineCount, lineH){ return Math.max(0, lineCount) * lineH; }
+
     async function makeBattleCardPNG(d){
       // 1080x1350 (IG portrait)
       const W = 1080, H = 1350;
@@ -390,11 +387,10 @@
       ctx.fillStyle = grd;
       ctx.fillRect(0,0,W,H);
 
-      // header pill
+      // outer card
       const pad = 70;
       const boxX = pad, boxY = 110, boxW = W - pad*2, boxH = H - pad*2;
 
-      // outer card
       ctx.save();
       roundRect(ctx, boxX, boxY, boxW, boxH, 42);
       ctx.fillStyle = card;
@@ -436,37 +432,56 @@
       ctx.lineTo(boxX+boxW-52, boxY+140);
       ctx.stroke();
 
-      // A vs B block
-      const leftX = boxX+52;
-      const rightX = boxX+boxW-52;
-      let y = boxY + 210;
+      /* ========= A / B + VS (FIX: VS CENTRATO) =========
+         - Calcoliamo una "zona" A/B
+         - Mettiamo VS al centro di quella zona
+         - A sopra, B sotto, con offset simmetrico
+      */
+      const zoneTop = boxY + 200;
+      const zoneBottom = boxY + 520;             // fine blocco A/B
+      const zoneMid = (zoneTop + zoneBottom) / 2; // centro perfetto
+      const labelX = boxX + 52;
+      const textX  = boxX + 92;
+      const rightX = boxX + boxW - 52;
+      const maxTextW = rightX - textX;
 
+      // labels A/B
       ctx.font = "700 26px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = muted;
-      ctx.fillText("A", leftX, y);
-      ctx.fillText("B", leftX, y+140);
+      // A label baseline
+      ctx.fillText("A", labelX, zoneTop + 40);
+      // B label baseline
+      ctx.fillText("B", labelX, zoneMid + 120);
 
+      // A text
       ctx.font = "900 44px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = fg;
+      const aText = String(d.a || "").trim();
+      const bText = String(d.b || "").trim();
 
-      const maxTextW = (rightX - (leftX+40));
-      const aLines = wrapLines(ctx, d.a || "", maxTextW).slice(0,2);
-      const bLines = wrapLines(ctx, d.b || "", maxTextW).slice(0,2);
+      const aLines = wrapLines(ctx, aText, maxTextW).slice(0,2);
+      const bLines = wrapLines(ctx, bText, maxTextW).slice(0,2);
 
-      let yy = y-10;
+      // per render pulito
+      const lineH = 52;
+
+      // A: parte sopra il centro
+      let ay = zoneMid - 120; // start A block (sopra)
       for (const ln of aLines){
-        ctx.fillText(ln, leftX+40, yy+50);
-        yy += 52;
-      }
-      yy = y+130;
-      for (const ln of bLines){
-        ctx.fillText(ln, leftX+40, yy+50);
-        yy += 52;
+        ctx.fillText(ln, textX, ay);
+        ay += lineH;
       }
 
-      // VS badge
+      // B: parte sotto il centro
+      let by = zoneMid + 80; // start B block (sotto)
+      for (const ln of bLines){
+        ctx.fillText(ln, textX, by);
+        by += lineH;
+      }
+
+      // VS badge al CENTRO della zona (FIX)
       const vsX = boxX + boxW/2;
-      const vsY = boxY + 388;
+      const vsY = zoneMid; // centro perfetto tra A e B
       ctx.save();
       ctx.beginPath();
       ctx.arc(vsX, vsY, 46, 0, Math.PI*2);
@@ -482,10 +497,14 @@
       ctx.restore();
       ctx.textAlign = "left";
 
-      // winner banner
-      y = boxY + 520;
+      /* ========= Winner banner (EVIDENZIATO) ========= */
+      let y = boxY + 560;
       ctx.save();
       roundRect(ctx, boxX+52, y, boxW-104, 112, 28);
+
+      // glow (shadow) per vincitore
+      ctx.shadowColor = "rgba(255,236,1,.35)";
+      ctx.shadowBlur = 25;
       const winGrad = ctx.createLinearGradient(boxX+52, y, boxX+52, y+112);
       winGrad.addColorStop(0, accent);
       winGrad.addColorStop(1, accent2);
@@ -493,17 +512,18 @@
       ctx.fill();
       ctx.restore();
 
+      // testo winner
       ctx.font = "900 34px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = ink;
       ctx.fillText("🏆 Vince", boxX+92, y+52);
 
       ctx.font = "900 46px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       const winName = String(d.winner || "").trim();
-      const winLines = wrapLines(ctx, winName, boxW-240).slice(0,1);
-      ctx.fillText(winLines[0] || "—", boxX+92, y+98);
+      const winLine = wrapLines(ctx, winName, boxW-240).slice(0,1)[0] || "—";
+      ctx.fillText(winLine, boxX+92, y+98);
 
-      // reason block
-      y = boxY + 680;
+      /* ========= Motivo ========= */
+      y = boxY + 730;
       ctx.font = "800 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = muted;
       ctx.fillText("Motivo", boxX+52, y);
@@ -512,16 +532,16 @@
       ctx.fillStyle = fg;
       const reason = String(d.reason || "").trim();
       const rLines = wrapLines(ctx, reason, boxW-104).slice(0,5);
-      let ry = y+50;
+      let ry = y + 50;
       for (const ln of rLines){
         ctx.fillText(ln, boxX+52, ry);
         ry += 44;
       }
 
-      // tagline
+      /* ========= Tagline ========= */
       const tagline = String(d.tagline || "").trim();
       if (tagline){
-        const ty = Math.max(ry+20, boxY+980);
+        const ty = Math.max(ry + 26, boxY + 1000);
         ctx.font = "800 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
         ctx.fillStyle = muted;
         ctx.fillText("Tagline", boxX+52, ty);
@@ -529,7 +549,7 @@
         ctx.font = "900 38px system-ui, -apple-system, Segoe UI, Roboto, Arial";
         ctx.fillStyle = accent2;
         const tLines = wrapLines(ctx, "“" + tagline + "”", boxW-104).slice(0,2);
-        let tty = ty+54;
+        let tty = ty + 54;
         for (const ln of tLines){
           ctx.fillText(ln, boxX+52, tty);
           tty += 46;
@@ -557,12 +577,9 @@
       setTimeout(()=>URL.revokeObjectURL(url), 1200);
     }
 
-    function openModal(){
-      $("shareModal").classList.add("open");
-    }
-    function closeModal(){
-      $("shareModal").classList.remove("open");
-    }
+    function openModal(){ $("shareModal").classList.add("open"); }
+    function closeModal(){ $("shareModal").classList.remove("open"); }
+
     $("closeModalBtn").onclick = closeModal;
     $("shareModal").addEventListener("click", (e)=>{
       if(e.target === $("shareModal")) closeModal();
@@ -570,6 +587,18 @@
 
     let last = null;
     let lastCard = null; // {dataUrl, blob}
+
+    async function ensureCard(){
+      if(!last) return null;
+      if(lastCard?.blob && lastCard?.dataUrl) return lastCard;
+      lastCard = await makeBattleCardPNG({
+        a: last.a, b: last.b,
+        winner: last.winner,
+        reason: last.reason,
+        tagline: last.tagline
+      });
+      return lastCard;
+    }
 
     async function runBattle(){
       setErr("");
@@ -617,7 +646,7 @@
         }
 
         last = { ...data, a, b };
-        lastCard = null; // reset cache card
+        lastCard = null;
 
         $("winnerLine").textContent = "🏆 Vince: " + (data.winner || "—");
         $("reasonLine").textContent  = data.reason || "";
@@ -642,19 +671,6 @@
         setTimeout(()=>setErr(""),900);
       }catch{ setErr("Impossibile copiare."); }
     };
-
-    // ====== Card + Share flow ======
-    async function ensureCard(){
-      if(!last) return null;
-      if(lastCard?.blob && lastCard?.dataUrl) return lastCard;
-      lastCard = await makeBattleCardPNG({
-        a: last.a, b: last.b,
-        winner: last.winner,
-        reason: last.reason,
-        tagline: last.tagline
-      });
-      return lastCard;
-    }
 
     $("shareBtn").onclick = async ()=>{
       if(!last) return;
@@ -683,7 +699,6 @@
       const card = await ensureCard();
       const text = shareCaption(last);
 
-      // prova share con file immagine
       try{
         const file = new File([card.blob], "battle.png", { type: "image/png" });
         if (navigator.canShare && navigator.canShare({ files:[file] }) && navigator.share){
@@ -692,12 +707,10 @@
         }
       }catch{}
 
-      // fallback: share testo
       if (navigator.share){
         try{ await navigator.share({ text, title:"What?f — Battle" }); return; }catch{}
       }
 
-      // fallback 2: copia testo + download
       try{
         await navigator.clipboard.writeText(text);
         setErr("Caption copiata. Ora salva la card.");
@@ -719,12 +732,10 @@
       }
     };
 
-    // Instagram / TikTok helper: apri app/sito e istruzioni
     $("igBtn").onclick = async ()=>{
       if(!last) return;
       await ensureCard();
       setErr("Salva la card e caricala su Instagram.");
-      // prova deep link (può fallire in molti browser, ok)
       location.href = "instagram://app";
       setTimeout(()=>{ window.open("https://www.instagram.com/", "_blank"); }, 500);
     };
@@ -747,9 +758,7 @@
       $("aInput").focus();
     };
 
-    onAuthStateChanged(auth, async ()=>{
-      await syncCredits();
-    });
+    onAuthStateChanged(auth, async ()=>{ await syncCredits(); });
     window.addEventListener("focus", syncCredits);
     window.addEventListener("pageshow", syncCredits);
 
