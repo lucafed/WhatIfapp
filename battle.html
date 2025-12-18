@@ -324,13 +324,14 @@
       return `⚔️ Battle\nA: ${d.a}\nB: ${d.b}\n🏆 Vince: ${d.winner}\n${d.reason}\n${d.tagline ? "— " + d.tagline : ""}`.trim();
     }
 
-    // ✅ caption COMPLETA (sfida + risposta)
+    // ✅ caption COMPLETA (sfida + vincitore + motivo + tagline + link)
     function shareCaption(d){
       const a = String(d.a||"").trim();
       const b = String(d.b||"").trim();
       const w = String(d.winner||"").trim();
       const r = String(d.reason||"").trim();
       const t = String(d.tagline||"").trim();
+
       return [
         `⚔️ Battle: ${a} vs ${b}`,
         `🏆 Vince: ${w}`,
@@ -377,8 +378,8 @@
        CARD GENERATOR (FIXED)
        - What?f grande in alto
        - VS centrato
-       - niente accavallamenti (footer riservato)
-       - contiene sfida + risposta
+       - NO accavallamenti (footer riservato)
+       - CTA + link
        ======================= */
     async function makeBattleCardPNG(d){
       const W = 1080, H = 1350;
@@ -412,8 +413,8 @@
       const innerR = boxX + boxW - 52;
       const innerW = innerR - innerX;
 
-      // footer reserved area (prevents overlaps)
-      const FOOTER_H = 130;
+      // Footer reserved space (prevents overlap with tagline)
+      const FOOTER_H = 140;
       const FOOTER_Y = boxY + boxH - FOOTER_H;
 
       ctx.save();
@@ -427,21 +428,21 @@
       ctx.stroke();
       ctx.restore();
 
-      // HEADER: What?f big
-      ctx.font = "900 64px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      // HEADER: What?f BIG + Battle
+      ctx.font = "900 70px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = fg;
       ctx.fillText("What?f", innerX, boxY + 92);
 
-      ctx.font = "800 44px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.font = "900 46px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = "rgba(255,255,255,.92)";
-      ctx.fillText("⚔️ Battle", innerX, boxY + 142);
+      ctx.fillText("⚔️ Battle", innerX, boxY + 145);
 
       // style chip right
       const styleText = isWtf ? "What the F" : "What if";
       ctx.font = "800 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       const chipW = ctx.measureText(styleText).width + 44;
       const chipX = innerR - chipW;
-      const chipY = boxY + 72;
+      const chipY = boxY + 68;
 
       ctx.save();
       roundRect(ctx, chipX, chipY, chipW, 46, 23);
@@ -458,12 +459,12 @@
       ctx.strokeStyle = line;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(innerX, boxY + 178);
-      ctx.lineTo(innerR, boxY + 178);
+      ctx.moveTo(innerX, boxY + 182);
+      ctx.lineTo(innerR, boxY + 182);
       ctx.stroke();
 
-      // A vs B zone
-      const zoneTop = boxY + 215;
+      // A vs B zone (with centered VS)
+      const zoneTop = boxY + 220;
       const zoneBottom = boxY + 545;
       const zoneMid = (zoneTop + zoneBottom) / 2;
 
@@ -474,18 +475,18 @@
       ctx.font = "800 26px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = muted;
       ctx.fillText("A", labelX, zoneTop + 40);
-      ctx.fillText("B", labelX, zoneMid + 130);
+      ctx.fillText("B", labelX, zoneMid + 132);
 
-      ctx.font = "900 46px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.font = "900 48px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = fg;
 
       const aLines = wrapLines(ctx, String(d.a||"").trim(), maxTextW).slice(0,2);
       const bLines = wrapLines(ctx, String(d.b||"").trim(), maxTextW).slice(0,2);
 
-      const lineH = 56;
-      let ay = zoneMid - 140;
+      const lineH = 58;
+      let ay = zoneMid - 148;
       for (const ln of aLines){ ctx.fillText(ln, textX, ay); ay += lineH; }
-      let by = zoneMid + 110;
+      let by = zoneMid + 118;
       for (const ln of bLines){ ctx.fillText(ln, textX, by); by += lineH; }
 
       // VS centered
@@ -509,10 +510,10 @@
       // Winner banner (highlight)
       let y = boxY + 585;
       ctx.save();
-      roundRect(ctx, innerX, y, innerW, 118, 28);
-      ctx.shadowColor = "rgba(255,236,1,.30)";
+      roundRect(ctx, innerX, y, innerW, 120, 30);
+      ctx.shadowColor = "rgba(255,236,1,.32)";
       ctx.shadowBlur = 22;
-      const winGrad = ctx.createLinearGradient(innerX, y, innerX, y+118);
+      const winGrad = ctx.createLinearGradient(innerX, y, innerX, y+120);
       winGrad.addColorStop(0, accent);
       winGrad.addColorStop(1, accent2);
       ctx.fillStyle = winGrad;
@@ -523,12 +524,12 @@
       ctx.fillStyle = ink;
       ctx.fillText("🏆 Vince", innerX + 40, y + 54);
 
-      ctx.font = "900 50px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.font = "900 52px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       const winLine = wrapLines(ctx, String(d.winner||"—").trim(), innerW - 120).slice(0,1)[0] || "—";
-      ctx.fillText(winLine, innerX + 40, y + 106);
+      ctx.fillText(winLine, innerX + 40, y + 108);
 
       // Reason
-      y = boxY + 755;
+      y = boxY + 760;
       ctx.font = "900 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = muted;
       ctx.fillText("Motivo", innerX, y);
@@ -540,16 +541,17 @@
 
       let ry = y + 54;
       for (const ln of reasonLines){
+        // non invadere footer
+        if (ry > FOOTER_Y - 30) break;
         ctx.fillText(ln, innerX, ry);
         ry += 44;
       }
 
-      // Tagline (no overlap with footer)
+      // Tagline (never overlaps footer)
       const tagline = String(d.tagline||"").trim();
-      const yMax = FOOTER_Y - 22;
-
-      if (tagline && ry < yMax - 70){
-        const ty = Math.min(ry + 26, yMax - 70);
+      const yMax = FOOTER_Y - 24;
+      if (tagline && ry < yMax - 80){
+        const ty = Math.min(ry + 26, yMax - 80);
 
         ctx.font = "900 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
         ctx.fillStyle = muted;
@@ -567,7 +569,7 @@
         }
       }
 
-      // Footer fixed
+      // Footer fixed + CTA
       ctx.strokeStyle = line;
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -580,8 +582,8 @@
       ctx.fillText("👉 Rifalla anche tu:", innerX, FOOTER_Y + 52);
 
       ctx.font = "800 26px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      ctx.fillStyle = "rgba(255,255,255,.88)";
-      ctx.fillText("what-ifapp.vercel.app/battle", innerX, FOOTER_Y + 92);
+      ctx.fillStyle = "rgba(255,255,255,.90)";
+      ctx.fillText("what-ifapp.vercel.app/battle", innerX, FOOTER_Y + 94);
 
       const dataUrl = c.toDataURL("image/png");
       const blob = await new Promise((resolve)=> c.toBlob(resolve, "image/png", 1.0));
