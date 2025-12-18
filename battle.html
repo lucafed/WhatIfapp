@@ -4,346 +4,133 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Battle</title>
+  <link rel="stylesheet" href="style.css" />
   <style>
-    :root{
-      --bg:#0A0F14; --surface:#141C22; --text:#fff; --muted:#A0B2BA;
-      --accent:#00E0FF; --accent2:#00B5CC; --danger:#ff6b6b; --ok:#7CFF9B;
-      --shadow: 0 12px 30px rgba(0,0,0,.35);
-      --radius: 18px;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      background:radial-gradient(1100px 700px at 20% 0%, rgba(0,224,255,.10), transparent 60%),
-                 radial-gradient(1000px 700px at 80% 20%, rgba(26,255,213,.08), transparent 60%),
-                 var(--bg);
-      color:var(--text);
-      min-height:100vh;
-      display:flex; justify-content:center;
-      padding:16px;
-    }
-    .wrap{width:min(720px,100%);}
-
-    .topbar{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:12px;
-      margin:6px 0 14px;
-    }
-    .pill{
-      display:inline-flex; align-items:center; gap:10px;
-      padding:10px 14px; border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.08);
-      box-shadow:var(--shadow);
-      backdrop-filter: blur(10px);
-      color:var(--text);
-      text-decoration:none;
-      user-select:none;
-    }
-    .pill strong{color:var(--accent)}
-    .pill small{color:var(--muted)}
-    .pill.btn{cursor:pointer}
-    .title{
-      margin:10px 2px 4px;
-      font-size:44px; letter-spacing:.2px;
-      background:linear-gradient(90deg,var(--accent),#1AFFD5);
-      -webkit-background-clip:text; background-clip:text; color:transparent;
-      font-weight:800;
-    }
-    .sub{
-      margin:0 2px 16px;
-      color:var(--muted);
-      font-size:16px;
-      line-height:1.4;
-    }
-
-    .card{
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:var(--radius);
-      padding:16px;
-      box-shadow:var(--shadow);
-      backdrop-filter: blur(10px);
-    }
-
-    label{display:block; margin:10px 2px 8px; color:var(--muted); font-weight:650}
-    select,input{
-      width:100%;
-      padding:14px 14px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(10,15,20,.55);
-      color:var(--text);
-      outline:none;
-      font-size:16px;
-    }
-    select:focus,input:focus{border-color: rgba(0,224,255,.45); box-shadow:0 0 0 4px rgba(0,224,255,.10)}
-    .row{
-      display:flex; gap:12px; align-items:center; justify-content:space-between;
-      margin-top:14px;
-      flex-wrap:wrap;
-    }
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      gap:10px;
-      padding:12px 16px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
-      background:linear-gradient(180deg, rgba(0,224,255,.18), rgba(0,181,204,.12));
-      color:var(--text);
-      font-weight:750;
-      cursor:pointer;
-      min-width:160px;
-      user-select:none;
-    }
-    .btn:disabled{opacity:.45; cursor:not-allowed}
-    .btn.secondary{
-      background:rgba(255,255,255,.06);
-    }
-
-    .err{
-      display:none;
-      margin-top:12px;
-      padding:12px 12px;
-      border-radius:14px;
-      border:1px solid rgba(255,107,107,.35);
-      background:rgba(255,107,107,.10);
-      color: #ffd0d0;
-      font-weight:650;
-    }
-
-    .result{
-      margin-top:14px;
-      padding:14px;
-      border-radius:16px;
-      border:1px solid rgba(0,224,255,.18);
-      background:rgba(0,224,255,.06);
-      display:none;
-    }
-    .result h3{margin:0 0 8px 0; color:var(--accent); font-size:18px}
-    .result p{margin:6px 0; color:var(--text); line-height:1.35}
-    .muted{color:var(--muted)}
-    .small{font-size:13px}
-    .hr{height:1px;background:rgba(255,255,255,.08);margin:12px 0}
+    .wrap{max-width:820px;margin:0 auto;padding:16px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .pill{padding:10px 12px;border:1px solid #2a3944;border-radius:999px;cursor:pointer}
+    .pill.active{background:#00B5CC;color:#001018;border-color:#00B5CC}
+    .box{padding:14px;border:1px solid #2a3944;border-radius:14px;background:#141C22}
+    input{width:100%;padding:12px;border-radius:12px;border:1px solid #2a3944;background:#0A0F14;color:#fff}
+    button{padding:12px 14px;border-radius:12px;border:none;cursor:pointer;font-weight:700}
   </style>
 </head>
-
 <body>
   <div class="wrap">
-    <!-- TOP BAR -->
-    <div class="topbar">
-      <a class="pill" href="/home.html" title="Home">🏠</a>
-
-      <div class="pill" aria-live="polite">
-        <small>Crediti:</small> <strong id="creditsTop">…</strong>
-      </div>
-
-      <a class="pill" href="/store/credit-store.html" title="Ricarica">🛒 <strong>Ricarica</strong></a>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+      <h1 style="margin:8px 0;">⚔️ Battle</h1>
+      <a href="index.html">← Home</a>
     </div>
 
-    <div class="title">Battle</div>
-    <p class="sub">
-      Metti due opzioni contro. Scelgo un vincitore e ti spiego perché (1–2 frasi).
-      <span class="muted">Ogni giudizio scala 1 credito.</span>
-    </p>
-
-    <div class="card">
-      <label for="category">Categoria</label>
-      <select id="category">
-        <option value="persone">Persone</option>
-        <option value="cose">Cose</option>
-        <option value="scelte">Scelte</option>
-        <option value="lavoro">Lavoro</option>
-        <option value="amore">Amore</option>
-        <option value="soldi">Soldi</option>
-      </select>
-
-      <label for="inputA">A</label>
-      <input id="inputA" type="text" placeholder="Es. Luca / Pizza / Andare via…" autocomplete="off" />
-
-      <label for="inputB">B</label>
-      <input id="inputB" type="text" placeholder="Es. Sara / Sushi / Restare…" autocomplete="off" />
-
-      <div class="row">
-        <button class="btn" id="btnFight">⚔️ Combatti</button>
-        <button class="btn secondary" id="btnSwap">🔁 Scambia</button>
+    <div class="box">
+      <div style="opacity:.8;margin-bottom:10px;">Scegli categoria</div>
+      <div class="row" id="cats">
+        <div class="pill active" data-cat="persone">🧑‍🤝‍🧑 Persone</div>
+        <div class="pill" data-cat="cose">🍕 Cose</div>
+        <div class="pill" data-cat="scelte">🧠 Scelte</div>
       </div>
 
-      <div id="battleError" class="err"></div>
+      <div style="height:14px"></div>
 
-      <div id="battleResult" class="result">
-        <h3>🏆 Vince: <span id="winner"></span></h3>
-        <p><strong>Perché:</strong> <span id="reason"></span></p>
-        <p class="muted"><strong>Tagline:</strong> <span id="tagline"></span></p>
-        <div class="hr"></div>
-        <p class="small muted">Se non ti piace il verdetto, fai un rematch. 😉</p>
+      <div class="row">
+        <div style="flex:1;min-width:240px">
+          <div style="opacity:.8;margin:0 0 6px;">A</div>
+          <input id="a" placeholder="Es: Pizza / Io / Rischiare" />
+        </div>
+        <div style="flex:1;min-width:240px">
+          <div style="opacity:.8;margin:0 0 6px;">B</div>
+          <input id="b" placeholder="Es: Sushi / Il mio amico / Accontentarsi" />
+        </div>
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="row" style="align-items:center;">
+        <button id="judge">GIUDICA</button>
+        <span id="status" style="opacity:.8"></span>
+      </div>
+    </div>
+
+    <div style="height:14px"></div>
+
+    <div class="box" id="result" style="display:none;">
+      <div style="opacity:.8;">Risultato</div>
+      <div id="winner" style="font-size:22px;font-weight:800;margin-top:8px;"></div>
+      <div id="reason" style="margin-top:10px;font-size:18px;line-height:1.35;"></div>
+      <div id="tagline" style="margin-top:8px;opacity:.9;"></div>
+
+      <div style="height:14px"></div>
+      <div class="row">
+        <button id="share">📤 Condividi</button>
+        <button id="copy">📋 Copia</button>
       </div>
     </div>
   </div>
 
-  <script type="module">
-    // ====== CONFIG PATHS (battle.html in ROOT) ======
-    // Se battle.html NON è in root, questi path vanno cambiati.
-    const PATH_FIREBASE = "./firebase.init.js";
-    const PATH_CREDITS  = "./store/credits.js";
+<script>
+  let category = "persone";
+  let last = null;
 
-    const showFatal = (msg) => {
-      document.body.innerHTML = `
-        <div style="padding:16px;font-family:system-ui;color:#fff;background:#111">
-          <h2 style="margin:0 0 8px 0">Battle – Errore</h2>
-          <pre style="white-space:pre-wrap;opacity:.9">${msg}</pre>
-          <p style="opacity:.8">Apri Console (F12) per dettagli.</p>
-        </div>`;
-    };
+  document.getElementById("cats").addEventListener("click", (e) => {
+    const pill = e.target.closest(".pill");
+    if (!pill) return;
+    document.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+    pill.classList.add("active");
+    category = pill.dataset.cat;
+  });
 
-    try {
-      const fb = await import(PATH_FIREBASE);
-      const cr = await import(PATH_CREDITS);
+  function shareText(d){
+    return `⚔️ Battle (${d.category})\nA: ${d.a}\nB: ${d.b}\n🏆 Vince: ${d.winner}\n${d.reason}\n${d.tagline ? "— " + d.tagline : ""}`.trim();
+  }
 
-      const { auth } = fb;
-      const { bootCredits, getBalance } = cr;
+  async function runBattle(){
+    const a = document.getElementById("a").value.trim();
+    const b = document.getElementById("b").value.trim();
+    if(!a || !b) return alert("Inserisci A e B");
 
-      const $ = (s) => document.querySelector(s);
+    document.getElementById("status").textContent = "Sto giudicando…";
+    document.getElementById("result").style.display = "none";
 
-      const elCredits = $("#creditsTop");
-      const elCategory = $("#category");
-      const elA = $("#inputA");
-      const elB = $("#inputB");
-      const btnFight = $("#btnFight");
-      const btnSwap = $("#btnSwap");
+    const resp = await fetch("/api/battle", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ a, b, category, style:"ironico" })
+    });
 
-      const boxErr = $("#battleError");
-      const boxRes = $("#battleResult");
-      const boxWinner = $("#winner");
-      const boxReason = $("#reason");
-      const boxTagline = $("#tagline");
-
-      const setErr = (msg) => {
-        if (!boxErr) return;
-        boxErr.textContent = msg || "";
-        boxErr.style.display = msg ? "block" : "none";
-      };
-
-      const setLoading = (on) => {
-        if (!btnFight) return;
-        btnFight.disabled = !!on;
-        btnFight.textContent = on ? "⏳ Giudico..." : "⚔️ Combatti";
-      };
-
-      async function refreshCredits() {
-        try {
-          await bootCredits();
-          const bal = await getBalance();
-          elCredits.textContent = Number.isFinite(bal) ? String(bal) : "∞";
-        } catch (e) {
-          console.warn("refreshCredits error:", e);
-          elCredits.textContent = "0";
-        }
-      }
-
-      async function getTokenOrThrow() {
-        const u = auth.currentUser;
-        if (!u) throw new Error("no_user");
-        return await u.getIdToken(true);
-      }
-
-      function swapAB() {
-        const va = elA.value || "";
-        elA.value = elB.value || "";
-        elB.value = va;
-      }
-
-      async function fight() {
-        try {
-          setErr("");
-          boxRes.style.display = "none";
-
-          const category = (elCategory.value || "cose").trim();
-          const a = (elA.value || "").trim();
-          const b = (elB.value || "").trim();
-
-          if (!a || !b) return setErr("Inserisci sia A che B.");
-
-          const token = await getTokenOrThrow();
-
-          setLoading(true);
-
-          const r = await fetch("/api/battle", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ category, a, b }),
-          });
-
-          const data = await r.json().catch(() => ({}));
-
-          if (!r.ok) {
-            if (data?.error === "unauthorized" && data?.redirect) {
-              window.location.href = data.redirect;
-              return;
-            }
-            if (data?.error === "no_credits") {
-              setErr("Crediti finiti. Vai in Ricarica.");
-              if (data?.redirect) window.location.href = data.redirect;
-              return;
-            }
-            console.error("battle api error:", r.status, data);
-            setErr("Errore server. Riprova.");
-            return;
-          }
-
-          // UI risultato
-          boxWinner.textContent = data.winner || "";
-          boxReason.textContent = data.reason || "";
-          boxTagline.textContent = data.tagline || "";
-          boxRes.style.display = "block";
-
-          // Crediti: se l'API li restituisce ok, altrimenti rilegge Firestore
-          if (typeof data.creditsLeft !== "undefined") {
-            elCredits.textContent = String(Math.max(0, Number(data.creditsLeft) || 0));
-          } else {
-            await refreshCredits();
-          }
-        } catch (e) {
-          console.error("fight error:", e);
-          setErr("Errore server. Riprova.");
-        } finally {
-          setLoading(false);
-        }
-      }
-
-      // Eventi
-      btnFight.addEventListener("click", fight);
-      btnSwap.addEventListener("click", swapAB);
-
-      // Enter per combattere
-      [elA, elB].forEach((el) => {
-        el.addEventListener("keydown", (ev) => {
-          if (ev.key === "Enter") fight();
-        });
-      });
-
-      // Auth guard + credits
-      auth.onAuthStateChanged(async (u) => {
-        if (!u) {
-          // se vuoi, manda al login
-          // window.location.href = "/index.html";
-          elCredits.textContent = "0";
-          setErr("Devi essere loggato per usare Battle.");
-          return;
-        }
-        await refreshCredits();
-        setErr("");
-      });
-
-      // Debug: ti fa capire subito se mancano elementi
-      console.log("Battle loaded OK");
-    } catch (e) {
-      console.error("BATTLE FATAL:", e);
-      showFatal(String(e?.message || e));
+    if(!resp.ok){
+      document.getElementById("status").textContent = "";
+      return alert("Errore /api/battle");
     }
-  </script>
+
+    const data = await resp.json();
+    last = data;
+
+    document.getElementById("winner").textContent = "🏆 Vince: " + data.winner;
+    document.getElementById("reason").textContent = data.reason || "";
+    document.getElementById("tagline").textContent = data.tagline ? ("“" + data.tagline + "”") : "";
+
+    document.getElementById("status").textContent = "";
+    document.getElementById("result").style.display = "block";
+  }
+
+  document.getElementById("judge").addEventListener("click", runBattle);
+
+  document.getElementById("copy").addEventListener("click", async () => {
+    if(!last) return;
+    await navigator.clipboard.writeText(shareText(last));
+    alert("Copiato!");
+  });
+
+  document.getElementById("share").addEventListener("click", async () => {
+    if(!last) return;
+    const text = shareText(last);
+    if(navigator.share){
+      try { await navigator.share({ text }); } catch(e){}
+    } else {
+      await navigator.clipboard.writeText(text);
+      alert("Share non supportato: testo copiato.");
+    }
+  });
+</script>
 </body>
 </html>
