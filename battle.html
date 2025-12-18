@@ -321,10 +321,29 @@
     }
 
     function shareText(d){
-      return `⚔️ Battle\nA: ${d.a}\nB: ${d.b}\n🏆 Vince: ${d.winner}\n${d.reason}\n${d.tagline ? "— " + d.tagline : ""}`.trim();
+      // testo "copia" (non caption social): completo
+      return [
+        "⚔️ Battle",
+        `A: ${d.a}`,
+        `B: ${d.b}`,
+        `🏆 Vince: ${d.winner}`,
+        d.reason || "",
+        d.tagline ? `“${d.tagline}”` : ""
+      ].filter(Boolean).join("\n").trim();
     }
+
     function shareCaption(d){
-      return `⚔️ Battle: ${d.winner}\n${d.reason}${d.tagline ? "\n“" + d.tagline + "”" : ""}\n\n#whatif #battle`.trim();
+      // ✅ caption social: contiene sfida + risposta (come vuoi tu)
+      return [
+        "⚔️ Battle",
+        `A vs B: ${d.a} vs ${d.b}`,
+        `🏆 Vince: ${d.winner}`,
+        "",
+        (d.reason || "").trim(),
+        d.tagline ? `“${d.tagline}”` : "",
+        "",
+        "#whatif #battle"
+      ].filter(Boolean).join("\n").trim();
     }
 
     /* =======================
@@ -359,8 +378,6 @@
       ctx.closePath();
     }
 
-    function measureLinesHeight(lineCount, lineH){ return Math.max(0, lineCount) * lineH; }
-
     async function makeBattleCardPNG(d){
       // 1080x1350 (IG portrait)
       const W = 1080, H = 1350;
@@ -368,7 +385,6 @@
       c.width = W; c.height = H;
       const ctx = c.getContext("2d");
 
-      // theme colors (match page)
       const isWtf = document.documentElement.getAttribute("data-theme") === "wtf";
       const bg1 = isWtf ? "#101414" : "#0E1724";
       const bg2 = isWtf ? "#0B0B0C" : "#0B1018";
@@ -402,7 +418,7 @@
       ctx.stroke();
       ctx.restore();
 
-      // top brand row
+      // top brand
       ctx.font = "800 44px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = fg;
       ctx.fillText("What?f ⚔️ Battle", boxX+52, boxY+92);
@@ -432,14 +448,18 @@
       ctx.lineTo(boxX+boxW-52, boxY+140);
       ctx.stroke();
 
-      /* ========= A / B + VS (FIX: VS CENTRATO) =========
-         - Calcoliamo una "zona" A/B
-         - Mettiamo VS al centro di quella zona
-         - A sopra, B sotto, con offset simmetrico
-      */
+      // winner logic for highlight
+      const aTextRaw = String(d.a || "").trim();
+      const bTextRaw = String(d.b || "").trim();
+      const winnerRaw = String(d.winner || "").trim();
+      const winnerIsA = winnerRaw && aTextRaw && winnerRaw.toLowerCase() === aTextRaw.toLowerCase();
+      const winnerIsB = winnerRaw && bTextRaw && winnerRaw.toLowerCase() === bTextRaw.toLowerCase();
+
+      // zone A/B + VS centered
       const zoneTop = boxY + 200;
-      const zoneBottom = boxY + 520;             // fine blocco A/B
-      const zoneMid = (zoneTop + zoneBottom) / 2; // centro perfetto
+      const zoneBottom = boxY + 520;
+      const zoneMid = (zoneTop + zoneBottom) / 2;
+
       const labelX = boxX + 52;
       const textX  = boxX + 92;
       const rightX = boxX + boxW - 52;
@@ -448,40 +468,69 @@
       // labels A/B
       ctx.font = "700 26px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = muted;
-      // A label baseline
       ctx.fillText("A", labelX, zoneTop + 40);
-      // B label baseline
       ctx.fillText("B", labelX, zoneMid + 120);
+
+      // helper badge WIN/LOSE
+      function drawMiniBadge(txt, x, y, isWin){
+        ctx.save();
+        ctx.font = "900 22px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+        const w = ctx.measureText(txt).width + 30;
+        roundRect(ctx, x, y-26, w, 34, 17);
+        if(isWin){
+          const g = ctx.createLinearGradient(x, y-26, x, y+8);
+          g.addColorStop(0, accent);
+          g.addColorStop(1, accent2);
+          ctx.fillStyle = g;
+          ctx.shadowColor = "rgba(255,236,1,.45)";
+          ctx.shadowBlur = 18;
+          ctx.fill();
+          ctx.fillStyle = ink;
+        }else{
+          ctx.fillStyle = "rgba(255,255,255,.06)";
+          ctx.fill();
+          ctx.strokeStyle = line;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.fillStyle = muted;
+        }
+        ctx.fillText(txt, x+15, y-2);
+        ctx.restore();
+      }
 
       // A text
       ctx.font = "900 44px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = fg;
-      const aText = String(d.a || "").trim();
-      const bText = String(d.b || "").trim();
+      const aLines = wrapLines(ctx, aTextRaw, maxTextW).slice(0,2);
+      const bLines = wrapLines(ctx, bTextRaw, maxTextW).slice(0,2);
 
-      const aLines = wrapLines(ctx, aText, maxTextW).slice(0,2);
-      const bLines = wrapLines(ctx, bText, maxTextW).slice(0,2);
-
-      // per render pulito
       const lineH = 52;
 
-      // A: parte sopra il centro
-      let ay = zoneMid - 120; // start A block (sopra)
+      // A block (above)
+      let ay = zoneMid - 125;
       for (const ln of aLines){
         ctx.fillText(ln, textX, ay);
         ay += lineH;
       }
+      // badge A
+      if(winnerRaw){
+        drawMiniBadge(winnerIsA ? "WIN" : "LOSE", rightX - 110, zoneMid - 155, !!winnerIsA);
+      }
 
-      // B: parte sotto il centro
-      let by = zoneMid + 80; // start B block (sotto)
+      // B block (below)
+      let by = zoneMid + 90;
       for (const ln of bLines){
         ctx.fillText(ln, textX, by);
         by += lineH;
       }
+      // badge B
+      if(winnerRaw){
+        drawMiniBadge(winnerIsB ? "WIN" : "LOSE", rightX - 110, zoneMid + 45, !!winnerIsB);
+      }
 
-      // VS badge al CENTRO della zona (FIX)
+      // VS badge centered perfectly
       const vsX = boxX + boxW/2;
-      const vsY = zoneMid; // centro perfetto tra A e B
+      const vsY = zoneMid;
       ctx.save();
       ctx.beginPath();
       ctx.arc(vsX, vsY, 46, 0, Math.PI*2);
@@ -497,12 +546,10 @@
       ctx.restore();
       ctx.textAlign = "left";
 
-      /* ========= Winner banner (EVIDENZIATO) ========= */
+      // winner banner highlighted
       let y = boxY + 560;
       ctx.save();
       roundRect(ctx, boxX+52, y, boxW-104, 112, 28);
-
-      // glow (shadow) per vincitore
       ctx.shadowColor = "rgba(255,236,1,.35)";
       ctx.shadowBlur = 25;
       const winGrad = ctx.createLinearGradient(boxX+52, y, boxX+52, y+112);
@@ -512,17 +559,15 @@
       ctx.fill();
       ctx.restore();
 
-      // testo winner
       ctx.font = "900 34px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = ink;
       ctx.fillText("🏆 Vince", boxX+92, y+52);
 
       ctx.font = "900 46px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      const winName = String(d.winner || "").trim();
-      const winLine = wrapLines(ctx, winName, boxW-240).slice(0,1)[0] || "—";
+      const winLine = wrapLines(ctx, winnerRaw, boxW-240).slice(0,1)[0] || "—";
       ctx.fillText(winLine, boxX+92, y+98);
 
-      /* ========= Motivo ========= */
+      // reason
       y = boxY + 730;
       ctx.font = "800 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = muted;
@@ -538,7 +583,7 @@
         ry += 44;
       }
 
-      /* ========= Tagline ========= */
+      // tagline
       const tagline = String(d.tagline || "").trim();
       if (tagline){
         const ty = Math.max(ry + 26, boxY + 1000);
