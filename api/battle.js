@@ -6,7 +6,7 @@ import admin from "./_firebaseAdmin.js";
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-// === CORS (come tua versione) ===
+// ===== CORS =====
 function cors(req, res) {
   const origin = String(req.headers.origin || "");
   res.setHeader("Access-Control-Allow-Origin", origin || "*");
@@ -15,7 +15,7 @@ function cors(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 }
 
-// === Auth ===
+// ===== Auth =====
 async function getUidFromAuth(req) {
   const h = String(req.headers.authorization || "");
   const m = h.match(/^Bearer\s+(.+)$/i);
@@ -25,11 +25,10 @@ async function getUidFromAuth(req) {
   return decoded?.uid || null;
 }
 
-// === Helpers wallet: stessa logica di /store/credits.js ===
+// ===== Wallet schema (stesso tuo /store/credits.js) =====
 const DEFAULT_DAILY_LIMIT = 3;
 
 function todayISO_Rome() {
-  // YYYY-MM-DD (Europe/Rome) - equivalente al tuo credits.js
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Europe/Rome",
     year: "numeric",
@@ -43,7 +42,6 @@ function todayISO_Rome() {
 function normalizeWalletData(data = {}, today) {
   const out = { ...(data || {}) };
 
-  // Vecchi campi (compat)
   const oldDailyLimit = Number.isFinite(+out.dailyLimit) ? +out.dailyLimit : DEFAULT_DAILY_LIMIT;
   const oldUsedToday = Number.isFinite(+out.usedToday) ? +out.usedToday : 0;
 
@@ -52,7 +50,6 @@ function normalizeWalletData(data = {}, today) {
     typeof out.creditsPaid !== "undefined" ||
     typeof out.lastFreeReset !== "undefined";
 
-  // Migrazione vecchio schema -> nuovo
   if (!hasNew) {
     const oldBalance = Math.max(0, oldDailyLimit - oldUsedToday);
     const creditsFree = Math.max(0, Math.min(DEFAULT_DAILY_LIMIT, oldBalance));
@@ -61,7 +58,6 @@ function normalizeWalletData(data = {}, today) {
     out.creditsFree = creditsFree;
     out.creditsPaid = creditsPaid;
     out.lastFreeReset = today;
-
     out.day = typeof out.day === "string" ? out.day : today;
     out.usedToday = oldUsedToday;
   }
@@ -78,12 +74,10 @@ function normalizeWalletData(data = {}, today) {
 
   let lastFreeReset = typeof out.lastFreeReset === "string" ? out.lastFreeReset : today;
 
-  // Cambio giorno: reset statistica
   if (day !== today) {
     day = today;
     usedToday = 0;
   }
-  // Reset free giornalieri
   if (lastFreeReset !== today) {
     creditsFree = DEFAULT_DAILY_LIMIT;
     lastFreeReset = today;
@@ -106,15 +100,14 @@ function walletRef(uid) {
   return admin.firestore().collection("wallets").doc(uid);
 }
 
-// ✅ scala 1 credito (FREE -> PAID) atomico, come consumeCredit()
+// ✅ charge 1 credito (FREE -> PAID) atomico
 async function chargeOneCreditOrThrow(uid) {
   const ref = walletRef(uid);
   const today = todayISO_Rome();
 
-  const result = await admin.firestore().runTransaction(async (tx) => {
+  const creditsLeft = await admin.firestore().runTransaction(async (tx) => {
     const snap = await tx.get(ref);
 
-    // Se non esiste, lo creiamo e consumiamo 1 FREE subito (come credits.js)
     if (!snap.exists) {
       const creditsFree = Math.max(0, DEFAULT_DAILY_LIMIT - 1);
       tx.set(ref, {
@@ -127,11 +120,10 @@ async function chargeOneCreditOrThrow(uid) {
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
-      return { creditsLeft: creditsFree, ok: true };
+      return creditsFree;
     }
 
-    const data = snap.data() || {};
-    const normalized = normalizeWalletData(data, today);
+    const normalized = normalizeWalletData(snap.data() || {}, today);
 
     const free = Number.isFinite(+normalized.creditsFree) ? +normalized.creditsFree : 0;
     const paid = Number.isFinite(+normalized.creditsPaid) ? +normalized.creditsPaid : 0;
@@ -152,8 +144,6 @@ async function chargeOneCreditOrThrow(uid) {
     const usedToday = (Number.isFinite(+normalized.usedToday) ? +normalized.usedToday : 0) + 1;
     const totalUsed = (Number.isFinite(+normalized.totalUsed) ? +normalized.totalUsed : 0) + 1;
 
-    const creditsLeft = Math.max(0, newFree + newPaid);
-
     tx.set(
       ref,
       {
@@ -168,13 +158,13 @@ async function chargeOneCreditOrThrow(uid) {
       { merge: true }
     );
 
-    return { creditsLeft, ok: true };
+    return Math.max(0, newFree + newPaid);
   });
 
-  return result.creditsLeft;
+  return creditsLeft;
 }
 
-// ✅ refund 1 credito (rimettiamo 1 su PAID, “persistente”, così non sballa il free reset)
+// ✅ refund 1 credito su PAID (non tocca i free giornalieri)
 async function refundOneCredit(uid) {
   const ref = walletRef(uid);
   const today = todayISO_Rome();
@@ -182,17 +172,14 @@ async function refundOneCredit(uid) {
   try {
     await admin.firestore().runTransaction(async (tx) => {
       const snap = await tx.get(ref);
-      const data = snap.exists ? (snap.data() || {}) : {};
-      const normalized = normalizeWalletData(data, today);
-
+      const normalized = normalizeWalletData(snap.exists ? (snap.data() || {}) : {}, today);
       const paid = Number.isFinite(+normalized.creditsPaid) ? +normalized.creditsPaid : 0;
-      const newPaid = paid + 1;
 
       tx.set(
         ref,
         {
           ...normalized,
-          creditsPaid: newPaid,
+          creditsPaid: paid + 1,
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           createdAt: normalized.createdAt || admin.firestore.FieldValue.serverTimestamp(),
         },
@@ -204,8 +191,7 @@ async function refundOneCredit(uid) {
   }
 }
 
-// === Safe trim inputs ===
-function safeTrim(x, max = 120) {
+function safeTrim(x, max = 100) {
   const s = String(x ?? "").trim();
   return s.length > max ? s.slice(0, max) : s;
 }
@@ -232,23 +218,20 @@ export default async function handler(req, res) {
 
     if (!a || !b) return res.status(400).json({ error: "bad_request" });
 
-    // ✅ Scala credito PRIMA di OpenAI (come vuoi tu)
+    // ✅ Scala PRIMA della chiamata OpenAI
     try {
       creditsLeft = await chargeOneCreditOrThrow(uid);
       charged = true;
     } catch (e) {
       if (e?.code === "no_credits" || e?.message === "no_credits") {
-        return res.status(402).json({
-          error: "no_credits",
-          redirect: "/store/credit-store.html",
-        });
+        return res.status(402).json({ error: "no_credits", redirect: "/store/credit-store.html" });
       }
       throw e;
     }
 
     const sys = `Sei un giudice di "battle" rapida.
 Scegli un vincitore tra A e B.
-Rispondi SOLO in JSON valido con: winner ("A"|"B"), reason, tagline.
+Rispondi SOLO JSON valido: {"winner":"A"|"B","reason":"...","tagline":"..."}.
 reason: 1-2 frasi max, ironico ma non offensivo, niente volgarità pesante.`;
 
     const user = `Categoria: ${category}\nA: ${a}\nB: ${b}\nDecidi.`;
@@ -257,7 +240,6 @@ reason: 1-2 frasi max, ironico ma non offensivo, niente volgarità pesante.`;
       model: MODEL,
       temperature: 0.9,
       max_tokens: 180,
-      // IMPORTANT: forza JSON stabile
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: sys },
@@ -275,6 +257,7 @@ reason: 1-2 frasi max, ironico ma non offensivo, niente volgarità pesante.`;
     return res.status(200).json({
       ok: true,
       winner,
+      winnerKey,
       reason: String(out.reason || "Perché sì.").trim(),
       tagline: String(out.tagline || "Fine della discussione.").trim(),
       creditsLeft,
@@ -282,7 +265,7 @@ reason: 1-2 frasi max, ironico ma non offensivo, niente volgarità pesante.`;
   } catch (err) {
     console.error("❌ [/api/battle] error:", err);
 
-    // ✅ se ho scalato e poi è esploso qualcosa → refund
+    // ✅ se ho scalato e poi crasha OpenAI -> refund
     if (uid && charged) await refundOneCredit(uid);
 
     return res.status(500).json({ error: "server_error" });
