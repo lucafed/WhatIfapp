@@ -1,313 +1,124 @@
-<!DOCTYPE html>
-<html lang="it" data-theme="whatif">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>What?f — Battle</title>
-    <meta name="theme-color" content="#0A0F14" />
-    <style>
-      :root{
-        --bg:#0B1018; --bg2:#0E1724; --card:#141C22;
-        --fg:#F4F7FB; --muted:#A7B3C2;
-        --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
-        --chip:#0F1820; --line:#1B2A34;
-        --ok:#2ecc71; --bad:#ff6b6b;
-      }
-      html[data-theme="wtf"]{
-        --bg:#0B0B0C; --bg2:#101414; --card:#111713;
-        --fg:#EEF5F0; --muted:#A6B6AD;
-        --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;
-        --chip:#0F1714; --line:#21322A;
-      }
-      *{box-sizing:border-box}
-      html,body{
-        height:100%;margin:0;
-        background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-        color:var(--fg);
-        font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-        -webkit-font-smoothing:antialiased;
-      }
-      main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
-      .wrap{width:min(100%,980px)}
-      .topbar{
-        position:sticky;top:0;z-index:10;
-        display:flex;align-items:center;justify-content:space-between;gap:10px;
-        padding:8px 10px;
-        background:rgba(10,15,20,.96);
-        backdrop-filter:blur(6px);
-        border-bottom:1px solid var(--line);
-      }
-      .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-      .btn{
-        appearance:none;border:1px solid var(--line);
-        background:var(--chip);color:var(--fg);
-        border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer;
-      }
-      .btn.primary{
-        background:linear-gradient(180deg,var(--accent),var(--accent2));
-        color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35);
-      }
-      .btn[disabled]{opacity:.45;cursor:not-allowed}
-      .badge{
-        background:var(--chip);border:1px solid var(--line);
-        border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap;
-      }
-      .card{
-        background:var(--card);
-        border:1px solid var(--line);
-        border-radius:16px;
-        padding:16px;
-        margin:10px 0;
-        backdrop-filter:blur(12px);
-      }
-      h1{margin:8px 0 4px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
-      .sub{margin:0 0 12px;color:var(--muted)}
-      label{display:block;margin:10px 0 6px;font-weight:900;color:var(--accent2)}
-      select, input{
-        width:100%;
-        appearance:none;
-        background:rgba(255,255,255,.06);
-        border:1px solid var(--line);
-        color:var(--fg);
-        padding:14px;
-        border-radius:14px;
-        font-size:16px;
-        font-weight:700;
-      }
-      .grid{display:grid;grid-template-columns:1fr;gap:12px}
-      .actions{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-top:12px}
-      .result{
-        border:1px solid var(--line);
-        border-radius:14px;
-        padding:14px;
-        background:rgba(255,255,255,.04);
-        margin-top:12px;
-      }
-      .winner{
-        font-weight:1000;
-        font-size:20px;
-        margin:0 0 8px;
-      }
-      .reason{margin:0;color:var(--fg);line-height:1.35}
-      .tagline{margin:10px 0 0;color:var(--muted);font-weight:700}
-      .err{margin-top:10px;color:var(--bad);font-weight:900}
-      .hint{font-size:12px;color:var(--muted)}
-    </style>
-  </head>
+<script type="module">
+  import { auth } from "../firebase.init.js";
+  import { bootCredits, getBalance } from "../store/credits.js";
 
-  <body>
-    <div class="topbar">
-      <div class="row">
-        <button class="btn" id="backBtn" type="button">←</button>
-        <button class="btn" id="homeBtn" type="button">🏠</button>
-      </div>
-      <div class="row">
-        <span class="badge" id="creditsBadge">Crediti: —</span>
-        <button class="btn" id="rechargeBtn" type="button">🛒 Ricarica</button>
-      </div>
-    </div>
+  const $ = (s) => document.querySelector(s);
 
-    <main>
-      <div class="wrap">
-        <h1>Battle</h1>
-        <p class="sub">Metti due opzioni contro. Scelgo un vincitore e ti spiego perché (1–2 frasi). Ogni giudizio scala 1 credito.</p>
+  // Adatta questi ID/classi ai TUOI elementi reali
+  const elCredits = $("#creditsTop");          // es: <span id="creditsTop"></span>
+  const elCategory = $("#category");           // select o input
+  const elA = $("#inputA");
+  const elB = $("#inputB");
+  const btnFight = $("#btnFight");
+  const btnSwap = $("#btnSwap");
 
-        <div class="card">
-          <div class="grid">
-            <div>
-              <label for="cat">Categoria</label>
-              <select id="cat">
-                <option value="persone">Persone</option>
-                <option value="cose">Cose</option>
-                <option value="scelte">Scelte</option>
-                <option value="lavoro">Lavoro</option>
-              </select>
-            </div>
+  const boxWinner = $("#winner");              // dove stampi winner
+  const boxReason = $("#reason");
+  const boxTagline = $("#tagline");
+  const boxError = $("#battleError");          // dove scrivi "Errore server"
+  const boxLoading = $("#battleLoading");      // opzionale
 
-            <div>
-              <label for="a">A</label>
-              <input id="a" placeholder="Es. Sara" autocomplete="off" />
-            </div>
+  function setErr(msg) {
+    if (!boxError) return;
+    boxError.textContent = msg || "";
+    boxError.style.display = msg ? "block" : "none";
+  }
 
-            <div>
-              <label for="b">B</label>
-              <input id="b" placeholder="Es. Luca" autocomplete="off" />
-            </div>
+  function setLoading(on) {
+    if (boxLoading) boxLoading.style.display = on ? "block" : "none";
+    if (btnFight) btnFight.disabled = !!on;
+    if (btnSwap) btnSwap.disabled = !!on;
+  }
 
-            <div class="actions">
-              <button class="btn primary" id="fightBtn" type="button">⚔️ Combatti</button>
-              <button class="btn" id="swapBtn" type="button">🔁 Scambia</button>
-            </div>
+  async function refreshCredits() {
+    try {
+      await bootCredits();
+      const bal = await getBalance();
+      if (elCredits) elCredits.textContent = Number.isFinite(bal) ? String(bal) : "∞";
+    } catch {
+      if (elCredits) elCredits.textContent = "0";
+    }
+  }
 
-            <div class="hint" id="smallHint"></div>
-            <div class="err" id="errBox" style="display:none;"></div>
+  async function getTokenOrThrow() {
+    const u = auth.currentUser;
+    if (!u) throw new Error("no_user");
+    return await u.getIdToken(true);
+  }
 
-            <div class="result" id="resultBox" style="display:none;">
-              <div class="winner" id="winnerLine"></div>
-              <p class="reason" id="reasonLine"></p>
-              <div class="tagline" id="tagLine"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
+  async function fight() {
+    try {
+      setErr("");
+      setLoading(true);
 
-    <script type="module">
-      import { auth } from "./firebase.init.js";
-      import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-
-      import { bootCredits, getBalance } from "./store/credits.js";
-
-      const LS = localStorage;
-      const $ = (id) => document.getElementById(id);
-
-      // tema coerente con app
-      try{
-        const prefs = JSON.parse(LS.getItem("whatif_prefs")||"{}");
-        const stile = (prefs.stile === "wtf") ? "wtf" : "whatif";
-        document.documentElement.setAttribute("data-theme", stile);
-      }catch{}
-
-      const lang = (LS.getItem("lang") || "it").toLowerCase().slice(0,2);
-
-      $("homeBtn").onclick = () => (location.href = "index.html");
-      $("backBtn").onclick = () => (history.length > 1 ? history.back() : (location.href="index.html"));
-      $("rechargeBtn").onclick = () => (location.href = `store/credit-store.html?lang=${encodeURIComponent(lang||"it")}`);
-
-      let currentBalance = 0;
-
-      async function syncCredits() {
-        if (!auth.currentUser) {
-          currentBalance = 0;
-          $("creditsBadge").textContent = "Crediti: 0";
-          return;
-        }
-        await bootCredits();
-        currentBalance = await getBalance();
-        $("creditsBadge").textContent = `Crediti: ${Number.isFinite(currentBalance) ? currentBalance : "∞"}`;
+      const category = (elCategory?.value || "cose").trim();
+      const a = (elA?.value || "").trim();
+      const b = (elB?.value || "").trim();
+      if (!a || !b) {
+        setErr("Inserisci A e B.");
+        return;
       }
 
-      function setError(msg) {
-        const el = $("errBox");
-        if (!msg) { el.style.display = "none"; el.textContent = ""; return; }
-        el.style.display = "block";
-        el.textContent = msg;
-      }
+      const token = await getTokenOrThrow();
 
-      function setResult({ winner, reason, tagline }) {
-        $("resultBox").style.display = "block";
-        $("winnerLine").textContent = `🏆 Vince: ${winner}`;
-        $("reasonLine").textContent = reason || "";
-        $("tagLine").textContent = tagline || "";
-      }
-
-      function clearResult() {
-        $("resultBox").style.display = "none";
-        $("winnerLine").textContent = "";
-        $("reasonLine").textContent = "";
-        $("tagLine").textContent = "";
-      }
-
-      $("swapBtn").onclick = () => {
-        const a = $("a").value;
-        $("a").value = $("b").value;
-        $("b").value = a;
-        setError("");
-        clearResult();
-      };
-
-      async function guardLoginAndCredits() {
-        if (!auth.currentUser) {
-          alert("Per usare Battle devi essere loggato.");
-          location.href = "index.html";
-          return false;
-        }
-        if (currentBalance <= 0) {
-          alert("Hai finito i crediti. Ricarica per continuare.");
-          location.href = `store/credit-store.html?lang=${encodeURIComponent(lang||"it")}`;
-          return false;
-        }
-        return true;
-      }
-
-      async function doBattle() {
-        setError("");
-        clearResult();
-
-        const ok = await guardLoginAndCredits();
-        if (!ok) return;
-
-        const a = ($("a").value || "").trim();
-        const b = ($("b").value || "").trim();
-        const category = ($("cat").value || "cose").trim();
-
-        if (!a || !b) {
-          setError("Inserisci sia A che B.");
-          return;
-        }
-
-        const btn = $("fightBtn");
-        const prev = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = "⏳...";
-
-        try {
-          const idToken = await auth.currentUser.getIdToken(true);
-
-          // opzionale: admin token
-          const adminToken = LS.getItem("admin_token") || "";
-
-          const res = await fetch("/api/battle", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${idToken}`,
-              ...(adminToken ? { "x-admin-token": adminToken } : {})
-            },
-            body: JSON.stringify({ a, b, category, lang }),
-          });
-
-          const data = await res.json().catch(() => ({}));
-
-          if (!res.ok) {
-            if (data?.error === "no_credits") {
-              location.href = `store/credit-store.html?lang=${encodeURIComponent(lang||"it")}`;
-              return;
-            }
-            setError("Errore server. Riprova.");
-            return;
-          }
-
-          setResult({
-            winner: data.winner,
-            reason: data.reason,
-            tagline: data.tagline
-          });
-
-          // aggiorna crediti coerenti con Firestore
-          await syncCredits();
-          $("smallHint").textContent =
-            (typeof data.creditsLeft === "number")
-              ? `Crediti rimasti: ${data.creditsLeft}`
-              : "";
-        } catch (e) {
-          console.error(e);
-          setError("Errore server. Riprova.");
-        } finally {
-          btn.disabled = false;
-          btn.textContent = prev;
-        }
-      }
-
-      $("fightBtn").onclick = doBattle;
-
-      // init
-      onAuthStateChanged(auth, async () => {
-        await syncCredits();
+      const r = await fetch("/api/battle", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ category, a, b }),
       });
 
-      window.addEventListener("focus", syncCredits);
-      window.addEventListener("pageshow", syncCredits);
-    </script>
-  </body>
-</html>
+      const data = await r.json().catch(() => ({}));
+
+      if (!r.ok) {
+        if (data?.error === "no_credits") {
+          setErr("Crediti finiti. Vai in Ricarica.");
+          if (data?.redirect) window.location.href = data.redirect;
+          return;
+        }
+        setErr("Errore server. Riprova.");
+        console.error("battle api error:", r.status, data);
+        return;
+      }
+
+      // Render risultato
+      if (boxWinner) boxWinner.textContent = data.winner || "";
+      if (boxReason) boxReason.textContent = data.reason || "";
+      if (boxTagline) boxTagline.textContent = data.tagline || "";
+
+      // Aggiorna crediti (valore server = verità)
+      if (elCredits && typeof data.creditsLeft !== "undefined") {
+        elCredits.textContent = String(Math.max(0, Number(data.creditsLeft) || 0));
+      } else {
+        await refreshCredits();
+      }
+    } catch (e) {
+      console.error("fight() error:", e);
+      setErr("Errore server. Riprova.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function swapAB() {
+    const va = elA?.value || "";
+    const vb = elB?.value || "";
+    if (elA) elA.value = vb;
+    if (elB) elB.value = va;
+  }
+
+  btnFight?.addEventListener("click", fight);
+  btnSwap?.addEventListener("click", swapAB);
+
+  // Boot
+  auth.onAuthStateChanged(async (u) => {
+    if (!u) {
+      // se vuoi redirect:
+      // window.location.href = "/index.html";
+      return;
+    }
+    await refreshCredits();
+  });
+</script>
