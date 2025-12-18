@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Battle</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .wrap{max-width:820px;margin:0 auto;padding:16px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .pill{padding:10px 12px;border:1px solid #2a3944;border-radius:999px;cursor:pointer}
+    .pill.active{background:#00B5CC;color:#001018;border-color:#00B5CC}
+    .box{padding:14px;border:1px solid #2a3944;border-radius:14px;background:#141C22}
+    input{width:100%;padding:12px;border-radius:12px;border:1px solid #2a3944;background:#0A0F14;color:#fff}
+    button{padding:12px 14px;border-radius:12px;border:none;cursor:pointer;font-weight:700}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+      <h1 style="margin:8px 0;">⚔️ Battle</h1>
+      <a href="index.html">← Home</a>
+    </div>
+
+    <div class="box">
+      <div style="opacity:.8;margin-bottom:10px;">Scegli categoria</div>
+      <div class="row" id="cats">
+        <div class="pill active" data-cat="persone">🧑‍🤝‍🧑 Persone</div>
+        <div class="pill" data-cat="cose">🍕 Cose</div>
+        <div class="pill" data-cat="scelte">🧠 Scelte</div>
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="row">
+        <div style="flex:1;min-width:240px">
+          <div style="opacity:.8;margin:0 0 6px;">A</div>
+          <input id="a" placeholder="Es: Pizza / Io / Rischiare" />
+        </div>
+        <div style="flex:1;min-width:240px">
+          <div style="opacity:.8;margin:0 0 6px;">B</div>
+          <input id="b" placeholder="Es: Sushi / Il mio amico / Accontentarsi" />
+        </div>
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="row" style="align-items:center;">
+        <button id="judge">GIUDICA</button>
+        <span id="status" style="opacity:.8"></span>
+      </div>
+    </div>
+
+    <div style="height:14px"></div>
+
+    <div class="box" id="result" style="display:none;">
+      <div style="opacity:.8;">Risultato</div>
+      <div id="winner" style="font-size:22px;font-weight:800;margin-top:8px;"></div>
+      <div id="reason" style="margin-top:10px;font-size:18px;line-height:1.35;"></div>
+      <div id="tagline" style="margin-top:8px;opacity:.9;"></div>
+
+      <div style="height:14px"></div>
+      <div class="row">
+        <button id="share">📤 Condividi</button>
+        <button id="copy">📋 Copia</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  let category = "persone";
+  let last = null;
+
+  document.getElementById("cats").addEventListener("click", (e) => {
+    const pill = e.target.closest(".pill");
+    if (!pill) return;
+    document.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+    pill.classList.add("active");
+    category = pill.dataset.cat;
+  });
+
+  function shareText(d){
+    return `⚔️ Battle (${d.category})\nA: ${d.a}\nB: ${d.b}\n🏆 Vince: ${d.winner}\n${d.reason}\n${d.tagline ? "— " + d.tagline : ""}`.trim();
+  }
+
+  async function runBattle(){
+    const a = document.getElementById("a").value.trim();
+    const b = document.getElementById("b").value.trim();
+    if(!a || !b) return alert("Inserisci A e B");
+
+    document.getElementById("status").textContent = "Sto giudicando…";
+    document.getElementById("result").style.display = "none";
+
+    const resp = await fetch("/api/battle", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ a, b, category, style:"ironico" })
+    });
+
+    if(!resp.ok){
+      document.getElementById("status").textContent = "";
+      return alert("Errore /api/battle");
+    }
+
+    const data = await resp.json();
+    last = data;
+
+    document.getElementById("winner").textContent = "🏆 Vince: " + data.winner;
+    document.getElementById("reason").textContent = data.reason || "";
+    document.getElementById("tagline").textContent = data.tagline ? ("“" + data.tagline + "”") : "";
+
+    document.getElementById("status").textContent = "";
+    document.getElementById("result").style.display = "block";
+  }
+
+  document.getElementById("judge").addEventListener("click", runBattle);
+
+  document.getElementById("copy").addEventListener("click", async () => {
+    if(!last) return;
+    await navigator.clipboard.writeText(shareText(last));
+    alert("Copiato!");
+  });
+
+  document.getElementById("share").addEventListener("click", async () => {
+    if(!last) return;
+    const text = shareText(last);
+    if(navigator.share){
+      try { await navigator.share({ text }); } catch(e){}
+    } else {
+      await navigator.clipboard.writeText(text);
+      alert("Share non supportato: testo copiato.");
+    }
+  });
+</script>
+</body>
+</html>
