@@ -1,19 +1,43 @@
-// /api/battle.js
+// /api/battle.js — Battle Engine (A vs B) per WhatIfapp
 import OpenAI from "openai";
-import { getAuth } from "firebase-admin/auth";
-import admin from "./_firebaseAdmin.js";
+import { Redis } from "@upstash/redis";
+import { Ratelimit } from "@upstash/ratelimit";
 
 /* ========= OpenAI ========= */
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-/* ========= CORS (come ask.js) ========= */
+/* ========= Redis & Rate ========= */
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL || "",
+  token: process.env.UPSTASH_REDIS_REST_TOKEN || "",
+});
+const rl = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(20, "1 m"), // battle può essere più permissiva
+});
+
+// Wrapper tollerante
+let rateOk = async () => true;
+try {
+  rateOk = async (key) => {
+    try {
+      const { success } = await rl.limit(key);
+      return !!success;
+    } catch {
+      return true;
+    }
+  };
+} catch {
+  /* noop */
+}
+
+/* ========= CORS ========= */
 const ALLOWED_ORIGINS = [
   "https://what-ifapp.vercel.app",
   "http://localhost:3000",
   "http://127.0.0.1:5500",
 ];
-
 function cors(req, res) {
   const origin = String(req.headers.origin || "");
   const allow = ALLOWED_ORIGINS.includes(origin)
@@ -24,329 +48,178 @@ function cors(req, res) {
   if (allow) res.setHeader("Access-Control-Allow-Origin", allow);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token, x-pro");
 }
 
 /* ========= Helpers ========= */
 function safeJsonParse(maybeJson) {
-  try {
-    return JSON.parse(maybeJson);
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(maybeJson); } catch { return null; }
+}
+function normalizeOneParagraph(s = "") {
+  return String(s)
+    .replace(/\s*\n+\s*/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\.\.\.+/g, "…")
+    .replace(/\s+([.,;:!?])/g, "$1")
+    .trim();
+}
+function clampWords(text, maxWords) {
+  const w = String(text || "").trim().split(/\s+/);
+  if (w.length <= maxWords) return String(text || "").trim();
+  return w.slice(0, maxWords).join(" ") + "…";
+}
+function stripQuotes(s = "") {
+  return String(s || "").trim().replace(/^["“”']+/, "").replace(/["“”']+$/, "").trim();
+}
+function safeCategory(c = "") {
+  const x = String(c || "").toLowerCase().trim();
+  if (["persone", "cose", "scelte"].includes(x)) return x;
+  return "cose";
+}
+function safeStyle(s = "") {
+  const x = String(s || "").toLowerCase().trim();
+  if (["ironico", "serio", "cattivello"].includes(x)) return x;
+  return "ironico";
 }
 
-function isAdminMode(req) {
-  // stessa logica: se arriva x-admin-token puoi decidere di bypassare crediti
-  // (se non ti serve, lascia sempre false)
-  const t = String(req.headers["x-admin-token"] || "").trim();
-  return !!t && t === String(process.env.ADMIN_TOKEN || "").trim();
+function buildPrompt({ a, b, category, style }) {
+  // Nota: vogliamo giudizi “discutibili” ma non offensivi/diffamatori
+  const tone =
+    style === "serio"
+      ? "lucido, concreto, senza sarcasmo"
+      : style === "cattivello"
+      ? "tagliente ma non offensivo, mai crudele"
+      : "ironico, secco, memorabile";
+
+  const catHint =
+    category === "persone"
+      ? "Trattale come archetipi (io/amico/ex), evita accuse, diagnosi, diffamazione."
+      : category === "scelte"
+      ? "Parla di trade-off pratici, rischio, energia, conseguenze."
+      : "Usa cultura pop/quotidiano, motivo breve e stuzzicante.";
+
+  return `
+Sei “Il Giudice” di una app Battle. Stile: ${tone}.
+Categoria: ${category}. ${catHint}
+
+Devi scegliere SEMPRE un vincitore tra A e B.
+Regole di sicurezza:
+- Niente volgarità pesante, niente odio, niente insulti verso identità protette.
+- Se compaiono nomi di persone reali: niente accuse o affermazioni fattuali negative; resta sul gioco e sul tono.
+- Non dire “dipende”, non fare liste, non fare spiegoni.
+
+Output:
+- Motivo: 1–2 frasi, massimo 22 parole.
+- Tagline: massimo 8 parole, memorabile.
+
+A: "${a}"
+B: "${b}"
+
+Rispondi SOLO in JSON valido con esattamente queste chiavi:
+{
+  "winner": "A" | "B",
+  "reason": "string",
+  "tagline": "string"
+}
+  `.trim();
 }
 
-async function getUidFromAuth(req) {
-  const h = String(req.headers.authorization || "");
-  const m = h.match(/^Bearer\s+(.+)$/i);
+function extractJson(text = "") {
+  const t = String(text || "").trim();
+  // prova JSON diretto
+  const direct = safeJsonParse(t);
+  if (direct) return direct;
+
+  // prova a prendere il primo blocco {...}
+  const m = t.match(/\{[\s\S]*\}/);
   if (!m) return null;
-
-  const idToken = m[1].trim();
-  try {
-    const decoded = await getAuth(admin).verifyIdToken(idToken);
-    return decoded?.uid || null;
-  } catch {
-    return null; // IMPORTANT: niente 500 se token non valido
-  }
+  return safeJsonParse(m[0]);
 }
 
-/* ========= Firestore credits (stesso schema di /store/credits.js) ========= */
-const DEFAULT_DAILY_LIMIT = 3;
-const db = admin.firestore();
-
-function todayISO_Rome() {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/Rome",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-  const get = (t) => parts.find((p) => p.type === t)?.value || "";
-  return `${get("year")}-${get("month")}-${get("day")}`;
-}
-
-function normalizeWalletData(data = {}, today) {
-  const out = { ...(data || {}) };
-
-  // migrazione dal vecchio schema (dailyLimit/usedToday) se serve
-  const oldDailyLimit = Number.isFinite(+out.dailyLimit) ? +out.dailyLimit : DEFAULT_DAILY_LIMIT;
-  const oldUsedToday = Number.isFinite(+out.usedToday) ? +out.usedToday : 0;
-
-  const hasNew =
-    typeof out.creditsFree !== "undefined" ||
-    typeof out.creditsPaid !== "undefined" ||
-    typeof out.lastFreeReset !== "undefined";
-
-  if (!hasNew) {
-    const oldBalance = Math.max(0, oldDailyLimit - oldUsedToday);
-    const creditsFree = Math.max(0, Math.min(DEFAULT_DAILY_LIMIT, oldBalance));
-    const creditsPaid = Math.max(0, oldBalance - creditsFree);
-
-    out.creditsFree = creditsFree;
-    out.creditsPaid = creditsPaid;
-    out.lastFreeReset = today;
-
-    out.day = typeof out.day === "string" ? out.day : today;
-    out.usedToday = oldUsedToday;
-  }
-
-  let creditsFree = Number.isFinite(+out.creditsFree) ? +out.creditsFree : DEFAULT_DAILY_LIMIT;
-  let creditsPaid = Number.isFinite(+out.creditsPaid) ? +out.creditsPaid : 0;
-  if (creditsPaid < 0) creditsPaid = 0;
-  if (creditsFree < 0) creditsFree = 0;
-  if (creditsFree > DEFAULT_DAILY_LIMIT) creditsFree = DEFAULT_DAILY_LIMIT;
-
-  let day = typeof out.day === "string" ? out.day : today;
-  let usedToday = Number.isFinite(+out.usedToday) ? +out.usedToday : 0;
-  if (usedToday < 0) usedToday = 0;
-
-  let lastFreeReset = typeof out.lastFreeReset === "string" ? out.lastFreeReset : today;
-
-  if (day !== today) {
-    day = today;
-    usedToday = 0;
-  }
-  if (lastFreeReset !== today) {
-    creditsFree = DEFAULT_DAILY_LIMIT;
-    lastFreeReset = today;
-  }
-
-  let totalUsed = Number.isFinite(+out.totalUsed) ? +out.totalUsed : 0;
-  if (totalUsed < 0) totalUsed = 0;
-
-  out.day = day;
-  out.usedToday = usedToday;
-  out.totalUsed = totalUsed;
-  out.creditsFree = creditsFree;
-  out.creditsPaid = creditsPaid;
-  out.lastFreeReset = lastFreeReset;
-
-  return out;
-}
-
-function walletRef(uid) {
-  return db.collection("wallets").doc(uid);
-}
-
-/**
- * Decrementa 1 credito in transazione.
- * Torna: { ok, creditsLeft, snapshotAfter }
- */
-async function consumeOneCredit(uid) {
-  const ref = walletRef(uid);
-  const today = todayISO_Rome();
-
-  const result = await db.runTransaction(async (tx) => {
-    const snap = await tx.get(ref);
-
-    let data = snap.exists ? snap.data() : null;
-    if (!data) {
-      // wallet nuovo
-      data = {
-        day: today,
-        usedToday: 0,
-        totalUsed: 0,
-        creditsFree: DEFAULT_DAILY_LIMIT,
-        creditsPaid: 0,
-        lastFreeReset: today,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      };
-    }
-
-    const normalized = normalizeWalletData(data, today);
-    const free = +normalized.creditsFree || 0;
-    const paid = +normalized.creditsPaid || 0;
-    const balance = free + paid;
-
-    if (balance <= 0) {
-      // aggiorna normalizzazione comunque (es. cambio giorno)
-      tx.set(
-        ref,
-        { ...normalized, updatedAt: admin.firestore.FieldValue.serverTimestamp() },
-        { merge: true }
-      );
-      return { ok: false, creditsLeft: 0 };
-    }
-
-    let newFree = free;
-    let newPaid = paid;
-    if (newFree > 0) newFree -= 1;
-    else newPaid -= 1;
-
-    const usedToday = (+normalized.usedToday || 0) + 1;
-    const totalUsed = (+normalized.totalUsed || 0) + 1;
-
-    const creditsLeft = Math.max(0, newFree + newPaid);
-
-    tx.set(
-      ref,
-      {
-        ...normalized,
-        day: today,
-        usedToday,
-        totalUsed,
-        creditsFree: newFree,
-        creditsPaid: newPaid,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
-
-    return { ok: true, creditsLeft };
-  });
-
-  return result;
-}
-
-/** Rimborso 1 credito (se OpenAI fallisce) */
-async function refundOneCredit(uid) {
-  const ref = walletRef(uid);
-  const today = todayISO_Rome();
-
-  await db.runTransaction(async (tx) => {
-    const snap = await tx.get(ref);
-    const data = snap.exists ? snap.data() : {};
-    const normalized = normalizeWalletData(data, today);
-
-    // Rimborso su PAID (più “safe”), ma se preferisci free basta cambiare qui
-    const paid = Number.isFinite(+normalized.creditsPaid) ? +normalized.creditsPaid : 0;
-    const newPaid = paid + 1;
-
-    tx.set(
-      ref,
-      {
-        ...normalized,
-        day: today,
-        creditsPaid: newPaid,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
-  });
-}
-
-/* ========= OpenAI battle ========= */
-async function runBattleLLM({ a, b, category }) {
-  const sys = `Sei un giudice di "battle" rapida.
-Scegli un vincitore tra A e B.
-Rispondi SOLO JSON valido: {"winner":"A"|"B","reason":"...","tagline":"..."}.
-Motivi: 1-2 frasi max, tono ironico ma non offensivo, niente volgarità pesante.`;
-
-  const user = `Categoria: ${category}\nA: ${a}\nB: ${b}\nDecidi.`;
-
-  // Proviamo anche a “forzare” JSON in modo robusto
-  const completion = await client.chat.completions.create({
-    model: MODEL,
-    temperature: 0.9,
-    max_tokens: 180,
-    messages: [
-      { role: "system", content: sys },
-      { role: "user", content: user },
-    ],
-    // se il tuo runtime/SDK lo supporta, aiuta tantissimo:
-    // response_format: { type: "json_object" },
-  });
-
-  const raw = completion?.choices?.[0]?.message?.content?.trim() || "{}";
-  let out = safeJsonParse(raw);
-  if (!out || typeof out !== "object") out = {};
-
-  const winnerKey = out.winner === "B" ? "B" : "A";
-  return {
-    winnerKey,
-    reason: String(out.reason || "Perché sì.").trim(),
-    tagline: String(out.tagline || "Fine della discussione.").trim(),
-  };
-}
-
-/* ========= Handler ========= */
+/* ========= HANDLER ========= */
 export default async function handler(req, res) {
   cors(req, res);
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ error: "missing_api_key" });
-    }
+    if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: "missing_api_key" });
 
-    // body robusto (come ask.js)
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+      .toString()
+      .split(",")[0]
+      .trim();
+
+    const ok = await rateOk(`battle:${ip}`);
+    if (!ok) return res.status(429).json({ error: "rate_limited_minute" });
+
+    // body robusto (come ask)
     let body = req.body || {};
     if (typeof body === "string") body = safeJsonParse(body) || {};
     else if (typeof body === "object" && body && typeof body.body === "string") {
       body = safeJsonParse(body.body) || body;
     }
 
-    const a = String(body.a || "").trim();
-    const b = String(body.b || "").trim();
-    const category = String(body.category || "cose").trim();
+    const a = stripQuotes(body.a || "");
+    const b = stripQuotes(body.b || "");
+    const category = safeCategory(body.category || "cose");
+    const style = safeStyle(body.style || "ironico");
 
-    if (!a || !b) return res.status(400).json({ error: "bad_request" });
+    if (!a || !b) return res.status(400).json({ error: "bad_request", detail: "a_and_b_required" });
 
-    const adminMode = isAdminMode(req);
+    // prompt
+    const prompt = buildPrompt({ a, b, category, style });
 
-    // auth (se non admin)
-    let uid = null;
-    if (!adminMode) {
-      uid = await getUidFromAuth(req);
-      if (!uid) {
-        return res.status(401).json({ error: "unauthorized", redirect: "/index.html" });
-      }
-    }
-
-    // 1) scala credito (solo se non admin)
-    let creditsLeft = null;
-    if (!adminMode) {
-      const charged = await consumeOneCredit(uid);
-      if (!charged.ok) {
-        return res.status(402).json({
-          error: "no_credits",
-          redirect: "/store/credit-store.html",
-        });
-      }
-      creditsLeft = charged.creditsLeft;
-    }
-
-    // 2) OpenAI
-    try {
-      const judged = await runBattleLLM({ a, b, category });
-
-      const winner = judged.winnerKey === "A" ? a : b;
-
-      return res.status(200).json({
-        winner,
-        winnerKey: judged.winnerKey,
-        reason: judged.reason,
-        tagline: judged.tagline,
-        creditsLeft: adminMode ? Infinity : creditsLeft,
-      });
-    } catch (e) {
-      // 3) rimborso se OpenAI fallisce
-      if (!adminMode && uid) {
-        try {
-          await refundOneCredit(uid);
-        } catch {
-          // se fallisce il refund, almeno non blocchiamo la risposta
-        }
-      }
-      const detail = String(e?.message || e);
-      return res.status(500).json({
-        error: "server_error",
-        detail: process.env.NODE_ENV !== "production" ? detail : undefined,
-      });
-    }
-  } catch (err) {
-    console.error("❌ [/api/battle] fatal:", err);
-    return res.status(500).json({
-      error: "server_error",
-      detail: process.env.NODE_ENV !== "production" ? String(err?.message || err) : undefined,
+    const completion = await client.chat.completions.create({
+      model: MODEL,
+      temperature: style === "serio" ? 0.5 : 0.9,
+      top_p: 0.95,
+      max_tokens: 160,
+      messages: [
+        { role: "system", content: "You output strict JSON only." },
+        { role: "user", content: prompt },
+      ],
     });
+
+    const raw = completion?.choices?.[0]?.message?.content?.trim() || "";
+    const obj = extractJson(raw);
+
+    if (!obj || !obj.winner || !obj.reason) {
+      // fallback deterministic “soft”
+      const winner = Math.random() < 0.5 ? "A" : "B";
+      return res.status(200).json({
+        a, b, category, style,
+        winner: winner === "A" ? a : b,
+        reason: "Vince perché oggi suona più convincente. Domani magari cambia.",
+        tagline: "Discussione aperta.",
+        model: MODEL,
+        mode: "battle",
+        fallback: true
+      });
+    }
+
+    const w = String(obj.winner).toUpperCase() === "A" ? "A" : "B";
+    let reason = normalizeOneParagraph(obj.reason || "");
+    let tagline = normalizeOneParagraph(obj.tagline || "");
+
+    reason = clampWords(reason, 22);
+    tagline = clampWords(tagline, 8);
+
+    // normalizza output
+    return res.status(200).json({
+      mode: "battle",
+      model: MODEL,
+      a,
+      b,
+      category,
+      style,
+      winner: w === "A" ? a : b,
+      reason,
+      tagline,
+      fallback: false,
+    });
+  } catch (err) {
+    console.error("❌ [/api/battle] error:", err);
+    return res.status(500).json({ error: "server_error", detail: String(err?.message || err) });
   }
 }
