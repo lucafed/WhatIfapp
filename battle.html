@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="it" data-theme="wtf">
+<html lang="it" data-theme="whatif">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>What?f — Battle</title>
   <meta name="theme-color" content="#0A0F14"/>
-
   <style>
     :root{
       --bg:#0B1018; --bg2:#0E1724; --card:#141C22;
       --fg:#F4F7FB; --muted:#A7B3C2;
       --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
-      --chip:#0F1820; --line:#1B2A34; --shadow:rgba(0,0,0,.45);
+      --chip:#0F1820; --line:#1B2A34;
+      --shadow:rgba(0,0,0,.35);
     }
     html[data-theme="wtf"]{
       --bg:#0B0B0C; --bg2:#101414; --card:#111713;
@@ -26,17 +26,13 @@
       color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       -webkit-font-smoothing:antialiased;
-      overflow-x:hidden;
     }
     main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
     .wrap{width:min(100%,980px)}
-    h1{margin:6px 0 6px;font-size:clamp(26px,6vw,38px);color:var(--accent);display:flex;gap:10px;align-items:center}
-    h1 .icon{font-size:26px}
-    .small{font-size:12px;color:var(--muted)}
     .topbar{
       position:sticky;top:0;z-index:10;
       display:flex;align-items:center;justify-content:space-between;gap:10px;
-      padding:10px 10px;
+      padding:8px 10px;
       background:rgba(10,15,20,.96);
       backdrop-filter:blur(6px);
       border-bottom:1px solid var(--line);
@@ -45,73 +41,72 @@
     .btn{
       appearance:none;border:1px solid var(--line);
       background:var(--chip);color:var(--fg);
-      border-radius:14px;padding:10px 14px;font-weight:900;cursor:pointer;
+      border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer;
     }
     .btn.primary{
       background:linear-gradient(180deg,var(--accent),var(--accent2));
-      color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35);
-    }
-    .btn.link{
-      background:transparent;border:none;color:var(--accent);
-      padding:10px 10px;font-weight:1000;
+      color:var(--ink);border:none;box-shadow:0 10px 26px var(--shadow);
     }
     .btn[disabled]{opacity:.45;cursor:not-allowed}
     .badge{
       background:var(--chip);border:1px solid var(--line);
-      border-radius:999px;padding:8px 12px;font-size:13px;color:#d7e8ec;white-space:nowrap;
-      font-weight:900;
+      border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap;
     }
     .card{
-      background:rgba(255,255,255,.04);
+      background:rgba(20,28,34,.78);
       border:1px solid var(--line);
-      border-radius:22px;
-      padding:14px;
-      margin:10px 0;
+      border-radius:16px;
+      padding:16px;
+      box-shadow:0 14px 40px rgba(0,0,0,.20);
       backdrop-filter:blur(12px);
-      box-shadow:0 14px 40px var(--shadow);
     }
-    .label{color:var(--accent2);font-weight:1000;margin:0 0 10px;font-size:13px;letter-spacing:.2px}
-    .chips{display:flex;flex-wrap:wrap;gap:10px}
-    .chip{
-      background:var(--chip);
-      border:1px solid var(--line);
-      color:#eaf3ee;
-      border-radius:999px;
-      padding:12px 16px;
-      font-size:15px;
-      font-weight:1000;
-      cursor:pointer;
+    h1{margin:6px 0 0;font-size:clamp(24px,6vw,36px);color:var(--accent)}
+    .muted{color:var(--muted);font-size:13px;line-height:1.5}
+    .grid{
+      display:grid;grid-template-columns:1fr;gap:12px;
     }
-    .chip.sel{
-      background:linear-gradient(180deg,var(--accent),var(--accent2));
-      color:var(--ink);
-      border:none;
-      box-shadow:0 0 0 1px rgba(255,255,255,.15) inset;
+    @media(min-width:860px){
+      .grid{grid-template-columns:1fr 1fr;}
     }
-    .input{
+    .input, select{
       width:100%;
       background:rgba(255,255,255,.06);
       color:#EAF3EE;
       border:1px solid var(--line);
-      border-radius:18px;
-      padding:18px;
-      font-size:20px;
+      border-radius:12px;
+      padding:12px;
+      font-size:16px;
       outline:none;
     }
-    .grid{display:grid;grid-template-columns:1fr;gap:12px}
-    @media(min-width:720px){ .grid{grid-template-columns:1fr 1fr} }
-    .fieldTitle{opacity:.9;font-weight:1000;margin:0 0 8px}
-    .err{color:#ffb3b3;font-weight:1000;margin-top:12px;min-height:18px}
-    .resultBox{
+    .label{color:var(--accent2);font-weight:800;margin:0 0 8px}
+    .result{
       border:1px solid var(--line);
-      border-radius:18px;
-      padding:12px 14px;
+      border-radius:14px;
+      padding:14px;
       background:rgba(255,255,255,.04);
-      margin-top:12px;
     }
-    .winner{font-weight:1100;font-size:18px;margin:0 0 6px}
-    .reason{margin:0;color:var(--muted);line-height:1.45}
-    .tagline{margin:10px 0 0;font-weight:1000;opacity:.95}
+    .win{
+      font-weight:900;
+      font-size:18px;
+      margin-bottom:6px;
+    }
+    .tagline{
+      margin-top:8px;
+      font-weight:800;
+      color:#EAE9D1;
+    }
+    .err{color:#ffb3b3;font-size:13px;min-height:18px}
+    .spin{
+      display:inline-block;
+      width:16px;height:16px;
+      border:2px solid rgba(255,255,255,.25);
+      border-top-color: rgba(255,255,255,.9);
+      border-radius:999px;
+      animation: r 0.8s linear infinite;
+      vertical-align:-3px;
+      margin-right:8px;
+    }
+    @keyframes r{to{transform:rotate(360deg)}}
   </style>
 </head>
 
@@ -121,51 +116,50 @@
       <button class="btn" id="backBtn" type="button">←</button>
       <button class="btn" id="homeBtn" type="button">🏠</button>
     </div>
-
     <div class="row">
-      <span class="badge" id="styleBadge">🤡 What the F</span>
       <span class="badge" id="creditsBadge">Crediti: —</span>
-      <button class="btn" id="storeBtn" type="button">🛒 Crediti</button>
+      <button class="btn" id="buyBtn" type="button">🛒 Ricarica</button>
     </div>
   </div>
 
   <main>
     <div class="wrap">
-      <h1><span class="icon">⚔️</span>Battle</h1>
-      <div class="small" style="margin-top:-6px">Ogni giudizio scala 1 credito.</div>
+      <h1>Battle</h1>
+      <div class="muted">Metti due opzioni contro. Io scelgo un vincitore e ti spiego perché (1–2 frasi).</div>
 
-      <div class="card">
+      <div class="card" style="margin-top:10px;">
         <div class="label">Categoria</div>
-        <div class="chips" id="catChips">
-          <button class="chip sel" data-cat="people">🧑‍🤝‍🧑 Persone</button>
-          <button class="chip" data-cat="things">🍕 Cose</button>
-          <button class="chip" data-cat="choices">🧠 Scelte</button>
-        </div>
-      </div>
+        <select id="cat">
+          <option value="cose">Cose</option>
+          <option value="cibo">Cibo</option>
+          <option value="persone">Persone</option>
+          <option value="lavoro">Lavoro</option>
+          <option value="relazioni">Relazioni</option>
+          <option value="viaggi">Viaggi</option>
+        </select>
 
-      <div class="card">
-        <div class="grid">
+        <div class="grid" style="margin-top:12px;">
           <div>
-            <div class="fieldTitle">A</div>
-            <input class="input" id="aInput" placeholder="Luca" autocomplete="off" />
+            <div class="label">A</div>
+            <input class="input" id="a" placeholder="Es. Pizza" maxlength="80"/>
           </div>
           <div>
-            <div class="fieldTitle">B</div>
-            <input class="input" id="bInput" placeholder="Sara" autocomplete="off" />
+            <div class="label">B</div>
+            <input class="input" id="b" placeholder="Es. Sushi" maxlength="80"/>
           </div>
         </div>
 
-        <div class="row" style="justify-content:space-between;margin-top:14px">
-          <button class="btn primary" id="judgeBtn" type="button">✨ Giudica</button>
-          <button class="btn link" id="buyLinkBtn" type="button">Compra crediti</button>
+        <div class="row" style="margin-top:12px;justify-content:space-between;">
+          <button class="btn primary" id="go" type="button">⚔️ Combatti</button>
+          <button class="btn" id="swap" type="button">🔁 Scambia</button>
         </div>
 
-        <div class="err" id="errLine"></div>
+        <div class="err" id="err"></div>
 
-        <div class="resultBox" id="resultBox" style="display:none">
-          <div class="winner" id="winnerLine">🏆 Vince: —</div>
-          <p class="reason" id="reasonLine"></p>
-          <div class="tagline" id="tagLine"></div>
+        <div class="result" id="out" style="display:none;margin-top:12px;">
+          <div class="win" id="winner"></div>
+          <div class="muted" id="reason"></div>
+          <div class="tagline" id="tagline"></div>
         </div>
       </div>
     </div>
@@ -174,183 +168,152 @@
   <script type="module">
     import { auth } from "./firebase.init.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    import { bootCredits, getBalance } from "./store/credits.js";
 
-    const LS = localStorage;
     const $ = (id) => document.getElementById(id);
 
-    const STORE_URL = "store/credit-store.html";
-    const IS_ADMIN = !!LS.getItem("admin_token");
-
-    let prefs = (() => {
-      try { return JSON.parse(LS.getItem("whatif_prefs") || "{}") || {}; }
-      catch { return {}; }
+    const IS_ADMIN = (() => {
+      try { return !!localStorage.getItem("admin_token"); } catch { return false; }
     })();
-    if (!prefs.stile) prefs.stile = "wtf";
 
-    document.documentElement.setAttribute("data-theme", prefs.stile === "wtf" ? "wtf" : "whatif");
-    $("styleBadge").textContent = prefs.stile === "wtf" ? "🤡 What the F" : "🧠 What if";
-
-    function goStore(){
-      const lang = (LS.getItem("lang") || "it").toLowerCase();
-      location.href = `${STORE_URL}?lang=${encodeURIComponent(lang)}`;
+    function setErr(t=""){ $("err").textContent = t || ""; }
+    function showResult(data){
+      $("out").style.display = "block";
+      $("winner").textContent = `🏆 Vince: ${data.winner}`;
+      $("reason").textContent  = data.reason || "";
+      $("tagline").textContent = data.tagline || "";
     }
-    $("storeBtn").onclick = goStore;
-    $("buyLinkBtn").onclick = goStore;
-    $("homeBtn").onclick = () => (location.href = "index.html");
+    function hideResult(){
+      $("out").style.display = "none";
+      $("winner").textContent = "";
+      $("reason").textContent = "";
+      $("tagline").textContent = "";
+    }
+
+    $("homeBtn").onclick = () => location.href = "index.html";
     $("backBtn").onclick = () => (history.length > 1 ? history.back() : (location.href = "index.html"));
+    $("buyBtn").onclick = () => location.href = "/store/credit-store.html";
 
-    let category = "people";
-    $("catChips").addEventListener("click", (e) => {
-      const b = e.target.closest(".chip");
-      if(!b) return;
-      category = b.dataset.cat || "people";
-      [...$("catChips").querySelectorAll(".chip")].forEach(x => x.classList.toggle("sel", x === b));
-    });
+    $("swap").onclick = () => {
+      const A = $("a").value;
+      $("a").value = $("b").value;
+      $("b").value = A;
+      hideResult();
+      setErr("");
+    };
 
-    function setErr(t){ $("errLine").textContent = t || ""; }
-    function setLoading(v){
-      const btn = $("judgeBtn");
-      btn.disabled = !!v;
-      btn.textContent = v ? "⏳..." : "✨ Giudica";
-    }
-    function showResult({ winner, reason, tagline }){
-      $("winnerLine").textContent = "🏆 Vince: " + (winner || "—");
-      $("reasonLine").textContent  = reason || "";
-      $("tagLine").textContent     = tagline ? `“${tagline}”` : "";
-      $("resultBox").style.display = "block";
-    }
-
-    // ===== Credits badge (Redis via /api/credits-balance) =====
-    let currentCredits = null;
-    function renderCredits(){
+    async function renderCredits(){
       if (IS_ADMIN){
         $("creditsBadge").textContent = "Crediti: ∞ (admin)";
         return;
       }
-      $("creditsBadge").textContent = "Crediti: " + (currentCredits ?? "—");
-    }
-
-    async function getIdToken(){
-      const u = auth.currentUser;
-      if (!u) return null;
-      try { return await u.getIdToken(/*forceRefresh*/ false); }
-      catch { return null; }
-    }
-
-    async function syncCredits(){
-      if (IS_ADMIN){ renderCredits(); return; }
-      const token = await getIdToken();
-      if (!token){
-        currentCredits = 0;
-        renderCredits();
+      if (!auth.currentUser){
+        $("creditsBadge").textContent = "Crediti: —";
         return;
       }
       try{
-        const res = await fetch("/api/credits-balance", {
-          method: "GET",
-          headers: { "Authorization": "Bearer " + token }
-        });
-        const data = await res.json().catch(()=> ({}));
-        if (!res.ok || !data.ok){
-          currentCredits = 0;
-        } else {
-          currentCredits = Number(data.credits || 0) || 0;
-        }
+        await bootCredits();
+        const bal = await getBalance();
+        $("creditsBadge").textContent = `Crediti: ${Number.isFinite(bal) ? bal : 0}`;
       }catch(e){
-        console.error("syncCredits error:", e);
+        console.warn("credits render error", e);
+        $("creditsBadge").textContent = "Crediti: —";
       }
-      renderCredits();
     }
 
-    function guardLocalCredits(){
-      if (IS_ADMIN) return true;
-      if ((currentCredits ?? 0) <= 0){
-        alert("Hai finito i crediti. Ricarica per continuare.");
-        goStore();
-        return false;
+    onAuthStateChanged(auth, async (u) => {
+      await renderCredits();
+      if (!u && !IS_ADMIN){
+        // battle usa crediti -> meglio riportare a home/login
+        // (puoi commentarlo se vuoi lasciarla accessibile senza login)
+        // location.href = "index.html";
       }
-      return true;
-    }
+    });
 
-    async function runBattle(){
+    window.addEventListener("focus", renderCredits);
+    window.addEventListener("pageshow", renderCredits);
+
+    async function callBattle(){
       setErr("");
-      $("resultBox").style.display = "none";
+      hideResult();
 
-      const a = ($("aInput").value || "").trim();
-      const b = ($("bInput").value || "").trim();
-      if(!a || !b){ setErr("Inserisci A e B."); return; }
+      const a = ($("a").value || "").trim();
+      const b = ($("b").value || "").trim();
+      const category = ($("cat").value || "cose").trim();
 
-      if(!guardLocalCredits()) return;
+      if (!a || !b){
+        setErr("Inserisci sia A che B.");
+        return;
+      }
 
-      const token = await getIdToken();
-      if(!token){
-        alert("Devi essere loggato per usare Battle.");
+      if (!auth.currentUser && !IS_ADMIN){
+        setErr("Devi essere loggato per usare i crediti.");
         location.href = "index.html";
         return;
       }
 
-      setLoading(true);
+      const btn = $("go");
+      const old = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spin"></span>Decido…`;
 
       try{
-        const res = await fetch("/api/battle", {
-          method:"POST",
-          headers:{
-            "Content-Type":"application/json",
-            "Authorization":"Bearer " + token
+        let token = null;
+        if (auth.currentUser){
+          token = await auth.currentUser.getIdToken(true);
+        }
+
+        const r = await fetch("/api/battle", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
           },
-          body: JSON.stringify({
-            a, b,
-            category
-          })
+          body: JSON.stringify({ a, b, category })
         });
 
-        const data = await res.json().catch(()=> ({}));
-
-        if(!res.ok){
-          if (data && data.error === "no_credits"){
-            alert("Hai finito i crediti. Ricarica per continuare.");
-            goStore();
-            return;
-          }
-          setErr((data && (data.error || data.message)) || ("Errore Battle (HTTP " + res.status + "). Riprova."));
+        // 402 -> no credits
+        if (r.status === 402){
+          const j = await r.json().catch(()=>({}));
+          location.href = j.redirect || "/store/credit-store.html";
           return;
         }
 
-        // ✅ aggiorna crediti dal server (quelli rimasti)
-        if (!IS_ADMIN && typeof data.creditsLeft !== "undefined"){
-          currentCredits = Number(data.creditsLeft);
-          if (!Number.isFinite(currentCredits)) currentCredits = currentCredits ?? null;
-          renderCredits();
-          if ((currentCredits ?? 0) <= 0){
-            // appena finiti -> manda allo store (soft)
-            setTimeout(()=>{ try{ goStore(); }catch{} }, 600);
-          }
+        // 401 -> not logged / token invalid
+        if (r.status === 401){
+          const j = await r.json().catch(()=>({}));
+          location.href = j.redirect || "/index.html";
+          return;
         }
 
-        showResult({
-          winner: data.winner || "—",
-          reason: data.reason || "",
-          tagline: data.tagline || ""
-        });
+        const j = await r.json().catch(()=>({}));
 
+        if (!r.ok || !j.ok){
+          setErr("Errore server. Riprova.");
+          return;
+        }
+
+        showResult(j);
+        await renderCredits(); // aggiorna badge (server ha scalato)
       }catch(e){
         console.error(e);
-        setErr("Errore rete. Riprova.");
+        setErr("Errore di rete. Riprova.");
       }finally{
-        setLoading(false);
+        btn.disabled = false;
+        btn.innerHTML = old;
       }
     }
 
-    $("judgeBtn").onclick = runBattle;
-    $("aInput").addEventListener("keydown", (e)=>{ if(e.key==="Enter") runBattle(); });
-    $("bInput").addEventListener("keydown", (e)=>{ if(e.key==="Enter") runBattle(); });
+    $("go").onclick = callBattle;
 
-    onAuthStateChanged(auth, async () => {
-      await syncCredits();
+    // Enter per combattere
+    ["a","b"].forEach(id=>{
+      $(id).addEventListener("keydown",(e)=>{
+        if(e.key==="Enter"){ e.preventDefault(); callBattle(); }
+      });
     });
-    window.addEventListener("focus", syncCredits);
-    window.addEventListener("pageshow", syncCredits);
 
+    // primo render
     renderCredits();
   </script>
 </body>
