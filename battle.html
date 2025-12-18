@@ -275,41 +275,7 @@
       document.querySelectorAll("#catChips .chip").forEach(x=>x.classList.remove("sel"));
       b.classList.add("sel");
       category = b.dataset.cat || "persone";
-      // aggiorna URL “pulito” (opzionale) se già esiste deep-link
-      try{
-        const u = new URL(location.href);
-        if (u.searchParams.get("cat")) {
-          u.searchParams.set("cat", category);
-          history.replaceState({}, "", u.toString());
-        }
-      }catch{}
     });
-
-    // ✅ Deep link in ingresso: ?a=&b=&cat=
-    (function preloadFromUrl(){
-      try{
-        const p = new URLSearchParams(window.location.search);
-        const a = p.get("a");
-        const b = p.get("b");
-        const cat = p.get("cat");
-
-        if (a) $("aInput").value = decodeURIComponent(a);
-        if (b) $("bInput").value = decodeURIComponent(b);
-
-        if (cat){
-          category = cat;
-          document.querySelectorAll("#catChips .chip").forEach(x=>{
-            x.classList.toggle("sel", x.dataset.cat === cat);
-          });
-        }
-
-        if (a && b){
-          setTimeout(()=> $("judgeBtn").scrollIntoView({ behavior:"smooth", block:"center" }), 200);
-        }
-      }catch(e){
-        console.warn("Deep link parse error", e);
-      }
-    })();
 
     // credits state
     let currentBalance = 0;
@@ -358,34 +324,27 @@
       return `⚔️ Battle\nA: ${d.a}\nB: ${d.b}\n🏆 Vince: ${d.winner}\n${d.reason}\n${d.tagline ? "— " + d.tagline : ""}`.trim();
     }
 
-    // ✅ Caption COMPLETA: include sfida + risposta + link che riapre la battle già pronta
+    // ✅ caption COMPLETA (sfida + risposta)
     function shareCaption(d){
-      const a = encodeURIComponent(d.a || "");
-      const b = encodeURIComponent(d.b || "");
-      const cat = encodeURIComponent(category || "cose");
-
-      const link = `https://what-ifapp.vercel.app/battle?a=${a}&b=${b}&cat=${cat}`;
-
+      const a = String(d.a||"").trim();
+      const b = String(d.b||"").trim();
+      const w = String(d.winner||"").trim();
+      const r = String(d.reason||"").trim();
+      const t = String(d.tagline||"").trim();
       return [
-        "⚔️ Battle — What?f",
-        `A: ${d.a}`,
-        `B: ${d.b}`,
+        `⚔️ Battle: ${a} vs ${b}`,
+        `🏆 Vince: ${w}`,
+        r ? `💬 ${r}` : "",
+        t ? `“${t}”` : "",
         "",
-        `🏆 Vince: ${d.winner}`,
-        d.reason || "",
-        d.tagline ? `“${d.tagline}”` : "",
-        "",
-        "👉 Rifalla anche tu:",
-        link,
-        "",
+        "Provala qui: what-ifapp.vercel.app/battle",
         "#whatif #battle"
       ].filter(Boolean).join("\n").trim();
     }
 
     /* =======================
-       CARD GENERATOR (Canvas)
+       HELPERS CANVAS
        ======================= */
-
     function wrapLines(ctx, text, maxWidth){
       const words = String(text||"").split(/\s+/).filter(Boolean);
       const lines = [];
@@ -414,14 +373,19 @@
       ctx.closePath();
     }
 
+    /* =======================
+       CARD GENERATOR (FIXED)
+       - What?f grande in alto
+       - VS centrato
+       - niente accavallamenti (footer riservato)
+       - contiene sfida + risposta
+       ======================= */
     async function makeBattleCardPNG(d){
-      // 1080x1350 (IG portrait)
       const W = 1080, H = 1350;
       const c = document.createElement("canvas");
       c.width = W; c.height = H;
       const ctx = c.getContext("2d");
 
-      // theme colors (match page)
       const isWtf = document.documentElement.getAttribute("data-theme") === "wtf";
       const bg1 = isWtf ? "#101414" : "#0E1724";
       const bg2 = isWtf ? "#0B0B0C" : "#0B1018";
@@ -433,7 +397,7 @@
       const accent2 = isWtf ? "#5A8C75" : "#FFEC01";
       const ink = isWtf ? "#06110B" : "#11110A";
 
-      // background gradient
+      // bg
       const grd = ctx.createRadialGradient(W*0.25,H*0.18, 40, W*0.25,H*0.18, Math.max(W,H));
       grd.addColorStop(0, bg1);
       grd.addColorStop(1, bg2);
@@ -443,6 +407,14 @@
       // outer card
       const pad = 70;
       const boxX = pad, boxY = 110, boxW = W - pad*2, boxH = H - pad*2;
+
+      const innerX = boxX + 52;
+      const innerR = boxX + boxW - 52;
+      const innerW = innerR - innerX;
+
+      // footer reserved area (prevents overlaps)
+      const FOOTER_H = 130;
+      const FOOTER_Y = boxY + boxH - FOOTER_H;
 
       ctx.save();
       roundRect(ctx, boxX, boxY, boxW, boxH, 42);
@@ -455,17 +427,21 @@
       ctx.stroke();
       ctx.restore();
 
-      // top brand row
-      ctx.font = "800 44px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      // HEADER: What?f big
+      ctx.font = "900 64px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = fg;
-      ctx.fillText("What?f ⚔️ Battle", boxX+52, boxY+92);
+      ctx.fillText("What?f", innerX, boxY + 92);
 
-      // style chip
+      ctx.font = "800 44px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillStyle = "rgba(255,255,255,.92)";
+      ctx.fillText("⚔️ Battle", innerX, boxY + 142);
+
+      // style chip right
       const styleText = isWtf ? "What the F" : "What if";
       ctx.font = "800 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       const chipW = ctx.measureText(styleText).width + 44;
-      const chipX = boxX + boxW - chipW - 52;
-      const chipY = boxY + 55;
+      const chipX = innerR - chipW;
+      const chipY = boxY + 72;
 
       ctx.save();
       roundRect(ctx, chipX, chipY, chipW, 46, 23);
@@ -482,41 +458,37 @@
       ctx.strokeStyle = line;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(boxX+52, boxY+140);
-      ctx.lineTo(boxX+boxW-52, boxY+140);
+      ctx.moveTo(innerX, boxY + 178);
+      ctx.lineTo(innerR, boxY + 178);
       ctx.stroke();
 
-      /* ========= SFIDA COMPLETA (A vs B) ========= */
-      const zoneTop = boxY + 200;
-      const zoneBottom = boxY + 540;
-      const zoneMid = (zoneTop + zoneBottom)/2;
+      // A vs B zone
+      const zoneTop = boxY + 215;
+      const zoneBottom = boxY + 545;
+      const zoneMid = (zoneTop + zoneBottom) / 2;
 
-      const labelX = boxX + 52;
-      const textX  = boxX + 92;
-      const rightX = boxX + boxW - 52;
-      const maxTextW = rightX - textX;
+      const labelX = innerX;
+      const textX  = innerX + 40;
+      const maxTextW = innerR - textX;
 
-      // labels
       ctx.font = "800 26px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = muted;
       ctx.fillText("A", labelX, zoneTop + 40);
       ctx.fillText("B", labelX, zoneMid + 130);
 
-      // text
-      ctx.font = "900 44px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.font = "900 46px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = fg;
 
       const aLines = wrapLines(ctx, String(d.a||"").trim(), maxTextW).slice(0,2);
       const bLines = wrapLines(ctx, String(d.b||"").trim(), maxTextW).slice(0,2);
 
-      const lineH = 52;
-      let ay = zoneMid - 135;
+      const lineH = 56;
+      let ay = zoneMid - 140;
       for (const ln of aLines){ ctx.fillText(ln, textX, ay); ay += lineH; }
-
-      let by = zoneMid + 95;
+      let by = zoneMid + 110;
       for (const ln of bLines){ ctx.fillText(ln, textX, by); by += lineH; }
 
-      // VS centrato
+      // VS centered
       const vsX = boxX + boxW/2;
       const vsY = zoneMid;
       ctx.save();
@@ -534,13 +506,13 @@
       ctx.restore();
       ctx.textAlign = "left";
 
-      /* ========= WINNER EVIDENZIATO ========= */
-      let y = boxY + 575;
+      // Winner banner (highlight)
+      let y = boxY + 585;
       ctx.save();
-      roundRect(ctx, boxX+52, y, boxW-104, 118, 28);
-      ctx.shadowColor = "rgba(255,236,1,.35)";
-      ctx.shadowBlur = 25;
-      const winGrad = ctx.createLinearGradient(boxX+52, y, boxX+52, y+118);
+      roundRect(ctx, innerX, y, innerW, 118, 28);
+      ctx.shadowColor = "rgba(255,236,1,.30)";
+      ctx.shadowBlur = 22;
+      const winGrad = ctx.createLinearGradient(innerX, y, innerX, y+118);
       winGrad.addColorStop(0, accent);
       winGrad.addColorStop(1, accent2);
       ctx.fillStyle = winGrad;
@@ -549,48 +521,67 @@
 
       ctx.font = "900 34px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = ink;
-      ctx.fillText("🏆 Vince", boxX+92, y+55);
+      ctx.fillText("🏆 Vince", innerX + 40, y + 54);
 
-      ctx.font = "900 46px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      const winLine = wrapLines(ctx, String(d.winner||"—").trim(), boxW-240).slice(0,1)[0] || "—";
-      ctx.fillText(winLine, boxX+92, y+102);
+      ctx.font = "900 50px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      const winLine = wrapLines(ctx, String(d.winner||"—").trim(), innerW - 120).slice(0,1)[0] || "—";
+      ctx.fillText(winLine, innerX + 40, y + 106);
 
-      /* ========= MOTIVO ========= */
-      y = boxY + 740;
+      // Reason
+      y = boxY + 755;
       ctx.font = "900 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = muted;
-      ctx.fillText("Motivo", boxX+52, y);
+      ctx.fillText("Motivo", innerX, y);
 
       ctx.font = "650 34px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = fg;
-      const rLines = wrapLines(ctx, String(d.reason||"").trim(), boxW-104).slice(0,6);
-      let ry = y + 52;
-      for (const ln of rLines){ ctx.fillText(ln, boxX+52, ry); ry += 44; }
+      const reason = String(d.reason||"").trim();
+      const reasonLines = wrapLines(ctx, reason, innerW).slice(0,6);
 
-      /* ========= TAGLINE ========= */
+      let ry = y + 54;
+      for (const ln of reasonLines){
+        ctx.fillText(ln, innerX, ry);
+        ry += 44;
+      }
+
+      // Tagline (no overlap with footer)
       const tagline = String(d.tagline||"").trim();
-      if (tagline){
-        const ty = Math.max(ry + 26, boxY + 1010);
+      const yMax = FOOTER_Y - 22;
+
+      if (tagline && ry < yMax - 70){
+        const ty = Math.min(ry + 26, yMax - 70);
+
         ctx.font = "900 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
         ctx.fillStyle = muted;
-        ctx.fillText("Tagline", boxX+52, ty);
+        ctx.fillText("Tagline", innerX, ty);
 
         ctx.font = "900 38px system-ui, -apple-system, Segoe UI, Roboto, Arial";
         ctx.fillStyle = accent2;
-        const tLines = wrapLines(ctx, "“" + tagline + "”", boxW-104).slice(0,2);
+
+        const tLines = wrapLines(ctx, "“" + tagline + "”", innerW).slice(0,2);
         let tty = ty + 56;
-        for (const ln of tLines){ ctx.fillText(ln, boxX+52, tty); tty += 46; }
+        for (const ln of tLines){
+          if (tty > yMax) break;
+          ctx.fillText(ln, innerX, tty);
+          tty += 46;
+        }
       }
 
-      /* ========= CTA (VIRALE) ========= */
-      const ctaY = boxY + boxH - 140;
-      ctx.font = "900 34px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      ctx.fillStyle = accent2;
-      ctx.fillText("👉 Rifalla anche tu:", boxX+52, ctaY);
+      // Footer fixed
+      ctx.strokeStyle = line;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(innerX, FOOTER_Y);
+      ctx.lineTo(innerR, FOOTER_Y);
+      ctx.stroke();
 
-      ctx.font = "800 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      ctx.fillStyle = "rgba(255,255,255,.85)";
-      ctx.fillText("what-ifapp.vercel.app/battle", boxX+52, ctaY + 46);
+      ctx.font = "900 30px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillStyle = accent2;
+      ctx.fillText("👉 Rifalla anche tu:", innerX, FOOTER_Y + 52);
+
+      ctx.font = "800 26px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillStyle = "rgba(255,255,255,.88)";
+      ctx.fillText("what-ifapp.vercel.app/battle", innerX, FOOTER_Y + 92);
 
       const dataUrl = c.toDataURL("image/png");
       const blob = await new Promise((resolve)=> c.toBlob(resolve, "image/png", 1.0));
@@ -617,7 +608,7 @@
     });
 
     let last = null;
-    let lastCard = null; // {dataUrl, blob}
+    let lastCard = null;
 
     async function ensureCard(){
       if(!last) return null;
@@ -683,15 +674,6 @@
         $("reasonLine").textContent  = data.reason || "";
         $("tagLine").textContent     = data.tagline ? `“${data.tagline}”` : "";
         $("resultBox").style.display = "block";
-
-        // aggiorna URL con deep-link (virale)
-        try{
-          const u = new URL(location.href);
-          u.searchParams.set("a", encodeURIComponent(a));
-          u.searchParams.set("b", encodeURIComponent(b));
-          u.searchParams.set("cat", category);
-          history.replaceState({}, "", u.toString());
-        }catch{}
       }catch(e){
         console.error(e);
         setErr("Errore rete. Riprova.");
