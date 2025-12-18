@@ -243,16 +243,19 @@
     let prefs = {};
     try{ prefs = JSON.parse(LS.getItem("whatif_prefs")||"{}") || {}; }catch{ prefs = {}; }
 
+    // tema coerente
     const theme = (prefs.stile === "wtf") ? "wtf" : "whatif";
     document.documentElement.setAttribute("data-theme", theme);
     $("styleBadge").textContent = "🎭 " + (theme === "wtf" ? "What the F" : "What if");
 
+    // nav
     $("homeBtn").onclick = ()=> location.href = "index.html";
     $("backBtn").onclick = ()=>{
       if(history.length>1) history.back();
       else location.href = "index.html";
     };
 
+    // store link con lang
     function getLang(){
       const l = (LS.getItem("lang") || document.documentElement.lang || "it").toLowerCase();
       return ["it","en","es","fr","de"].includes(l) ? l : "it";
@@ -264,6 +267,7 @@
     $("buyBtn").onclick = goStore;
     $("storeLink").onclick = (e)=>{ e.preventDefault(); goStore(); };
 
+    // categorie
     let category = "persone";
     $("catChips").addEventListener("click",(e)=>{
       const b = e.target.closest(".chip");
@@ -271,8 +275,43 @@
       document.querySelectorAll("#catChips .chip").forEach(x=>x.classList.remove("sel"));
       b.classList.add("sel");
       category = b.dataset.cat || "persone";
+      // aggiorna URL “pulito” (opzionale) se già esiste deep-link
+      try{
+        const u = new URL(location.href);
+        if (u.searchParams.get("cat")) {
+          u.searchParams.set("cat", category);
+          history.replaceState({}, "", u.toString());
+        }
+      }catch{}
     });
 
+    // ✅ Deep link in ingresso: ?a=&b=&cat=
+    (function preloadFromUrl(){
+      try{
+        const p = new URLSearchParams(window.location.search);
+        const a = p.get("a");
+        const b = p.get("b");
+        const cat = p.get("cat");
+
+        if (a) $("aInput").value = decodeURIComponent(a);
+        if (b) $("bInput").value = decodeURIComponent(b);
+
+        if (cat){
+          category = cat;
+          document.querySelectorAll("#catChips .chip").forEach(x=>{
+            x.classList.toggle("sel", x.dataset.cat === cat);
+          });
+        }
+
+        if (a && b){
+          setTimeout(()=> $("judgeBtn").scrollIntoView({ behavior:"smooth", block:"center" }), 200);
+        }
+      }catch(e){
+        console.warn("Deep link parse error", e);
+      }
+    })();
+
+    // credits state
     let currentBalance = 0;
 
     function setErr(t){ $("err").textContent = t || ""; }
@@ -315,34 +354,29 @@
       return true;
     }
 
-    function catLabel(cat){
-      if(cat === "persone") return "🧑‍🤝‍🧑 Persone";
-      if(cat === "scelte") return "🧠 Scelte";
-      return "🍕 Cose";
+    function shareText(d){
+      return `⚔️ Battle\nA: ${d.a}\nB: ${d.b}\n🏆 Vince: ${d.winner}\n${d.reason}\n${d.tagline ? "— " + d.tagline : ""}`.trim();
     }
 
-    function shareText(d){
+    // ✅ Caption COMPLETA: include sfida + risposta + link che riapre la battle già pronta
+    function shareCaption(d){
+      const a = encodeURIComponent(d.a || "");
+      const b = encodeURIComponent(d.b || "");
+      const cat = encodeURIComponent(category || "cose");
+
+      const link = `https://what-ifapp.vercel.app/battle?a=${a}&b=${b}&cat=${cat}`;
+
       return [
-        "⚔️ Battle",
-        `Categoria: ${catLabel(d.category || category)}`,
+        "⚔️ Battle — What?f",
         `A: ${d.a}`,
         `B: ${d.b}`,
+        "",
         `🏆 Vince: ${d.winner}`,
         d.reason || "",
-        d.tagline ? `“${d.tagline}”` : ""
-      ].filter(Boolean).join("\n").trim();
-    }
-
-    function shareCaption(d){
-      // ✅ caption FULL: sfida + risposta
-      return [
-        "⚔️ Battle",
-        `Categoria: ${catLabel(d.category || category)}`,
-        `SFIDA: ${d.a} vs ${d.b}`,
-        `RISPOSTA: vince ${d.winner}`,
+        d.tagline ? `“${d.tagline}”` : "",
         "",
-        `Motivo: ${d.reason || ""}`.trim(),
-        d.tagline ? `Tagline: “${d.tagline}”` : "",
+        "👉 Rifalla anche tu:",
+        link,
         "",
         "#whatif #battle"
       ].filter(Boolean).join("\n").trim();
@@ -380,30 +414,14 @@
       ctx.closePath();
     }
 
-    function drawPill(ctx, x, y, text, fg, bg, stroke){
-      ctx.save();
-      ctx.font = "900 24px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      const w = ctx.measureText(text).width + 34;
-      roundRect(ctx, x, y, w, 40, 20);
-      ctx.fillStyle = bg;
-      ctx.fill();
-      if(stroke){
-        ctx.strokeStyle = stroke;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-      ctx.fillStyle = fg;
-      ctx.fillText(text, x+17, y+28);
-      ctx.restore();
-      return w;
-    }
-
     async function makeBattleCardPNG(d){
+      // 1080x1350 (IG portrait)
       const W = 1080, H = 1350;
       const c = document.createElement("canvas");
       c.width = W; c.height = H;
       const ctx = c.getContext("2d");
 
+      // theme colors (match page)
       const isWtf = document.documentElement.getAttribute("data-theme") === "wtf";
       const bg1 = isWtf ? "#101414" : "#0E1724";
       const bg2 = isWtf ? "#0B0B0C" : "#0B1018";
@@ -415,12 +433,14 @@
       const accent2 = isWtf ? "#5A8C75" : "#FFEC01";
       const ink = isWtf ? "#06110B" : "#11110A";
 
+      // background gradient
       const grd = ctx.createRadialGradient(W*0.25,H*0.18, 40, W*0.25,H*0.18, Math.max(W,H));
       grd.addColorStop(0, bg1);
       grd.addColorStop(1, bg2);
       ctx.fillStyle = grd;
       ctx.fillRect(0,0,W,H);
 
+      // outer card
       const pad = 70;
       const boxX = pad, boxY = 110, boxW = W - pad*2, boxH = H - pad*2;
 
@@ -435,113 +455,68 @@
       ctx.stroke();
       ctx.restore();
 
-      // header
-      ctx.font = "900 46px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      // top brand row
+      ctx.font = "800 44px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = fg;
       ctx.fillText("What?f ⚔️ Battle", boxX+52, boxY+92);
 
-      // chips row: STYLE + CATEGORY
-      const styleText = isWtf ? "🎭 What the F" : "🎭 What if";
-      const catText = "🏷️ " + (catLabel(String(d.category || "cose")));
+      // style chip
+      const styleText = isWtf ? "What the F" : "What if";
+      ctx.font = "800 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      const chipW = ctx.measureText(styleText).width + 44;
+      const chipX = boxX + boxW - chipW - 52;
+      const chipY = boxY + 55;
 
-      // style chip gradient
       ctx.save();
-      ctx.font = "900 24px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      const styleW = ctx.measureText(styleText).width + 34;
-      const styleX = boxX + 52;
-      const chipY = boxY + 120;
-      roundRect(ctx, styleX, chipY, styleW, 40, 20);
-      const g = ctx.createLinearGradient(styleX, chipY, styleX, chipY+40);
-      g.addColorStop(0, accent);
-      g.addColorStop(1, accent2);
-      ctx.fillStyle = g;
+      roundRect(ctx, chipX, chipY, chipW, 46, 23);
+      const chipGrad = ctx.createLinearGradient(chipX, chipY, chipX, chipY+46);
+      chipGrad.addColorStop(0, accent);
+      chipGrad.addColorStop(1, accent2);
+      ctx.fillStyle = chipGrad;
       ctx.fill();
       ctx.fillStyle = ink;
-      ctx.fillText(styleText, styleX+17, chipY+28);
+      ctx.fillText(styleText, chipX+22, chipY+33);
       ctx.restore();
-
-      // category chip (neutral)
-      const catX = styleX + styleW + 14;
-      drawPill(ctx, catX, chipY, catText, fg, "rgba(255,255,255,.06)", line);
 
       // divider
       ctx.strokeStyle = line;
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(boxX+52, boxY+178);
-      ctx.lineTo(boxX+boxW-52, boxY+178);
+      ctx.moveTo(boxX+52, boxY+140);
+      ctx.lineTo(boxX+boxW-52, boxY+140);
       ctx.stroke();
 
-      // section label: SFIDA
-      ctx.font = "900 30px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      ctx.fillStyle = muted;
-      ctx.fillText("SFIDA", boxX+52, boxY+228);
-
-      const aTextRaw = String(d.a || "").trim();
-      const bTextRaw = String(d.b || "").trim();
-      const winnerRaw = String(d.winner || "").trim();
-
-      const winnerIsA = winnerRaw && aTextRaw && winnerRaw.toLowerCase() === aTextRaw.toLowerCase();
-      const winnerIsB = winnerRaw && bTextRaw && winnerRaw.toLowerCase() === bTextRaw.toLowerCase();
-
-      // A/B + VS centered
-      const zoneTop = boxY + 255;
-      const zoneBottom = boxY + 555;
-      const zoneMid = (zoneTop + zoneBottom) / 2;
+      /* ========= SFIDA COMPLETA (A vs B) ========= */
+      const zoneTop = boxY + 200;
+      const zoneBottom = boxY + 540;
+      const zoneMid = (zoneTop + zoneBottom)/2;
 
       const labelX = boxX + 52;
       const textX  = boxX + 92;
       const rightX = boxX + boxW - 52;
       const maxTextW = rightX - textX;
 
-      // A/B labels
+      // labels
       ctx.font = "800 26px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = muted;
       ctx.fillText("A", labelX, zoneTop + 40);
-      ctx.fillText("B", labelX, zoneMid + 120);
+      ctx.fillText("B", labelX, zoneMid + 130);
 
-      function drawMiniBadge(txt, x, y, isWin){
-        ctx.save();
-        ctx.font = "900 22px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-        const w = ctx.measureText(txt).width + 30;
-        roundRect(ctx, x, y-26, w, 34, 17);
-        if(isWin){
-          const g2 = ctx.createLinearGradient(x, y-26, x, y+8);
-          g2.addColorStop(0, accent);
-          g2.addColorStop(1, accent2);
-          ctx.fillStyle = g2;
-          ctx.shadowColor = "rgba(255,236,1,.45)";
-          ctx.shadowBlur = 18;
-          ctx.fill();
-          ctx.fillStyle = ink;
-        }else{
-          ctx.fillStyle = "rgba(255,255,255,.06)";
-          ctx.fill();
-          ctx.strokeStyle = line;
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          ctx.fillStyle = muted;
-        }
-        ctx.fillText(txt, x+15, y-2);
-        ctx.restore();
-      }
-
+      // text
       ctx.font = "900 44px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = fg;
-      const aLines = wrapLines(ctx, aTextRaw, maxTextW).slice(0,2);
-      const bLines = wrapLines(ctx, bTextRaw, maxTextW).slice(0,2);
+
+      const aLines = wrapLines(ctx, String(d.a||"").trim(), maxTextW).slice(0,2);
+      const bLines = wrapLines(ctx, String(d.b||"").trim(), maxTextW).slice(0,2);
 
       const lineH = 52;
-
-      let ay = zoneMid - 125;
+      let ay = zoneMid - 135;
       for (const ln of aLines){ ctx.fillText(ln, textX, ay); ay += lineH; }
-      if(winnerRaw) drawMiniBadge(winnerIsA ? "WIN" : "LOSE", rightX - 110, zoneMid - 155, !!winnerIsA);
 
-      let by = zoneMid + 90;
+      let by = zoneMid + 95;
       for (const ln of bLines){ ctx.fillText(ln, textX, by); by += lineH; }
-      if(winnerRaw) drawMiniBadge(winnerIsB ? "WIN" : "LOSE", rightX - 110, zoneMid + 45, !!winnerIsB);
 
-      // VS
+      // VS centrato
       const vsX = boxX + boxW/2;
       const vsY = zoneMid;
       ctx.save();
@@ -559,18 +534,13 @@
       ctx.restore();
       ctx.textAlign = "left";
 
-      // section label: RISPOSTA
-      ctx.font = "900 30px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      ctx.fillStyle = muted;
-      ctx.fillText("RISPOSTA", boxX+52, boxY+610);
-
-      // winner banner
-      let y = boxY + 640;
+      /* ========= WINNER EVIDENZIATO ========= */
+      let y = boxY + 575;
       ctx.save();
-      roundRect(ctx, boxX+52, y, boxW-104, 112, 28);
+      roundRect(ctx, boxX+52, y, boxW-104, 118, 28);
       ctx.shadowColor = "rgba(255,236,1,.35)";
       ctx.shadowBlur = 25;
-      const winGrad = ctx.createLinearGradient(boxX+52, y, boxX+52, y+112);
+      const winGrad = ctx.createLinearGradient(boxX+52, y, boxX+52, y+118);
       winGrad.addColorStop(0, accent);
       winGrad.addColorStop(1, accent2);
       ctx.fillStyle = winGrad;
@@ -579,29 +549,28 @@
 
       ctx.font = "900 34px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = ink;
-      ctx.fillText("🏆 Vince", boxX+92, y+52);
+      ctx.fillText("🏆 Vince", boxX+92, y+55);
 
       ctx.font = "900 46px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      const winLine = wrapLines(ctx, winnerRaw, boxW-240).slice(0,1)[0] || "—";
-      ctx.fillText(winLine, boxX+92, y+98);
+      const winLine = wrapLines(ctx, String(d.winner||"—").trim(), boxW-240).slice(0,1)[0] || "—";
+      ctx.fillText(winLine, boxX+92, y+102);
 
-      // motivo
-      y = boxY + 820;
+      /* ========= MOTIVO ========= */
+      y = boxY + 740;
       ctx.font = "900 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = muted;
       ctx.fillText("Motivo", boxX+52, y);
 
       ctx.font = "650 34px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = fg;
-      const reason = String(d.reason || "").trim();
-      const rLines = wrapLines(ctx, reason, boxW-104).slice(0,5);
-      let ry = y + 50;
+      const rLines = wrapLines(ctx, String(d.reason||"").trim(), boxW-104).slice(0,6);
+      let ry = y + 52;
       for (const ln of rLines){ ctx.fillText(ln, boxX+52, ry); ry += 44; }
 
-      // tagline
-      const tagline = String(d.tagline || "").trim();
+      /* ========= TAGLINE ========= */
+      const tagline = String(d.tagline||"").trim();
       if (tagline){
-        const ty = Math.max(ry + 26, boxY + 1040);
+        const ty = Math.max(ry + 26, boxY + 1010);
         ctx.font = "900 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
         ctx.fillStyle = muted;
         ctx.fillText("Tagline", boxX+52, ty);
@@ -609,14 +578,19 @@
         ctx.font = "900 38px system-ui, -apple-system, Segoe UI, Roboto, Arial";
         ctx.fillStyle = accent2;
         const tLines = wrapLines(ctx, "“" + tagline + "”", boxW-104).slice(0,2);
-        let tty = ty + 54;
+        let tty = ty + 56;
         for (const ln of tLines){ ctx.fillText(ln, boxX+52, tty); tty += 46; }
       }
 
-      // footer
-      ctx.font = "700 24px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      ctx.fillStyle = "rgba(255,255,255,.55)";
-      ctx.fillText("what-ifapp.vercel.app", boxX+52, boxY+boxH-54);
+      /* ========= CTA (VIRALE) ========= */
+      const ctaY = boxY + boxH - 140;
+      ctx.font = "900 34px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillStyle = accent2;
+      ctx.fillText("👉 Rifalla anche tu:", boxX+52, ctaY);
+
+      ctx.font = "800 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+      ctx.fillStyle = "rgba(255,255,255,.85)";
+      ctx.fillText("what-ifapp.vercel.app/battle", boxX+52, ctaY + 46);
 
       const dataUrl = c.toDataURL("image/png");
       const blob = await new Promise((resolve)=> c.toBlob(resolve, "image/png", 1.0));
@@ -643,7 +617,7 @@
     });
 
     let last = null;
-    let lastCard = null;
+    let lastCard = null; // {dataUrl, blob}
 
     async function ensureCard(){
       if(!last) return null;
@@ -652,8 +626,7 @@
         a: last.a, b: last.b,
         winner: last.winner,
         reason: last.reason,
-        tagline: last.tagline,
-        category: last.category
+        tagline: last.tagline
       });
       return lastCard;
     }
@@ -667,6 +640,7 @@
       const ok = await guardCredits();
       if(!ok) return;
 
+      // consuma 1 credito prima della richiesta
       if(!IS_ADMIN){
         try{
           const ok2 = await consumeCredit();
@@ -702,14 +676,22 @@
           return;
         }
 
-        // ✅ salviamo anche category per card/caption
-        last = { ...data, a, b, category };
+        last = { ...data, a, b };
         lastCard = null;
 
         $("winnerLine").textContent = "🏆 Vince: " + (data.winner || "—");
         $("reasonLine").textContent  = data.reason || "";
         $("tagLine").textContent     = data.tagline ? `“${data.tagline}”` : "";
         $("resultBox").style.display = "block";
+
+        // aggiorna URL con deep-link (virale)
+        try{
+          const u = new URL(location.href);
+          u.searchParams.set("a", encodeURIComponent(a));
+          u.searchParams.set("b", encodeURIComponent(b));
+          u.searchParams.set("cat", category);
+          history.replaceState({}, "", u.toString());
+        }catch{}
       }catch(e){
         console.error(e);
         setErr("Errore rete. Riprova.");
@@ -820,6 +802,7 @@
     window.addEventListener("focus", syncCredits);
     window.addEventListener("pageshow", syncCredits);
 
+    // init
     await syncCredits();
   </script>
 </body>
