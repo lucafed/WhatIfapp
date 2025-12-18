@@ -148,6 +148,7 @@
       color:var(--muted);
       font-size:12px;
       font-weight:800;
+      flex-wrap:wrap;
     }
 
     .result{display:none;margin-top:6px}
@@ -180,6 +181,19 @@
       font-weight:800;
       min-height:18px;
     }
+
+    .credits{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid var(--card-border);
+      background:rgba(20,28,34,.55);
+      padding:8px 12px;
+      border-radius:999px;
+      font-weight:900;
+      color:var(--fg);
+      backdrop-filter:blur(10px);
+    }
   </style>
 </head>
 
@@ -187,6 +201,7 @@
 <main>
   <div class="top">
     <a href="index.html" class="back">← Home</a>
+    <div class="credits" id="creditsBadge">Crediti: —</div>
   </div>
 
   <h1>⚔️ Battle</h1>
@@ -215,7 +230,7 @@
     <button class="cta" id="judge">GIUDICA (−1 credito)</button>
 
     <div class="mini">
-      <span id="creditsHint">Serve login: usa i tuoi crediti.</span>
+      <span id="creditsHint">Ogni giudizio scala 1 credito.</span>
       <a href="/store/credit-store.html" style="color:var(--accent);text-decoration:none;font-weight:900;">
         Compra crediti
       </a>
@@ -247,6 +262,61 @@
       document.documentElement.setAttribute('data-theme','whatif');
     }
   })();
+
+  // ======= CREDITI (client) =======
+  const CREDIT_KEYS = ["whatif_credits","credits","user_credits"];
+
+  function getCreditsKey(){
+    for(const k of CREDIT_KEYS){
+      const v = localStorage.getItem(k);
+      if(v !== null) return k;
+    }
+    // se non c'è nulla, creiamo la chiave canonica
+    localStorage.setItem("whatif_credits","0");
+    return "whatif_credits";
+  }
+
+  function readCredits(){
+    const k = getCreditsKey();
+    const n = parseInt(localStorage.getItem(k) || "0", 10);
+    return Number.isFinite(n) ? Math.max(0,n) : 0;
+  }
+
+  function writeCredits(n){
+    const k = getCreditsKey();
+    localStorage.setItem(k, String(Math.max(0, parseInt(n||0,10) || 0)));
+    updateCreditsUI();
+  }
+
+  function decCredit(){
+    const c = readCredits();
+    if(c <= 0) return false;
+    writeCredits(c - 1);
+    return true;
+  }
+
+  function incCredit(){
+    const c = readCredits();
+    writeCredits(c + 1);
+  }
+
+  function updateCreditsUI(){
+    const badge = document.getElementById("creditsBadge");
+    const hint  = document.getElementById("creditsHint");
+    const c = readCredits();
+    if(badge) badge.textContent = "Crediti: " + c;
+    if(hint){
+      hint.textContent = c > 0
+        ? `Hai ${c} crediti. Ogni giudizio scala 1 credito.`
+        : "Crediti finiti: compra un pacchetto per continuare.";
+    }
+  }
+
+  function goBuyCredits(){
+    window.location.href = "/store/credit-store.html";
+  }
+
+  updateCreditsUI();
 </script>
 
 <script type="module">
@@ -259,9 +329,9 @@
   const $ = (s)=>document.querySelector(s);
   const errEl = $("#err");
   const judgeBtn = $("#judge");
-  const creditsHint = $("#creditsHint");
 
-  // categoria
+  function setErr(t){ errEl.textContent = t || ""; }
+
   $("#cats").addEventListener("click",(e)=>{
     const b = e.target.closest(".pill");
     if(!b) return;
@@ -270,24 +340,19 @@
     category = b.dataset.cat || "persone";
   });
 
-  function setErr(t){ errEl.textContent = t || ""; }
-
   function shareText(d){
     return `⚔️ Battle\nA: ${d.a}\nB: ${d.b}\n🏆 Vince: ${d.winner}\n${d.reason}\n${d.tagline ? "— " + d.tagline : ""}`;
   }
 
-  // UI login hint
+  // Se vuoi obbligare login per usare crediti, lascia così:
   onAuthStateChanged(auth, (user)=>{
-    if(user){
-      creditsHint.textContent = "Ok: user loggato. Ogni giudizio scala 1 credito.";
-      judgeBtn.disabled = false;
-    }else{
-      creditsHint.textContent = "Serve login: torna alla Home e fai accesso.";
-      judgeBtn.disabled = false; // lasciamo cliccabile per mandarlo a home con messaggio
-    }
+    // non blocco hard: ma se non loggato e hai crediti client, funziona comunque
+    // se preferisci BLOCCARE senza login: decommenta le 2 righe sotto
+    // if(!user) judgeBtn.disabled = false;
+    // else judgeBtn.disabled = false;
+    judgeBtn.disabled = false;
   });
 
-  // GIUDICA (con crediti)
   judgeBtn.addEventListener("click", async ()=>{
     setErr("");
 
@@ -295,24 +360,30 @@
     const b = $("#b").value.trim();
     if(!a || !b){ setErr("Inserisci A e B."); return; }
 
-    const user = auth.currentUser;
-    if(!user){
-      // crediti = utente
-      window.location.href = "index.html";
+    // ✅ check crediti PRIMA della chiamata
+    if (window.readCredits && window.readCredits() <= 0){
+      window.location.href = "/store/credit-store.html";
+      return;
+    }
+
+    // ✅ scala 1 credito subito (UX)
+    const ok = window.decCredit && window.decCredit();
+    if(!ok){
+      window.location.href = "/store/credit-store.html";
       return;
     }
 
     judgeBtn.disabled = true;
 
-    let idToken = "";
+    // token se loggato (per future enforcement server)
+    let authHeader = {};
     try{
-      idToken = await user.getIdToken();
-    }catch(e){
-      judgeBtn.disabled = false;
-      setErr("Errore sessione: rifai login.");
-      window.location.href = "index.html";
-      return;
-    }
+      const user = auth.currentUser;
+      if(user){
+        const idToken = await user.getIdToken();
+        authHeader = { "Authorization": "Bearer " + idToken };
+      }
+    }catch{}
 
     let resp, data;
     try{
@@ -320,12 +391,14 @@
         method:"POST",
         headers:{
           "Content-Type":"application/json",
-          "Authorization":"Bearer " + idToken
+          ...authHeader
         },
         body: JSON.stringify({ a, b, category })
       });
       data = await resp.json().catch(()=>({}));
     }catch(e){
+      // ripristino credito (non deve bruciare)
+      if(window.incCredit) window.incCredit();
       judgeBtn.disabled = false;
       setErr("Errore rete. Riprova.");
       return;
@@ -333,13 +406,17 @@
 
     judgeBtn.disabled = false;
 
-    // ✅ NO CREDITI → store
+    // ✅ server dice: no crediti (se un domani blindiamo lato server)
     if(resp.status === 402 || data?.error === "no_credits"){
+      // ripristino credito (perché server ha negato)
+      if(window.incCredit) window.incCredit();
       window.location.href = data.redirect || "/store/credit-store.html";
       return;
     }
 
     if(!resp.ok){
+      // ripristino credito su errore server
+      if(window.incCredit) window.incCredit();
       setErr("Errore Battle. Riprova.");
       return;
     }
@@ -351,9 +428,9 @@
     $("#tagline").textContent = data.tagline ? `“${data.tagline}”` : "";
     $("#result").style.display = "block";
 
-    // opzionale: aggiorna testo bottone con crediti residui
-    if(typeof data.creditsLeft === "number"){
-      judgeBtn.textContent = `GIUDICA (−1 credito) · rimasti ${data.creditsLeft}`;
+    // se l’API restituisce creditsLeft, sincronizziamo anche localStorage
+    if(typeof data.creditsLeft === "number" && window.writeCredits){
+      window.writeCredits(data.creditsLeft);
     }
   });
 
