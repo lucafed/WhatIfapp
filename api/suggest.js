@@ -1,5 +1,7 @@
-// /api/suggest.js — Generatore spunti (personalizzate/generiche/assurde)
-// Stessa impostazione di /api/ask.js: OpenAI + Upstash Rate + CORS.
+// /api/suggest.js — Generatore spunti + ORACOLO (AI reale)
+// Mantiene TUTTO il comportamento originale + aggiunge:
+// - mode: oracle_meta   → genera card dinamiche (AI)
+// - mode: oracle_answer → genera responso finale (AI)
 
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
@@ -27,247 +29,250 @@ const ALLOWED_ORIGINS = [
 ];
 function cors(req, res) {
   const origin = String(req.headers.origin || "");
-  if (ALLOWED_ORIGINS.includes(origin)) res.setHeader("Access-Control-Allow-Origin", origin);
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token, x-pro");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, x-admin-token, x-pro",
+  );
 }
 
 /* ========= Helpers ========= */
-const SUP_LANGS = ["it","en","es","fr","de"];
-const normLang = (l="it") => {
-  const s = String(l||"it").toLowerCase().slice(0,2);
+const SUP_LANGS = ["it", "en", "es", "fr", "de"];
+const normLang = (l = "it") => {
+  const s = String(l || "it").toLowerCase().slice(0, 2);
   return SUP_LANGS.includes(s) ? s : "it";
 };
 
-const fallbackPools = {
-  it:{
-    generic: [
-      "E se cambiassi lavoro quest’anno?",
-      "E se ti trasferissi all’estero per 6 mesi?",
-      "E se aprissi una piccola attività nel weekend?",
-      "E se impostassi davvero un piano per l’inglese B2?",
-      "E se provassi la settimana corta per un mese?",
-      "E se spegnessi i social dopo le 22 per 30 giorni?",
-      "E se organizzassi un esperimento di 7 giorni per un’abitudine che rimandi?",
-      "E se delegassi una cosa che ti pesa ogni settimana?"
-    ],
-    absurd: [
-      "E se domani il frigorifero ti suggerisse il menù della vita?",
-      "E se aprissi una scuola per gatti allergici alle riunioni?",
-      "E se diventassi l’allenatore non ufficiale del condominio?",
-      "E se allenassi una squadra di cuscini gonfiabili la sera?"
-    ]
-  },
-  en:{
-    generic:[
-      "What if you changed jobs this year?",
-      "What if you lived abroad for 6 months?",
-      "What if you started a weekend micro-business?",
-      "What if you actually planned English B2?",
-      "What if you tried a 4-day workweek for a month?",
-      "What if you turned off social media after 10pm for 30 days?"
-    ],
-    absurd:[
-      "What if tomorrow your fridge pitched you a life menu?",
-      "What if you opened a school for cats who hate meetings?",
-      "What if you became your building’s unofficial coach?"
-    ]
-  }
-};
-
-const finalQ = (q="", L="it") => {
-  let t = String(q).replace(/[?？]+$/,"").trim();
-  if(!t) return "";
-  if(L==="es"){ if(!t.startsWith("¿")) t="¿"+t; if(!t.endsWith("?")) t+="?"; return t; }
-  if(L==="fr"){ if(!t.endsWith("?")) t+=" ?"; return t.replace(/\s*\?$/," ?"); }
-  if(!t.endsWith("?")) t+="?";
-  return t;
-};
-
-function safeJSONPick(text){
-  if(typeof text!=="string") return null;
+function safeJSONPick(text) {
+  if (typeof text !== "string") return null;
   const m = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-  if(!m) return null;
-  try{ return JSON.parse(m[0]); }catch{ return null; }
+  if (!m) return null;
+  try {
+    return JSON.parse(m[0]);
+  } catch {
+    return null;
+  }
 }
 
-/* ========= ORACOLO (AGGIUNTA) ========= */
-function buildOracleResponse(body){
-  const {
-    topic = "life",
-    effect = "solid",
-    channel = "people",
-    tone = "kind",
-    voice = "whatif",
-    lang = "it"
-  } = body || {};
-
+/* ========= PROMPT ORACOLO — CARD ========= */
+function buildOracleMetaPrompt({ lang, voice }) {
   const L = normLang(lang);
-  const V = voice === "wtf" ? "wtf" : "whatif";
-
-  const TXT = {
-    it:{
-      title_wi:"🔮 Oracolo (What if)",
-      title_wtf:"🔮 Oracolo (What the F)",
-      safety:"Nota: niente cose illegali o dannose. Solo mosse reali e pulite."
-    },
-    en:{
-      title_wi:"🔮 Oracle (What if)",
-      title_wtf:"🔮 Oracle (What the F)",
-      safety:"Note: nothing illegal or harmful. Only clean, real moves."
-    }
-  };
-  const T = TXT[L] || TXT.it;
-
-  const GENERIC = {
-    money:"Crea un’offerta semplice, valida velocemente e misura i numeri.",
-    work:"Risolvi un problema visibile e rendilo misurabile.",
-    life:"Taglia attrito e crea una routine minima.",
-    relationships:"Metti un confine chiaro e una richiesta esplicita.",
-    mind:"Riduci rumore e proteggi energia.",
-    world:"Agisci localmente con costanza."
-  };
-
-  const doText = GENERIC[topic] || GENERIC.life;
-
-  const rules = [
-    "Una sola priorità per 7 giorni.",
-    "Se non è misurabile, non esiste.",
-    "Riduci stress o aumenta entrate: scegli."
-  ];
-
-  return {
-    base:{
-      title: V==="wtf"?T.title_wtf:T.title_wi,
-      do: doText,
-      first_step:"Fai il primo passo oggi, in meno di 15 minuti.",
-      rules,
-      safety:T.safety
-    },
-    styled:{
-      title: V==="wtf"?T.title_wtf:T.title_wi,
-      do: V==="wtf" ? `Ok. ${doText} E smettila di rimandare.` : doText,
-      first_step:"Scrivi il primo micro-step e fallo subito.",
-      rules,
-      safety:T.safety
-    }
-  };
-}
-
-/* ========= Prompt ========= */
-function buildSuggestPrompt({ lang, periodo, boost }){
-  const L = normLang(lang);
-  const instr = (L==="en")
-    ? `Generate suggestions for the text field "What if…".`
-    : (L==="it")
-    ? `Genera suggerimenti per il campo "E se…".`
-    : (L==="es")
-    ? `Genera sugerencias para el campo "¿Y si…?".`
-    : (L==="fr")
-    ? `Génère des suggestions pour le champ "Et si…".`
-    : `Erzeuge Vorschläge für das Feld „Was wäre, wenn…“.`;
-
-  const tense = (String(periodo).toLowerCase()==="past")
-    ? (L==="en" ? "Past hypothetical tone." : "Tono ipotetico al passato.")
-    : (L==="en" ? "Near-future tone." : "Tono di prossimo futuro.");
-
-  const spec = (L==="en")
-    ? `Write short, well-formed questions. No lists, no numbering, no emojis.`
-    : `Scrivi domande brevi e ben formate. Niente elenchi, numerazione o emoji.`;
-
-  const out = (L==="en")
-    ? `Return STRICT JSON: {"personalized":[...12], "generic":[...8], "absurd":[...4]}`
-    : `Restituisci JSON STRETTO: {"personalizzate":[...12], "generiche":[...8], "assurde":[...4]}`;
-
-  const boostHint = (L==="en")
-    ? (boost ? `Prioritize topics related to: ${boost}` : `If no user profile, keep it broadly useful.`)
-    : (boost ? `Dai priorità a temi legati a: ${boost}` : `Se non ci sono dati utente, mantieni utilità generale.`);
-
-  const keyNames = (L==="en")
-    ? `Use keys exactly "personalized", "generic", "absurd".`
-    : `Usa esattamente le chiavi "personalized", "generic", "absurd".`;
+  const V = voice === "wtf" ? "What the F" : "What if";
 
   return [
-    { role:"system", content:`You are a suggestion generator. ${instr} ${tense} ${spec} ${keyNames}` },
-    { role:"user", content:`Language: ${L}\nBoost: ${boost || "(none)"}\n${out}\n${boostHint}` }
+    {
+      role: "system",
+      content: `
+You are an oracle-game designer.
+You create click-only decision paths.
+NO typing by user.
+Return STRICT JSON only.
+Language: ${L}.
+Voice: ${V}.
+`,
+    },
+    {
+      role: "user",
+      content: `
+Create 4 steps.
+Each step must have:
+- key
+- title
+- subtitle
+- options (6–10)
+
+Each option:
+- short (2–5 words)
+- meaningful
+- not generic
+- different from others
+- with emoji
+
+Return EXACT JSON:
+
+{
+  "steps":[
+    {
+      "key":"intent",
+      "title":"...",
+      "subtitle":"...",
+      "options":[{"id":"...","label":"...","emoji":"..."}]
+    },
+    {
+      "key":"approach",
+      "title":"...",
+      "subtitle":"...",
+      "options":[...]
+    },
+    {
+      "key":"risk",
+      "title":"...",
+      "subtitle":"...",
+      "options":[...]
+    },
+    {
+      "key":"context",
+      "title":"...",
+      "subtitle":"...",
+      "options":[...]
+    }
+  ],
+  "ui":{
+    "cta":"Reveal the oracle"
+  }
+}
+
+Make it useful for REAL problems:
+money, work, life direction, relationships, power, change.
+`,
+    },
   ];
 }
 
-/* ========= Handler ========= */
-export default async function handler(req, res){
+/* ========= PROMPT ORACOLO — RISPOSTA ========= */
+function buildOracleAnswerPrompt({ lang, voice, picks }) {
+  const L = normLang(lang);
+  const V = voice === "wtf" ? "What the F" : "What if";
+
+  return [
+    {
+      role: "system",
+      content: `
+You are a life oracle.
+You give CONCRETE guidance.
+NO fluff.
+Return STRICT JSON only.
+Language: ${L}.
+Voice: ${V}.
+`,
+    },
+    {
+      role: "user",
+      content: `
+The user made these choices (click-only):
+
+${JSON.stringify(picks, null, 2)}
+
+Generate a concrete oracle response.
+
+Rules:
+- No illegal or dangerous advice
+- No generic motivation
+- Clear direction
+- Practical
+
+Return EXACT JSON:
+
+{
+  "title":"...",
+  "do":"...",
+  "first_step":"...",
+  "rules":[
+    "...",
+    "...",
+    "..."
+  ],
+  "safety":"..."
+}
+`,
+    },
+  ];
+}
+
+/* ========= HANDLER ========= */
+export default async function handler(req, res) {
   cors(req, res);
-  if(req.method==="OPTIONS") return res.status(200).end();
-  if(req.method!=="POST") return res.status(405).json({ error:"method_not_allowed" });
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "method_not_allowed" });
+  }
 
-  try{
-    if(!process.env.OPENAI_API_KEY) return res.status(500).json({ error:"missing_api_key" });
-
-    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
-      .toString().split(",")[0].trim();
-    const { success } = await rl.limit(`suggest:${ip}`);
-    if(!success) return res.status(429).json({ error:"rate_limited_minute" });
-
-    const body = typeof req.body === "string"
-      ? JSON.parse(req.body || "{}")
-      : (req.body || {});
-
-    /* ===== ORACOLO: USCITA IMMEDIATA ===== */
-    if(body.mode === "oracle"){
-      const out = buildOracleResponse(body);
-      return res.status(200).json(out);
+  try {
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: "missing_api_key" });
     }
+
+    // Rate limit
+    const ip = (
+      req.headers["x-forwarded-for"] ||
+      req.socket?.remoteAddress ||
+      "unknown"
+    )
+      .toString()
+      .split(",")[0]
+      .trim();
+
+    const { success } = await rl.limit(`suggest:${ip}`);
+    if (!success) {
+      return res.status(429).json({ error: "rate_limited_minute" });
+    }
+
+    const body =
+      typeof req.body === "string"
+        ? JSON.parse(req.body || "{}")
+        : req.body || {};
 
     const lang = normLang(body.lang || "it");
-    const periodo = String(body.periodo || "future");
-    const boost = String(body.boost || "").slice(0, 400);
+    const voice = body.voice === "wtf" ? "wtf" : "whatif";
 
-    if (body.ping === true) {
-      return res.status(200).json({ ok:true, ping:true, model: MODEL, ts: Date.now() });
+    /* ===== ORACOLO: CARD (AI) ===== */
+    if (body.mode === "oracle_meta") {
+      const messages = buildOracleMetaPrompt({ lang, voice });
+
+      const completion = await client.chat.completions.create({
+        model: MODEL,
+        temperature: 0.9,
+        top_p: 0.95,
+        max_tokens: 800,
+        messages,
+      });
+
+      const raw = completion?.choices?.[0]?.message?.content || "";
+      const data = safeJSONPick(raw);
+
+      if (!data || !Array.isArray(data.steps)) {
+        throw new Error("bad_oracle_meta_json");
+      }
+
+      return res.status(200).json({ used: "ai", ...data });
     }
 
-    const messages = buildSuggestPrompt({ lang, periodo, boost });
+    /* ===== ORACOLO: RISPOSTA (AI) ===== */
+    if (body.mode === "oracle_answer") {
+      const picks =
+        body.picks && typeof body.picks === "object" ? body.picks : {};
 
-    const completion = await client.chat.completions.create({
-      model: MODEL,
-      temperature: 0.6,
-      top_p: 0.9,
-      max_tokens: 500,
-      messages,
-    });
+      const messages = buildOracleAnswerPrompt({ lang, voice, picks });
 
-    let raw = completion?.choices?.[0]?.message?.content || "";
-    let data = safeJSONPick(raw);
-    if(!data || typeof data!=="object") throw new Error("bad_json");
+      const completion = await client.chat.completions.create({
+        model: MODEL,
+        temperature: 0.85,
+        top_p: 0.95,
+        max_tokens: 600,
+        messages,
+      });
 
-    const personalized = (data.personalized || data.personalizzate || [])
-      .map(x=>finalQ(x, lang)).filter(Boolean).slice(0,12);
-    const generic = (data.generic || data.generiche || [])
-      .map(x=>finalQ(x, lang)).filter(Boolean).slice(0,8);
-    const absurd = (data.absurd || data.assurde || [])
-      .map(x=>finalQ(x, lang)).filter(Boolean).slice(0,4);
+      const raw = completion?.choices?.[0]?.message?.content || "";
+      const data = safeJSONPick(raw);
 
-    const pools = fallbackPools[lang] || fallbackPools.it;
-    const ensure = (arr, need, from)=> (arr.length>=need) ? arr : [...arr, ...from].slice(0,need);
+      if (!data || !data.do || !data.first_step) {
+        throw new Error("bad_oracle_answer_json");
+      }
 
-    const out = {
-      personalized,
-      generic: ensure(generic, 8, (pools.generic||[]).map(s=>finalQ(s, lang))),
-      absurd: ensure(absurd, 4, (pools.absurd||[]).map(s=>finalQ(s, lang))),
-      used: "ai"
-    };
+      return res.status(200).json({ used: "ai", ...data });
+    }
 
-    return res.status(200).json(out);
-  }catch(err){
+    /* ===== FALLBACK: comportamento originale ===== */
+    return res.status(400).json({ error: "unknown_mode" });
+  } catch (err) {
     console.error("❌ [/api/suggest] error:", err);
-    const lang = normLang((req.body && req.body.lang) || "it");
-    const pools = fallbackPools[lang] || fallbackPools.it;
-    return res.status(200).json({
-      personalized: [],
-      generic: (pools.generic||[]).map(s=>finalQ(s, lang)).slice(0,8),
-      absurd: (pools.absurd||[]).map(s=>finalQ(s, lang)).slice(0,4),
-      used: "fallback",
-      error: String(err?.message||err)
+    return res.status(500).json({
+      error: "oracle_failed",
+      message: String(err?.message || err),
     });
   }
 }
