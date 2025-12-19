@@ -154,37 +154,37 @@
     </div>
     <div class="row">
       <span class="badge" id="styleBadge">🎭 —</span>
-      <span class="badge" id="creditsBadge">Crediti: —</span>
-      <button class="btn" id="buyBtn" type="button">🛒 Crediti</button>
+      <span class="badge" id="creditsBadge">—</span>
+      <button class="btn" id="buyBtn" type="button">🛒</button>
     </div>
   </div>
 
   <main>
     <div class="wrap">
-      <h1>⚔️ Battle</h1>
-      <div class="small" id="subtitle">Ogni giudizio scala 1 credito.</div>
+      <h1 id="titleH">⚔️ Battle</h1>
+      <div class="small" id="subH">—</div>
 
       <div class="card">
-        <div class="small" id="catLabel" style="margin-bottom:8px;font-weight:900;color:var(--accent2)">Categoria</div>
+        <div class="small" id="catLabel" style="margin-bottom:8px;font-weight:900;color:var(--accent2)">—</div>
         <div class="chips" id="catChips">
-          <button class="chip sel" data-cat="persone" id="catPeople">🧑‍🤝‍🧑 Persone</button>
-          <button class="chip" data-cat="cose" id="catThings">🍕 Cose</button>
-          <button class="chip" data-cat="scelte" id="catChoices">🧠 Scelte</button>
+          <button class="chip sel" data-cat="people" id="catPeople">🧑‍🤝‍🧑</button>
+          <button class="chip" data-cat="things" id="catThings">🍕</button>
+          <button class="chip" data-cat="choices" id="catChoices">🧠</button>
         </div>
       </div>
 
       <div class="card">
         <div class="small" id="aLabel" style="margin-bottom:6px;font-weight:900;color:var(--accent2)">A</div>
-        <input class="input" id="aInput" placeholder="Es: Pizza / Io / Rischiare" autocomplete="off"/>
+        <input class="input" id="aInput" autocomplete="off"/>
 
         <div style="height:10px"></div>
 
         <div class="small" id="bLabel" style="margin-bottom:6px;font-weight:900;color:var(--accent2)">B</div>
-        <input class="input" id="bInput" placeholder="Es: Sushi / Il mio amico / Accontentarsi" autocomplete="off"/>
+        <input class="input" id="bInput" autocomplete="off"/>
 
         <div class="row" style="justify-content:space-between;margin-top:12px">
-          <button class="btn primary" id="judgeBtn" type="button">✨ Giudica</button>
-          <a class="link" href="store/credit-store.html" id="storeLink">Compra crediti</a>
+          <button class="btn primary" id="judgeBtn" type="button">✨</button>
+          <a class="link" href="store/credit-store.html" id="storeLink">—</a>
         </div>
 
         <div class="err" id="err"></div>
@@ -194,39 +194,35 @@
           <div class="reason" id="reasonLine"></div>
           <div class="small" id="tagLine" style="margin-top:8px;font-weight:800"></div>
           <div class="actions">
-            <button class="btn" id="copyBtn" type="button">📋 Copia</button>
-            <button class="btn" id="shareBtn" type="button">🖼️ Card</button>
-            <button class="btn" id="againBtn" type="button">🔁 Ancora</button>
+            <button class="btn" id="copyBtn" type="button">📋</button>
+            <button class="btn" id="shareBtn" type="button">🖼️</button>
+            <button class="btn" id="againBtn" type="button">🔁</button>
           </div>
-          <div class="hint" id="tipText">
-            Tip: con “Card” crei un’immagine pronta da postare. Su Instagram/TikTok: salva la card e caricala come post/storia.
-          </div>
+          <div class="hint" id="hintBox">—</div>
         </div>
       </div>
     </div>
   </main>
 
   <!-- Share modal -->
-  <div class="modal" id="shareModal" role="dialog" aria-modal="true" aria-label="Condividi card">
+  <div class="modal" id="shareModal" role="dialog" aria-modal="true" aria-label="Share card">
     <div class="modalCard">
       <div class="modalHead">
-        <div class="modalTitle" id="modalTitle">🖼️ Card Battle</div>
+        <div class="modalTitle" id="modalTitle">🖼️</div>
         <button class="btn ghost" id="closeModalBtn" type="button">✕</button>
       </div>
       <div class="modalBody">
         <div class="previewWrap">
-          <img class="previewImg" id="cardPreview" alt="Anteprima card"/>
+          <img class="previewImg" id="cardPreview" alt="Preview card"/>
         </div>
-        <div class="hint" id="shareHint">
-          Se “Condividi” non manda l’immagine, usa “Salva” e caricala su Instagram/TikTok.
-        </div>
+        <div class="hint" id="shareHint">—</div>
       </div>
       <div class="modalActions">
-        <button class="btn primary" id="nativeShareBtn" type="button">📤 Condividi</button>
-        <button class="btn" id="downloadBtn" type="button">⬇️ Salva</button>
-        <button class="btn" id="igBtn" type="button">📸 Instagram</button>
-        <button class="btn" id="ttBtn" type="button">🎵 TikTok</button>
-        <button class="btn" id="copyCaptionBtn" type="button">📋 Copia caption</button>
+        <button class="btn primary" id="nativeShareBtn" type="button">📤</button>
+        <button class="btn" id="downloadBtn" type="button">⬇️</button>
+        <button class="btn" id="igBtn" type="button">📸</button>
+        <button class="btn" id="ttBtn" type="button">🎵</button>
+        <button class="btn" id="copyCaptionBtn" type="button">📋</button>
       </div>
     </div>
   </div>
@@ -239,347 +235,280 @@
     const LS = localStorage;
     const $ = (id)=>document.getElementById(id);
 
-    function getLang(){
-      const l = (LS.getItem("lang") || document.documentElement.lang || "it").toLowerCase();
-      return ["it","en","es","fr","de"].includes(l) ? l : "it";
-    }
-
-    const I18N = {
-      it: {
-        creditsLabel: "Crediti",
-        buyCredits: "🛒 Crediti",
-        subtitle: "Ogni giudizio scala 1 credito.",
-        cat: "Categoria",
-        people: "🧑‍🤝‍🧑 Persone",
-        things: "🍕 Cose",
-        choices: "🧠 Scelte",
-        aPh: "Es: Pizza / Io / Rischiare",
-        bPh: "Es: Sushi / Il mio amico / Accontentarsi",
-        judge: "✨ Giudica",
-        store: "Compra crediti",
-        copy: "📋 Copia",
-        card: "🖼️ Card",
-        again: "🔁 Ancora",
-        tip: "Tip: con “Card” crei un’immagine pronta da postare. Su Instagram/TikTok: salva la card e caricala come post/storia.",
-        modalAria: "Condividi card",
-        modalTitle: "🖼️ Card Battle",
-        shareHint: "Se “Condividi” non manda l’immagine, usa “Salva” e caricala su Instagram/TikTok.",
-        nativeShare: "📤 Condividi",
-        save: "⬇️ Salva",
-        ig: "📸 Instagram",
-        tt: "🎵 TikTok",
-        copyCaption: "📋 Copia caption",
-
-        // runtime strings
-        needLogin: "Per usare i crediti devi essere loggato.",
-        noCredits: "Hai finito i crediti. Ricarica per continuare.",
-        needAB: "Inserisci A e B.",
-        errUseCredits: "Errore nell'utilizzo dei crediti. Riprova.",
-        errBattle: "Errore Battle. Riprova.",
-        errNet: "Errore rete. Riprova.",
-        copied: "Copiato!",
-        cannotCopy: "Impossibile copiare.",
-        cannotMakeCard: "Impossibile creare la card. Riprova.",
-        saved: "Card salvata!",
-        captionCopiedSave: "Caption copiata. Ora salva la card.",
-        shareNotSupported: "Condivisione non supportata qui.",
-        captionCopied: "Caption copiata!",
-        cannotCopyCaption: "Impossibile copiare la caption.",
-        igHint: "Salva la card e caricala su Instagram.",
-        ttHint: "Salva la card e caricala su TikTok.",
-
-        // share text / caption templates
-        shareTitle: "⚔️ Battle",
-        aLine: "A",
-        bLine: "B",
-        winnerPrefix: "🏆 Vince",
-        dash: "—",
-
-        // card PNG labels
-        cardBattle: "⚔️ Battle",
-        winLabel: "🏆 Vince",
-        reasonLabel: "Motivo",
-        taglineLabel: "Tagline",
-        footerCTA: "👇 Commenta: chi doveva vincere?",
-        footerURL: "what-ifapp.vercel.app/battle"
-      },
-      en: {
-        creditsLabel: "Credits",
-        buyCredits: "🛒 Credits",
-        subtitle: "Each judgment costs 1 credit.",
-        cat: "Category",
-        people: "🧑‍🤝‍🧑 People",
-        things: "🍕 Things",
-        choices: "🧠 Choices",
-        aPh: "e.g. Pizza / Me / Taking risks",
-        bPh: "e.g. Sushi / My friend / Playing safe",
-        judge: "✨ Judge",
-        store: "Buy credits",
-        copy: "📋 Copy",
-        card: "🖼️ Card",
-        again: "🔁 Again",
-        tip: "Tip: “Card” creates a ready-to-post image. On Instagram/TikTok: save the card and upload it as a post/story.",
-        modalAria: "Share card",
-        modalTitle: "🖼️ Battle Card",
-        shareHint: "If “Share” doesn’t send the image, use “Save” and upload it to Instagram/TikTok.",
-        nativeShare: "📤 Share",
-        save: "⬇️ Save",
-        ig: "📸 Instagram",
-        tt: "🎵 TikTok",
-        copyCaption: "📋 Copy caption",
-
-        needLogin: "To use credits you must be logged in.",
-        noCredits: "You’re out of credits. Recharge to continue.",
-        needAB: "Enter A and B.",
-        errUseCredits: "Error using credits. Try again.",
-        errBattle: "Battle error. Try again.",
-        errNet: "Network error. Try again.",
-        copied: "Copied!",
-        cannotCopy: "Unable to copy.",
-        cannotMakeCard: "Unable to create the card. Try again.",
-        saved: "Card saved!",
-        captionCopiedSave: "Caption copied. Now save the card.",
-        shareNotSupported: "Sharing isn’t supported here.",
-        captionCopied: "Caption copied!",
-        cannotCopyCaption: "Unable to copy the caption.",
-        igHint: "Save the card and upload it to Instagram.",
-        ttHint: "Save the card and upload it to TikTok.",
-
-        shareTitle: "⚔️ Battle",
-        aLine: "A",
-        bLine: "B",
-        winnerPrefix: "🏆 Winner",
-        dash: "—",
-
-        cardBattle: "⚔️ Battle",
-        winLabel: "🏆 Winner",
-        reasonLabel: "Reason",
-        taglineLabel: "Tagline",
-        footerCTA: "👇 Comment: who should’ve won?",
-        footerURL: "what-ifapp.vercel.app/battle"
-      },
-      es: {
-        creditsLabel: "Créditos",
-        buyCredits: "🛒 Créditos",
-        subtitle: "Cada juicio cuesta 1 crédito.",
-        cat: "Categoría",
-        people: "🧑‍🤝‍🧑 Personas",
-        things: "🍕 Cosas",
-        choices: "🧠 Elecciones",
-        aPh: "Ej: Pizza / Yo / Arriesgar",
-        bPh: "Ej: Sushi / Mi amigo / Ir a lo seguro",
-        judge: "✨ Juzgar",
-        store: "Comprar créditos",
-        copy: "📋 Copiar",
-        card: "🖼️ Card",
-        again: "🔁 Otra",
-        tip: "Tip: con “Card” creas una imagen lista para publicar. En Instagram/TikTok: guarda la card y súbela como post/historia.",
-        modalAria: "Compartir card",
-        modalTitle: "🖼️ Card Battle",
-        shareHint: "Si “Compartir” no envía la imagen, usa “Guardar” y súbela a Instagram/TikTok.",
-        nativeShare: "📤 Compartir",
-        save: "⬇️ Guardar",
-        ig: "📸 Instagram",
-        tt: "🎵 TikTok",
-        copyCaption: "📋 Copiar caption",
-
-        needLogin: "Para usar créditos debes iniciar sesión.",
-        noCredits: "Te quedaste sin créditos. Recarga para continuar.",
-        needAB: "Introduce A y B.",
-        errUseCredits: "Error al usar créditos. Inténtalo de nuevo.",
-        errBattle: "Error de Battle. Inténtalo de nuevo.",
-        errNet: "Error de red. Inténtalo de nuevo.",
-        copied: "¡Copiado!",
-        cannotCopy: "No se puede copiar.",
-        cannotMakeCard: "No se puede crear la card. Inténtalo de nuevo.",
-        saved: "¡Card guardada!",
-        captionCopiedSave: "Caption copiada. Ahora guarda la card.",
-        shareNotSupported: "Compartir no está disponible aquí.",
-        captionCopied: "¡Caption copiada!",
-        cannotCopyCaption: "No se puede copiar la caption.",
-        igHint: "Guarda la card y súbela a Instagram.",
-        ttHint: "Guarda la card y súbela a TikTok.",
-
-        shareTitle: "⚔️ Battle",
-        aLine: "A",
-        bLine: "B",
-        winnerPrefix: "🏆 Gana",
-        dash: "—",
-
-        cardBattle: "⚔️ Battle",
-        winLabel: "🏆 Gana",
-        reasonLabel: "Motivo",
-        taglineLabel: "Tagline",
-        footerCTA: "👇 Comenta: ¿quién debía ganar?",
-        footerURL: "what-ifapp.vercel.app/battle"
-      },
-      fr: {
-        creditsLabel: "Crédits",
-        buyCredits: "🛒 Crédits",
-        subtitle: "Chaque jugement coûte 1 crédit.",
-        cat: "Catégorie",
-        people: "🧑‍🤝‍🧑 Personnes",
-        things: "🍕 Choses",
-        choices: "🧠 Choix",
-        aPh: "Ex : Pizza / Moi / Prendre des risques",
-        bPh: "Ex : Sushi / Mon ami / Jouer safe",
-        judge: "✨ Juger",
-        store: "Acheter des crédits",
-        copy: "📋 Copier",
-        card: "🖼️ Carte",
-        again: "🔁 Encore",
-        tip: "Astuce : “Carte” crée une image prête à poster. Sur Instagram/TikTok : enregistre la carte et publie-la en post/story.",
-        modalAria: "Partager la carte",
-        modalTitle: "🖼️ Carte Battle",
-        shareHint: "Si “Partager” n’envoie pas l’image, utilise “Enregistrer” puis publie-la sur Instagram/TikTok.",
-        nativeShare: "📤 Partager",
-        save: "⬇️ Enregistrer",
-        ig: "📸 Instagram",
-        tt: "🎵 TikTok",
-        copyCaption: "📋 Copier la légende",
-
-        needLogin: "Pour utiliser des crédits, tu dois être connecté.",
-        noCredits: "Tu n’as plus de crédits. Recharge pour continuer.",
-        needAB: "Renseigne A et B.",
-        errUseCredits: "Erreur d’utilisation des crédits. Réessaie.",
-        errBattle: "Erreur Battle. Réessaie.",
-        errNet: "Erreur réseau. Réessaie.",
-        copied: "Copié !",
-        cannotCopy: "Impossible de copier.",
-        cannotMakeCard: "Impossible de créer la carte. Réessaie.",
-        saved: "Carte enregistrée !",
-        captionCopiedSave: "Légende copiée. Maintenant, enregistre la carte.",
-        shareNotSupported: "Le partage n’est pas disponible ici.",
-        captionCopied: "Légende copiée !",
-        cannotCopyCaption: "Impossible de copier la légende.",
-        igHint: "Enregistre la carte puis poste-la sur Instagram.",
-        ttHint: "Enregistre la carte puis poste-la sur TikTok.",
-
-        shareTitle: "⚔️ Battle",
-        aLine: "A",
-        bLine: "B",
-        winnerPrefix: "🏆 Gagnant",
-        dash: "—",
-
-        cardBattle: "⚔️ Battle",
-        winLabel: "🏆 Gagnant",
-        reasonLabel: "Raison",
-        taglineLabel: "Punchline",
-        footerCTA: "👇 Commente : qui devait gagner ?",
-        footerURL: "what-ifapp.vercel.app/battle"
-      },
-      de: {
-        creditsLabel: "Credits",
-        buyCredits: "🛒 Credits",
-        subtitle: "Jedes Urteil kostet 1 Credit.",
-        cat: "Kategorie",
-        people: "🧑‍🤝‍🧑 Personen",
-        things: "🍕 Dinge",
-        choices: "🧠 Entscheidungen",
-        aPh: "z. B. Pizza / Ich / Risiko",
-        bPh: "z. B. Sushi / Mein Freund / Sicher spielen",
-        judge: "✨ Bewerten",
-        store: "Credits kaufen",
-        copy: "📋 Kopieren",
-        card: "🖼️ Karte",
-        again: "🔁 Nochmal",
-        tip: "Tipp: Mit “Karte” erstellst du ein postfertiges Bild. Für Instagram/TikTok: Karte speichern und als Post/Story hochladen.",
-        modalAria: "Karte teilen",
-        modalTitle: "🖼️ Battle-Karte",
-        shareHint: "Wenn “Teilen” das Bild nicht sendet: “Speichern” nutzen und dann zu Instagram/TikTok hochladen.",
-        nativeShare: "📤 Teilen",
-        save: "⬇️ Speichern",
-        ig: "📸 Instagram",
-        tt: "🎵 TikTok",
-        copyCaption: "📋 Caption kopieren",
-
-        needLogin: "Um Credits zu nutzen, musst du eingeloggt sein.",
-        noCredits: "Keine Credits mehr. Bitte aufladen, um fortzufahren.",
-        needAB: "Gib A und B ein.",
-        errUseCredits: "Fehler beim Verwenden der Credits. Versuch’s nochmal.",
-        errBattle: "Battle-Fehler. Versuch’s nochmal.",
-        errNet: "Netzwerkfehler. Versuch’s nochmal.",
-        copied: "Kopiert!",
-        cannotCopy: "Kopieren nicht möglich.",
-        cannotMakeCard: "Karte konnte nicht erstellt werden. Versuch’s nochmal.",
-        saved: "Karte gespeichert!",
-        captionCopiedSave: "Caption kopiert. Jetzt die Karte speichern.",
-        shareNotSupported: "Teilen wird hier nicht unterstützt.",
-        captionCopied: "Caption kopiert!",
-        cannotCopyCaption: "Caption konnte nicht kopiert werden.",
-        igHint: "Karte speichern und bei Instagram hochladen.",
-        ttHint: "Karte speichern und bei TikTok hochladen.",
-
-        shareTitle: "⚔️ Battle",
-        aLine: "A",
-        bLine: "B",
-        winnerPrefix: "🏆 Sieger",
-        dash: "—",
-
-        cardBattle: "⚔️ Battle",
-        winLabel: "🏆 Sieger",
-        reasonLabel: "Begründung",
-        taglineLabel: "Tagline",
-        footerCTA: "👇 Kommentar: Wer hätte gewinnen sollen?",
-        footerURL: "what-ifapp.vercel.app/battle"
-      }
+    const SUP_LANG = ["it","en","es","fr","de"];
+    const normLang = (l)=>{
+      const s = String(l||"it").toLowerCase().slice(0,2);
+      return SUP_LANG.includes(s) ? s : "it";
     };
-
-    function t(){
-      const L = getLang();
-      return I18N[L] || I18N.it;
-    }
-
-    function applyI18n(){
-      const TT = t();
-      const L = getLang();
-      document.documentElement.lang = L;
-
-      $("creditsBadge").textContent = TT.creditsLabel + ": —";
-      $("buyBtn").textContent = TT.buyCredits;
-
-      $("subtitle").textContent = TT.subtitle;
-      $("catLabel").textContent = TT.cat;
-
-      $("catPeople").textContent = TT.people;
-      $("catThings").textContent = TT.things;
-      $("catChoices").textContent = TT.choices;
-
-      $("aInput").placeholder = TT.aPh;
-      $("bInput").placeholder = TT.bPh;
-
-      $("judgeBtn").textContent = TT.judge;
-      $("storeLink").textContent = TT.store;
-
-      $("copyBtn").textContent = TT.copy;
-      $("shareBtn").textContent = TT.card;
-      $("againBtn").textContent = TT.again;
-
-      $("tipText").textContent = TT.tip;
-
-      $("shareModal").setAttribute("aria-label", TT.modalAria);
-      $("modalTitle").textContent = TT.modalTitle;
-      $("cardPreview").alt = (L === "en") ? "Card preview" :
-                             (L === "es") ? "Vista previa" :
-                             (L === "fr") ? "Aperçu" :
-                             (L === "de") ? "Vorschau" : "Anteprima card";
-      $("shareHint").textContent = TT.shareHint;
-
-      $("nativeShareBtn").textContent = TT.nativeShare;
-      $("downloadBtn").textContent = TT.save;
-      $("igBtn").textContent = TT.ig;
-      $("ttBtn").textContent = TT.tt;
-      $("copyCaptionBtn").textContent = TT.copyCaption;
+    function getLang(){
+      return normLang(LS.getItem("lang") || document.documentElement.lang || "it");
     }
 
     const IS_ADMIN = !!LS.getItem("admin_token");
     let prefs = {};
     try{ prefs = JSON.parse(LS.getItem("whatif_prefs")||"{}") || {}; }catch{ prefs = {}; }
 
+    const voice = (prefs.stile === "wtf") ? "wtf" : "whatif";
+
     // tema coerente
-    const theme = (prefs.stile === "wtf") ? "wtf" : "whatif";
-    document.documentElement.setAttribute("data-theme", theme);
-    $("styleBadge").textContent = "🎭 " + (theme === "wtf" ? "What the F" : "What if");
+    document.documentElement.setAttribute("data-theme", voice === "wtf" ? "wtf" : "whatif");
+    document.documentElement.lang = getLang();
+
+    // ===== I18N =====
+    const UI = {
+      it:{
+        title:"⚔️ Battle",
+        sub:"Ogni giudizio scala 1 credito.",
+        credits:(n)=> IS_ADMIN ? "Crediti: ∞ (admin)" : ("Crediti: " + n),
+        buy:"🛒 Crediti",
+        store:"Compra crediti",
+        cat:"Categoria",
+        people:"🧑‍🤝‍🧑 Persone",
+        things:"🍕 Cose",
+        choices:"🧠 Scelte",
+        aPh:"Es: Pizza / Io / Rischiare",
+        bPh:"Es: Sushi / Il mio amico / Accontentarsi",
+        judge:"✨ Giudica",
+        needAB:"Inserisci A e B.",
+        loginNeed:"Per usare i crediti devi essere loggato.",
+        noCredits:"Hai finito i crediti. Ricarica per continuare.",
+        errUseCredits:"Errore nell'utilizzo dei crediti. Riprova.",
+        errBattle:"Errore Battle. Riprova.",
+        errNet:"Errore rete. Riprova.",
+        winPrefix:"🏆 Vince: ",
+        reasonPrefix:"💬 ",
+        copied:"Copiato!",
+        cannotCopy:"Impossibile copiare.",
+        cardFail:"Impossibile creare la card. Riprova.",
+        saved:"Card salvata!",
+        captionCopied:"Caption copiata!",
+        captionFail:"Impossibile copiare la caption.",
+        shareNotSupported:"Condivisione non supportata qui.",
+        captionCopied2:"Caption copiata. Ora salva la card.",
+        igHint:"Salva la card e caricala su Instagram.",
+        ttHint:"Salva la card e caricala su TikTok.",
+        again:"🔁 Ancora",
+        copy:"📋 Copia",
+        card:"🖼️ Card",
+        hint:"Tip: con “Card” crei un’immagine pronta da postare. Su Instagram/TikTok: salva la card e caricala come post/storia.",
+        modalTitle:"🖼️ Card Battle",
+        modalHint:"Se “Condividi” non manda l’immagine, usa “Salva” e caricala su Instagram/TikTok.",
+        share:"📤 Condividi",
+        save:"⬇️ Salva",
+        ig:"📸 Instagram",
+        tt:"🎵 TikTok",
+        copyCaption:"📋 Copia caption",
+      },
+      en:{
+        title:"⚔️ Battle",
+        sub:"Each verdict costs 1 credit.",
+        credits:(n)=> IS_ADMIN ? "Credits: ∞ (admin)" : ("Credits: " + n),
+        buy:"🛒 Credits",
+        store:"Buy credits",
+        cat:"Category",
+        people:"🧑‍🤝‍🧑 People",
+        things:"🍕 Things",
+        choices:"🧠 Choices",
+        aPh:"Ex: Pizza / Me / Take risks",
+        bPh:"Ex: Sushi / My friend / Play it safe",
+        judge:"✨ Judge",
+        needAB:"Enter A and B.",
+        loginNeed:"You must be logged in to use credits.",
+        noCredits:"You’re out of credits. Recharge to continue.",
+        errUseCredits:"Credit error. Try again.",
+        errBattle:"Battle error. Try again.",
+        errNet:"Network error. Try again.",
+        winPrefix:"🏆 Winner: ",
+        reasonPrefix:"💬 ",
+        copied:"Copied!",
+        cannotCopy:"Can't copy here.",
+        cardFail:"Couldn’t create the card. Try again.",
+        saved:"Card saved!",
+        captionCopied:"Caption copied!",
+        captionFail:"Can't copy the caption.",
+        shareNotSupported:"Sharing not supported here.",
+        captionCopied2:"Caption copied. Now save the card.",
+        igHint:"Save the card and upload it to Instagram.",
+        ttHint:"Save the card and upload it to TikTok.",
+        again:"🔁 Again",
+        copy:"📋 Copy",
+        card:"🖼️ Card",
+        hint:"Tip: “Card” generates a ready-to-post image. For Instagram/TikTok: save it and upload as post/story.",
+        modalTitle:"🖼️ Battle card",
+        modalHint:"If “Share” doesn’t send the image, use “Save” and upload to Instagram/TikTok.",
+        share:"📤 Share",
+        save:"⬇️ Save",
+        ig:"📸 Instagram",
+        tt:"🎵 TikTok",
+        copyCaption:"📋 Copy caption",
+      },
+      es:{
+        title:"⚔️ Battle",
+        sub:"Cada veredicto cuesta 1 crédito.",
+        credits:(n)=> IS_ADMIN ? "Créditos: ∞ (admin)" : ("Créditos: " + n),
+        buy:"🛒 Créditos",
+        store:"Comprar créditos",
+        cat:"Categoría",
+        people:"🧑‍🤝‍🧑 Personas",
+        things:"🍕 Cosas",
+        choices:"🧠 Decisiones",
+        aPh:"Ej: Pizza / Yo / Arriesgar",
+        bPh:"Ej: Sushi / Mi amigo / Ir a lo seguro",
+        judge:"✨ Juzgar",
+        needAB:"Escribe A y B.",
+        loginNeed:"Debes iniciar sesión para usar créditos.",
+        noCredits:"No te quedan créditos. Recarga para continuar.",
+        errUseCredits:"Error de créditos. Inténtalo de nuevo.",
+        errBattle:"Error Battle. Inténtalo de nuevo.",
+        errNet:"Error de red. Inténtalo de nuevo.",
+        winPrefix:"🏆 Gana: ",
+        reasonPrefix:"💬 ",
+        copied:"¡Copiado!",
+        cannotCopy:"No se puede copiar.",
+        cardFail:"No se pudo crear la card. Inténtalo de nuevo.",
+        saved:"¡Card guardada!",
+        captionCopied:"¡Caption copiada!",
+        captionFail:"No se puede copiar la caption.",
+        shareNotSupported:"Compartir no disponible aquí.",
+        captionCopied2:"Caption copiada. Ahora guarda la card.",
+        igHint:"Guarda la card y súbela a Instagram.",
+        ttHint:"Guarda la card y súbela a TikTok.",
+        again:"🔁 Otra",
+        copy:"📋 Copiar",
+        card:"🖼️ Card",
+        hint:"Tip: “Card” crea una imagen lista para publicar. En Instagram/TikTok: guárdala y súbela.",
+        modalTitle:"🖼️ Card Battle",
+        modalHint:"Si “Compartir” no envía la imagen, usa “Guardar” y súbela a Instagram/TikTok.",
+        share:"📤 Compartir",
+        save:"⬇️ Guardar",
+        ig:"📸 Instagram",
+        tt:"🎵 TikTok",
+        copyCaption:"📋 Copiar caption",
+      },
+      fr:{
+        title:"⚔️ Battle",
+        sub:"Chaque verdict coûte 1 crédit.",
+        credits:(n)=> IS_ADMIN ? "Crédits : ∞ (admin)" : ("Crédits : " + n),
+        buy:"🛒 Crédits",
+        store:"Acheter des crédits",
+        cat:"Catégorie",
+        people:"🧑‍🤝‍🧑 Personnes",
+        things:"🍕 Choses",
+        choices:"🧠 Choix",
+        aPh:"Ex : Pizza / Moi / Prendre des risques",
+        bPh:"Ex : Sushi / Mon ami / Jouer safe",
+        judge:"✨ Juger",
+        needAB:"Saisis A et B.",
+        loginNeed:"Tu dois être connecté pour utiliser des crédits.",
+        noCredits:"Plus de crédits. Recharge pour continuer.",
+        errUseCredits:"Erreur crédits. Réessaie.",
+        errBattle:"Erreur Battle. Réessaie.",
+        errNet:"Erreur réseau. Réessaie.",
+        winPrefix:"🏆 Gagnant : ",
+        reasonPrefix:"💬 ",
+        copied:"Copié !",
+        cannotCopy:"Impossible de copier.",
+        cardFail:"Impossible de créer la card. Réessaie.",
+        saved:"Card sauvegardée !",
+        captionCopied:"Caption copiée !",
+        captionFail:"Impossible de copier la caption.",
+        shareNotSupported:"Partage non supporté ici.",
+        captionCopied2:"Caption copiée. Maintenant sauvegarde la card.",
+        igHint:"Sauvegarde la card et upload sur Instagram.",
+        ttHint:"Sauvegarde la card et upload sur TikTok.",
+        again:"🔁 Refaire",
+        copy:"📋 Copier",
+        card:"🖼️ Card",
+        hint:"Astuce : “Card” génère une image prête à poster. Pour Instagram/TikTok : sauvegarde puis upload.",
+        modalTitle:"🖼️ Card Battle",
+        modalHint:"Si “Partager” n’envoie pas l’image, utilise “Sauvegarder” puis upload sur Instagram/TikTok.",
+        share:"📤 Partager",
+        save:"⬇️ Sauvegarder",
+        ig:"📸 Instagram",
+        tt:"🎵 TikTok",
+        copyCaption:"📋 Copier caption",
+      },
+      de:{
+        title:"⚔️ Battle",
+        sub:"Jedes Urteil kostet 1 Credit.",
+        credits:(n)=> IS_ADMIN ? "Credits: ∞ (admin)" : ("Credits: " + n),
+        buy:"🛒 Credits",
+        store:"Credits kaufen",
+        cat:"Kategorie",
+        people:"🧑‍🤝‍🧑 Personen",
+        things:"🍕 Dinge",
+        choices:"🧠 Entscheidungen",
+        aPh:"Bsp: Pizza / Ich / Risiko",
+        bPh:"Bsp: Sushi / Freund / Sicher spielen",
+        judge:"✨ Urteilen",
+        needAB:"A und B eingeben.",
+        loginNeed:"Du musst eingeloggt sein, um Credits zu nutzen.",
+        noCredits:"Keine Credits mehr. Bitte aufladen.",
+        errUseCredits:"Credit-Fehler. Versuch’s nochmal.",
+        errBattle:"Battle-Fehler. Versuch’s nochmal.",
+        errNet:"Netzwerkfehler. Versuch’s nochmal.",
+        winPrefix:"🏆 Sieger: ",
+        reasonPrefix:"💬 ",
+        copied:"Kopiert!",
+        cannotCopy:"Kopieren nicht möglich.",
+        cardFail:"Card konnte nicht erstellt werden. Versuch’s nochmal.",
+        saved:"Card gespeichert!",
+        captionCopied:"Caption kopiert!",
+        captionFail:"Caption kann nicht kopiert werden.",
+        shareNotSupported:"Teilen hier nicht unterstützt.",
+        captionCopied2:"Caption kopiert. Jetzt Card speichern.",
+        igHint:"Card speichern und auf Instagram hochladen.",
+        ttHint:"Card speichern und auf TikTok hochladen.",
+        again:"🔁 Nochmal",
+        copy:"📋 Kopieren",
+        card:"🖼️ Card",
+        hint:"Tipp: “Card” erzeugt ein postfertiges Bild. Für Instagram/TikTok: speichern und hochladen.",
+        modalTitle:"🖼️ Battle-Card",
+        modalHint:"Wenn “Teilen” kein Bild sendet, nutze “Speichern” und lade es bei Instagram/TikTok hoch.",
+        share:"📤 Teilen",
+        save:"⬇️ Speichern",
+        ig:"📸 Instagram",
+        tt:"🎵 TikTok",
+        copyCaption:"📋 Caption kopieren",
+      }
+    };
+
+    function T(){ return UI[getLang()] || UI.it; }
+
+    function applyI18n(){
+      const t = T();
+      document.documentElement.lang = getLang();
+
+      $("titleH").textContent = t.title;
+      $("subH").textContent   = t.sub;
+      $("buyBtn").textContent = t.buy;
+      $("storeLink").textContent = t.store;
+
+      $("catLabel").textContent = t.cat;
+      $("catPeople").textContent = t.people;
+      $("catThings").textContent = t.things;
+      $("catChoices").textContent = t.choices;
+
+      $("aInput").placeholder = t.aPh;
+      $("bInput").placeholder = t.bPh;
+
+      $("judgeBtn").textContent = t.judge;
+      $("copyBtn").textContent  = t.copy;
+      $("shareBtn").textContent = t.card;
+      $("againBtn").textContent = t.again;
+      $("hintBox").textContent  = t.hint;
+
+      $("modalTitle").textContent = t.modalTitle;
+      $("shareHint").textContent  = t.modalHint;
+      $("nativeShareBtn").textContent = t.share;
+      $("downloadBtn").textContent = t.save;
+      $("igBtn").textContent = t.ig;
+      $("ttBtn").textContent = t.tt;
+      $("copyCaptionBtn").textContent = t.copyCaption;
+    }
+
+    // badge stile
+    $("styleBadge").textContent = "🎭 " + (voice === "wtf" ? "What the F" : "What if");
 
     // nav
     $("homeBtn").onclick = ()=> location.href = "index.html";
@@ -596,27 +525,24 @@
     $("buyBtn").onclick = goStore;
     $("storeLink").onclick = (e)=>{ e.preventDefault(); goStore(); };
 
-    // categorie
-    let category = "persone";
+    // categorie (API-friendly)
+    let category = "people";
     $("catChips").addEventListener("click",(e)=>{
       const b = e.target.closest(".chip");
       if(!b) return;
       document.querySelectorAll("#catChips .chip").forEach(x=>x.classList.remove("sel"));
       b.classList.add("sel");
-      category = b.dataset.cat || "persone";
+      category = b.dataset.cat || "people";
     });
 
     // credits state
     let currentBalance = 0;
 
-    function setErr(msg){ $("err").textContent = msg || ""; }
+    function setErr(t){ $("err").textContent = t || ""; }
+
     function renderCredits(){
-      const TT = t();
-      if(IS_ADMIN){
-        $("creditsBadge").textContent = `${TT.creditsLabel}: ∞ (admin)`;
-        return;
-      }
-      $("creditsBadge").textContent = `${TT.creditsLabel}: ${currentBalance}`;
+      const t = T();
+      $("creditsBadge").textContent = t.credits(currentBalance);
     }
 
     async function syncCredits(){
@@ -637,14 +563,14 @@
     }
 
     async function guardCredits(){
-      const TT = t();
+      const t = T();
       if(IS_ADMIN) return true;
       if(!auth.currentUser){
-        alert(TT.needLogin);
+        alert(t.loginNeed);
         return false;
       }
       if(currentBalance <= 0){
-        alert(TT.noCredits);
+        alert(t.noCredits);
         goStore();
         return false;
       }
@@ -652,73 +578,45 @@
     }
 
     function shareText(d){
-      const TT = t();
-      return `${TT.shareTitle}\n${TT.aLine}: ${d.a}\n${TT.bLine}: ${d.b}\n${TT.winnerPrefix}: ${d.winner}\n${d.reason}\n${d.tagline ? TT.dash + " " + d.tagline : ""}`.trim();
+      const t = T();
+      return `⚔️ Battle\nA: ${d.a}\nB: ${d.b}\n${t.winPrefix}${d.winner}\n${d.reason}\n${d.tagline ? "— " + d.tagline : ""}`.trim();
     }
 
-    // Caption COMPLETA (sfida + vincitore + motivo + tagline + link + hashtag)
+    // Caption localizzata + CTA
     function shareCaption(d){
       const L = getLang();
       const a = String(d.a||"").trim();
       const b = String(d.b||"").trim();
       const w = String(d.winner||"").trim();
       const r = String(d.reason||"").trim();
-      const tl = String(d.tagline||"").trim();
+      const tg = String(d.tagline||"").trim();
 
-      if (L === "en"){
-        return [
-          `⚔️ Battle: ${a} vs ${b}`,
-          `🏆 Winner: ${w}`,
-          r ? `💬 ${r}` : "",
-          tl ? `“${tl}”` : "",
-          "",
-          "Try it: what-ifapp.vercel.app/battle",
-          "#whatif #battle"
-        ].filter(Boolean).join("\n").trim();
-      }
-      if (L === "es"){
-        return [
-          `⚔️ Battle: ${a} vs ${b}`,
-          `🏆 Gana: ${w}`,
-          r ? `💬 ${r}` : "",
-          tl ? `“${tl}”` : "",
-          "",
-          "Pruébalo: what-ifapp.vercel.app/battle",
-          "#whatif #battle"
-        ].filter(Boolean).join("\n").trim();
-      }
-      if (L === "fr"){
-        return [
-          `⚔️ Battle: ${a} vs ${b}`,
-          `🏆 Gagnant: ${w}`,
-          r ? `💬 ${r}` : "",
-          tl ? `“${tl}”` : "",
-          "",
-          "Teste ici : what-ifapp.vercel.app/battle",
-          "#whatif #battle"
-        ].filter(Boolean).join("\n").trim();
-      }
-      if (L === "de"){
-        return [
-          `⚔️ Battle: ${a} vs ${b}`,
-          `🏆 Sieger: ${w}`,
-          r ? `💬 ${r}` : "",
-          tl ? `“${tl}”` : "",
-          "",
-          "Teste es: what-ifapp.vercel.app/battle",
-          "#whatif #battle"
-        ].filter(Boolean).join("\n").trim();
-      }
+      const CTA = {
+        it:"Provala qui:",
+        en:"Try it here:",
+        es:"Pruébalo aquí:",
+        fr:"Essaie ici :",
+        de:"Hier testen:"
+      }[L] || "Provala qui:";
 
-      // it default
+      const HASH = {
+        it:"#whatif #battle",
+        en:"#whatif #battle",
+        es:"#whatif #battle",
+        fr:"#whatif #battle",
+        de:"#whatif #battle"
+      }[L] || "#whatif #battle";
+
+      const winLine = (UI[L]||UI.it).winPrefix + w;
+
       return [
         `⚔️ Battle: ${a} vs ${b}`,
-        `🏆 Vince: ${w}`,
+        winLine,
         r ? `💬 ${r}` : "",
-        tl ? `“${tl}”` : "",
+        tg ? `“${tg}”` : "",
         "",
-        "Provala qui: what-ifapp.vercel.app/battle",
-        "#whatif #battle"
+        `${CTA} what-ifapp.vercel.app/battle`,
+        HASH
       ].filter(Boolean).join("\n").trim();
     }
 
@@ -761,11 +659,9 @@
     }
 
     /* =======================
-       CARD GENERATOR — ULTRA VIRALE
+       CARD GENERATOR
        ======================= */
     async function makeBattleCardPNG(d){
-      const TT = t();
-
       const W = 1080, H = 1350;
       const c = document.createElement("canvas");
       c.width = W; c.height = H;
@@ -782,6 +678,37 @@
       const accent2 = isWtf ? "#5A8C75" : "#FFEC01";
       const ink = isWtf ? "#06110B" : "#11110A";
 
+      const L = getLang();
+      const titleBattle = (L==="en") ? "⚔️ Battle" :
+                          (L==="es") ? "⚔️ Battle" :
+                          (L==="fr") ? "⚔️ Battle" :
+                          (L==="de") ? "⚔️ Battle" :
+                          "⚔️ Battle";
+
+      const labelWin = (L==="en") ? "🏆 Winner" :
+                       (L==="es") ? "🏆 Gana" :
+                       (L==="fr") ? "🏆 Gagnant" :
+                       (L==="de") ? "🏆 Sieger" :
+                       "🏆 Vince";
+
+      const labelWhy = (L==="en") ? "Reason" :
+                       (L==="es") ? "Motivo" :
+                       (L==="fr") ? "Motif" :
+                       (L==="de") ? "Grund" :
+                       "Motivo";
+
+      const labelTag = (L==="en") ? "Tagline" :
+                       (L==="es") ? "Tagline" :
+                       (L==="fr") ? "Tagline" :
+                       (L==="de") ? "Tagline" :
+                       "Tagline";
+
+      const cta = (L==="en") ? "👇 Comment: who should’ve won?" :
+                  (L==="es") ? "👇 Comenta: ¿quién debía ganar?" :
+                  (L==="fr") ? "👇 Dis en com’: qui devait gagner ?" :
+                  (L==="de") ? "👇 Kommentar: Wer hätte gewinnen sollen?" :
+                  "👇 Commenta: chi doveva vincere?";
+
       // background
       const grd = ctx.createRadialGradient(W*0.25,H*0.18, 40, W*0.25,H*0.18, Math.max(W,H));
       grd.addColorStop(0, bg1);
@@ -797,7 +724,7 @@
       const innerR = boxX + boxW - 52;
       const innerW = innerR - innerX;
 
-      // footer reserved (prevents overlaps)
+      // footer reserved
       const FOOTER_H = 160;
       const FOOTER_Y = boxY + boxH - FOOTER_H;
 
@@ -819,9 +746,9 @@
 
       ctx.font = "900 48px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = "rgba(255,255,255,.92)";
-      ctx.fillText(TT.cardBattle, innerX, boxY + 154);
+      ctx.fillText(titleBattle, innerX, boxY + 154);
 
-      // style chip (right)
+      // style chip
       const styleText = isWtf ? "What the F" : "What if";
       ctx.font = "800 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       const chipW = ctx.measureText(styleText).width + 44;
@@ -864,10 +791,8 @@
       ctx.font = "900 54px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = fg;
 
-      const aLinesRaw = wrapLines(ctx, String(d.a||"").trim(), maxTextW);
-      const bLinesRaw = wrapLines(ctx, String(d.b||"").trim(), maxTextW);
-      const aLines = clampLines(aLinesRaw, 2);
-      const bLines = clampLines(bLinesRaw, 2);
+      const aLines = clampLines(wrapLines(ctx, String(d.a||"").trim(), maxTextW), 2);
+      const bLines = clampLines(wrapLines(ctx, String(d.b||"").trim(), maxTextW), 2);
 
       const lineH = 62;
       let ay = zoneMid - 156;
@@ -875,7 +800,7 @@
       let by = zoneMid + 126;
       for (const ln of bLines){ ctx.fillText(ln, textX, by); by += lineH; }
 
-      // VS centered
+      // VS
       const vsX = boxX + boxW/2;
       const vsY = zoneMid;
       ctx.save();
@@ -893,7 +818,7 @@
       ctx.restore();
       ctx.textAlign = "left";
 
-      // Winner banner (glow)
+      // Winner banner
       let y = boxY + 610;
       ctx.save();
       roundRect(ctx, innerX, y, innerW, 128, 30);
@@ -908,23 +833,22 @@
 
       ctx.font = "900 34px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = ink;
-      ctx.fillText(TT.winLabel, innerX + 42, y + 56);
+      ctx.fillText(labelWin, innerX + 42, y + 56);
 
       ctx.font = "900 56px system-ui, -apple-system, Segoe UI, Roboto, Arial";
-      const winLine = clampLines(wrapLines(ctx, String(d.winner||TT.dash).trim(), innerW - 140), 1, "")[0] || TT.dash;
+      const winLine = clampLines(wrapLines(ctx, String(d.winner||"—").trim(), innerW - 140), 1, "")[0] || "—";
       ctx.fillText(winLine, innerX + 42, y + 114);
 
-      // Motivo (clamp, no overlap with footer)
+      // Reason
       y = boxY + 795;
       ctx.font = "900 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = muted;
-      ctx.fillText(TT.reasonLabel, innerX, y);
+      ctx.fillText(labelWhy, innerX, y);
 
       ctx.font = "700 36px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = fg;
 
-      const reason = String(d.reason||"").trim();
-      const reasonLines = clampLines(wrapLines(ctx, reason, innerW), 5);
+      const reasonLines = clampLines(wrapLines(ctx, String(d.reason||"").trim(), innerW), 5);
       let ry = y + 56;
       for (const ln of reasonLines){
         if (ry > FOOTER_Y - 80) break;
@@ -932,7 +856,7 @@
         ry += 46;
       }
 
-      // Tagline (only if fits)
+      // Tagline (if fits)
       const tagline = String(d.tagline||"").trim();
       const yMax = FOOTER_Y - 28;
       if (tagline && ry < yMax - 70){
@@ -940,7 +864,7 @@
 
         ctx.font = "900 28px system-ui, -apple-system, Segoe UI, Roboto, Arial";
         ctx.fillStyle = muted;
-        ctx.fillText(TT.taglineLabel, innerX, ty);
+        ctx.fillText(labelTag, innerX, ty);
 
         ctx.font = "900 42px system-ui, -apple-system, Segoe UI, Roboto, Arial";
         ctx.fillStyle = accent2;
@@ -954,7 +878,7 @@
         }
       }
 
-      // Footer CTA fixed
+      // Footer CTA
       ctx.strokeStyle = line;
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -964,11 +888,11 @@
 
       ctx.font = "900 32px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = accent2;
-      ctx.fillText(TT.footerCTA, innerX, FOOTER_Y + 58);
+      ctx.fillText(cta, innerX, FOOTER_Y + 58);
 
       ctx.font = "800 26px system-ui, -apple-system, Segoe UI, Roboto, Arial";
       ctx.fillStyle = "rgba(255,255,255,.92)";
-      ctx.fillText(TT.footerURL, innerX, FOOTER_Y + 104);
+      ctx.fillText("what-ifapp.vercel.app/battle", innerX, FOOTER_Y + 104);
 
       const dataUrl = c.toDataURL("image/png");
       const blob = await new Promise((resolve)=> c.toBlob(resolve, "image/png", 1.0));
@@ -1010,21 +934,22 @@
     }
 
     async function runBattle(){
-      const TT = t();
+      const t = T();
       setErr("");
       const a = ($("aInput").value||"").trim();
       const b = ($("bInput").value||"").trim();
-      if(!a || !b){ setErr(TT.needAB); return; }
+      if(!a || !b){ setErr(t.needAB); return; }
 
       const ok = await guardCredits();
       if(!ok) return;
 
+      // consuma credito PRIMA della chiamata
       if(!IS_ADMIN){
         try{
           const ok2 = await consumeCredit();
           if(!ok2){
             await syncCredits();
-            alert(TT.noCredits);
+            alert(t.noCredits);
             goStore();
             return;
           }
@@ -1032,7 +957,7 @@
           renderCredits();
         }catch(e){
           console.error("consumeCredit error:", e);
-          setErr(TT.errUseCredits);
+          setErr(t.errUseCredits);
           return;
         }
       }
@@ -1042,54 +967,56 @@
       btn.textContent = "⏳...";
 
       try{
+        const lang = getLang();
         const res = await fetch("/api/battle",{
           method:"POST",
           headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ a, b, category })
+          body: JSON.stringify({
+            a, b,
+            category,
+            lang,          // ✅ PASSO LANG
+            voice          // ✅ PASSO VOICE
+          })
         });
+
         const data = await res.json().catch(()=>({}));
 
         if(!res.ok){
-          setErr(TT.errBattle);
+          setErr(t.errBattle);
           return;
         }
 
+        // fallback: se API risponde in lingua sbagliata, almeno UI resta corretta
         last = { ...data, a, b };
         lastCard = null;
 
-        const winnerPrefix = (getLang()==="en") ? "🏆 Winner: " :
-                             (getLang()==="es") ? "🏆 Gana: " :
-                             (getLang()==="fr") ? "🏆 Gagnant: " :
-                             (getLang()==="de") ? "🏆 Sieger: " :
-                             "🏆 Vince: ";
-
-        $("winnerLine").textContent = winnerPrefix + (data.winner || TT.dash);
-        $("reasonLine").textContent  = data.reason || "";
+        $("winnerLine").textContent = t.winPrefix + (data.winner || "—");
+        $("reasonLine").textContent  = (data.reason ? (t.reasonPrefix + data.reason) : "");
         $("tagLine").textContent     = data.tagline ? `“${data.tagline}”` : "";
         $("resultBox").style.display = "block";
       }catch(e){
         console.error(e);
-        setErr(TT.errNet);
+        setErr(t.errNet);
       }finally{
         btn.disabled = false;
-        btn.textContent = t().judge;
+        btn.textContent = t.judge;
       }
     }
 
     $("judgeBtn").onclick = runBattle;
 
     $("copyBtn").onclick = async ()=>{
-      const TT = t();
+      const t = T();
       if(!last) return;
       try{
         await navigator.clipboard.writeText(shareText(last));
-        setErr(TT.copied);
+        setErr(t.copied);
         setTimeout(()=>setErr(""),900);
-      }catch{ setErr(TT.cannotCopy); }
+      }catch{ setErr(t.cannotCopy); }
     };
 
     $("shareBtn").onclick = async ()=>{
-      const TT = t();
+      const t = T();
       if(!last) return;
       setErr("");
       try{
@@ -1098,22 +1025,22 @@
         openModal();
       }catch(e){
         console.error(e);
-        setErr(TT.cannotMakeCard);
+        setErr(t.cardFail);
       }
     };
 
     $("downloadBtn").onclick = async ()=>{
-      const TT = t();
+      const t = T();
       if(!last) return;
       const card = await ensureCard();
       const safe = (String(last.winner||"battle").slice(0,18) || "battle").replace(/[^\w\-]+/g, "_");
       downloadBlob(card.blob, `battle_${safe}.png`);
-      setErr(TT.saved);
+      setErr(t.saved);
       setTimeout(()=>setErr(""),900);
     };
 
     $("nativeShareBtn").onclick = async ()=>{
-      const TT = t();
+      const t = T();
       if(!last) return;
       const card = await ensureCard();
       const text = shareCaption(last);
@@ -1132,40 +1059,40 @@
 
       try{
         await navigator.clipboard.writeText(text);
-        setErr(TT.captionCopiedSave);
+        setErr(t.captionCopied2);
         const safe = (String(last.winner||"battle").slice(0,18) || "battle").replace(/[^\w\-]+/g, "_");
         downloadBlob(card.blob, `battle_${safe}.png`);
       }catch{
-        setErr(TT.shareNotSupported);
+        setErr(t.shareNotSupported);
       }
     };
 
     $("copyCaptionBtn").onclick = async ()=>{
-      const TT = t();
+      const t = T();
       if(!last) return;
       try{
         await navigator.clipboard.writeText(shareCaption(last));
-        setErr(TT.captionCopied);
+        setErr(t.captionCopied);
         setTimeout(()=>setErr(""),900);
       }catch{
-        setErr(TT.cannotCopyCaption);
+        setErr(t.captionFail);
       }
     };
 
     $("igBtn").onclick = async ()=>{
-      const TT = t();
+      const t = T();
       if(!last) return;
       await ensureCard();
-      setErr(TT.igHint);
+      setErr(t.igHint);
       location.href = "instagram://app";
       setTimeout(()=>{ window.open("https://www.instagram.com/", "_blank"); }, 500);
     };
 
     $("ttBtn").onclick = async ()=>{
-      const TT = t();
+      const t = T();
       if(!last) return;
       await ensureCard();
-      setErr(TT.ttHint);
+      setErr(t.ttHint);
       location.href = "tiktok://";
       setTimeout(()=>{ window.open("https://www.tiktok.com/upload", "_blank"); }, 500);
     };
@@ -1182,29 +1109,12 @@
 
     onAuthStateChanged(auth, async ()=>{ await syncCredits(); });
     window.addEventListener("focus", syncCredits);
-    window.addEventListener("pageshow", ()=>{
-      try{ applyI18n(); }catch{}
-      syncCredits();
-    });
+    window.addEventListener("pageshow", ()=>{ applyI18n(); syncCredits(); });
+    window.addEventListener("storage", (e)=>{ if(e?.key==="lang"){ applyI18n(); } });
 
     // init
     applyI18n();
     await syncCredits();
-
-    // se cambia lang altrove
-    window.addEventListener("storage", (e)=>{
-      if(e && e.key === "lang"){
-        try{ applyI18n(); }catch{}
-        try{ renderCredits(); }catch{}
-      }
-    });
-    document.addEventListener("visibilitychange", ()=>{
-      if(!document.hidden){
-        try{ applyI18n(); }catch{}
-        try{ renderCredits(); }catch{}
-      }
-    });
-
   </script>
 </body>
 </html>
