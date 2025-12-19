@@ -10,27 +10,29 @@
       :root{
         --bg:#0B1018; --bg2:#0E1724; --card:#141C22;
         --fg:#F4F7FB; --muted:#A7B3C2;
-        --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
+        --accent:#00E0FF; --accent2:#1AFFD5; --ink:#06110B;
         --chip:#0F1820; --line:#1B2A34; --shadow:rgba(0,0,0,.35);
+        --warnbg:rgba(255,255,255,.04);
       }
       html[data-theme="wtf"]{
         --bg:#0B0B0C; --bg2:#101414; --card:#111713;
         --fg:#EEF5F0; --muted:#A6B6AD;
-        --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;
+        --accent:#00E0FF; --accent2:#1AFFD5; --ink:#06110B;
         --chip:#0F1714; --line:#21322A; --shadow:rgba(0,0,0,.45);
+        --warnbg:rgba(255,255,255,.04);
       }
       *{box-sizing:border-box}
       html,body{
         height:100%;margin:0;
-        background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+        background:
+          radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%),
+          radial-gradient(800px 600px at 90% 120%, rgba(0,224,255,.06), transparent 70%);
         color:var(--fg);
         font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
         -webkit-font-smoothing:antialiased;
       }
-
       main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:8px 14px 30px}
       .wrap{width:min(100%,980px)}
-
       .topbar{
         position:sticky;top:0;z-index:10;
         display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -43,11 +45,15 @@
       .btn{
         appearance:none;border:1px solid var(--line);
         background:var(--chip);color:var(--fg);
-        border-radius:12px;padding:8px 12px;font-weight:800;cursor:pointer;
+        border-radius:12px;padding:9px 12px;font-weight:900;cursor:pointer;
       }
       .btn.primary{
         background:linear-gradient(180deg,var(--accent),var(--accent2));
         color:var(--ink);border:none;box-shadow:0 10px 26px var(--shadow);
+      }
+      .btn.ghost{
+        background:transparent;
+        border:1px solid var(--line);
       }
       .btn[disabled]{opacity:.45;cursor:not-allowed}
       .badge{
@@ -56,47 +62,50 @@
       }
       select{
         appearance:none;background:var(--chip);border:1px solid var(--line);
-        color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:800;cursor:pointer;
+        color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:900;cursor:pointer;
       }
-
-      h1{margin:8px 0 6px;font-size:clamp(24px,5vw,34px);color:var(--accent)}
+      h1{margin:10px 0 6px;font-size:clamp(24px,5vw,34px);color:var(--accent)}
       .card{
         background:var(--card);
         border:1px solid var(--line);
-        border-radius:16px;
+        border-radius:18px;
         padding:16px;
         margin:10px 0;
         backdrop-filter:blur(12px);
         box-shadow:0 10px 26px var(--shadow);
       }
-      .center{max-width:760px;margin:0 auto}
-      .label{color:var(--accent2);font-weight:900;margin:0 0 8px}
-      .small{font-size:12px;color:var(--muted);line-height:1.45}
-
-      .progress{height:10px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;overflow:hidden}
-      .bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%}
-
-      .stepHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-      .stepTitle{font-weight:900;font-size:18px;margin:0}
-      .stepSub{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.4}
-
+      .center{max-width:820px;margin:0 auto}
+      .label{color:var(--accent2);font-weight:950;margin:0 0 8px}
+      .small{font-size:12px;color:var(--muted);line-height:1.55}
       .chips{display:flex;flex-wrap:wrap;gap:8px}
       .chip{
         background:var(--chip);border:1px solid var(--line);
         color:#eaf3ee;border-radius:999px;padding:10px 12px;
-        font-size:13px;font-weight:800;cursor:pointer;
+        font-size:13px;font-weight:900;cursor:pointer;
         max-width:100%;
         white-space:normal;
         word-break:break-word;
         line-height:1.2;
         display:inline-flex;align-items:center;gap:8px;
-        transition:transform .12s ease;
       }
-      .chip:active{transform:translateY(1px)}
       .chip.sel{
         background:linear-gradient(180deg,var(--accent),var(--accent2));
         color:var(--ink);
       }
+
+      .stepHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+      .stepTitle{font-weight:950;font-size:18px;margin:0}
+      .stepSub{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.45}
+
+      .progress{height:10px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+      .bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%}
+
+      .resultTitle{font-weight:980;font-size:18px;margin:0 0 8px}
+      .resultDo{font-size:15px;line-height:1.6;margin:0 0 10px}
+      .resultBlock{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:12px}
+      ul{margin:8px 0 0;padding-left:18px}
+      li{margin:6px 0;color:var(--fg)}
+      .hr{height:1px;background:var(--line);margin:12px 0}
 
       /* input domanda */
       .qwrap{display:flex;flex-direction:column;gap:10px}
@@ -110,11 +119,10 @@
         color:var(--fg);
         border-radius:14px;
         padding:12px 12px;
-        font-weight:800;
+        font-weight:950;
         outline:none;
       }
-      .qinput::placeholder{color:rgba(167,179,194,.75);font-weight:700}
-
+      .qinput::placeholder{color:rgba(167,179,194,.75);font-weight:800}
       .grid{
         display:grid;
         grid-template-columns:repeat(2,minmax(0,1fr));
@@ -130,38 +138,69 @@
         border-radius:14px;
         padding:10px 10px;
         cursor:pointer;
-        transition:transform .12s ease;
+        transition:transform .06s ease;
       }
-      .cardSug:active{transform:translateY(1px)}
-      .cardSug .t{font-weight:900;font-size:13px;line-height:1.25}
+      .cardSug .t{font-weight:950;font-size:13px;line-height:1.25}
       .cardSug .s{margin-top:6px;font-size:12px;color:var(--muted);line-height:1.35}
+      .cardSug:active{transform:translateY(1px)}
       .cardSug.sel{
-        background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
-        border-color:rgba(255,255,255,.22);
-        box-shadow:0 0 0 1px rgba(255,255,255,.08) inset;
+        border-color:rgba(0,224,255,.65);
+        box-shadow:0 0 0 2px rgba(0,224,255,.20) inset;
       }
 
-      /* result */
-      .resultTitle{font-weight:950;font-size:18px;margin:0 0 8px}
-      .resultDo{font-size:15px;line-height:1.55;margin:0 0 10px}
-      .resultBlock{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:12px}
-      ul{margin:8px 0 0;padding-left:18px}
-      li{margin:6px 0;color:var(--fg)}
-      .hr{height:1px;background:var(--line);margin:12px 0}
+      /* mini input per card */
+      .mini{
+        margin-top:10px;
+        display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+      }
+      .mini input{
+        flex:1;min-width:240px;
+        background:rgba(255,255,255,.04);
+        border:1px solid var(--line);
+        color:var(--fg);
+        border-radius:12px;
+        padding:10px 10px;
+        font-weight:850;
+        outline:none;
+      }
+      .mini input::placeholder{color:rgba(167,179,194,.7);font-weight:750}
 
       /* loader */
-      .loader{
-        display:inline-flex;align-items:center;gap:8px;
-        padding:8px 10px;border-radius:999px;
-        border:1px solid var(--line);
-        background:rgba(255,255,255,.03);
-        color:var(--muted);
-        font-size:12px;font-weight:900;
+      .thinking{
+        display:none;
+        gap:10px;align-items:center;
       }
-      .dot{width:6px;height:6px;border-radius:50%;background:var(--muted);opacity:.6;animation:blink 1s infinite}
+      .dot{
+        width:8px;height:8px;border-radius:999px;
+        background:var(--accent);
+        animation:bounce 1.2s infinite ease-in-out;
+      }
       .dot:nth-child(2){animation-delay:.15s}
       .dot:nth-child(3){animation-delay:.3s}
-      @keyframes blink{0%{opacity:.25}50%{opacity:.85}100%{opacity:.25}}
+      @keyframes bounce{
+        0%,80%,100%{transform:translateY(0);opacity:.55}
+        40%{transform:translateY(-6px);opacity:1}
+      }
+
+      /* disclaimer */
+      details{
+        margin-top:10px;
+        border:1px solid var(--line);
+        border-radius:14px;
+        background:var(--warnbg);
+        padding:10px 12px;
+      }
+      summary{cursor:pointer;font-weight:950;color:#dff7ff}
+      .links{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+      .links a{
+        color:var(--accent);
+        text-decoration:none;
+        font-weight:900;
+        border:1px solid rgba(0,224,255,.25);
+        padding:8px 10px;
+        border-radius:999px;
+      }
+      .links a:hover{opacity:.9}
     </style>
   </head>
 
@@ -186,43 +225,47 @@
 
     <main>
       <div class="wrap">
-        <h1 id="pageTitle">🔮 Oracolo</h1>
+        <h1>🔮 <span id="titleTxt">Oracolo</span></h1>
 
-        <!-- COSA FA / COME SI USA (chiaro e veloce) -->
+        <!-- COSA FA + DISCLAIMER -->
         <div class="card center">
           <div class="label" id="subLabel">A cosa serve</div>
           <div class="small" id="hintText">
-            Scegli un obiettivo, genera 4 carte e l’Oracolo ti restituisce una cosa sola: <b>cosa fare adesso</b> per avvicinarti a ciò che vuoi.
+            Scegli un obiettivo, genera 4 carte, fai 4 scelte → e l’Oracolo ti dice <b>cosa fare</b> per avvicinarti a ciò che vuoi.
           </div>
 
-          <div class="small" id="softDisclaimer" style="margin-top:10px;opacity:.95">
-            Nota: spunti + piano generale (AI). Non è consulenza medica/legale/finanziaria. Usa il tuo giudizio.
+          <details>
+            <summary id="discSummary">⚠️ Importante (leggi)</summary>
+            <div class="small" id="discFull">
+              Questa funzione fornisce idee e domande guida. Non è consulenza medica/legale/finanziaria. Non usarla per attività illegali o dannose.
+            </div>
+          </details>
+
+          <div class="links">
+            <a href="terms.html" id="termsLink">Terms</a>
+            <a href="privacy.html" id="privacyLink">Privacy</a>
           </div>
 
           <div style="margin-top:12px">
             <div class="progress"><div class="bar" id="bar"></div></div>
             <div class="small" id="progressText" style="margin-top:8px">0/4</div>
           </div>
-
-          <div id="metaLoader" style="margin-top:10px;display:none">
-            <span class="loader">
-              ⏳ <span id="loaderText">Sto pensando</span>
-              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-            </span>
-          </div>
         </div>
 
         <!-- DOMANDA + SUGGERIMENTI -->
         <div class="card center">
-          <div class="label" id="qLabel">Obiettivo</div>
+          <div class="label" id="qLabel">Obiettivo (scrivilo come domanda)</div>
+
           <div class="qwrap">
             <div class="qrow">
-              <input id="goalInput" class="qinput" type="text"
-                placeholder="Esempio: Come faccio a cambiare lavoro senza rischiare troppo?"
-                maxlength="160"
-              />
-              <button class="btn" id="clearGoalBtn" type="button">Pulisci</button>
-              <button class="btn primary" id="genCardsBtn" type="button">🃏 Genera carte</button>
+              <input id="goalInput" class="qinput" type="text" maxlength="160"/>
+              <button class="btn" id="clearGoalBtn" type="button"></button>
+              <button class="btn primary" id="genCardsBtn" type="button"></button>
+            </div>
+
+            <div class="thinking" id="thinkingRow">
+              <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+              <div class="small" id="thinkingTxt">Sto pensando…</div>
             </div>
 
             <div class="small" id="qHelp">
@@ -233,14 +276,14 @@
           </div>
         </div>
 
-        <!-- STEPS (carte) -->
+        <!-- STEPS -->
         <div id="stepsWrap" class="center"></div>
 
         <!-- CTA -->
         <div class="card center">
           <div class="row" style="justify-content:space-between;align-items:center">
             <div class="small" id="ctaHelp">Completa le 4 scelte per sbloccare il responso.</div>
-            <button class="btn primary" id="revealBtn" type="button" disabled>🔮 Rivela l’Oracolo</button>
+            <button class="btn primary" id="revealBtn" type="button" disabled>🔮</button>
           </div>
         </div>
 
@@ -252,12 +295,12 @@
           <p class="resultDo" id="rDo">—</p>
 
           <div class="resultBlock">
-            <div class="small" style="font-weight:900;margin-bottom:6px" id="firstStepLabel">Primo passo (15 minuti)</div>
+            <div class="small" style="font-weight:950;margin-bottom:6px" id="firstStepLabel">Primo passo (15 minuti)</div>
             <div id="rFirst">—</div>
 
             <div class="hr"></div>
 
-            <div class="small" style="font-weight:900;margin-bottom:6px" id="rulesLabel">Regole</div>
+            <div class="small" style="font-weight:950;margin-bottom:6px" id="rulesLabel">Regole</div>
             <ul id="rRules"></ul>
 
             <div class="hr"></div>
@@ -266,7 +309,7 @@
           </div>
 
           <div class="row" style="justify-content:flex-end;margin-top:12px">
-            <button class="btn" id="playAgainBtn" type="button">🔁 Rifai</button>
+            <button class="btn" id="playAgainBtn" type="button">🔁</button>
           </div>
         </div>
 
@@ -282,7 +325,7 @@
       import { bootCredits, getBalance, consumeCredit } from "./store/credits.js";
 
       const LS = localStorage;
-      const $ = (id) => document.getElementById(id);
+      const $ = id => document.getElementById(id);
 
       const SUP_LANG = ["it","en","es","fr","de"];
       const normLang = (l) => {
@@ -303,170 +346,145 @@
       $("langSelect").value = lang;
       document.documentElement.lang = lang;
 
-      // ===== I18N (tutta pagina) =====
-      const I18N = {
+      // ===== I18N UI =====
+      const UI = {
         it: {
-          pageTitle: "🔮 Oracolo",
-          subLabel: "A cosa serve",
-          hintText: 'Scegli un obiettivo, genera 4 carte e l’Oracolo ti restituisce una cosa sola: <b>cosa fare adesso</b> per avvicinarti a ciò che vuoi.',
-          softDisclaimer: "Nota: spunti + piano generale (AI). Non è consulenza medica/legale/finanziaria. Usa il tuo giudizio.",
-          loaderText: "Sto pensando",
-          qLabel: "Obiettivo",
-          goalPh: "Esempio: Come faccio a cambiare lavoro senza rischiare troppo?",
-          clear: "Pulisci",
-          genCards: "🃏 Genera carte",
-          qHelp: "Se non sai cosa scrivere: tocca un suggerimento qui sotto (poi puoi modificarlo).",
-          ctaHelp: "Completa le 4 scelte per sbloccare il responso.",
-          reveal: "🔮 Rivela l’Oracolo",
-          resultLabel: "Risposta",
-          firstStepLabel: "Primo passo (15 minuti)",
-          rulesLabel: "Regole",
-          playAgain: "🔁 Rifai",
-          alerts: {
-            login: "Per usare l’Oracolo devi essere loggato.",
-            noCredits: "Hai finito i crediti. Vai allo store per ricaricare.",
-            loadErr: "Errore nel caricare le carte. Riprova.",
-            genHint: "Scrivi o scegli un obiettivo, poi premi “Genera carte”.",
-            ansErr: "Errore nel generare la risposta. Riprova.",
-            blockedTitle: "Non posso aiutarti su questo.",
-            blockedBody: "Se ti senti in pericolo o stai pensando di farti del male, chiama subito il 112 (Italia) o il numero di emergenza del tuo Paese, oppure parla con qualcuno di fiducia adesso."
-          }
+          title:"Oracolo",
+          serve:"A cosa serve",
+          hint:'Scegli un obiettivo, genera 4 carte, fai 4 scelte → e l’Oracolo ti dice <b>cosa fare</b> per avvicinarti a ciò che vuoi.',
+          discSum:"⚠️ Importante (leggi)",
+          discFull:"Questa funzione fornisce idee e domande guida. Non è consulenza medica/legale/finanziaria o professionale. Usa il tuo giudizio. Non usarla per attività illegali o dannose.",
+          goalLabel:"Obiettivo (scrivilo come domanda)",
+          placeholder:"Esempio: Come faccio a trovare lavoro senza rischiare troppo?",
+          clear:"Pulisci",
+          gen:"✨ Genera carte",
+          thinking:"Sto pensando…",
+          qHelp:"Se non sai cosa scrivere: tocca un suggerimento qui sotto (poi puoi modificarlo).",
+          ctaHelp:"Completa le 4 scelte per sbloccare il responso.",
+          reveal:"🔮 Rivela l’Oracolo",
+          result:"Risposta",
+          first:"Primo passo (15 minuti)",
+          rules:"Regole",
+          again:"🔁 Rifai",
+          login:"Per usare l’Oracolo devi essere loggato.",
+          noCredits:"Hai finito i crediti. Vai allo store per ricaricare.",
+          errCards:"Errore nel generare le carte. Riprova.",
+          errAns:"Errore nel generare la risposta. Riprova.",
         },
         en: {
-          pageTitle: "🔮 Oracle",
-          subLabel: "What it does",
-          hintText: 'Pick a goal, generate 4 cards, and the Oracle returns one thing: <b>what to do now</b> to move closer to what you want.',
-          softDisclaimer: "Note: ideas + general plan (AI). Not medical/legal/financial advice. Use your judgment.",
-          loaderText: "Thinking",
-          qLabel: "Goal",
-          goalPh: "Example: How do I change jobs without taking big risks?",
-          clear: "Clear",
-          genCards: "🃏 Generate cards",
-          qHelp: "If you don’t know what to write: tap a suggestion below (then you can edit it).",
-          ctaHelp: "Complete the 4 picks to unlock the answer.",
-          reveal: "🔮 Reveal the Oracle",
-          resultLabel: "Answer",
-          firstStepLabel: "First step (15 minutes)",
-          rulesLabel: "Rules",
-          playAgain: "🔁 Again",
-          alerts: {
-            login: "You must be logged in to use the Oracle.",
-            noCredits: "You’re out of credits. Go to the store to recharge.",
-            loadErr: "Error loading cards. Try again.",
-            genHint: "Write or pick a goal, then press “Generate cards”.",
-            ansErr: "Error generating the answer. Try again.",
-            blockedTitle: "I can’t help with that.",
-            blockedBody: "If you feel in danger or you’re thinking about self-harm, call your local emergency number now, or reach out to someone you trust immediately."
-          }
+          title:"Oracle",
+          serve:"What it does",
+          hint:'Pick a goal, generate 4 cards, make 4 choices → the Oracle tells you <b>what to do</b> next.',
+          discSum:"⚠️ Important (read)",
+          discFull:"This feature provides ideas and planning prompts. It is not medical/legal/financial or professional advice. Use your judgment. Do not use it for harmful or illegal activities.",
+          goalLabel:"Goal (write it as a question)",
+          placeholder:"Example: How do I find a job without taking big risks?",
+          clear:"Clear",
+          gen:"✨ Generate cards",
+          thinking:"Thinking…",
+          qHelp:"If you’re not sure, tap a suggestion below (then edit it).",
+          ctaHelp:"Complete the 4 picks to unlock the answer.",
+          reveal:"🔮 Reveal the Oracle",
+          result:"Answer",
+          first:"First step (15 minutes)",
+          rules:"Rules",
+          again:"🔁 Again",
+          login:"You must be logged in to use the Oracle.",
+          noCredits:"You’re out of credits. Go to the store to recharge.",
+          errCards:"Failed to generate cards. Try again.",
+          errAns:"Failed to generate the answer. Try again.",
         },
         es: {
-          pageTitle: "🔮 Oráculo",
-          subLabel: "Para qué sirve",
-          hintText: 'Elige un objetivo, genera 4 cartas y el Oráculo te devuelve una cosa: <b>qué hacer ahora</b> para acercarte a lo que quieres.',
-          softDisclaimer: "Nota: ideas + plan general (IA). No es asesoramiento médico/legal/financiero. Usa tu criterio.",
-          loaderText: "Pensando",
-          qLabel: "Objetivo",
-          goalPh: "Ejemplo: ¿Cómo cambio de trabajo sin arriesgar demasiado?",
-          clear: "Limpiar",
-          genCards: "🃏 Generar cartas",
-          qHelp: "Si no sabes qué escribir: toca una sugerencia abajo (luego puedes editarla).",
-          ctaHelp: "Completa las 4 elecciones para desbloquear la respuesta.",
-          reveal: "🔮 Revelar el Oráculo",
-          resultLabel: "Respuesta",
-          firstStepLabel: "Primer paso (15 minutos)",
-          rulesLabel: "Reglas",
-          playAgain: "🔁 Repetir",
-          alerts: {
-            login: "Debes iniciar sesión para usar el Oráculo.",
-            noCredits: "No te quedan créditos. Ve a la tienda para recargar.",
-            loadErr: "Error al cargar las cartas. Inténtalo de nuevo.",
-            genHint: "Escribe o elige un objetivo y luego pulsa “Generar cartas”.",
-            ansErr: "Error al generar la respuesta. Inténtalo de nuevo.",
-            blockedTitle: "No puedo ayudarte con eso.",
-            blockedBody: "Si estás en peligro o piensas en hacerte daño, llama ahora al número de emergencias de tu país o habla con alguien de confianza."
-          }
+          title:"Oráculo",
+          serve:"Para qué sirve",
+          hint:'Elige un objetivo, genera 4 cartas, haz 4 elecciones → el Oráculo te dice <b>qué hacer</b> ahora.',
+          discSum:"⚠️ Importante (leer)",
+          discFull:"Esta función ofrece ideas y preguntas guía. No es asesoramiento médico/legal/financiero o profesional. Usa tu criterio. No la uses para actividades dañinas o ilegales.",
+          goalLabel:"Objetivo (escríbelo como pregunta)",
+          placeholder:"Ejemplo: ¿Cómo encuentro trabajo sin arriesgar demasiado?",
+          clear:"Borrar",
+          gen:"✨ Generar cartas",
+          thinking:"Pensando…",
+          qHelp:"Si no sabes qué escribir, toca una sugerencia abajo (luego edítala).",
+          ctaHelp:"Completa las 4 elecciones para desbloquear la respuesta.",
+          reveal:"🔮 Revelar el Oráculo",
+          result:"Respuesta",
+          first:"Primer paso (15 minutos)",
+          rules:"Reglas",
+          again:"🔁 Repetir",
+          login:"Debes iniciar sesión para usar el Oráculo.",
+          noCredits:"No tienes créditos. Ve a la tienda para recargar.",
+          errCards:"Error al generar las cartas. Inténtalo de nuevo.",
+          errAns:"Error al generar la respuesta. Inténtalo de nuevo.",
         },
         fr: {
-          pageTitle: "🔮 Oracle",
-          subLabel: "À quoi ça sert",
-          hintText: 'Choisis un objectif, génère 4 cartes, et l’Oracle te renvoie une chose : <b>quoi faire maintenant</b> pour te rapprocher de ce que tu veux.',
-          softDisclaimer: "Note : idées + plan général (IA). Pas un avis médical/juridique/financier. Utilise ton jugement.",
-          loaderText: "Réflexion",
-          qLabel: "Objectif",
-          goalPh: "Exemple : Comment changer de job sans trop de risques ?",
-          clear: "Effacer",
-          genCards: "🃏 Générer les cartes",
-          qHelp: "Si tu ne sais pas quoi écrire : touche une suggestion ci-dessous (tu peux ensuite la modifier).",
-          ctaHelp: "Complète les 4 choix pour débloquer la réponse.",
-          reveal: "🔮 Révéler l’Oracle",
-          resultLabel: "Réponse",
-          firstStepLabel: "Premier pas (15 minutes)",
-          rulesLabel: "Règles",
-          playAgain: "🔁 Refaire",
-          alerts: {
-            login: "Tu dois être connecté pour utiliser l’Oracle.",
-            noCredits: "Tu n’as plus de crédits. Va à la boutique pour recharger.",
-            loadErr: "Erreur au chargement des cartes. Réessaie.",
-            genHint: "Écris ou choisis un objectif, puis appuie sur « Générer les cartes ».",
-            ansErr: "Erreur pendant la génération. Réessaie.",
-            blockedTitle: "Je ne peux pas aider avec ça.",
-            blockedBody: "Si tu es en danger ou si tu penses à te faire du mal, appelle immédiatement le numéro d’urgence de ton pays ou contacte une personne de confiance."
-          }
+          title:"Oracle",
+          serve:"À quoi ça sert",
+          hint:'Choisis un objectif, génère 4 cartes, fais 4 choix → l’Oracle te dit <b>quoi faire</b> ensuite.',
+          discSum:"⚠️ Important (lire)",
+          discFull:"Cette fonction propose des idées et des questions de cadrage. Ce n’est pas un avis médical/juridique/financier ou professionnel. Utilise ton jugement. Ne l’utilise pas pour des activités illégales ou nuisibles.",
+          goalLabel:"Objectif (écris-le comme une question)",
+          placeholder:"Exemple : Comment trouver un travail sans trop de risques ?",
+          clear:"Effacer",
+          gen:"✨ Générer les cartes",
+          thinking:"Je réfléchis…",
+          qHelp:"Si tu ne sais pas, touche une suggestion ci-dessous (puis modifie-la).",
+          ctaHelp:"Complète les 4 choix pour débloquer la réponse.",
+          reveal:"🔮 Révéler l’Oracle",
+          result:"Réponse",
+          first:"Premier pas (15 minutes)",
+          rules:"Règles",
+          again:"🔁 Refaire",
+          login:"Tu dois être connecté pour utiliser l’Oracle.",
+          noCredits:"Tu n’as plus de crédits. Va au store pour recharger.",
+          errCards:"Erreur lors de la génération des cartes. Réessaie.",
+          errAns:"Erreur lors de la génération de la réponse. Réessaie.",
         },
         de: {
-          pageTitle: "🔮 Orakel",
-          subLabel: "Wofür es ist",
-          hintText: 'Wähle ein Ziel, erzeuge 4 Karten, und das Orakel gibt dir eine Sache: <b>was du jetzt tun sollst</b>, um deinem Ziel näher zu kommen.',
-          softDisclaimer: "Hinweis: Ideen + allgemeiner Plan (KI). Keine medizinische/juristische/finanzielle Beratung. Nutze dein Urteil.",
-          loaderText: "Denkt nach",
-          qLabel: "Ziel",
-          goalPh: "Beispiel: Wie wechsle ich den Job ohne großes Risiko?",
-          clear: "Löschen",
-          genCards: "🃏 Karten erzeugen",
-          qHelp: "Wenn du nicht weißt, was du schreiben sollst: Tippe unten auf einen Vorschlag (du kannst ihn danach bearbeiten).",
-          ctaHelp: "Vervollständige die 4 Auswahlpunkte, um die Antwort freizuschalten.",
-          reveal: "🔮 Orakel enthüllen",
-          resultLabel: "Antwort",
-          firstStepLabel: "Erster Schritt (15 Minuten)",
-          rulesLabel: "Regeln",
-          playAgain: "🔁 Nochmal",
-          alerts: {
-            login: "Du musst eingeloggt sein, um das Orakel zu nutzen.",
-            noCredits: "Keine Credits mehr. Geh zum Store, um aufzuladen.",
-            loadErr: "Fehler beim Laden der Karten. Versuche es erneut.",
-            genHint: "Schreibe oder wähle ein Ziel und drücke dann „Karten erzeugen“.",
-            ansErr: "Fehler bei der Antwortgenerierung. Versuche es erneut.",
-            blockedTitle: "Dabei kann ich nicht helfen.",
-            blockedBody: "Wenn du in Gefahr bist oder daran denkst, dir etwas anzutun, ruf jetzt den Notruf deines Landes an oder wende dich sofort an eine vertraute Person."
-          }
+          title:"Orakel",
+          serve:"Wozu das dient",
+          hint:'Wähle ein Ziel, generiere 4 Karten, triff 4 Entscheidungen → das Orakel sagt dir <b>was du als Nächstes tun sollst</b>.',
+          discSum:"⚠️ Wichtig (lesen)",
+          discFull:"Diese Funktion liefert Ideen und Leitfragen. Keine medizinische/rechtliche/finanzielle oder professionelle Beratung. Nutze dein Urteilsvermögen. Nicht für schädliche oder illegale Zwecke nutzen.",
+          goalLabel:"Ziel (als Frage formulieren)",
+          placeholder:"Beispiel: Wie finde ich einen Job ohne großes Risiko?",
+          clear:"Leeren",
+          gen:"✨ Karten generieren",
+          thinking:"Denke nach…",
+          qHelp:"Wenn du unsicher bist: Tippe unten eine Idee an (danach bearbeiten).",
+          ctaHelp:"Vervollständige 4 Auswahlpunkte, um die Antwort zu sehen.",
+          reveal:"🔮 Orakel zeigen",
+          result:"Antwort",
+          first:"Erster Schritt (15 Minuten)",
+          rules:"Regeln",
+          again:"🔁 Nochmal",
+          login:"Du musst eingeloggt sein, um das Orakel zu nutzen.",
+          noCredits:"Keine Credits mehr. Geh in den Store zum Aufladen.",
+          errCards:"Karten konnten nicht generiert werden. Versuch’s nochmal.",
+          errAns:"Antwort konnte nicht generiert werden. Versuch’s nochmal.",
         }
       };
 
-      function t() {
-        return I18N[lang] || I18N.it;
-      }
-
       function applyI18n(){
-        const TT = t();
-        $("pageTitle").textContent = TT.pageTitle;
-        $("subLabel").textContent = TT.subLabel;
-        $("hintText").innerHTML = TT.hintText;
-        $("softDisclaimer").textContent = TT.softDisclaimer;
-        $("loaderText").textContent = TT.loaderText;
-
-        $("qLabel").textContent = TT.qLabel;
-        $("goalInput").setAttribute("placeholder", TT.goalPh);
-        $("clearGoalBtn").textContent = TT.clear;
-        $("genCardsBtn").textContent = TT.genCards;
-        $("qHelp").textContent = TT.qHelp;
-
-        $("ctaHelp").textContent = TT.ctaHelp;
-        if(!$("revealBtn").dataset.busy) $("revealBtn").textContent = TT.reveal;
-
-        $("resultLabel").textContent = TT.resultLabel;
-        $("firstStepLabel").textContent = TT.firstStepLabel;
-        $("rulesLabel").textContent = TT.rulesLabel;
-        $("playAgainBtn").textContent = TT.playAgain;
+        const t = UI[lang] || UI.it;
+        document.documentElement.lang = lang;
+        $("titleTxt").textContent = t.title;
+        $("subLabel").textContent = t.serve;
+        $("hintText").innerHTML = t.hint;
+        $("discSummary").textContent = t.discSum;
+        $("discFull").textContent = t.discFull;
+        $("qLabel").textContent = t.goalLabel;
+        $("goalInput").placeholder = t.placeholder;
+        $("clearGoalBtn").textContent = t.clear;
+        $("genCardsBtn").textContent = t.gen;
+        $("thinkingTxt").textContent = t.thinking;
+        $("qHelp").textContent = t.qHelp;
+        $("ctaHelp").textContent = t.ctaHelp;
+        $("revealBtn").textContent = t.reveal;
+        $("resultLabel").textContent = t.result;
+        $("firstStepLabel").textContent = t.first;
+        $("rulesLabel").textContent = t.rules;
+        $("playAgainBtn").textContent = t.again;
       }
 
       // UI badges
@@ -484,6 +502,7 @@
 
       // credits
       let currentBalance = 0;
+
       function renderCredits(){
         if (isAdmin){
           $("freeBadge").textContent = "Crediti: ∞ (admin)";
@@ -493,56 +512,47 @@
       }
 
       async function syncCredits(){
-        if (isAdmin){
-          renderCredits(); return;
-        }
+        if (isAdmin){ renderCredits(); return; }
         if (!auth.currentUser){
-          currentBalance = 0;
-          renderCredits();
-          return;
+          currentBalance = 0; renderCredits(); return;
         }
         try{
           await bootCredits();
           currentBalance = await getBalance();
-        }catch{
-          currentBalance = 0;
-        }
+        }catch{ currentBalance = 0; }
         renderCredits();
       }
 
       async function guardCredits(){
-        const TT = t();
+        const t = UI[lang] || UI.it;
         if (isAdmin) return true;
         if (!auth.currentUser){
-          alert(TT.alerts.login);
+          alert(t.login);
           location.href = "index.html";
           return false;
         }
         if (currentBalance <= 0){
-          alert(TT.alerts.noCredits);
+          alert(t.noCredits);
           location.href = "store/credit-store.html?lang=" + encodeURIComponent(lang);
           return false;
         }
         return true;
       }
 
-      onAuthStateChanged(auth, async () => {
-        await syncCredits();
-      });
+      onAuthStateChanged(auth, async () => { await syncCredits(); });
       window.addEventListener("focus", syncCredits);
 
       // language change
       $("langSelect").onchange = async () => {
         lang = normLang($("langSelect").value);
         LS.setItem("lang", lang);
-        document.documentElement.lang = lang;
+        $("langSelect").value = lang;
         applyI18n();
         renderSuggestions();
-        // NON auto-carichiamo carte: l’utente usa “Genera carte”
-        clearUI();
+        // non rigenero carte da solo: le generi tu col bottone
       };
 
-      // ===== DOMANDA + SUGGERIMENTI LOCALI =====
+      // ===== SUGGERIMENTI LOCALI =====
       const SUGG = {
         it: [
           { t:"Cambio lavoro", s:"Come cambio lavoro senza rischiare troppo?" },
@@ -586,7 +596,7 @@
         ]
       };
 
-      let selectedSugIdx = -1;
+      let lastSugIdx = -1;
 
       function escapeHtml(s){
         return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -599,13 +609,13 @@
 
         pool.forEach((item, idx)=>{
           const div = document.createElement("div");
-          div.className = "cardSug" + (idx === selectedSugIdx ? " sel" : "");
+          div.className = "cardSug" + (idx===lastSugIdx ? " sel":"");
           div.innerHTML = `<div class="t">${escapeHtml(item.t)}</div><div class="s">${escapeHtml(item.s)}</div>`;
           div.onclick = () => {
-            selectedSugIdx = idx;
+            lastSugIdx = idx;
             $("goalInput").value = item.s;
             try{ LS.setItem("oracle_goal_draft", item.s); }catch{}
-            renderSuggestions(); // evidenzia
+            renderSuggestions();
           };
           grid.appendChild(div);
         });
@@ -613,10 +623,9 @@
 
       $("clearGoalBtn").onclick = () => {
         $("goalInput").value = "";
-        selectedSugIdx = -1;
+        lastSugIdx = -1;
         try{ LS.removeItem("oracle_goal_draft"); }catch{}
         renderSuggestions();
-        clearUI();
       };
 
       // persist draft
@@ -625,42 +634,20 @@
         if (draft) $("goalInput").value = draft;
       }catch{}
       $("goalInput").addEventListener("input", () => {
-        selectedSugIdx = -1;
+        lastSugIdx = -1;
         try{ LS.setItem("oracle_goal_draft", $("goalInput").value.slice(0,160)); }catch{}
         renderSuggestions();
       });
 
-      renderSuggestions();
-
-      // ===== Hard guard client-side (tutela prima di consumare credito) =====
-      function isHighRiskClient(text){
-        const s = String(text||"").toLowerCase();
-        const keys = [
-          "suicid","mi voglio ucc","uccidermi","autolesion","farmI del male",
-          "kill myself","suicide","self harm",
-          "bomba","bomb","molotov","build a bomb","how to make a bomb",
-          "uccidere qualcuno","shoot","stab","sparare","accoltellare"
-        ];
-        return keys.some(k => s.includes(k));
-      }
-
-      function showBlocked(){
-        const TT = t();
-        alert(TT.alerts.blockedTitle + "\n\n" + TT.alerts.blockedBody);
-      }
-
-      // ===== ORACOLO: CARTE =====
-      let meta = null;
-      let picks = {}; // { key: {id,label,emoji} }
+      // ===== ORACOLO: CARTE AI CONTESTUALI =====
+      let picks = {}; // { key: {id,label,emoji,freeText?} }
       let steps = [];
+      let uiFromApi = null;
 
-      function setBusy(on, msgKey){
-        $("metaLoader").style.display = on ? "block" : "none";
-        if (on && msgKey){
-          $("loaderText").textContent = msgKey;
-        } else {
-          $("loaderText").textContent = t().loaderText;
-        }
+      function setThinking(on){
+        $("thinkingRow").style.display = on ? "flex" : "none";
+        $("genCardsBtn").disabled = on;
+        $("clearGoalBtn").disabled = on;
       }
 
       function progress(){
@@ -672,12 +659,11 @@
         $("revealBtn").disabled = !(done === total);
       }
 
-      function clearUI(){
+      function clearSteps(){
         $("stepsWrap").innerHTML = "";
         $("resultCard").style.display = "none";
         picks = {};
         steps = [];
-        meta = null;
         progress();
       }
 
@@ -690,17 +676,16 @@
           card.className = "card";
           card.dataset.key = st.key;
 
-          const head = document.createElement("div");
-          head.className = "stepHead";
-
           const left = document.createElement("div");
+          left.className = "stepHead";
           left.innerHTML = `
-            <div class="label">Step ${idx+1}</div>
-            <div class="stepTitle">${escapeHtml(st.title || "—")}</div>
-            <div class="stepSub">${escapeHtml(st.subtitle || "")}</div>
+            <div>
+              <div class="label">Step ${idx+1}</div>
+              <div class="stepTitle">${escapeHtml(st.title || "—")}</div>
+              <div class="stepSub">${escapeHtml(st.subtitle || "")}</div>
+            </div>
           `;
-          head.appendChild(left);
-          card.appendChild(head);
+          card.appendChild(left);
 
           const chips = document.createElement("div");
           chips.className = "chips";
@@ -713,7 +698,8 @@
 
             b.innerHTML = `<span>${escapeHtml(opt.emoji || "•")}</span><span>${escapeHtml(opt.label || opt.id || "—")}</span>`;
             b.onclick = () => {
-              picks[st.key] = { id: opt.id, label: opt.label, emoji: opt.emoji };
+              const prevFree = (picks[st.key] && picks[st.key].freeText) ? picks[st.key].freeText : "";
+              picks[st.key] = { id: opt.id, label: opt.label, emoji: opt.emoji, freeText: prevFree };
               renderSteps();
               progress();
             };
@@ -721,40 +707,51 @@
           });
 
           card.appendChild(chips);
+
+          // mini free text
+          const mini = document.createElement("div");
+          mini.className = "mini";
+          const inp = document.createElement("input");
+          inp.type = "text";
+          inp.maxLength = 80;
+          inp.value = (picks[st.key] && picks[st.key].freeText) ? picks[st.key].freeText : "";
+          inp.placeholder = (lang==="en") ? "Optional: add a short detail…" :
+                           (lang==="es") ? "Opcional: añade un detalle…" :
+                           (lang==="fr") ? "Optionnel : ajoute un détail…" :
+                           (lang==="de") ? "Optional: kurzes Detail…" :
+                           "Opzionale: aggiungi un dettaglio…";
+
+          inp.addEventListener("input", () => {
+            const cur = picks[st.key] || { id:"", label:"", emoji:"" };
+            picks[st.key] = { ...cur, freeText: inp.value.slice(0,80) };
+          });
+
+          mini.appendChild(inp);
+          card.appendChild(mini);
+
           wrap.appendChild(card);
         });
 
         progress();
       }
 
-      async function loadOracleMeta(){
-        const TT = t();
-        const goal = String($("goalInput").value || "").trim().slice(0, 200);
-
+      async function generateCards(){
+        const t = UI[lang] || UI.it;
+        const goal = String($("goalInput").value || "").trim();
         if (!goal){
-          alert(TT.alerts.genHint);
+          $("goalInput").focus();
           return;
         }
 
-        if (isHighRiskClient(goal)){
-          showBlocked();
-          return;
-        }
-
-        clearUI();
-        setBusy(true, TT.loaderText);
-
-        // feedback bottoni
-        $("genCardsBtn").disabled = true;
-        $("genCardsBtn").textContent = "⏳";
-        $("revealBtn").disabled = true;
+        clearSteps();
+        setThinking(true);
 
         try{
           const res = await fetch("/api/suggest", {
             method: "POST",
             headers: { "Content-Type":"application/json" },
             body: JSON.stringify({
-              mode: "oracle_meta",
+              mode: "oracle_cards",
               lang,
               voice,
               goal
@@ -762,78 +759,64 @@
           });
 
           const data = await res.json().catch(() => null);
-
-          if (data && data.blocked){
-            showBlocked();
+          if (!res.ok || !data || !Array.isArray(data.steps) || data.steps.length < 4){
+            alert(t.errCards);
+            console.error("oracle_cards failed:", res.status, data);
             return;
           }
 
-          if (!res.ok || !data || !Array.isArray(data.steps)){
-            alert(TT.alerts.loadErr);
-            console.error("oracle_meta failed:", res.status, data);
-            return;
+          uiFromApi = data.ui || null;
+
+          // aggiorno disclaimer con quello dell’AI se arriva
+          if (uiFromApi?.disclaimer_full){
+            $("discFull").textContent = uiFromApi.disclaimer_full;
+          }
+          if (uiFromApi?.disclaimer_short){
+            // lo metto nel summary come rinforzo
+            $("discSummary").textContent = (t.discSum + " — " + uiFromApi.disclaimer_short).slice(0, 120);
           }
 
-          meta = data;
-          steps = data.steps.slice(0, 4);
-          picks = {};
+          steps = data.steps.slice(0,4);
           renderSteps();
+          window.scrollTo({ top: $("stepsWrap").offsetTop - 10, behavior:"smooth" });
 
-          const cta = data?.ui?.cta;
-          $("revealBtn").textContent = (cta && typeof cta === "string")
-            ? (cta.includes("🔮") ? cta : ("🔮 " + cta))
-            : TT.reveal;
-
-        } finally {
-          setBusy(false);
-          $("genCardsBtn").disabled = false;
-          $("genCardsBtn").textContent = t().genCards;
-          progress();
+        }catch(e){
+          console.warn("oracle_cards error:", e);
+          alert(t.errCards);
+        }finally{
+          setThinking(false);
         }
       }
 
-      $("genCardsBtn").onclick = loadOracleMeta;
+      $("genCardsBtn").onclick = generateCards;
 
       async function revealOracle(){
-        const TT = t();
-        const goal = String($("goalInput").value || "").trim().slice(0, 200);
-
-        // se non ha generato carte, lo guidiamo
-        if (!steps || steps.length < 4){
-          alert(TT.alerts.genHint);
-          return;
-        }
-
-        // guard client
-        if (isHighRiskClient(goal)){
-          showBlocked();
-          return;
-        }
-
+        const t = UI[lang] || UI.it;
         const ok = await guardCredits();
         if (!ok) return;
 
-        // consuma 1 credito SOLO ORA (come il tuo)
+        // consuma 1 credito SOLO ORA
         if (!isAdmin){
           const ok2 = await consumeCredit();
           if (!ok2){
             await syncCredits();
-            alert(TT.alerts.noCredits);
+            alert(t.noCredits);
             return;
           }
           await syncCredits();
         }
 
         $("revealBtn").disabled = true;
-        $("revealBtn").dataset.busy = "1";
         const originalBtn = $("revealBtn").textContent;
-        $("revealBtn").textContent = "⏳";
+        $("revealBtn").textContent = "⏳...";
 
         try{
           const picksPayload = {};
           for (const k of Object.keys(picks)){
             picksPayload[k] = picks[k];
           }
+
+          const goal = String($("goalInput").value || "").trim().slice(0, 200);
 
           const res = await fetch("/api/suggest", {
             method: "POST",
@@ -848,14 +831,8 @@
           });
 
           const data = await res.json().catch(() => null);
-
-          if (data && data.blocked){
-            showBlocked();
-            return;
-          }
-
           if (!res.ok || !data || !data.do){
-            alert(TT.alerts.ansErr);
+            alert(t.errAns);
             console.error("oracle_answer failed:", res.status, data);
             return;
           }
@@ -878,24 +855,23 @@
           window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
 
         } finally {
-          $("revealBtn").disabled = false;
-          $("revealBtn").textContent = originalBtn || t().reveal;
-          delete $("revealBtn").dataset.busy;
+          $("revealBtn").textContent = originalBtn || (UI[lang]||UI.it).reveal;
           progress();
         }
       }
 
       $("revealBtn").onclick = revealOracle;
 
-      $("playAgainBtn").onclick = async () => {
-        clearUI();
+      $("playAgainBtn").onclick = () => {
+        clearSteps();
+        $("goalInput").focus();
         window.scrollTo({ top: 0, behavior: "smooth" });
       };
 
       // init
       applyI18n();
+      renderSuggestions();
       await syncCredits();
-      // NON auto-generiamo carte: l’utente clicca “Genera carte”
     </script>
   </body>
 </html>
