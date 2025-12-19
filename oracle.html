@@ -12,140 +12,205 @@
         --fg:#F4F7FB; --muted:#A7B3C2;
         --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
         --chip:#0F1820; --line:#1B2A34; --shadow:rgba(0,0,0,.35);
+        --good:rgba(26,255,213,.35);
       }
       html[data-theme="wtf"]{
         --bg:#0B0B0C; --bg2:#101414; --card:#111713;
         --fg:#EEF5F0; --muted:#A6B6AD;
         --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;
         --chip:#0F1714; --line:#21322A; --shadow:rgba(0,0,0,.45);
+        --good:rgba(26,255,213,.25);
       }
       *{box-sizing:border-box}
       html,body{
         height:100%;margin:0;
-        background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+        background:
+          radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%),
+          radial-gradient(900px 700px at 85% 10%, rgba(0,224,255,.08) 0%, transparent 55%),
+          radial-gradient(800px 600px at 70% 80%, rgba(26,255,213,.05) 0%, transparent 55%);
         color:var(--fg);
         font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
         -webkit-font-smoothing:antialiased;
       }
-      main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:8px 14px 30px}
-      .wrap{width:min(100%,980px)}
+      main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:8px 14px 34px}
+      .wrap{width:min(100%,1020px)}
       .topbar{
         position:sticky;top:0;z-index:10;
         display:flex;align-items:center;justify-content:space-between;gap:10px;
-        padding:8px 10px;
-        background:rgba(10,15,20,.96);
-        backdrop-filter:blur(6px);
+        padding:10px 12px;
+        background:rgba(10,15,20,.92);
+        backdrop-filter:blur(8px);
         border-bottom:1px solid var(--line);
       }
       .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
       .btn{
         appearance:none;border:1px solid var(--line);
         background:var(--chip);color:var(--fg);
-        border-radius:12px;padding:8px 12px;font-weight:800;cursor:pointer;
+        border-radius:14px;padding:9px 12px;font-weight:900;cursor:pointer;
       }
       .btn.primary{
         background:linear-gradient(180deg,var(--accent),var(--accent2));
-        color:var(--ink);border:none;box-shadow:0 10px 26px var(--shadow);
+        color:var(--ink);border:none;box-shadow:0 12px 30px var(--shadow);
       }
-      .btn[disabled]{opacity:.4;cursor:not-allowed}
+      .btn.ghost{
+        background:transparent;
+        border:1px dashed rgba(255,255,255,.18);
+      }
+      .btn[disabled]{opacity:.45;cursor:not-allowed}
       .badge{
-        background:var(--chip);border:1px solid var(--line);
-        border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap;
+        background:rgba(255,255,255,.03);
+        border:1px solid var(--line);
+        border-radius:999px;padding:7px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap;
       }
       select{
-        appearance:none;background:var(--chip);border:1px solid var(--line);
-        color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:800;cursor:pointer;
+        appearance:none;background:rgba(255,255,255,.03);border:1px solid var(--line);
+        color:var(--fg);padding:9px 12px;border-radius:14px;font-weight:900;cursor:pointer;
       }
-      h1{margin:8px 0 6px;font-size:clamp(24px,5vw,34px);color:var(--accent)}
+
+      /* header hero */
+      .hero{
+        display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;
+        margin:6px 0 2px;
+      }
+      h1{
+        margin:0;
+        font-size:clamp(26px,5vw,40px);
+        letter-spacing:.2px;
+      }
+      .subtitle{
+        margin:6px 0 0;
+        color:var(--muted);
+        line-height:1.45;
+        max-width:760px;
+      }
+
       .card{
-        background:var(--card);
+        background:rgba(20,28,34,.92);
         border:1px solid var(--line);
-        border-radius:16px;
+        border-radius:18px;
         padding:16px;
         margin:10px 0;
         backdrop-filter:blur(12px);
-        box-shadow:0 10px 26px var(--shadow);
+        box-shadow:0 12px 30px var(--shadow);
       }
-      .center{max-width:760px;margin:0 auto}
-      .label{color:var(--accent2);font-weight:900;margin:0 0 8px}
-      .small{font-size:12px;color:var(--muted);line-height:1.45}
-      .chips{display:flex;flex-wrap:wrap;gap:8px}
-      .chip{
-        background:var(--chip);border:1px solid var(--line);
-        color:#eaf3ee;border-radius:999px;padding:10px 12px;
-        font-size:13px;font-weight:800;cursor:pointer;
-        max-width:100%;
-        white-space:normal;
-        word-break:break-word;
-        line-height:1.2;
-        display:inline-flex;align-items:center;gap:8px;
-      }
-      .chip.sel{
-        background:linear-gradient(180deg,var(--accent),var(--accent2));
-        color:var(--ink);
-      }
+      html[data-theme="wtf"] .card{ background:rgba(17,23,19,.92); }
 
-      .stepHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-      .stepTitle{font-weight:900;font-size:18px;margin:0}
-      .stepSub{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.4}
+      .center{max-width:820px;margin:0 auto}
+      .label{color:var(--accent2);font-weight:950;margin:0 0 8px;letter-spacing:.2px}
+      .small{font-size:12px;color:var(--muted);line-height:1.45}
 
       .progress{height:10px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;overflow:hidden}
       .bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%}
-
-      .resultTitle{font-weight:950;font-size:18px;margin:0 0 8px}
-      .resultDo{font-size:15px;line-height:1.55;margin:0 0 10px}
-      .resultBlock{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:12px}
-      ul{margin:8px 0 0;padding-left:18px}
-      li{margin:6px 0;color:var(--fg)}
-      .hr{height:1px;background:var(--line);margin:12px 0}
 
       /* input domanda */
       .qwrap{display:flex;flex-direction:column;gap:10px}
       .qrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
       .qinput{
         flex:1;
-        min-width:220px;
+        min-width:240px;
         width:100%;
         background:rgba(255,255,255,.04);
-        border:1px solid var(--line);
+        border:1px solid rgba(255,255,255,.10);
         color:var(--fg);
-        border-radius:14px;
+        border-radius:16px;
         padding:12px 12px;
-        font-weight:800;
+        font-weight:900;
         outline:none;
       }
-      .qinput::placeholder{color:rgba(167,179,194,.75);font-weight:700}
+      .qinput::placeholder{color:rgba(167,179,194,.75);font-weight:800}
 
+      /* suggestions grid */
       .grid{
         display:grid;
         grid-template-columns:repeat(2,minmax(0,1fr));
         gap:8px;
       }
-      @media (min-width:720px){
+      @media (min-width:820px){
         .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
       }
       .cardSug{
         text-align:left;
         background:rgba(255,255,255,.03);
         border:1px solid var(--line);
-        border-radius:14px;
-        padding:10px 10px;
+        border-radius:16px;
+        padding:11px 11px;
         cursor:pointer;
         transition:transform .06s ease, box-shadow .12s ease, border-color .12s ease;
+        min-height:74px;
       }
-      .cardSug .t{font-weight:900;font-size:13px;line-height:1.25}
+      .cardSug .t{font-weight:950;font-size:13px;line-height:1.25}
       .cardSug .s{margin-top:6px;font-size:12px;color:var(--muted);line-height:1.35}
       .cardSug:active{transform:translateY(1px)}
-      /* ✅ evidenzia suggerimento selezionato */
       .cardSug.sel{
-        border-color:rgba(255,255,255,.22);
-        box-shadow:0 0 0 1px rgba(255,255,255,.10) inset, 0 10px 26px rgba(0,0,0,.30);
-        background:linear-gradient(180deg, rgba(28,87,160,.22), rgba(255,236,1,.10));
+        border-color:rgba(255,255,255,.24);
+        box-shadow:0 0 0 1px rgba(255,255,255,.10) inset, 0 12px 30px rgba(0,0,0,.28);
+        background:linear-gradient(180deg, rgba(0,224,255,.12), rgba(26,255,213,.07));
       }
 
-      /* feedback "thinking" */
-      .pulse{animation:pulse 1.1s ease-in-out infinite;}
+      /* steps */
+      .stepHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+      .stepTitle{font-weight:950;font-size:18px;margin:0}
+      .stepSub{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.4}
+      .chips{display:flex;flex-wrap:wrap;gap:8px}
+      .chip{
+        background:rgba(255,255,255,.03);border:1px solid var(--line);
+        color:#eaf3ee;border-radius:999px;padding:10px 12px;
+        font-size:13px;font-weight:950;cursor:pointer;
+        white-space:normal;word-break:break-word;line-height:1.2;
+        display:inline-flex;align-items:center;gap:8px;
+      }
+      .chip.sel{
+        background:linear-gradient(180deg,var(--accent),var(--accent2));
+        color:var(--ink);border:none;
+      }
+
+      /* result */
+      .resultTitle{font-weight:980;font-size:18px;margin:0 0 8px}
+      .resultDo{font-size:15px;line-height:1.6;margin:0 0 10px}
+      .resultBlock{
+        background:rgba(255,255,255,.04);
+        border:1px solid var(--line);
+        border-radius:16px;
+        padding:12px
+      }
+      ul{margin:8px 0 0;padding-left:18px}
+      li{margin:6px 0;color:var(--fg)}
+      .hr{height:1px;background:var(--line);margin:12px 0}
+
+      /* loading row */
+      .loaderRow{
+        display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+        padding:10px 12px;
+        background:rgba(255,255,255,.03);
+        border:1px dashed rgba(255,255,255,.16);
+        border-radius:16px;
+      }
+      .spin{
+        width:18px;height:18px;border-radius:999px;
+        border:2px solid rgba(255,255,255,.25);
+        border-top-color:rgba(255,255,255,.90);
+        animation:spin 0.9s linear infinite;
+      }
+      @keyframes spin{to{transform:rotate(360deg)}}
+      .pulse{animation:pulse 1.1s ease-in-out infinite}
       @keyframes pulse{0%{opacity:.65}50%{opacity:1}100%{opacity:.65}}
+
+      /* mini "tip" */
+      .tip{
+        display:flex;gap:10px;align-items:flex-start;
+        border:1px solid rgba(255,255,255,.10);
+        background:rgba(255,255,255,.03);
+        border-radius:16px;
+        padding:12px 12px;
+      }
+      .tip b{color:rgba(255,255,255,.92)}
+      .spark{
+        width:34px;height:34px;border-radius:12px;
+        background:linear-gradient(180deg, rgba(0,224,255,.18), rgba(26,255,213,.10));
+        border:1px solid rgba(255,255,255,.12);
+        display:flex;align-items:center;justify-content:center;
+        flex:0 0 auto;
+      }
     </style>
   </head>
 
@@ -170,14 +235,26 @@
 
     <main>
       <div class="wrap">
-        <h1>🔮 Oracolo</h1>
+        <div class="hero">
+          <div>
+            <h1>🔮 Oracolo</h1>
+            <div class="subtitle">
+              Qui non “indoviniamo il futuro”: costruiamo <b>un piano concreto</b>.
+              Tu dai l’obiettivo (facoltativo) + 4 scelte rapide.
+              L’Oracolo ti restituisce <b>strategia</b> + <b>primo passo in 15 minuti</b>.
+            </div>
+          </div>
+        </div>
 
-        <!-- COSA FA / COME SI USA -->
         <div class="card center">
-          <div class="label" id="subLabel">A cosa serve</div>
-          <div class="small" id="hintText">
-            Scegli 4 carte e l’Oracolo ti restituisce una cosa sola: <b>una strategia chiara</b> + <b>il primo passo</b> per avvicinarti al tuo obiettivo.
-            Se vuoi, scrivi anche la domanda: aiuta a centrare meglio il responso.
+          <div class="tip">
+            <div class="spark">⚡</div>
+            <div class="small">
+              <b>Come funziona (10 secondi):</b><br/>
+              1) Scrivi la domanda oppure clicca un suggerimento.<br/>
+              2) Premi <b>Genera carte</b> (ti mostro le 4 scelte).<br/>
+              3) Seleziona 4 opzioni → <b>Rivela</b>.
+            </div>
           </div>
 
           <div style="margin-top:12px">
@@ -186,31 +263,42 @@
           </div>
         </div>
 
-        <!-- DOMANDA OPZIONALE + SUGGERIMENTI -->
+        <!-- DOMANDA + CTA GENERA CARTE -->
         <div class="card center">
-          <div class="label" id="qLabel">Domanda (opzionale)</div>
+          <div class="label" id="qLabel">La tua domanda / obiettivo</div>
           <div class="qwrap">
             <div class="qrow">
               <input id="goalInput" class="qinput" type="text"
-                placeholder="Esempio: Come faccio a cambiare lavoro senza rischiare troppo?"
+                placeholder="Esempio: Come cambio lavoro senza rischiare troppo?"
                 maxlength="160"
               />
               <button class="btn" id="clearGoalBtn" type="button">Pulisci</button>
+              <button class="btn primary" id="genCardsBtn" type="button">✨ Genera carte</button>
             </div>
+
             <div class="small" id="qHelp">
               Se non sai cosa scrivere: tocca un suggerimento qui sotto (poi puoi modificarlo).
             </div>
+
             <div class="grid" id="suggGrid"></div>
+
+            <!-- LOADING CARTE -->
+            <div id="cardsLoading" style="display:none;margin-top:10px">
+              <div class="loaderRow">
+                <div class="spin" aria-hidden="true"></div>
+                <div class="small pulse" id="cardsLoadingText">Sto pensando alle carte…</div>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- STEPS (carte) -->
         <div id="stepsWrap" class="center"></div>
 
-        <!-- CTA -->
+        <!-- CTA RIVELA -->
         <div class="card center">
           <div class="row" style="justify-content:space-between;align-items:center">
-            <div class="small" id="ctaHelp">Completa le 4 scelte per sbloccare il responso.</div>
+            <div class="small" id="ctaHelp">Genera le carte, poi completa le 4 scelte per sbloccare il responso.</div>
             <button class="btn primary" id="revealBtn" type="button" disabled>🔮 Rivela l’Oracolo</button>
           </div>
         </div>
@@ -223,12 +311,12 @@
           <p class="resultDo" id="rDo">—</p>
 
           <div class="resultBlock">
-            <div class="small" style="font-weight:900;margin-bottom:6px" id="firstStepLabel">Primo passo (15 minuti)</div>
+            <div class="small" style="font-weight:950;margin-bottom:6px" id="firstStepLabel">Primo passo (15 minuti)</div>
             <div id="rFirst">—</div>
 
             <div class="hr"></div>
 
-            <div class="small" style="font-weight:900;margin-bottom:6px" id="rulesLabel">Regole</div>
+            <div class="small" style="font-weight:950;margin-bottom:6px" id="rulesLabel">Regole</div>
             <ul id="rRules"></ul>
 
             <div class="hr"></div>
@@ -240,7 +328,6 @@
             <button class="btn" id="playAgainBtn" type="button">🔁 Rifai</button>
           </div>
         </div>
-
       </div>
     </main>
 
@@ -336,16 +423,20 @@
       });
       window.addEventListener("focus", syncCredits);
 
-      // language change (solo ricarica meta + testi suggerimenti)
+      // language change
       $("langSelect").onchange = async () => {
         lang = normLang($("langSelect").value);
         LS.setItem("lang", lang);
         document.documentElement.lang = lang;
-        renderSuggestions();        // ✅ locale, istantaneo
-        await loadOracleMeta(true); // ✅ rigenera le carte
+        renderSuggestions();
+        resetOracleUI(true);
       };
 
-      // ===== DOMANDA OPZIONALE + SUGGERIMENTI LOCALI =====
+      function escapeHtml(s){
+        return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      }
+
+      // ===== DOMANDA + SUGGERIMENTI =====
       const SUGG = {
         it: [
           { t:"Cambio lavoro", s:"Come cambio lavoro senza rischiare troppo?" },
@@ -389,11 +480,6 @@
         ]
       };
 
-      function escapeHtml(s){
-        return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-      }
-
-      // ✅ evidenza card selezionata
       let selectedSuggIndex = -1;
 
       function renderSuggestions(){
@@ -409,7 +495,7 @@
             selectedSuggIndex = idx;
             $("goalInput").value = item.s;
             try{ LS.setItem("oracle_goal_draft", item.s); }catch{}
-            renderSuggestions(); // re-render per highlight
+            renderSuggestions();
           };
           grid.appendChild(div);
         });
@@ -422,23 +508,23 @@
         renderSuggestions();
       };
 
-      // persist draft
       try{
         const draft = LS.getItem("oracle_goal_draft");
         if (draft) $("goalInput").value = draft;
       }catch{}
       $("goalInput").addEventListener("input", () => {
-        selectedSuggIndex = -1; // se l’utente scrive, tolgo highlight
+        selectedSuggIndex = -1;
         try{ LS.setItem("oracle_goal_draft", $("goalInput").value.slice(0,160)); }catch{}
         renderSuggestions();
       });
 
       renderSuggestions();
 
-      // ===== ORACOLO: CARTE =====
+      // ===== ORACOLO STATE =====
       let meta = null;
-      let picks = {}; // { key: {id,label,emoji} }
+      let picks = {};
       let steps = [];
+      let cardsReady = false;
 
       function progress(){
         const total = steps.length || 4;
@@ -446,14 +532,23 @@
         const pct = total ? Math.round((done/total)*100) : 0;
         $("bar").style.width = pct + "%";
         $("progressText").textContent = `${done}/${total}`;
-        $("revealBtn").disabled = !(done === total);
+        $("revealBtn").disabled = !(cardsReady && done === total);
       }
 
-      function clearUI(){
+      function resetOracleUI(keepGoal=false){
         $("stepsWrap").innerHTML = "";
         $("resultCard").style.display = "none";
         picks = {};
+        steps = [];
+        meta = null;
+        cardsReady = false;
+        $("revealBtn").disabled = true;
         progress();
+        if(!keepGoal){
+          $("goalInput").value = "";
+          selectedSuggIndex = -1;
+          renderSuggestions();
+        }
       }
 
       function renderSteps(){
@@ -502,82 +597,84 @@
         progress();
       }
 
-      // ✅ Cache locale meta (così le carte arrivano SUBITO)
-      function metaCacheKey(){
-        return `oracle_meta_cache:${lang}:${voice}`;
-      }
-      function saveMetaCache(data){
-        try{
-          const payload = { ts: Date.now(), data };
-          localStorage.setItem(metaCacheKey(), JSON.stringify(payload));
-        }catch{}
-      }
-      function loadMetaCache(){
-        try{
-          const raw = localStorage.getItem(metaCacheKey());
-          if(!raw) return null;
-          const obj = JSON.parse(raw);
-          if(!obj || !obj.data) return null;
-          // TTL 24h
-          if((Date.now() - (obj.ts||0)) > 24*60*60*1000) return null;
-          return obj.data;
-        }catch{
-          return null;
-        }
+      // ===== LOADING UI CARTE =====
+      function showCardsLoading(on){
+        $("cardsLoading").style.display = on ? "block" : "none";
+        $("genCardsBtn").disabled = on;
+        $("clearGoalBtn").disabled = on;
       }
 
-      async function loadOracleMeta(force=false){
-        clearUI();
-
-        // 1) mostra cache subito (se c’è) → UX immediata
-        if(!force){
-          const cached = loadMetaCache();
-          if(cached && Array.isArray(cached.steps)){
-            meta = cached;
-            steps = cached.steps.slice(0,4);
-            picks = {};
-            renderSteps();
-
-            const cta = cached?.ui?.cta;
-            $("revealBtn").textContent = cta
-              ? (cta.includes("🔮") ? cta : ("🔮 " + cta))
-              : "🔮 Rivela l’Oracolo";
-          }
-        }
-
-        // 2) fetch reale → aggiorna cache
-        const res = await fetch("/api/suggest", {
-          method: "POST",
-          headers: { "Content-Type":"application/json" },
-          body: JSON.stringify({ mode:"oracle_meta", lang, voice })
-        });
-
-        const data = await res.json().catch(() => null);
-        if (!res.ok || !data || !Array.isArray(data.steps)){
-          if(meta && Array.isArray(steps) && steps.length) return; // non rompere se cache già mostrata
-          alert("Errore nel caricare l’Oracolo. Riprova.");
-          console.error("oracle_meta failed:", res.status, data);
-          return;
-        }
-
-        meta = data;
-        steps = data.steps.slice(0, 4);
+      // ✅ tasto che genera carte (questa è la modifica chiave)
+      $("genCardsBtn").onclick = async () => {
+        // reset scelte precedenti
+        $("resultCard").style.display = "none";
+        $("stepsWrap").innerHTML = "";
         picks = {};
-        renderSteps();
+        steps = [];
+        cardsReady = false;
+        progress();
 
-        saveMetaCache({ ui: data.ui, steps: steps, used: data.used });
+        showCardsLoading(true);
 
-        const cta = data?.ui?.cta;
-        $("revealBtn").textContent = cta
-          ? (cta.includes("🔮") ? cta : ("🔮 " + cta))
-          : "🔮 Rivela l’Oracolo";
-      }
+        const THINK = (lang === "en")
+          ? ["Thinking of the cards…", "Almost ready…", "Just a second…"]
+          : ["Sto pensando alle carte…", "Quasi pronte…", "Ancora un attimo…"];
+        let ti = 0;
+        $("cardsLoadingText").textContent = THINK[0];
+        const timer = setInterval(()=>{
+          ti = (ti + 1) % THINK.length;
+          $("cardsLoadingText").textContent = THINK[ti];
+        }, 1200);
+
+        try{
+          const res = await fetch("/api/suggest", {
+            method: "POST",
+            headers: { "Content-Type":"application/json" },
+            body: JSON.stringify({ mode:"oracle_meta", lang, voice })
+          });
+
+          const data = await res.json().catch(() => null);
+          if (!res.ok || !data || !Array.isArray(data.steps)){
+            alert("Errore nel caricare le carte. Riprova.");
+            console.error("oracle_meta failed:", res.status, data);
+            return;
+          }
+
+          meta = data;
+          steps = data.steps.slice(0,4);
+          cardsReady = true;
+
+          // CTA testo
+          const cta = data?.ui?.cta;
+          $("revealBtn").textContent = cta
+            ? (cta.includes("🔮") ? cta : ("🔮 " + cta))
+            : "🔮 Rivela l’Oracolo";
+
+          renderSteps();
+          progress();
+
+          // scroll alle carte
+          setTimeout(()=> {
+            const y = $("stepsWrap").getBoundingClientRect().top + window.scrollY - 70;
+            window.scrollTo({ top:y, behavior:"smooth" });
+          }, 50);
+
+        } finally {
+          clearInterval(timer);
+          showCardsLoading(false);
+        }
+      };
 
       async function revealOracle(){
         const ok = await guardCredits();
         if (!ok) return;
 
-        // consuma 1 credito SOLO ORA (come già avevi)
+        if(!cardsReady){
+          alert("Prima genera le carte 😊");
+          return;
+        }
+
+        // consuma 1 credito SOLO ORA
         if (!isAdmin){
           const ok2 = await consumeCredit();
           if (!ok2){
@@ -591,7 +688,6 @@
         $("revealBtn").disabled = true;
         const originalBtn = $("revealBtn").textContent;
 
-        // ✅ UX: thinking (così non scappa)
         const THINK = (lang === "en")
           ? ["Thinking…", "Still thinking…", "Almost there…"]
           : ["Sto pensando…", "Ancora un attimo…", "Ci siamo…"];
@@ -607,7 +703,6 @@
           for (const k of Object.keys(picks)){
             picksPayload[k] = picks[k];
           }
-
           const goal = String($("goalInput").value || "").trim().slice(0, 200);
 
           const res = await fetch("/api/suggest", {
@@ -657,13 +752,13 @@
       $("revealBtn").onclick = revealOracle;
 
       $("playAgainBtn").onclick = async () => {
-        await loadOracleMeta(true);
+        resetOracleUI(true);
         window.scrollTo({ top: 0, behavior: "smooth" });
       };
 
       // init
-      await loadOracleMeta(false);
       await syncCredits();
+      resetOracleUI(true);
     </script>
   </body>
 </html>
