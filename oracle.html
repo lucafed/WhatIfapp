@@ -130,10 +130,17 @@
         border-radius:14px;
         padding:10px 10px;
         cursor:pointer;
+        transition:.16s;
       }
       .cardSug .t{font-weight:900;font-size:13px;line-height:1.25}
       .cardSug .s{margin-top:6px;font-size:12px;color:var(--muted);line-height:1.35}
       .cardSug:active{transform:translateY(1px)}
+      /* ✅ evidenzia card suggerimento selezionata */
+      .cardSug.sel{
+        background:linear-gradient(180deg,rgba(28,87,160,.30),rgba(255,236,1,.14));
+        border-color:rgba(255,255,255,.22);
+        box-shadow:0 0 0 1px rgba(255,255,255,.08) inset;
+      }
     </style>
   </head>
 
@@ -187,6 +194,7 @@
             </div>
             <div class="small" id="qHelp">
               Se non sai cosa scrivere: tocca un suggerimento qui sotto (poi puoi modificarlo).
+              <b>Se cambi la domanda</b>, l’Oracolo riallinea le carte.
             </div>
             <div class="grid" id="suggGrid"></div>
           </div>
@@ -329,11 +337,11 @@
         lang = normLang($("langSelect").value);
         LS.setItem("lang", lang);
         document.documentElement.lang = lang;
-        renderSuggestions();        // ✅ locale, istantaneo
-        await loadOracleMeta(true); // ✅ rigenera solo le carte base
+        renderSuggestions();        // locale, istantaneo
+        await loadOracleMeta(true); // rigenera carte ALLINEATE a seed corrente
       };
 
-      // ===== DOMANDA OPZIONALE + SUGGERIMENTI LOCALI (zero lentezza) =====
+      // ===== DOMANDA OPZIONALE + SUGGERIMENTI LOCALI =====
       const SUGG = {
         it: [
           { t:"Cambio lavoro", s:"Come cambio lavoro senza rischiare troppo?" },
@@ -377,26 +385,79 @@
         ]
       };
 
+      function escapeHtml(s){
+        return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      }
+
+      // ✅ seed state: serve per allineare le carte al contenuto
+      let selectedSuggIndex = -1;
+      let oracleSeed = "";         // testo domanda
+      let oracleSeedType = "user"; // "suggested" | "user"
+
+      function computeSeedFromUI(){
+        const typed = String($("goalInput").value || "").trim();
+        if (typed){
+          // se l'utente modifica a mano, diventa "user"
+          oracleSeed = typed.slice(0, 200);
+          oracleSeedType = "user";
+          return;
+        }
+        // se non c'è testo, ma avevo una suggestion selezionata:
+        if (selectedSuggIndex >= 0){
+          const pool = SUGG[lang] || SUGG.it;
+          const item = pool[selectedSuggIndex];
+          if (item && item.s){
+            oracleSeed = String(item.s).trim().slice(0, 200);
+            oracleSeedType = "suggested";
+            return;
+          }
+        }
+        oracleSeed = "";
+        oracleSeedType = "user";
+      }
+
       function renderSuggestions(){
         const grid = $("suggGrid");
         grid.innerHTML = "";
         const pool = SUGG[lang] || SUGG.it;
 
-        pool.forEach(item=>{
+        pool.forEach((item, idx)=>{
           const div = document.createElement("div");
-          div.className = "cardSug";
+          div.className = "cardSug" + (idx === selectedSuggIndex ? " sel" : "");
           div.innerHTML = `<div class="t">${escapeHtml(item.t)}</div><div class="s">${escapeHtml(item.s)}</div>`;
-          div.onclick = () => {
+
+          div.onclick = async () => {
+            // ✅ evidenzia card
+            selectedSuggIndex = idx;
+            // ✅ metto il testo in input (poi modificabile)
             $("goalInput").value = item.s;
+
             try{ LS.setItem("oracle_goal_draft", item.s); }catch{}
+
+            // ✅ con card cliccata → seedType suggested (finché non modifichi)
+            oracleSeed = String(item.s).trim().slice(0, 200);
+            oracleSeedType = "suggested";
+
+            renderSuggestions();
+
+            // ✅ IMPORTANTISSIMO: riallinea SUBITO le carte (oracle_meta) alla domanda scelta
+            await loadOracleMeta(true);
           };
+
           grid.appendChild(div);
         });
       }
 
-      $("clearGoalBtn").onclick = () => {
+      $("clearGoalBtn").onclick = async () => {
         $("goalInput").value = "";
+        selectedSuggIndex = -1;
+        oracleSeed = "";
+        oracleSeedType = "user";
         try{ LS.removeItem("oracle_goal_draft"); }catch{}
+        renderSuggestions();
+
+        // riallinea al default (senza seed)
+        await loadOracleMeta(true);
       };
 
       // persist draft
@@ -404,17 +465,33 @@
         const draft = LS.getItem("oracle_goal_draft");
         if (draft) $("goalInput").value = draft;
       }catch{}
+
+      // ✅ se l’utente scrive a mano → seedType user (ma NON ricarico ad ogni tasto)
       $("goalInput").addEventListener("input", () => {
         try{ LS.setItem("oracle_goal_draft", $("goalInput").value.slice(0,160)); }catch{}
+        // se sta editando a mano, tolgo selezione “suggested” (ma non cancello il testo)
+        if (selectedSuggIndex >= 0){
+          selectedSuggIndex = -1;
+          renderSuggestions();
+        }
       });
 
-      function escapeHtml(s){
-        return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-      }
+      // ✅ ricarica carte SOLO quando preme INVIO o lascia il campo (evita lentezza)
+      $("goalInput").addEventListener("keydown", async (e) => {
+        if (e.key === "Enter"){
+          e.preventDefault();
+          await loadOracleMeta(true);
+        }
+      });
+      $("goalInput").addEventListener("blur", async () => {
+        // se c’è testo, riallinea quando esce dal campo
+        const typed = String($("goalInput").value || "").trim();
+        if (typed) await loadOracleMeta(true);
+      });
 
       renderSuggestions();
 
-      // ===== ORACOLO: CARTE (come prima) =====
+      // ===== ORACOLO: CARTE =====
       let meta = null;
       let picks = {}; // { key: {id,label,emoji} }
       let steps = [];
@@ -484,13 +561,18 @@
       async function loadOracleMeta(force=false){
         clearUI();
 
+        // ✅ calcola seed/seedType dalla UI
+        computeSeedFromUI();
+
         const res = await fetch("/api/suggest", {
           method: "POST",
           headers: { "Content-Type":"application/json" },
           body: JSON.stringify({
             mode: "oracle_meta",
             lang,
-            voice
+            voice,
+            seed: oracleSeed,           // ✅ NEW
+            seedType: oracleSeedType    // ✅ NEW
           })
         });
 
@@ -539,7 +621,8 @@
             picksPayload[k] = picks[k];
           }
 
-          const goal = String($("goalInput").value || "").trim().slice(0, 200);
+          // ✅ seed/seedType (non "goal")
+          computeSeedFromUI();
 
           const res = await fetch("/api/suggest", {
             method: "POST",
@@ -549,7 +632,8 @@
               lang,
               voice,
               picks: picksPayload,
-              goal // ✅ domanda opzionale
+              seed: oracleSeed,           // ✅ NEW (il backend lo usa)
+              seedType: oracleSeedType    // ✅ NEW
             })
           });
 
