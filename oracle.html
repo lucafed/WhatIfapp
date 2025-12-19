@@ -1,249 +1,599 @@
 <!DOCTYPE html>
 <html lang="it">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>What?f — Oracolo</title>
-  <meta name="theme-color" content="#0A0F14"/>
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>What?f — Oracolo</title>
+    <meta name="theme-color" content="#0A0F14"/>
 
-  <style>
-    :root{
-      --bg:#0B1018; --bg2:#0E1724; --card:#141C22;
-      --fg:#F4F7FB; --muted:#A7B3C2;
-      --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
-      --chip:#0F1820; --line:#1B2A34; --shadow:rgba(0,0,0,.35);
-    }
-    html[data-theme="wtf"]{
-      --bg:#0B0B0C; --bg2:#101414; --card:#111713;
-      --fg:#EEF5F0; --muted:#A6B6AD;
-      --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;
-      --chip:#0F1714; --line:#21322A; --shadow:rgba(0,0,0,.45);
-    }
-    *{box-sizing:border-box}
-    html,body{
-      height:100%;margin:0;
-      background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-      color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    }
-    main{min-height:100%;display:flex;flex-direction:column;align-items:center;padding:14px}
-    .wrap{width:min(100%,900px)}
+    <style>
+      :root{
+        --bg:#0B1018; --bg2:#0E1724; --card:#141C22;
+        --fg:#F4F7FB; --muted:#A7B3C2;
+        --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
+        --chip:#0F1820; --line:#1B2A34; --shadow:rgba(0,0,0,.35);
+      }
+      html[data-theme="wtf"]{
+        --bg:#0B0B0C; --bg2:#101414; --card:#111713;
+        --fg:#EEF5F0; --muted:#A6B6AD;
+        --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;
+        --chip:#0F1714; --line:#21322A; --shadow:rgba(0,0,0,.45);
+      }
+      *{box-sizing:border-box}
+      html,body{
+        height:100%;margin:0;
+        background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+        color:var(--fg);
+        font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+        -webkit-font-smoothing:antialiased;
+      }
+      main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:8px 14px 30px}
+      .wrap{width:min(100%,980px)}
+      .topbar{
+        position:sticky;top:0;z-index:10;
+        display:flex;align-items:center;justify-content:space-between;gap:10px;
+        padding:8px 10px;
+        background:rgba(10,15,20,.96);
+        backdrop-filter:blur(6px);
+        border-bottom:1px solid var(--line);
+      }
+      .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+      .btn{
+        appearance:none;border:1px solid var(--line);
+        background:var(--chip);color:var(--fg);
+        border-radius:12px;padding:8px 12px;font-weight:800;cursor:pointer;
+      }
+      .btn.primary{
+        background:linear-gradient(180deg,var(--accent),var(--accent2));
+        color:var(--ink);border:none;box-shadow:0 10px 26px var(--shadow);
+      }
+      .btn[disabled]{opacity:.4;cursor:not-allowed}
+      .badge{
+        background:var(--chip);border:1px solid var(--line);
+        border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap;
+      }
+      select{
+        appearance:none;background:var(--chip);border:1px solid var(--line);
+        color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:800;cursor:pointer;
+      }
+      h1{margin:8px 0 6px;font-size:clamp(24px,5vw,34px);color:var(--accent)}
+      .card{
+        background:var(--card);
+        border:1px solid var(--line);
+        border-radius:16px;
+        padding:16px;
+        margin:10px 0;
+        backdrop-filter:blur(12px);
+        box-shadow:0 10px 26px var(--shadow);
+      }
+      .center{max-width:760px;margin:0 auto}
+      .label{color:var(--accent2);font-weight:900;margin:0 0 8px}
+      .small{font-size:12px;color:var(--muted);line-height:1.45}
+      .chips{display:flex;flex-wrap:wrap;gap:8px}
+      .chip{
+        background:var(--chip);border:1px solid var(--line);
+        color:#eaf3ee;border-radius:999px;padding:10px 12px;
+        font-size:13px;font-weight:800;cursor:pointer;
+        max-width:100%;
+        white-space:normal;
+        word-break:break-word;
+        line-height:1.2;
+        display:inline-flex;align-items:center;gap:8px;
+      }
+      .chip.sel{
+        background:linear-gradient(180deg,var(--accent),var(--accent2));
+        color:var(--ink);
+      }
 
-    .topbar{
-      position:sticky;top:0;z-index:10;
-      display:flex;justify-content:space-between;align-items:center;
-      padding:8px 10px;
-      background:rgba(10,15,20,.95);
-      border-bottom:1px solid var(--line);
-      backdrop-filter:blur(6px);
-    }
-    .row{display:flex;gap:8px;align-items:center}
-    .btn{
-      background:var(--chip);
-      border:1px solid var(--line);
-      color:var(--fg);
-      border-radius:12px;
-      padding:8px 12px;
-      font-weight:800;
-      cursor:pointer;
-    }
-    .btn.primary{
-      background:linear-gradient(180deg,var(--accent),var(--accent2));
-      color:var(--ink);
-      border:none;
-    }
-    .badge{
-      background:var(--chip);
-      border:1px solid var(--line);
-      border-radius:999px;
-      padding:6px 10px;
-      font-size:12px;
-    }
+      .stepHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+      .stepTitle{font-weight:900;font-size:18px;margin:0}
+      .stepSub{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.4}
 
-    h1{margin:12px 0 6px;color:var(--accent)}
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:16px;
-      margin:12px 0;
-      box-shadow:0 10px 26px var(--shadow);
-    }
-    .label{font-weight:900;color:var(--accent2);margin-bottom:6px}
-    .small{font-size:13px;color:var(--muted)}
+      .progress{height:10px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+      .bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%}
 
-    textarea{
-      width:100%;
-      min-height:90px;
-      resize:vertical;
-      border-radius:12px;
-      border:1px solid var(--line);
-      background:var(--chip);
-      color:var(--fg);
-      padding:12px;
-      font-size:15px;
-    }
+      .resultTitle{font-weight:950;font-size:18px;margin:0 0 8px}
+      .resultDo{font-size:15px;line-height:1.55;margin:0 0 10px}
+      .resultBlock{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:12px}
+      ul{margin:8px 0 0;padding-left:18px}
+      li{margin:6px 0;color:var(--fg)}
+      .hr{height:1px;background:var(--line);margin:12px 0}
 
-    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-    .chip{
-      background:var(--chip);
-      border:1px solid var(--line);
-      border-radius:999px;
-      padding:8px 12px;
-      font-weight:800;
-      cursor:pointer;
-      font-size:13px;
-    }
-    .chip.sel{
-      background:linear-gradient(180deg,var(--accent),var(--accent2));
-      color:var(--ink);
-    }
+      /* input domanda */
+      .qwrap{display:flex;flex-direction:column;gap:10px}
+      .qrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+      .qinput{
+        flex:1;
+        min-width:220px;
+        width:100%;
+        background:rgba(255,255,255,.04);
+        border:1px solid var(--line);
+        color:var(--fg);
+        border-radius:14px;
+        padding:12px 12px;
+        font-weight:800;
+        outline:none;
+      }
+      .qinput::placeholder{color:rgba(167,179,194,.75);font-weight:700}
+      .grid{
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:8px;
+      }
+      @media (min-width:720px){
+        .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+      }
+      .cardSug{
+        text-align:left;
+        background:rgba(255,255,255,.03);
+        border:1px solid var(--line);
+        border-radius:14px;
+        padding:10px 10px;
+        cursor:pointer;
+      }
+      .cardSug .t{font-weight:900;font-size:13px;line-height:1.25}
+      .cardSug .s{margin-top:6px;font-size:12px;color:var(--muted);line-height:1.35}
+      .cardSug:active{transform:translateY(1px)}
+    </style>
+  </head>
 
-    .resultTitle{font-size:18px;font-weight:900;margin-bottom:6px}
-    ul{padding-left:18px}
-    li{margin:6px 0}
-
-  </style>
-</head>
-
-<body>
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div class="row">
-      <button class="btn" onclick="history.back()">←</button>
-      <button class="btn" onclick="location.href='index.html'">🏠</button>
+  <body>
+    <div class="topbar">
+      <div class="row">
+        <button class="btn" id="backBtn" type="button">←</button>
+        <button class="btn" id="homeBtn" type="button">🏠</button>
+      </div>
+      <div class="row">
+        <span class="badge" id="styleBadge">🎭 —</span>
+        <span class="badge" id="freeBadge">Crediti: —</span>
+        <select id="langSelect" aria-label="Language">
+          <option value="it">IT</option>
+          <option value="en">EN</option>
+          <option value="es">ES</option>
+          <option value="fr">FR</option>
+          <option value="de">DE</option>
+        </select>
+      </div>
     </div>
-    <div class="row">
-      <span class="badge" id="styleBadge">🎭</span>
-      <span class="badge" id="creditBadge">Crediti: —</span>
-    </div>
-  </div>
 
-  <main>
-    <div class="wrap">
-      <h1>🔮 Oracolo</h1>
+    <main>
+      <div class="wrap">
+        <h1>🔮 Oracolo</h1>
 
-      <!-- INPUT -->
-      <div class="card">
-        <div class="label">Cosa vuoi ottenere?</div>
-        <div class="small">
-          Non chiedere “che succede”.  
-          Dimmi **cosa vuoi ottenere** e l’Oracolo ti dice **come iniziare**.
+        <!-- COSA FA / COME SI USA (chiaro e veloce) -->
+        <div class="card center">
+          <div class="label" id="subLabel">A cosa serve</div>
+          <div class="small" id="hintText">
+            Scegli 4 carte e l’Oracolo ti restituisce una cosa sola: <b>cosa fare adesso</b> per avvicinarti a ciò che vuoi.
+            Se vuoi, scrivi anche una domanda: aiuta a centrare meglio il responso.
+          </div>
+
+          <div style="margin-top:12px">
+            <div class="progress"><div class="bar" id="bar"></div></div>
+            <div class="small" id="progressText" style="margin-top:8px">0/4</div>
+          </div>
         </div>
 
-        <textarea id="goalInput" placeholder="Es: voglio cambiare lavoro / voglio più soldi / voglio uscire da una relazione tossica"></textarea>
+        <!-- DOMANDA OPZIONALE + SUGGERIMENTI -->
+        <div class="card center">
+          <div class="label" id="qLabel">Domanda (opzionale)</div>
+          <div class="qwrap">
+            <div class="qrow">
+              <input id="goalInput" class="qinput" type="text"
+                placeholder="Esempio: Come faccio a cambiare lavoro senza rischiare troppo?"
+                maxlength="160"
+              />
+              <button class="btn" id="clearGoalBtn" type="button">Pulisci</button>
+            </div>
+            <div class="small" id="qHelp">
+              Se non sai cosa scrivere: tocca un suggerimento qui sotto (poi puoi modificarlo).
+            </div>
+            <div class="grid" id="suggGrid"></div>
+          </div>
+        </div>
 
-        <div class="chips" id="suggestions"></div>
+        <!-- STEPS (carte) -->
+        <div id="stepsWrap" class="center"></div>
+
+        <!-- CTA -->
+        <div class="card center">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div class="small" id="ctaHelp">Completa le 4 scelte per sbloccare il responso.</div>
+            <button class="btn primary" id="revealBtn" type="button" disabled>🔮 Rivela l’Oracolo</button>
+          </div>
+        </div>
+
+        <!-- RESULT -->
+        <div class="card center" id="resultCard" style="display:none">
+          <div class="label" id="resultLabel">Risposta</div>
+
+          <div class="resultTitle" id="rTitle">—</div>
+          <p class="resultDo" id="rDo">—</p>
+
+          <div class="resultBlock">
+            <div class="small" style="font-weight:900;margin-bottom:6px" id="firstStepLabel">Primo passo (15 minuti)</div>
+            <div id="rFirst">—</div>
+
+            <div class="hr"></div>
+
+            <div class="small" style="font-weight:900;margin-bottom:6px" id="rulesLabel">Regole</div>
+            <ul id="rRules"></ul>
+
+            <div class="hr"></div>
+
+            <div class="small" id="rSafety">—</div>
+          </div>
+
+          <div class="row" style="justify-content:flex-end;margin-top:12px">
+            <button class="btn" id="playAgainBtn" type="button">🔁 Rifai</button>
+          </div>
+        </div>
+
       </div>
+    </main>
 
-      <!-- CTA -->
-      <div class="card">
-        <button class="btn primary" id="revealBtn">🔮 Rivela l’Oracolo (1 credito)</button>
-      </div>
+    <script type="module">
+      // ===== Firebase base =====
+      import { auth } from "./firebase.init.js";
+      import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-      <!-- RESULT -->
-      <div class="card" id="resultCard" style="display:none">
-        <div class="label">Risposta dell’Oracolo</div>
+      // ===== Credits Firestore =====
+      import { bootCredits, getBalance, consumeCredit } from "./store/credits.js";
 
-        <div class="resultTitle" id="rTitle"></div>
-        <p id="rDo"></p>
+      const LS = localStorage;
+      const $ = id => document.getElementById(id);
 
-        <div class="label">Primo passo (15 minuti)</div>
-        <p id="rFirst"></p>
+      const SUP_LANG = ["it","en","es","fr","de"];
+      const normLang = (l) => {
+        const s = String(l||"it").toLowerCase().slice(0,2);
+        return SUP_LANG.includes(s) ? s : "it";
+      };
 
-        <div class="label">Regole</div>
-        <ul id="rRules"></ul>
+      const isAdmin = (() => { try{ return !!LS.getItem("admin_token"); }catch{ return false; } })();
 
-        <p class="small" id="rSafety"></p>
-      </div>
-    </div>
-  </main>
+      // prefs stile
+      let prefs = {};
+      try{ prefs = JSON.parse(LS.getItem("whatif_prefs")||"{}")||{}; }catch{ prefs = {}; }
+      const voice = (prefs.stile === "wtf") ? "wtf" : "whatif";
+      document.documentElement.setAttribute("data-theme", voice === "wtf" ? "wtf" : "whatif");
 
-<script type="module">
-import { auth } from "./firebase.init.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-import { bootCredits, getBalance, consumeCredit } from "./store/credits.js";
+      // lang
+      let lang = normLang(LS.getItem("lang") || "it");
+      $("langSelect").value = lang;
+      document.documentElement.lang = lang;
 
-const goalInput = document.getElementById("goalInput");
-const suggestionsWrap = document.getElementById("suggestions");
-const revealBtn = document.getElementById("revealBtn");
-const resultCard = document.getElementById("resultCard");
+      // UI badges
+      function renderBadges(){
+        $("styleBadge").textContent = "🎭 " + (voice === "wtf" ? "What the F" : "What if");
+      }
+      renderBadges();
 
-let selected = [];
+      // nav
+      $("homeBtn").onclick = () => location.href = "index.html";
+      $("backBtn").onclick = () => {
+        if (history.length > 1) history.back();
+        else location.href = "index.html";
+      };
 
-const baseSuggestions = [
-  "💰 Fare soldi",
-  "🏗 Costruire qualcosa",
-  "🧠 Cambiare mentalità",
-  "🔥 Scelta radicale",
-  "🕊 Vita più semplice",
-  "⚔️ Conflitto",
-];
+      // credits
+      let currentBalance = 0;
 
-baseSuggestions.forEach(s=>{
-  const b=document.createElement("button");
-  b.className="chip";
-  b.textContent=s;
-  b.onclick=()=>{
-    b.classList.toggle("sel");
-    selected = [...document.querySelectorAll(".chip.sel")].map(x=>x.textContent);
-  };
-  suggestionsWrap.appendChild(b);
-});
+      function renderCredits(){
+        if (isAdmin){
+          $("freeBadge").textContent = "Crediti: ∞ (admin)";
+          return;
+        }
+        $("freeBadge").textContent = "Crediti: " + currentBalance;
+      }
 
-async function syncCredits(){
-  if(!auth.currentUser)return;
-  await bootCredits();
-  const b=await getBalance();
-  document.getElementById("creditBadge").textContent="Crediti: "+b;
-}
+      async function syncCredits(){
+        if (isAdmin){
+          renderCredits(); return;
+        }
+        if (!auth.currentUser){
+          currentBalance = 0;
+          renderCredits();
+          return;
+        }
+        try{
+          await bootCredits();
+          currentBalance = await getBalance();
+        }catch{
+          currentBalance = 0;
+        }
+        renderCredits();
+      }
 
-onAuthStateChanged(auth,syncCredits);
+      async function guardCredits(){
+        if (isAdmin) return true;
+        if (!auth.currentUser){
+          alert("Per usare l’Oracolo devi essere loggato.");
+          location.href = "index.html";
+          return false;
+        }
+        if (currentBalance <= 0){
+          alert("Hai finito i crediti. Vai allo store per ricaricare.");
+          location.href = "store/credit-store.html?lang=" + encodeURIComponent(lang);
+          return false;
+        }
+        return true;
+      }
 
-revealBtn.onclick = async ()=>{
-  if(!auth.currentUser){
-    alert("Devi essere loggato");
-    return;
-  }
-  const ok = await consumeCredit();
-  if(!ok){
-    alert("Crediti finiti");
-    return;
-  }
-  await syncCredits();
+      onAuthStateChanged(auth, async () => {
+        await syncCredits();
+      });
+      window.addEventListener("focus", syncCredits);
 
-  revealBtn.textContent="⏳";
+      // language change (solo ricarica meta + testi suggerimenti)
+      $("langSelect").onchange = async () => {
+        lang = normLang($("langSelect").value);
+        LS.setItem("lang", lang);
+        document.documentElement.lang = lang;
+        renderSuggestions();        // ✅ locale, istantaneo
+        await loadOracleMeta(true); // ✅ rigenera solo le carte base
+      };
 
-  const res = await fetch("/api/suggest",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      mode:"oracle_answer",
-      lang:"it",
-      voice:"whatif",
-      goal:goalInput.value,
-      hints:selected
-    })
-  });
+      // ===== DOMANDA OPZIONALE + SUGGERIMENTI LOCALI (zero lentezza) =====
+      const SUGG = {
+        it: [
+          { t:"Cambio lavoro", s:"Come cambio lavoro senza rischiare troppo?" },
+          { t:"Soldi", s:"Come aumento entrate in 3 mesi in modo realistico?" },
+          { t:"Disciplina", s:"Come smetto di rimandare e parto davvero?" },
+          { t:"Relazioni", s:"Come gestisco un rapporto che mi pesa?" },
+          { t:"Forma", s:"Come rientro in forma senza mollare dopo 7 giorni?" },
+          { t:"Decisione", s:"Devo scegliere tra due strade: come decido bene?" }
+        ],
+        en: [
+          { t:"Career change", s:"How do I change jobs without taking big risks?" },
+          { t:"Money", s:"How can I increase my income in 3 realistic months?" },
+          { t:"Discipline", s:"How do I stop procrastinating and actually start?" },
+          { t:"Relationships", s:"How do I handle a relationship that drains me?" },
+          { t:"Fitness", s:"How do I get back in shape without quitting?" },
+          { t:"Decision", s:"I’m stuck between two paths—how do I choose?" }
+        ],
+        es: [
+          { t:"Trabajo", s:"¿Cómo cambio de trabajo sin arriesgar demasiado?" },
+          { t:"Dinero", s:"¿Cómo aumento mis ingresos en 3 meses de forma realista?" },
+          { t:"Disciplina", s:"¿Cómo dejo de procrastinar y empiezo de verdad?" },
+          { t:"Relaciones", s:"¿Cómo manejo una relación que me pesa?" },
+          { t:"Forma", s:"¿Cómo vuelvo a estar en forma sin abandonar?" },
+          { t:"Decisión", s:"¿Cómo elijo entre dos caminos sin liarla?" }
+        ],
+        fr: [
+          { t:"Carrière", s:"Comment changer de job sans trop de risques ?" },
+          { t:"Argent", s:"Comment augmenter mes revenus en 3 mois, réalistement ?" },
+          { t:"Discipline", s:"Comment arrêter de procrastiner et démarrer vraiment ?" },
+          { t:"Relations", s:"Comment gérer une relation qui m’épuise ?" },
+          { t:"Forme", s:"Comment me remettre en forme sans abandonner ?" },
+          { t:"Décision", s:"Je bloque entre deux options : comment choisir ?" }
+        ],
+        de: [
+          { t:"Jobwechsel", s:"Wie wechsle ich den Job ohne großes Risiko?" },
+          { t:"Geld", s:"Wie steigere ich mein Einkommen in 3 Monaten realistisch?" },
+          { t:"Disziplin", s:"Wie höre ich auf zu prokrastinieren und starte?" },
+          { t:"Beziehung", s:"Wie gehe ich mit einer belastenden Beziehung um?" },
+          { t:"Fitness", s:"Wie komme ich zurück in Form ohne abzubrechen?" },
+          { t:"Entscheidung", s:"Ich hänge zwischen zwei Wegen – wie entscheide ich?" }
+        ]
+      };
 
-  const data = await res.json();
+      function renderSuggestions(){
+        const grid = $("suggGrid");
+        grid.innerHTML = "";
+        const pool = SUGG[lang] || SUGG.it;
 
-  document.getElementById("rTitle").textContent = data.title;
-  document.getElementById("rDo").textContent = data.do;
-  document.getElementById("rFirst").textContent = data.first_step;
-  document.getElementById("rSafety").textContent = data.safety;
+        pool.forEach(item=>{
+          const div = document.createElement("div");
+          div.className = "cardSug";
+          div.innerHTML = `<div class="t">${escapeHtml(item.t)}</div><div class="s">${escapeHtml(item.s)}</div>`;
+          div.onclick = () => {
+            $("goalInput").value = item.s;
+            try{ LS.setItem("oracle_goal_draft", item.s); }catch{}
+          };
+          grid.appendChild(div);
+        });
+      }
 
-  const ul=document.getElementById("rRules");
-  ul.innerHTML="";
-  (data.rules||[]).forEach(r=>{
-    const li=document.createElement("li");
-    li.textContent=r;
-    ul.appendChild(li);
-  });
+      $("clearGoalBtn").onclick = () => {
+        $("goalInput").value = "";
+        try{ LS.removeItem("oracle_goal_draft"); }catch{}
+      };
 
-  resultCard.style.display="block";
-  revealBtn.textContent="🔮 Rivela l’Oracolo";
-};
-</script>
-</body>
+      // persist draft
+      try{
+        const draft = LS.getItem("oracle_goal_draft");
+        if (draft) $("goalInput").value = draft;
+      }catch{}
+      $("goalInput").addEventListener("input", () => {
+        try{ LS.setItem("oracle_goal_draft", $("goalInput").value.slice(0,160)); }catch{}
+      });
+
+      function escapeHtml(s){
+        return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      }
+
+      renderSuggestions();
+
+      // ===== ORACOLO: CARTE (come prima) =====
+      let meta = null;
+      let picks = {}; // { key: {id,label,emoji} }
+      let steps = [];
+
+      function progress(){
+        const total = steps.length || 4;
+        const done = Object.keys(picks).length;
+        const pct = total ? Math.round((done/total)*100) : 0;
+        $("bar").style.width = pct + "%";
+        $("progressText").textContent = `${done}/${total}`;
+        $("revealBtn").disabled = !(done === total);
+      }
+
+      function clearUI(){
+        $("stepsWrap").innerHTML = "";
+        $("resultCard").style.display = "none";
+        picks = {};
+        progress();
+      }
+
+      function renderSteps(){
+        const wrap = $("stepsWrap");
+        wrap.innerHTML = "";
+
+        steps.forEach((st, idx) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.dataset.key = st.key;
+
+          const head = document.createElement("div");
+          head.className = "stepHead";
+
+          const left = document.createElement("div");
+          left.innerHTML = `
+            <div class="label">Step ${idx+1}</div>
+            <div class="stepTitle">${escapeHtml(st.title || "—")}</div>
+            <div class="stepSub">${escapeHtml(st.subtitle || "")}</div>
+          `;
+          head.appendChild(left);
+          card.appendChild(head);
+
+          const chips = document.createElement("div");
+          chips.className = "chips";
+
+          (st.options || []).forEach(opt => {
+            const b = document.createElement("button");
+            b.className = "chip";
+            const chosen = picks[st.key] && picks[st.key].id === opt.id;
+            if (chosen) b.classList.add("sel");
+
+            b.innerHTML = `<span>${escapeHtml(opt.emoji || "•")}</span><span>${escapeHtml(opt.label || opt.id || "—")}</span>`;
+            b.onclick = () => {
+              picks[st.key] = { id: opt.id, label: opt.label, emoji: opt.emoji };
+              renderSteps();
+              progress();
+            };
+            chips.appendChild(b);
+          });
+
+          card.appendChild(chips);
+          wrap.appendChild(card);
+        });
+
+        progress();
+      }
+
+      async function loadOracleMeta(force=false){
+        clearUI();
+
+        const res = await fetch("/api/suggest", {
+          method: "POST",
+          headers: { "Content-Type":"application/json" },
+          body: JSON.stringify({
+            mode: "oracle_meta",
+            lang,
+            voice
+          })
+        });
+
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data || !Array.isArray(data.steps)){
+          alert("Errore nel caricare l’Oracolo. Riprova.");
+          console.error("oracle_meta failed:", res.status, data);
+          return;
+        }
+
+        meta = data;
+        steps = data.steps.slice(0, 4);
+        picks = {};
+        renderSteps();
+
+        const cta = data?.ui?.cta;
+        if (cta && typeof cta === "string"){
+          $("revealBtn").textContent = cta.includes("🔮") ? cta : ("🔮 " + cta);
+        } else {
+          $("revealBtn").textContent = "🔮 Rivela l’Oracolo";
+        }
+      }
+
+      async function revealOracle(){
+        const ok = await guardCredits();
+        if (!ok) return;
+
+        // consuma 1 credito SOLO ORA (come già avevi)
+        if (!isAdmin){
+          const ok2 = await consumeCredit();
+          if (!ok2){
+            await syncCredits();
+            alert("Hai finito i crediti.");
+            return;
+          }
+          await syncCredits();
+        }
+
+        $("revealBtn").disabled = true;
+        const originalBtn = $("revealBtn").textContent;
+        $("revealBtn").textContent = "⏳...";
+
+        try{
+          const picksPayload = {};
+          for (const k of Object.keys(picks)){
+            picksPayload[k] = picks[k];
+          }
+
+          const goal = String($("goalInput").value || "").trim().slice(0, 200);
+
+          const res = await fetch("/api/suggest", {
+            method: "POST",
+            headers: { "Content-Type":"application/json" },
+            body: JSON.stringify({
+              mode: "oracle_answer",
+              lang,
+              voice,
+              picks: picksPayload,
+              goal // ✅ domanda opzionale
+            })
+          });
+
+          const data = await res.json().catch(() => null);
+          if (!res.ok || !data || !data.do){
+            alert("Errore nel generare la risposta. Riprova.");
+            console.error("oracle_answer failed:", res.status, data);
+            return;
+          }
+
+          $("rTitle").textContent = data.title || "🔮";
+          $("rDo").textContent = data.do || "";
+          $("rFirst").textContent = data.first_step || "";
+          $("rSafety").textContent = data.safety || "";
+
+          const rules = Array.isArray(data.rules) ? data.rules : [];
+          const ul = $("rRules");
+          ul.innerHTML = "";
+          rules.slice(0, 6).forEach(r => {
+            const li = document.createElement("li");
+            li.textContent = String(r||"").trim();
+            ul.appendChild(li);
+          });
+
+          $("resultCard").style.display = "block";
+          window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+
+        } finally {
+          $("revealBtn").disabled = false;
+          $("revealBtn").textContent = originalBtn || (meta?.ui?.cta ? meta.ui.cta : "🔮 Rivela l’Oracolo");
+          progress();
+        }
+      }
+
+      $("revealBtn").onclick = revealOracle;
+
+      $("playAgainBtn").onclick = async () => {
+        await loadOracleMeta(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+
+      // init
+      await loadOracleMeta(false);
+      await syncCredits();
+    </script>
+  </body>
 </html>
