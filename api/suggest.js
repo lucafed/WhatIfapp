@@ -68,6 +68,81 @@ function compactPicks(picks = {}) {
   return out.join(" | ");
 }
 
+// hash semplice per cache key (senza crypto)
+function djb2(str = "") {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) h = ((h << 5) + h) ^ str.charCodeAt(i);
+  return (h >>> 0).toString(16);
+}
+
+/* ========= Hard guard (server-side) =========
+   Blocco per richieste ad alto rischio (autolesionismo, violenza imminente, illeciti gravi).
+   Non è perfetto ma tutela in modo concreto.
+*/
+function isHighRiskText(t = "") {
+  const s = String(t || "").toLowerCase();
+
+  // Autolesionismo / suicidio
+  const selfHarm = [
+    "suicid", "ammazz", "uccidermi", "mi voglio uccidere", "farmI del male", "autolesion",
+    "kill myself", "suicide", "self harm", "cut myself",
+    "quiero morir", "suicidarme", "me quiero matar", "autolesión",
+    "je veux mourir", "suicider", "me tuer", "auto-mutil",
+    "ich will sterben", "suizid", "mich töten", "selbstverletz",
+  ].some(k => s.includes(k));
+
+  // Violenza / danno a terzi (imminente)
+  const violence = [
+    "uccidere qualcuno", "fare del male a", "sparare", "accoltellare", "bomba", "esplosiv",
+    "kill him", "kill her", "shoot", "stab", "bomb", "explosiv",
+    "matar", "disparar", "apuñalar", "bomba",
+    "tuer", "tirer", "poignarder", "bombe",
+    "töten", "schießen", "erstechen", "bombe",
+  ].some(k => s.includes(k));
+
+  // Illeciti gravi / armi / droghe (istruzioni)
+  const illegal = [
+    "come fare una bomba", "come costruire una bomba", "ricetta bomba", "molotov",
+    "how to make a bomb", "build a bomb", "molotov",
+    "come fabbricare droga", "cucinare metanfetamina", "meth", "fentanyl",
+    "how to cook meth", "make fentanyl",
+  ].some(k => s.includes(k));
+
+  return selfHarm || violence || illegal;
+}
+
+function blockedMessage(lang) {
+  const L = normLang(lang);
+  const M = {
+    it: {
+      title: "Non posso aiutarti su questo.",
+      body:
+        "Se ti senti in pericolo o stai pensando di farti del male, chiama subito il 112 (Italia) o il numero di emergenza del tuo Paese, oppure parla con qualcuno di fiducia adesso.",
+    },
+    en: {
+      title: "I can’t help with that.",
+      body:
+        "If you feel in danger or you’re thinking about self-harm, call your local emergency number now, or reach out to someone you trust immediately.",
+    },
+    es: {
+      title: "No puedo ayudarte con eso.",
+      body:
+        "Si estás en peligro o piensas en hacerte daño, llama ahora al número de emergencias de tu país o habla con alguien de confianza.",
+    },
+    fr: {
+      title: "Je ne peux pas aider avec ça.",
+      body:
+        "Si tu es en danger ou si tu penses à te faire du mal, appelle immédiatement le numéro d’urgence de ton pays ou contacte une personne de confiance.",
+    },
+    de: {
+      title: "Dabei kann ich nicht helfen.",
+      body:
+        "Wenn du in Gefahr bist oder daran denkst, dir etwas anzutun, ruf jetzt den Notruf deines Landes an oder wende dich sofort an eine vertraute Person.",
+    },
+  };
+  return M[L] || M.it;
+}
+
 /* ========= Fallback (spunti classici) ========= */
 const fallbackPools = {
   it: {
@@ -175,63 +250,73 @@ function buildSuggestPrompt({ lang, periodo, boost }) {
   ];
 }
 
-/* ========= Prompt: ORACOLO META (4 step) ========= */
-/**
- * ✅ MODIFICA SOLO ORACLE:
- * - prende goal (obiettivo) e lo usa per generare step PERTINENTI
- * - step 4 NON chiede strategia: fa scegliere “che tipo di supporto/approccio vuoi ricevere”
- * - obbliga a cambiare carte se cambia goal
- */
+/* ========= Prompt: ORACOLO META (4 step) =========
+   ✅ ORIENTATO ALL'OBIETTIVO.
+   Gli step NON chiedono “strategia”, ma:
+   1) Cosa vuoi ottenere (risultato concreto)
+   2) Perché ti serve (motivazione)
+   3) Vincoli & realtà (tempo/energia/soldi)
+   4) Primo passo possibile (tipo di azione / contesto), non strategia.
+*/
 function buildOracleMetaPrompt({ lang, voice, goal }) {
   const L = normLang(lang);
   const v = voice === "wtf" ? "wtf" : "whatif";
-  const g = clampStr(goal || "", 220);
+  const G = clampStr(goal || "", 240);
 
   const tone =
     v === "wtf"
       ? (L === "en"
-          ? "Tone: sharp, ironic, bartender-energy, but still useful and concrete."
-          : "Tono: ironico/tagliente, energia da barista, ma comunque utile e concreto.")
+          ? "Tone: sharp, ironic, but still helpful and concrete."
+          : "Tono: ironico/tagliente ma comunque utile e concreto.")
       : (L === "en"
           ? "Tone: serious, pragmatic, emotionally intelligent."
           : "Tono: serio, pragmatico, emotivamente intelligente.");
 
   const spec =
     L === "en"
-      ? `Create EXACTLY 4 steps. Each step has key,title,subtitle and 4-6 options. Options have id,label,emoji.`
-      : `Crea ESATTAMENTE 4 step. Ogni step ha key,title,subtitle e 4-6 opzioni. Le opzioni hanno id,label,emoji.`;
+      ? `Create 4 steps aligned to the user's goal. Each step: key,title,subtitle, and 4-6 options. Options: id,label,emoji.`
+      : `Crea 4 step ALLINEATI all’obiettivo utente. Ogni step: key,title,subtitle e 4-6 opzioni. Opzioni: id,label,emoji.`;
 
   const rules =
     L === "en"
-      ? `Steps must be aligned to the user's goal. If the goal changes, steps MUST change. No generic filler. No repetition. Options must be mutually distinct.`
-      : `Gli step DEVONO essere allineati all’obiettivo dell’utente. Se il goal cambia, gli step DEVONO cambiare. Niente riempitivi generici. Niente ripetizioni. Opzioni ben diverse tra loro.`;
+      ? `No repetition. Options must be mutually distinct and meaningful. Keep text short and crystal-clear.`
+      : `Niente ripetizioni. Opzioni ben diverse e sensate. Testo corto e chiarissimo.`;
 
-  const stepBlueprint =
-    L === "en"
-      ? `Step 1: "What outcome exactly?" (scope/target)
-Step 2: "Why does it matter?" (motivation/meaning)
-Step 3: "What constraints?" (time/money/energy/risk)
-Step 4: "How should the Oracle help?" (style of plan: quick wins vs deep plan vs low-risk vs accountability) — DO NOT ask the user for the strategy itself.`
-      : `Step 1: "Che risultato preciso?" (ambito/target)
-Step 2: "Perché ti serve davvero?" (motivazione/significato)
-Step 3: "Quali vincoli hai?" (tempo/soldi/energia/rischio)
-Step 4: "Come vuoi che l’Oracolo ti aiuti?" (tipo di piano: quick wins vs piano profondo vs basso rischio vs accountability) — NON chiedere la strategia all’utente.`;
+  const schema =
+    `Return ONLY strict JSON with shape: ` +
+    `{"ui":{"cta":"..."}, "steps":[{"key":"...","title":"...","subtitle":"...","options":[{"id":"...","label":"...","emoji":"..."}]}]}`;
+
+  // istruzioni step (sempre uguali), ma “riempite” in modo coerente col goal
+  const stepGuideEN = `
+Steps MUST map to:
+1) Outcome: what exactly you want (concrete result / target)
+2) Why: main motivation (identity / relief / growth / freedom etc.)
+3) Constraints: time/energy/money/risk tolerance
+4) Context: where/how you can act now (solo / with help / learning / networking / micro-test). 
+DO NOT ask the user to choose a "strategy". The oracle will decide strategy in the final answer.
+`;
+
+  const stepGuideIT = `
+Gli step DEVONO essere:
+1) Risultato: cosa vuoi ottenere in modo concreto
+2) Perché: motivazione principale
+3) Vincoli: tempo/energia/soldi/rischio
+4) Contesto: dove/come puoi agire adesso (da solo / con aiuto / studio / contatti / micro-test).
+NON chiedere “che strategia vuoi adottare”. La strategia la decide l’Oracolo nella risposta finale.
+`;
 
   return [
     {
       role: "system",
       content:
-        `You generate a compact multi-step picker UI for an "Oracle" feature. ${tone}\n` +
-        `Return ONLY strict JSON with this shape:\n` +
-        `{"ui":{"cta":"..."}, "steps":[{"key":"...","title":"...","subtitle":"...","options":[{"id":"...","label":"...","emoji":"..."}]}]}\n` +
-        `${spec}\n${rules}\n${stepBlueprint}\n` +
-        `IMPORTANT: Each step title/subtitle/options must clearly reference the goal theme. Avoid abstract/meaningless labels.`,
+        `You generate a compact multi-step picker UI for an "Oracle" feature. ${tone} ${schema} ${spec} ${rules}`,
     },
     {
       role: "user",
       content:
-        `Language: ${L}\nVoice: ${v}\nGoal (user objective): ${g || "(none provided)"}\n` +
-        `Generate the initial 4 steps now. JSON only.`,
+        `Language: ${L}\nVoice: ${v}\nUser goal (optional): ${G || "(none)"}\n` +
+        (L === "en" ? stepGuideEN : stepGuideIT) +
+        `Generate the 4 steps now. Return JSON only.`,
     },
   ];
 }
@@ -242,7 +327,7 @@ function buildOracleNextPrompt({ lang, voice, picks, startIndex, goal }) {
   const v = voice === "wtf" ? "wtf" : "whatif";
   const ctx = compactPicks(picks || {});
   const idx = Number.isFinite(+startIndex) ? Math.max(0, Math.min(3, +startIndex)) : 0;
-  const g = clampStr(goal || "", 220);
+  const G = clampStr(goal || "", 240);
 
   const tone =
     v === "wtf"
@@ -255,23 +340,22 @@ function buildOracleNextPrompt({ lang, voice, picks, startIndex, goal }) {
 
   const spec =
     L === "en"
-      ? `Regenerate steps from index ${idx} to 3, adapting to previous picks AND the goal. Keep steps consistent and non-repetitive.`
-      : `Rigenera gli step da indice ${idx} a 3, adattandoli ai pick precedenti E al goal. Mantieni coerenza e niente ripetizioni.`;
+      ? `Regenerate steps from index ${idx} to 3, adapting to previous picks and the goal. Keep consistent, no repetition.`
+      : `Rigenera gli step da indice ${idx} a 3, adattandoli ai pick precedenti e al goal. Mantieni coerenza, niente ripetizioni.`;
 
   return [
     {
       role: "system",
       content:
-        `You generate the remaining steps of an Oracle picker UI. ${tone}\n` +
-        `Return ONLY strict JSON with shape: {"steps":[...]} where steps are the FULL remaining steps (index ${idx}..3).\n` +
-        `Each step: {"key","title","subtitle","options":[{"id","label","emoji"}]}\n` +
-        `Options must be mutually distinct and specific. No duplicates across options.\n` +
-        `Do NOT ask the user to choose a "strategy" — step 4 must be "how you want help" not "which strategy to adopt".`,
+        `You generate the remaining steps of an Oracle picker UI. ${tone} ` +
+        `Return ONLY strict JSON with shape: {"steps":[...]} where steps are the FULL remaining steps (index ${idx}..3). ` +
+        `Each step: {"key","title","subtitle","options":[{"id","label","emoji"}]} ` +
+        `Options must be mutually distinct and specific. No duplicates.`,
     },
     {
       role: "user",
       content:
-        `Language: ${L}\nVoice: ${v}\nGoal: ${g || "(none)"}\nAlready picked: ${ctx || "(none)"}\n` +
+        `Language: ${L}\nVoice: ${v}\nGoal: ${G || "(none)"}\nAlready picked: ${ctx || "(none)"}\n` +
         `${spec}\nReturn JSON only.`,
     },
   ];
@@ -282,7 +366,7 @@ function buildOracleAnswerPrompt({ lang, voice, picks, goal }) {
   const L = normLang(lang);
   const v = voice === "wtf" ? "wtf" : "whatif";
   const ctx = compactPicks(picks || {});
-  const g = clampStr(goal || "", 220);
+  const G = clampStr(goal || "", 240);
 
   const tone =
     v === "wtf"
@@ -296,22 +380,26 @@ function buildOracleAnswerPrompt({ lang, voice, picks, goal }) {
   const spec =
     L === "en"
       ? `Return ONLY JSON: {"title":"...","do":"...","first_step":"...","rules":[...],"safety":"..."}.
-do = 2-4 sentences. first_step = 1 concrete action in 15 minutes. rules = 4-6 short rules. safety = one gentle warning.
-The answer must be a practical mini-plan to reach the goal.`
+Do = 2-4 sentences. first_step = 1 concrete action in 15 minutes. rules = 4-6 short rules. safety = one gentle warning.`
       : `Restituisci SOLO JSON: {"title":"...","do":"...","first_step":"...","rules":[...],"safety":"..."}.
-do = 2-4 frasi. first_step = 1 azione concreta in 15 minuti. rules = 4-6 regole brevi. safety = un’avvertenza gentile.
-La risposta deve essere un mini-piano pratico per raggiungere il goal.`;
+do = 2-4 frasi. first_step = 1 azione concreta in 15 minuti. rules = 4-6 regole brevi. safety = un’avvertenza gentile.`;
 
-  const goalLine =
-    L === "en"
-      ? `Goal (objective): ${g || "(none provided)"}`
-      : `Goal (obiettivo): ${g || "(non specificato)"}`;
+  const goalHintEN = G
+    ? `User goal: "${G}". Make the plan directly aligned to this goal.`
+    : `No explicit goal provided. Infer a reasonable goal from picks and provide a useful plan.`;
+
+  const goalHintIT = G
+    ? `Obiettivo utente: "${G}". Allinea il piano direttamente a questo obiettivo.`
+    : `Nessun obiettivo esplicito. Deducilo dai pick e proponi un piano utile.`;
 
   return [
-    { role: "system", content: `You are the Oracle. ${tone}\n${spec}` },
+    { role: "system", content: `You are the Oracle. ${tone} ${spec}` },
     {
       role: "user",
-      content: `Language: ${L}\nVoice: ${v}\n${goalLine}\nUser picks: ${ctx || "(none)"}\nReturn JSON only.`,
+      content:
+        `Language: ${L}\nVoice: ${v}\n` +
+        (L === "en" ? goalHintEN : goalHintIT) +
+        `\nUser picks: ${ctx || "(none)"}\nReturn JSON only.`,
     },
   ];
 }
@@ -340,15 +428,34 @@ export default async function handler(req, res) {
 
     const mode = String(body.mode || "suggest");
 
-    // ===== ORACOLO: meta iniziale =====
+    // ===== ORACOLO: meta iniziale (ora dipende dal goal) =====
     if (mode === "oracle_meta") {
       const voice = String(body.voice || "whatif");
-      const goal = clampStr(body.goal || "", 220); // ✅ goal arriva dal client
+      const goal = clampStr(body.goal || "", 240);
+
+      // Hard guard server-side anche qui (non serve ai per roba pericolosa)
+      if (isHighRiskText(goal)) {
+        const msg = blockedMessage(lang);
+        return res.status(200).json({
+          blocked: true,
+          message: `${msg.title}\n\n${msg.body}`,
+        });
+      }
+
+      // Cache: stesso goal/lang/voice -> stessa meta (1 ora)
+      const cacheKey = `oracle_meta:${lang}:${voice}:${djb2(goal || "(none)")}`;
+      try {
+        const cached = await redis.get(cacheKey);
+        if (cached && typeof cached === "object" && Array.isArray(cached.steps)) {
+          return res.status(200).json({ ...cached, used: "cache" });
+        }
+      } catch {}
+
       const messages = buildOracleMetaPrompt({ lang, voice, goal });
 
       const completion = await client.chat.completions.create({
         model: MODEL,
-        temperature: 0.95, // ✅ più variazione, meno “template”
+        temperature: 0.75,
         top_p: 0.9,
         max_tokens: 900,
         messages,
@@ -373,11 +480,18 @@ export default async function handler(req, res) {
           : [],
       }));
 
-      return res.status(200).json({
+      const out = {
         ui: { cta: clampStr(data?.ui?.cta || (lang === "en" ? "Reveal the Oracle" : "Rivela l’Oracolo"), 40) },
         steps,
         used: "ai",
-      });
+      };
+
+      // salva cache 1 ora
+      try {
+        await redis.set(cacheKey, out, { ex: 3600 });
+      } catch {}
+
+      return res.status(200).json(out);
     }
 
     // ===== ORACOLO: next adattivo =====
@@ -385,13 +499,23 @@ export default async function handler(req, res) {
       const voice = String(body.voice || "whatif");
       const picks = body.picks && typeof body.picks === "object" ? body.picks : {};
       const startIndex = Number.isFinite(+body.startIndex) ? +body.startIndex : 0;
-      const goal = clampStr(body.goal || "", 220); // ✅ (compatibile se lo userai)
+      const goal = clampStr(body.goal || "", 240);
+
+      // Hard guard server-side
+      const riskText = `${goal} | ${compactPicks(picks)}`;
+      if (isHighRiskText(riskText)) {
+        const msg = blockedMessage(lang);
+        return res.status(200).json({
+          blocked: true,
+          message: `${msg.title}\n\n${msg.body}`,
+        });
+      }
 
       const messages = buildOracleNextPrompt({ lang, voice, picks, startIndex, goal });
 
       const completion = await client.chat.completions.create({
         model: MODEL,
-        temperature: 0.9,
+        temperature: 0.85,
         top_p: 0.9,
         max_tokens: 900,
         messages,
@@ -422,7 +546,17 @@ export default async function handler(req, res) {
     if (mode === "oracle_answer") {
       const voice = String(body.voice || "whatif");
       const picks = body.picks && typeof body.picks === "object" ? body.picks : {};
-      const goal = clampStr(body.goal || "", 220); // ✅ goal entra nella risposta
+      const goal = clampStr(body.goal || "", 240);
+
+      // Hard guard server-side
+      const riskText = `${goal} | ${compactPicks(picks)}`;
+      if (isHighRiskText(riskText)) {
+        const msg = blockedMessage(lang);
+        return res.status(200).json({
+          blocked: true,
+          message: `${msg.title}\n\n${msg.body}`,
+        });
+      }
 
       const messages = buildOracleAnswerPrompt({ lang, voice, picks, goal });
 
@@ -439,12 +573,27 @@ export default async function handler(req, res) {
 
       if (!data || typeof data !== "object") throw new Error("bad_oracle_answer_json");
 
+      // ✅ Safety “intelligente” + chiusura fissa (sempre)
+      const safetyBase = clampStr(data.safety || "", 240);
+      const fixedTail =
+        lang === "en"
+          ? " If this involves health, law, major money decisions, or personal safety, talk to a professional."
+          : lang === "es"
+          ? " Si esto implica salud, ley, dinero importante o seguridad personal, habla con un profesional."
+          : lang === "fr"
+          ? " Si cela touche à la santé, au droit, à de grosses décisions financières ou à ta sécurité, parle à un professionnel."
+          : lang === "de"
+          ? " Wenn es um Gesundheit, Recht, größere Geldentscheidungen oder persönliche Sicherheit geht, sprich mit einer Fachperson."
+          : " Se riguarda salute, legge, soldi importanti o sicurezza personale, parla con un professionista.";
+
+      const safety = clampStr((safetyBase ? safetyBase + " " : "") + fixedTail, 420);
+
       return res.status(200).json({
         title: clampStr(data.title || "🔮", 80),
         do: clampStr(data.do || "", 600),
         first_step: clampStr(data.first_step || "", 260),
         rules: Array.isArray(data.rules) ? data.rules.map((x) => clampStr(x, 120)).slice(0, 6) : [],
-        safety: clampStr(data.safety || "", 240),
+        safety,
         used: "ai",
       });
     }
