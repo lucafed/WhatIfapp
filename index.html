@@ -292,6 +292,7 @@
       <button class="chip" data-key="stile" data-val="whatif" data-i18n="whatif">What if</button>      
       <button class="chip" data-key="stile" data-val="wtf"    data-i18n="wtf">What the F</button>      
     </div>
+
     <!-- ⚔️ Battle (nuova modalità) -->
 <a href="battle.html"
    style="
@@ -311,21 +312,24 @@
       text-align:left;
     ">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-      <div style="font-weight:900;font-size:16px;">⚔️ Battle</div>
-      <div style="opacity:.8;font-weight:800;">Nuovo</div>
+      <div style="font-weight:900;font-size:16px;" data-i18n="battleTitle">⚔️ Battle</div>
+      <div style="opacity:.8;font-weight:800;" data-i18n="new">Nuovo</div>
     </div>
 
     <div style="margin-top:6px;color:var(--muted);line-height:1.35;font-size:13px;">
-      Duelli rapidissimi da condividere: <strong>A vs B</strong>. Tre categorie: Persone, Cose, Scelte.
+      <span data-i18n="battleDescA">Duelli rapidissimi da condividere:</span>
+      <strong>A vs B</strong><span>.</span>
+      <span data-i18n="battleDescB"> Tre categorie.</span>
     </div>
 
     <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-      <span class="info-btn" style="display:inline-flex;align-items:center;gap:6px;">🧑‍🤝‍🧑 Persone</span>
-      <span class="info-btn" style="display:inline-flex;align-items:center;gap:6px;">🍕 Cose</span>
-      <span class="info-btn" style="display:inline-flex;align-items:center;gap:6px;">🧠 Scelte</span>
+      <span class="info-btn" style="display:inline-flex;align-items:center;gap:6px;">🧑‍🤝‍🧑 <span data-i18n="battlePeople">Persone</span></span>
+      <span class="info-btn" style="display:inline-flex;align-items:center;gap:6px;">🍕 <span data-i18n="battleThings">Cose</span></span>
+      <span class="info-btn" style="display:inline-flex;align-items:center;gap:6px;">🧠 <span data-i18n="battleChoices">Scelte</span></span>
     </div>
   </div>
 </a>
+
     <!-- 🔮 Oracolo (nuova modalità) -->
 <a href="oracle.html"
    style="
@@ -345,18 +349,19 @@
       text-align:left;
     ">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-      <div style="font-weight:900;font-size:16px;">🔮 Oracolo</div>
-      <div style="opacity:.8;font-weight:800;">Nuovo</div>
+      <div style="font-weight:900;font-size:16px;" data-i18n="oracleTitle">🔮 Oracolo</div>
+      <div style="opacity:.8;font-weight:800;" data-i18n="new">Nuovo</div>
     </div>
 
     <div style="margin-top:6px;color:var(--muted);line-height:1.35;font-size:13px;">
-      4 click. Zero scrittura. Una sentenza concreta + primo passo. <strong>Costa 1 credito</strong>.
+      <span data-i18n="oracleDescA">4 click. Zero scrittura. Una sentenza concreta + primo passo.</span>
+      <strong> <span data-i18n="oracleCost">Costa 1 credito</span></strong><span>.</span>
     </div>
 
     <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-      <span class="info-btn" style="display:inline-flex;align-items:center;gap:6px;">⚡ Rapido</span>
-      <span class="info-btn" style="display:inline-flex;align-items:center;gap:6px;">🧠 Concreto</span>
-      <span class="info-btn" style="display:inline-flex;align-items:center;gap:6px;">💳 1 credito</span>
+      <span class="info-btn" style="display:inline-flex;align-items:center;gap:6px;">⚡ <span data-i18n="oracleFast">Rapido</span></span>
+      <span class="info-btn" style="display:inline-flex;align-items:center;gap:6px;">🧠 <span data-i18n="oracleConcrete">Concreto</span></span>
+      <span class="info-btn" style="display:inline-flex;align-items:center;gap:6px;">💳 <span data-i18n="oracleCredit">1 credito</span></span>
     </div>
   </div>
 </a>
@@ -502,7 +507,21 @@
         needChoices:"Seleziona prima Passato/Futuro e What if/WTF",      
         exit:"Esci",      
         privacy:"Privacy", terms:"Termini", info:"Info",      
-        delete:"Elimina il tuo account"      
+        delete:"Elimina il tuo account",
+        /* ✅ Battle + Oracolo i18n */
+        new:"Nuovo",
+        battleTitle:"⚔️ Battle",
+        battleDescA:"Duelli rapidissimi da condividere:",
+        battleDescB:" Tre categorie.",
+        battlePeople:"Persone",
+        battleThings:"Cose",
+        battleChoices:"Scelte",
+        oracleTitle:"🔮 Oracolo",
+        oracleDescA:"4 click. Zero scrittura. Una sentenza concreta + primo passo.",
+        oracleCost:"Costa 1 credito",
+        oracleFast:"Rapido",
+        oracleConcrete:"Concreto",
+        oracleCredit:"1 credito"
       },      
       en:{      
         title:"Discover your What?f",      
@@ -512,7 +531,21 @@
         needChoices:"Choose Past/Future and What if/WTF first",      
         exit:"Sign out",      
         privacy:"Privacy", terms:"Terms", info:"Info",      
-        delete:"Delete your account"      
+        delete:"Delete your account",
+        /* ✅ Battle + Oracolo i18n */
+        new:"New",
+        battleTitle:"⚔️ Battle",
+        battleDescA:"Fast duels to share:",
+        battleDescB:" Three categories.",
+        battlePeople:"People",
+        battleThings:"Things",
+        battleChoices:"Choices",
+        oracleTitle:"🔮 Oracle",
+        oracleDescA:"4 clicks. No typing. One concrete answer + first step.",
+        oracleCost:"Costs 1 credit",
+        oracleFast:"Fast",
+        oracleConcrete:"Concrete",
+        oracleCredit:"1 credit"
       },      
       es:{      
         title:"Descubre tu What?f",      
@@ -522,7 +555,21 @@
         needChoices:"Primero elige Pasado/Futuro y What if/WTF",      
         exit:"Salir",      
         privacy:"Privacidad", terms:"Términos", info:"Info",      
-        delete:"Eliminar tu cuenta"      
+        delete:"Eliminar tu cuenta",
+        /* ✅ Battle + Oracolo i18n */
+        new:"Nuevo",
+        battleTitle:"⚔️ Battle",
+        battleDescA:"Duelos rápidos para compartir:",
+        battleDescB:" Tres categorías.",
+        battlePeople:"Personas",
+        battleThings:"Cosas",
+        battleChoices:"Decisiones",
+        oracleTitle:"🔮 Oráculo",
+        oracleDescA:"4 clics. Sin escribir. Una respuesta concreta + primer paso.",
+        oracleCost:"Cuesta 1 crédito",
+        oracleFast:"Rápido",
+        oracleConcrete:"Concreto",
+        oracleCredit:"1 crédito"
       },      
       fr:{      
         title:"Découvrez votre What?f",      
@@ -532,7 +579,21 @@
         needChoices:"Choisissez d’abord Passé/Futur et What if/WTF",      
         exit:"Se déconnecter",      
         privacy:"Confidentialité", terms:"Conditions", info:"Info",      
-        delete:"Supprimer ton compte"      
+        delete:"Supprimer ton compte",
+        /* ✅ Battle + Oracolo i18n */
+        new:"Nouveau",
+        battleTitle:"⚔️ Battle",
+        battleDescA:"Duels rapides à partager :",
+        battleDescB:" Trois catégories.",
+        battlePeople:"Personnes",
+        battleThings:"Objets",
+        battleChoices:"Choix",
+        oracleTitle:"🔮 Oracle",
+        oracleDescA:"4 clics. Zéro écriture. Une réponse concrète + premier pas.",
+        oracleCost:"Coûte 1 crédit",
+        oracleFast:"Rapide",
+        oracleConcrete:"Concret",
+        oracleCredit:"1 crédit"
       },      
       de:{      
         title:"Entdecke dein What?f",      
@@ -542,7 +603,21 @@
         needChoices:"Wähle zuerst Vergangenheit/Zukunft und What if/WTF",      
         exit:"Abmelden",      
         privacy:"Datenschutz", terms:"Nutzungsbedingungen", info:"Info",      
-        delete:"Konto löschen"      
+        delete:"Konto löschen",
+        /* ✅ Battle + Oracolo i18n */
+        new:"Neu",
+        battleTitle:"⚔️ Battle",
+        battleDescA:"Schnelle Duelle zum Teilen:",
+        battleDescB:" Drei Kategorien.",
+        battlePeople:"Personen",
+        battleThings:"Dinge",
+        battleChoices:"Entscheidungen",
+        oracleTitle:"🔮 Orakel",
+        oracleDescA:"4 Klicks. Kein Schreiben. Eine klare Antwort + erster Schritt.",
+        oracleCost:"Kostet 1 Credit",
+        oracleFast:"Schnell",
+        oracleConcrete:"Konkret",
+        oracleCredit:"1 Credit"
       }      
     };  
   
