@@ -33,13 +33,6 @@ function cors(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token, x-pro");
 }
 
-/* ✅ NO-CACHE (per evitare risposte “sempre uguali” in ambienti con caching) */
-function noCache(res) {
-  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
-  res.setHeader("Pragma", "no-cache");
-  res.setHeader("Expires", "0");
-}
-
 /* ========= Helpers ========= */
 const SUP_LANGS = ["it", "en", "es", "fr", "de"];
 const normLang = (l = "it") => {
@@ -73,19 +66,6 @@ function compactPicks(picks = {}) {
     out.push(`${k}: ${label || id}`);
   }
   return out.join(" | ");
-}
-
-/* ✅ ORACLE seed helpers */
-function normSeedType(x) {
-  const s = String(x || "").toLowerCase();
-  return s === "suggested" ? "suggested" : "user";
-}
-function cleanSeed(x) {
-  // seed = domanda da card o testo utente; la rendiamo pulita e corta
-  const t = String(x || "")
-    .replace(/\s+/g, " ")
-    .trim();
-  return clampStr(t, 240);
 }
 
 /* ========= Fallback (spunti classici) ========= */
@@ -195,168 +175,176 @@ function buildSuggestPrompt({ lang, periodo, boost }) {
   ];
 }
 
-/* ========= Prompt: ORACOLO META (4 step) ========= */
-/* ✅ MODIFICA: ora gli step devono essere ALLINEATI alla domanda (seed) */
+/* ============================================================================
+   ORACOLO — MODIFICA SOLO QUI (meta/next/answer) per farlo diventare:
+   "Obiettivo -> 4 scelte -> piano d'azione"
+   ============================================================================ */
+
+function normalizeSeed(seed) {
+  const s = clampStr(seed || "", 220).trim();
+  return s;
+}
+function seedFallbackText(L) {
+  return L === "en"
+    ? "Goal not specified (generic)."
+    : "Obiettivo non specificato (generico).";
+}
+
+/* ========= Prompt: ORACOLO META (4 step) — ORIENTATO AL PIANO ========= */
 function buildOracleMetaPrompt({ lang, voice, seed, seedType }) {
   const L = normLang(lang);
   const v = voice === "wtf" ? "wtf" : "whatif";
-  const st = normSeedType(seedType);
-  const S = cleanSeed(seed);
+  const goal = normalizeSeed(seed);
+  const goalLine = goal ? goal : seedFallbackText(L);
 
   const tone =
     v === "wtf"
       ? (L === "en"
-          ? "Tone: sharp, ironic, but still helpful and concrete."
-          : "Tono: ironico/tagliente ma comunque utile e concreto.")
+          ? "Tone: witty, direct, but genuinely helpful and concrete."
+          : "Tono: ironico/diretto, ma davvero utile e concreto.")
       : (L === "en"
-          ? "Tone: serious, pragmatic, emotionally intelligent."
-          : "Tono: serio, pragmatico, emotivamente intelligente.");
+          ? "Tone: empathic, pragmatic, grounded."
+          : "Tono: empatico, pragmatico, concreto.");
 
-  // ✅ Quadro fisso: obiettivo / perché / vincoli / primo passo (sempre utile e “capibile al volo”)
-  const frame =
+  const concept =
     L === "en"
-      ? `The 4 steps MUST map to: (1) Outcome/Goal, (2) Why/Motivation, (3) Constraints/Risks, (4) First actionable move.`
-      : `I 4 step DEVONO seguire: (1) Risultato/Obiettivo, (2) Perché/Motivazione, (3) Vincoli/Rischi, (4) Prima mossa concreta.`;
+      ? `This Oracle turns a GOAL into a practical plan. The goal is what the user wants to achieve.`
+      : `Questo Oracolo trasforma un OBIETTIVO in un piano pratico. L’obiettivo è ciò che l’utente vuole ottenere.`;
 
-  const spec =
+  const hardRules =
     L === "en"
-      ? `Create 4 steps. Each step has key,title,subtitle and 4-6 options. Options have id,label,emoji.`
-      : `Crea 4 step. Ogni step ha key,title,subtitle e 4-6 opzioni. Le opzioni hanno id,label,emoji.`;
+      ? `Rules:
+- Create EXACTLY 4 steps, always relevant to the goal.
+- Each step must capture information needed to craft a plan: (1) target outcome, (2) why/meaning, (3) constraints & risk, (4) strategy style / next action preference.
+- Each step has 4–6 options, mutually distinct, simple to understand, no jargon.
+- Options must feel like "clickable" choices; short labels.
+- Return ONLY JSON.`
+      : `Regole:
+- Crea ESATTAMENTE 4 step, sempre rilevanti all’obiettivo.
+- Ogni step deve raccogliere info utili a costruire un piano: (1) risultato concreto, (2) perché/meaning, (3) vincoli & rischio, (4) stile strategia / preferenza prossima azione.
+- Ogni step ha 4–6 opzioni, ben diverse, comprensibili, zero gergo.
+- Opzioni "cliccabili": label brevi.
+- Restituisci SOLO JSON.`;
 
-  const rules =
-    L === "en"
-      ? `Make options mutually distinct. No filler. No repetition. Keep subtitles super clear.`
-      : `Opzioni ben diverse tra loro. Niente fuffa. Niente ripetizioni. Sottotitoli chiarissimi.`;
-
-  const align =
-    L === "en"
-      ? (st === "suggested"
-          ? `These steps must align tightly to the suggested question.`
-          : `These steps must align to the user's question, but remain easy even if the question is vague.`)
-      : (st === "suggested"
-          ? `Questi step devono essere molto allineati alla domanda suggerita.`
-          : `Questi step devono allinearsi alla domanda scritta, ma restare semplici anche se è vaga.`);
+  // NB: key stabili (aiuta front-end + coerenza)
+  const schema =
+    `Return strict JSON with shape:
+{
+  "ui":{"cta":"..."},
+  "steps":[
+    {"key":"outcome","title":"...","subtitle":"...","options":[{"id":"...","label":"...","emoji":"..."}]},
+    {"key":"why","title":"...","subtitle":"...","options":[{"id":"...","label":"...","emoji":"..."}]},
+    {"key":"constraints","title":"...","subtitle":"...","options":[{"id":"...","label":"...","emoji":"..."}]},
+    {"key":"strategy","title":"...","subtitle":"...","options":[{"id":"...","label":"...","emoji":"..."}]}
+  ]
+}`;
 
   return [
     {
       role: "system",
       content:
-        `You generate a compact multi-step picker UI for an "Oracle" feature. ${tone} ` +
-        `Return ONLY strict JSON with this shape: ` +
-        `{"ui":{"cta":"..."}, "steps":[{"key":"...","title":"...","subtitle":"...","options":[{"id":"...","label":"...","emoji":"..."}]}]}` +
-        ` ${spec} ${rules} ${frame} ${align}`,
+        `You generate a 4-step picker UI for an "Oracle" planning feature. ${tone} ${concept}\n${hardRules}\n${schema}`,
     },
     {
       role: "user",
-      content: `Language: ${L}\nVoice: ${v}\nSeedType: ${st}\nUserQuestion/Seed: ${S || "(none)"}\nGenerate the initial 4 steps now.\nReturn JSON only.`,
+      content:
+        `Language: ${L}\nVoice: ${v}\nSeedType: ${String(seedType || "user")}\nGOAL: ${goalLine}\nGenerate the 4 steps now. Return JSON only.`,
     },
   ];
 }
 
-/* ========= Prompt: ORACOLO NEXT (adattivo) ========= */
-/* ✅ MODIFICA: anche next si ancora alla domanda seed */
+/* ========= Prompt: ORACOLO NEXT (adattivo) — stesso concetto, più coerente ========= */
 function buildOracleNextPrompt({ lang, voice, picks, startIndex, seed, seedType }) {
   const L = normLang(lang);
   const v = voice === "wtf" ? "wtf" : "whatif";
   const ctx = compactPicks(picks || {});
   const idx = Number.isFinite(+startIndex) ? Math.max(0, Math.min(3, +startIndex)) : 0;
 
-  const st = normSeedType(seedType);
-  const S = cleanSeed(seed);
+  const goal = normalizeSeed(seed);
+  const goalLine = goal ? goal : seedFallbackText(L);
 
   const tone =
     v === "wtf"
       ? (L === "en"
-          ? "Tone: playful, ironic, but concrete and actionable."
-          : "Tono: ironico ma concreto e utile.")
+          ? "Tone: witty, direct, but actionable."
+          : "Tono: ironico/diretto, ma operativo.")
       : (L === "en"
-          ? "Tone: serious, pragmatic, emotionally intelligent."
-          : "Tono: serio, pragmatico, emotivamente intelligente.");
-
-  const frame =
-    L === "en"
-      ? `Keep the same step intent order: Goal -> Why -> Constraints -> First move.`
-      : `Mantieni lo stesso ordine degli intenti: Obiettivo -> Perché -> Vincoli -> Prima mossa.`;
+          ? "Tone: empathic, pragmatic, grounded."
+          : "Tono: empatico, pragmatico, concreto.");
 
   const spec =
     L === "en"
-      ? `Regenerate steps from index ${idx} to 3, adapting to previous picks AND the user's question seed. Keep coherent and non-repetitive.`
-      : `Rigenera gli step da indice ${idx} a 3, adattandoli ai pick precedenti E alla domanda seed. Mantieni coerenza e niente ripetizioni.`;
-
-  const align =
-    L === "en"
-      ? (st === "suggested"
-          ? `Align tightly to the suggested seed question.`
-          : `Align to the user seed question (even if vague), staying clear.`)
-      : (st === "suggested"
-          ? `Allinea forte alla domanda suggerita seed.`
-          : `Allinea alla domanda seed dell’utente (anche se vaga), restando chiaro.`);
+      ? `Regenerate remaining steps from index ${idx}..3. Keep the 4-step planning structure aligned to the GOAL. No repetition.`
+      : `Rigenera gli step rimanenti da indice ${idx}..3. Mantieni la struttura da piano allineata all’OBIETTIVO. Niente ripetizioni.`;
 
   return [
     {
       role: "system",
       content:
-        `You generate the remaining steps of an Oracle picker UI. ${tone} ` +
-        `Return ONLY strict JSON with shape: {"steps":[...]} where steps are the FULL remaining steps (index ${idx}..3). ` +
-        `Each step: {"key","title","subtitle","options":[{"id","label","emoji"}]} ` +
-        `Options must be mutually distinct and specific. No duplicates across options. ${frame} ${align}`,
+        `You generate remaining steps for an Oracle planning picker UI. ${tone}\n` +
+        `Return ONLY strict JSON with shape: {"steps":[...]} where steps are the FULL remaining steps (index ${idx}..3).\n` +
+        `Each step: {"key","title","subtitle","options":[{"id","label","emoji"}]}\n` +
+        `Options must be mutually distinct and simple.\n`,
     },
     {
       role: "user",
       content:
-        `Language: ${L}\nVoice: ${v}\nSeedType: ${st}\nUserQuestion/Seed: ${S || "(none)"}\n` +
-        `Already picked: ${ctx || "(none)"}\n` +
-        `${spec}\nReturn JSON only.`,
+        `Language: ${L}\nVoice: ${v}\nSeedType: ${String(seedType || "user")}\nGOAL: ${goalLine}\nAlready picked: ${ctx || "(none)"}\n${spec}\nReturn JSON only.`,
     },
   ];
 }
 
-/* ========= Prompt: ORACOLO ANSWER ========= */
-/* ✅ MODIFICA: risposta = piano pratico per “come arrivarci” + perché/limiti */
+/* ========= Prompt: ORACOLO ANSWER — PIANO PER RAGGIUNGERE OBIETTIVO ========= */
 function buildOracleAnswerPrompt({ lang, voice, picks, seed, seedType }) {
   const L = normLang(lang);
   const v = voice === "wtf" ? "wtf" : "whatif";
   const ctx = compactPicks(picks || {});
-  const st = normSeedType(seedType);
-  const S = cleanSeed(seed);
+  const goal = normalizeSeed(seed);
+  const goalLine = goal ? goal : seedFallbackText(L);
 
   const tone =
     v === "wtf"
       ? (L === "en"
-          ? "Voice: witty, blunt, bartender-energy, but still useful."
-          : "Voce: ironica, diretta, da barista affettuoso, ma utile.")
+          ? "Voice: witty, blunt, bartender-energy, but genuinely helpful."
+          : "Voce: ironica, diretta, da barista affettuoso, ma davvero utile.")
       : (L === "en"
           ? "Voice: empathic, pragmatic, grounded."
           : "Voce: empatica, pragmatica, concreta.");
 
+  // Output: piano, non “frase motivazionale”
   const spec =
     L === "en"
-      ? `Return ONLY JSON: {"title":"...","do":"...","first_step":"...","rules":[...],"safety":"..."}.
-do = 2-4 sentences explaining the best direction and WHY (based on picks and seed).
-first_step = 1 concrete action in 15 minutes.
-rules = 4-6 short rules that keep the user on track.
-safety = one gentle warning / constraint check.`
-      : `Restituisci SOLO JSON: {"title":"...","do":"...","first_step":"...","rules":[...],"safety":"..."}.
-do = 2-4 frasi che spiegano la direzione migliore e PERCHÉ (basata su picks e seed).
-first_step = 1 azione concreta in 15 minuti.
-rules = 4-6 regole brevi per restare in carreggiata.
-safety = un controllo rischi/vincoli gentile.`;
+      ? `Return ONLY JSON:
+{
+ "title":"...",
+ "do":"2–4 sentences describing the plan direction clearly (no fluff).",
+ "first_step":"ONE concrete action doable in 15 minutes, specific.",
+ "rules":[4–6 short rules that keep the user on-track],
+ "safety":"One gentle warning about the main risk/trap."
+}
+Focus: help the user REACH the GOAL. Use picks as constraints/preferences.`
+      : `Restituisci SOLO JSON:
+{
+ "title":"...",
+ "do":"2–4 frasi che danno una direzione di piano chiara (niente fuffa).",
+ "first_step":"UNA azione concreta fattibile in 15 minuti, specifica.",
+ "rules":[4–6 regole brevi per restare in rotta],
+ "safety":"Una avvertenza gentile sul rischio/trappola principale."
+}
+Focus: aiutare l’utente a RAGGIUNGERE l’OBIETTIVO. Usa i pick come vincoli/preferenze.`;
 
-  const align =
+  // Piccolo vincolo: se goal mancante, risposta generica “definisci obiettivo”
+  const behavior =
     L === "en"
-      ? (st === "suggested"
-          ? `Make the answer tightly aligned to the suggested seed question.`
-          : `Make the answer aligned to the user's seed question, even if vague (ask internally, but do NOT ask user questions; just assume reasonable defaults).`)
-      : (st === "suggested"
-          ? `Risposta molto allineata alla domanda seed suggerita.`
-          : `Risposta allineata alla domanda seed scritta anche se vaga (non fare domande all’utente; assumi default ragionevoli).`);
+      ? `If GOAL is missing, make the plan about clarifying the goal first.`
+      : `Se manca l’obiettivo, fai un piano per chiarirlo prima.`;
 
   return [
-    { role: "system", content: `You are the Oracle. ${tone} ${spec} ${align}` },
+    { role: "system", content: `You are the Oracle planner. ${tone} ${spec} ${behavior}` },
     {
       role: "user",
       content:
-        `Language: ${L}\nVoice: ${v}\nSeedType: ${st}\nUserQuestion/Seed: ${S || "(none)"}\nUser picks: ${ctx || "(none)"}\nReturn JSON only.`,
+        `Language: ${L}\nVoice: ${v}\nSeedType: ${String(seedType || "user")}\nGOAL: ${goalLine}\nUser picks: ${ctx || "(none)"}\nReturn JSON only.`,
     },
   ];
 }
@@ -364,8 +352,6 @@ safety = un controllo rischi/vincoli gentile.`;
 /* ========= Handler ========= */
 export default async function handler(req, res) {
   cors(req, res);
-  noCache(res);
-
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
@@ -387,18 +373,17 @@ export default async function handler(req, res) {
 
     const mode = String(body.mode || "suggest");
 
-    // ✅ Oracle seed (domanda) + seedType (suggested/user)
-    const seed = cleanSeed(body.seed || body.question || body.q || "");
-    const seedType = normSeedType(body.seedType || body.seed_type || "user");
-
     // ===== ORACOLO: meta iniziale =====
     if (mode === "oracle_meta") {
       const voice = String(body.voice || "whatif");
+      const seed = clampStr(body.seed || "", 220);
+      const seedType = clampStr(body.seedType || "user", 20);
+
       const messages = buildOracleMetaPrompt({ lang, voice, seed, seedType });
 
       const completion = await client.chat.completions.create({
         model: MODEL,
-        temperature: 0.75,
+        temperature: 0.7,
         top_p: 0.9,
         max_tokens: 900,
         messages,
@@ -409,19 +394,22 @@ export default async function handler(req, res) {
 
       if (!data || !Array.isArray(data.steps)) throw new Error("bad_oracle_meta_json");
 
-      // micro-normalize
-      const steps = data.steps.slice(0, 4).map((s, i) => ({
-        key: clampStr(s.key || `step${i + 1}`, 30),
+      // micro-normalize + key stabili
+      const stepsIn = data.steps.slice(0, 4);
+
+      const keyOrder = ["outcome", "why", "constraints", "strategy"];
+      const steps = stepsIn.map((s, i) => ({
+        key: clampStr(s.key || keyOrder[i] || `step${i+1}`, 30),
         title: clampStr(s.title || "—", 120),
         subtitle: clampStr(s.subtitle || "", 180),
-        options: Array.isArray(s.options)
-          ? s.options.slice(0, 6).map((o) => ({
-              id: clampStr(o.id || o.label || "x", 50),
-              label: clampStr(o.label || o.id || "—", 120),
-              emoji: clampStr(o.emoji || "•", 6),
-            }))
-          : [],
-      }));
+        options: Array.isArray(s.options) ? s.options.slice(0, 6).map(o => ({
+          id: clampStr(o.id || o.label || "x", 50),
+          label: clampStr(o.label || o.id || "—", 120),
+          emoji: clampStr(o.emoji || "•", 6),
+        })) : [],
+      }))
+      // assicura l’ordine outcome/why/constraints/strategy anche se l’AI sbaglia
+      .sort((a,b)=> keyOrder.indexOf(a.key) - keyOrder.indexOf(b.key));
 
       return res.status(200).json({
         ui: { cta: clampStr(data?.ui?.cta || (lang === "en" ? "Reveal the Oracle" : "Rivela l’Oracolo"), 40) },
@@ -433,14 +421,17 @@ export default async function handler(req, res) {
     // ===== ORACOLO: next adattivo =====
     if (mode === "oracle_next") {
       const voice = String(body.voice || "whatif");
-      const picks = body.picks && typeof body.picks === "object" ? body.picks : {};
+      const picks = (body.picks && typeof body.picks === "object") ? body.picks : {};
       const startIndex = Number.isFinite(+body.startIndex) ? +body.startIndex : 0;
+
+      const seed = clampStr(body.seed || "", 220);
+      const seedType = clampStr(body.seedType || "user", 20);
 
       const messages = buildOracleNextPrompt({ lang, voice, picks, startIndex, seed, seedType });
 
       const completion = await client.chat.completions.create({
         model: MODEL,
-        temperature: 0.82,
+        temperature: 0.8,
         top_p: 0.9,
         max_tokens: 900,
         messages,
@@ -452,16 +443,14 @@ export default async function handler(req, res) {
       if (!data || !Array.isArray(data.steps)) throw new Error("bad_oracle_next_json");
 
       const steps = data.steps.slice(0, 4).map((s, i) => ({
-        key: clampStr(s.key || `step${startIndex + i + 1}`, 30),
+        key: clampStr(s.key || `step${startIndex+i+1}`, 30),
         title: clampStr(s.title || "—", 120),
         subtitle: clampStr(s.subtitle || "", 180),
-        options: Array.isArray(s.options)
-          ? s.options.slice(0, 6).map((o) => ({
-              id: clampStr(o.id || o.label || "x", 50),
-              label: clampStr(o.label || o.id || "—", 120),
-              emoji: clampStr(o.emoji || "•", 6),
-            }))
-          : [],
+        options: Array.isArray(s.options) ? s.options.slice(0, 6).map(o => ({
+          id: clampStr(o.id || o.label || "x", 50),
+          label: clampStr(o.label || o.id || "—", 120),
+          emoji: clampStr(o.emoji || "•", 6),
+        })) : [],
       }));
 
       return res.status(200).json({ steps, used: "ai" });
@@ -470,15 +459,18 @@ export default async function handler(req, res) {
     // ===== ORACOLO: answer finale =====
     if (mode === "oracle_answer") {
       const voice = String(body.voice || "whatif");
-      const picks = body.picks && typeof body.picks === "object" ? body.picks : {};
+      const picks = (body.picks && typeof body.picks === "object") ? body.picks : {};
+
+      const seed = clampStr(body.seed || "", 220);
+      const seedType = clampStr(body.seedType || "user", 20);
 
       const messages = buildOracleAnswerPrompt({ lang, voice, picks, seed, seedType });
 
       const completion = await client.chat.completions.create({
         model: MODEL,
-        temperature: 0.82,
+        temperature: 0.8,
         top_p: 0.9,
-        max_tokens: 700,
+        max_tokens: 750,
         messages,
       });
 
@@ -489,10 +481,10 @@ export default async function handler(req, res) {
 
       return res.status(200).json({
         title: clampStr(data.title || "🔮", 80),
-        do: clampStr(data.do || "", 600),
-        first_step: clampStr(data.first_step || "", 260),
-        rules: Array.isArray(data.rules) ? data.rules.map((x) => clampStr(x, 120)).slice(0, 6) : [],
-        safety: clampStr(data.safety || "", 240),
+        do: clampStr(data.do || "", 650),
+        first_step: clampStr(data.first_step || "", 280),
+        rules: Array.isArray(data.rules) ? data.rules.map(x => clampStr(x, 140)).slice(0, 6) : [],
+        safety: clampStr(data.safety || "", 260),
         used: "ai",
       });
     }
@@ -515,16 +507,16 @@ export default async function handler(req, res) {
     const data = safeJSONPick(raw);
     if (!data || typeof data !== "object") throw new Error("bad_json");
 
-    const personalized = (data.personalized || data.personalizzate || []).map((x) => finalQ(x, lang)).filter(Boolean).slice(0, 12);
-    const generic = (data.generic || data.generiche || []).map((x) => finalQ(x, lang)).filter(Boolean).slice(0, 8);
-    const absurd = (data.absurd || data.assurde || []).map((x) => finalQ(x, lang)).filter(Boolean).slice(0, 4);
+    const personalized = (data.personalized || data.personalizzate || []).map(x => finalQ(x, lang)).filter(Boolean).slice(0, 12);
+    const generic = (data.generic || data.generiche || []).map(x => finalQ(x, lang)).filter(Boolean).slice(0, 8);
+    const absurd = (data.absurd || data.assurde || []).map(x => finalQ(x, lang)).filter(Boolean).slice(0, 4);
 
     const pools = fallbackPools[lang] || fallbackPools.it;
     const ensure = (arr, need, from) => (arr.length >= need ? arr : [...arr, ...from].slice(0, need));
     const out = {
       personalized,
-      generic: ensure(generic, 8, (pools.generic || []).map((s) => finalQ(s, lang))),
-      absurd: ensure(absurd, 4, (pools.absurd || []).map((s) => finalQ(s, lang))),
+      generic: ensure(generic, 8, (pools.generic || []).map(s => finalQ(s, lang))),
+      absurd: ensure(absurd, 4, (pools.absurd || []).map(s => finalQ(s, lang))),
       used: "ai",
     };
 
@@ -537,10 +529,10 @@ export default async function handler(req, res) {
     const pools = fallbackPools[lang] || fallbackPools.it;
     return res.status(200).json({
       personalized: [],
-      generic: (pools.generic || []).map((s) => finalQ(s, lang)).slice(0, 8),
-      absurd: (pools.absurd || []).map((s) => finalQ(s, lang)).slice(0, 4),
+      generic: (pools.generic || []).map(s => finalQ(s, lang)).slice(0, 8),
+      absurd: (pools.absurd || []).map(s => finalQ(s, lang)).slice(0, 4),
       used: "fallback",
       error: String(err?.message || err),
     });
   }
-                             }
+}
