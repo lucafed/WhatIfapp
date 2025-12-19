@@ -1,343 +1,409 @@
 <!DOCTYPE html>
 <html lang="it" data-theme="whatif">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>What?f — Oracolo</title>
-  <meta name="theme-color" content="#0A0F14"/>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>What?f — Oracolo</title>
+    <meta name="theme-color" content="#0A0F14" />
+    <style>
+      :root{
+        --bg:#0B1018; --bg2:#0E1724; --card:#141C22;
+        --fg:#F4F7FB; --muted:#A7B3C2;
+        --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
+        --chip:#0F1820; --line:#1B2A34; --shadow:rgba(0,0,0,.45);
+        --danger:#ff4d4d;
+      }
+      html[data-theme="wtf"]{
+        --bg:#0B0B0C; --bg2:#101414; --card:#111713;
+        --fg:#EEF5F0; --muted:#A6B6AD;
+        --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;
+        --chip:#0F1714; --line:#21322A;
+      }
+      *{box-sizing:border-box}
+      html,body{
+        height:100%;margin:0;
+        background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
+        color:var(--fg);
+        font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+        -webkit-font-smoothing:antialiased;
+      }
+      main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
+      .wrap{width:min(100%,980px)}
+      .topbar{
+        position:sticky;top:0;z-index:10;
+        display:flex;align-items:center;justify-content:space-between;gap:10px;
+        padding:8px 10px;
+        background:rgba(10,15,20,.96);
+        backdrop-filter:blur(6px);
+        border-bottom:1px solid var(--line);
+      }
+      .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+      .btn{
+        appearance:none;border:1px solid var(--line);
+        background:var(--chip);color:var(--fg);
+        border-radius:12px;padding:8px 12px;font-weight:800;cursor:pointer;
+      }
+      .btn.primary{
+        background:linear-gradient(180deg,var(--accent),var(--accent2));
+        color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35);
+      }
+      .btn[disabled]{opacity:.45;cursor:not-allowed}
+      .badge{
+        background:var(--chip);border:1px solid var(--line);
+        border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap;
+      }
+      h1{margin:10px 0 2px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
+      .lead{margin:0 0 8px;color:var(--muted);line-height:1.45;max-width:760px}
+      .card{
+        background:var(--card);
+        border:1px solid var(--line);
+        border-radius:16px;
+        padding:16px;
+        margin:10px 0;
+        backdrop-filter:blur(12px);
+        box-shadow:0 12px 28px var(--shadow);
+      }
+      .center{max-width:860px;margin:0 auto}
+      .label{color:var(--accent2);font-weight:900;margin:0 0 10px}
+      .small{font-size:12px;color:var(--muted)}
+      .chips{display:flex;flex-wrap:wrap;gap:8px}
+      .chip{
+        background:var(--chip);border:1px solid var(--line);
+        color:#eaf3ee;border-radius:999px;padding:9px 12px;
+        font-size:13px;cursor:pointer;font-weight:800;
+        max-width:100%;
+        white-space:normal;
+        word-break:break-word;
+        line-height:1.25;
+      }
+      .chip.sel{
+        background:linear-gradient(180deg,var(--accent),var(--accent2));
+        color:var(--ink);
+      }
+      .grid{display:grid;grid-template-columns:1fr;gap:12px}
+      @media(min-width:820px){ .grid{grid-template-columns:1fr 1fr} }
+      .hr{height:1px;background:var(--line);margin:12px 0}
+      .resultTitle{font-weight:1000;font-size:16px;margin:0 0 8px}
+      .box{
+        background:rgba(255,255,255,.04);
+        border:1px solid var(--line);
+        border-radius:12px;
+        padding:12px;
+        line-height:1.4;
+      }
+      .warn{
+        border-color:rgba(255,77,77,.45);
+        background:rgba(255,77,77,.08);
+      }
+      .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono",monospace}
+    </style>
+  </head>
 
-  <style>
-    :root{
-      --bg:#0B1018; --bg2:#0E1724; --card:#141C22;
-      --fg:#F4F7FB; --muted:#A7B3C2;
-      --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
-      --chip:#0F1820; --line:#1B2A34;
-      --shadow:rgba(0,0,0,.45);
-    }
-    html[data-theme="wtf"]{
-      --bg:#0B0B0C; --bg2:#101414; --card:#111713;
-      --fg:#EEF5F0; --muted:#A6B6AD;
-      --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;
-      --chip:#0F1714; --line:#21322A;
-    }
-    *{box-sizing:border-box}
-    html,body{
-      height:100%;margin:0;
-      background:radial-gradient(900px 700px at 25% 20%, var(--bg2) 0%, var(--bg) 60%);
-      color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    }
-    main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:10px 14px 26px}
-    .wrap{width:min(100%,980px)}
-    .topbar{
-      position:sticky;top:0;z-index:10;
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      padding:8px 10px;
-      background:rgba(10,15,20,.96);
-      backdrop-filter:blur(6px);
-      border-bottom:1px solid var(--line);
-    }
-    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .btn{
-      appearance:none;border:1px solid var(--line);
-      background:var(--chip);color:var(--fg);
-      border-radius:12px;padding:8px 12px;font-weight:800;cursor:pointer;
-    }
-    .btn.primary{
-      background:linear-gradient(180deg,var(--accent),var(--accent2));
-      color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35);
-    }
-    .btn[disabled]{opacity:.45;cursor:not-allowed}
-    .badge{
-      background:var(--chip);border:1px solid var(--line);
-      border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap;
-    }
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:16px;
-      margin:10px 0;
-      box-shadow:0 12px 28px var(--shadow);
-    }
-    h1{margin:6px 0 6px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
-    .label{color:var(--accent2);font-weight:900;margin:0 0 10px}
-    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-    .pick{
-      border:1px solid var(--line);
-      background:var(--chip);
-      border-radius:14px;
-      padding:14px;
-      font-weight:900;
-      cursor:pointer;
-      text-align:left;
-    }
-    .pick:active{ transform:translateY(1px) }
-    .small{font-size:12px;color:var(--muted)}
-    .out{white-space:pre-line;line-height:1.45}
-  </style>
-</head>
-
-<body>
-  <div class="topbar">
-    <div class="row">
-      <button class="btn" id="backBtn" type="button">←</button>
-      <button class="btn" id="homeBtn" type="button">🏠</button>
-    </div>
-    <div class="row">
-      <span class="badge" id="styleBadge">🎭 —</span>
-      <span class="badge" id="creditsBadge">Crediti: —</span>
-      <button class="btn" id="toggleStyleBtn" type="button">Cambia voce</button>
-    </div>
-  </div>
-
-  <main>
-    <div class="wrap">
-      <h1>🔮 Oracolo</h1>
-      <div class="small">4 click. Zero scrittura. <strong>Costo: 1 credito</strong> per consulto.</div>
-
-      <div class="card" id="stepCard">
-        <div class="label" id="stepTitle">1) Cosa vuoi cambiare?</div>
-        <div class="grid" id="optionsGrid"></div>
-        <div class="small" id="hintLine" style="margin-top:10px">Consiglio: clicca a istinto.</div>
+  <body>
+    <div class="topbar">
+      <div class="row">
+        <button class="btn" id="backBtn" type="button">←</button>
+        <button class="btn" id="homeBtn" type="button">🏠</button>
       </div>
 
-      <div class="card" id="resultCard" style="display:none">
-        <div class="label" id="resultTitle">Risultato</div>
-        <div class="out" id="resultText"></div>
-        <div class="row" style="margin-top:12px;justify-content:flex-end">
-          <button class="btn" id="copyBtn" type="button">Copia</button>
-          <button class="btn" id="replayBtn" type="button">🔁 Rigira</button>
-          <button class="btn primary" id="goWhatIfBtn" type="button">✨ Vai a What?f</button>
+      <div class="row">
+        <span class="badge" id="voiceBadge">🎭 —</span>
+        <span class="badge" id="creditsBadge">Crediti: —</span>
+      </div>
+    </div>
+
+    <main>
+      <div class="wrap">
+        <h1>🔮 Oracolo</h1>
+        <p class="lead">
+          4 click. Zero scrittura. Ti dà <strong>una mossa concreta</strong> + <strong>primo passo</strong>. Costa <strong>1 credito</strong>.
+        </p>
+
+        <!-- STEP 1 + 2 -->
+        <div class="grid">
+          <div class="card center" id="topicCard">
+            <div class="label">1) Di che parliamo?</div>
+            <div class="chips" id="topicGroup" data-group="topic">
+              <button class="chip" data-val="money" type="button">💰 Soldi</button>
+              <button class="chip" data-val="work" type="button">🏭 Lavoro</button>
+              <button class="chip" data-val="life" type="button">🧬 Vita</button>
+              <button class="chip" data-val="relationships" type="button">🫂 Relazioni</button>
+              <button class="chip" data-val="mind" type="button">🧠 Testa</button>
+              <button class="chip" data-val="world" type="button">🌍 Mondo</button>
+            </div>
+            <div class="small" style="margin-top:10px">Scegli il tema principale. Uno solo.</div>
+          </div>
+
+          <div class="card center" id="effectCard">
+            <div class="label">2) Quanto spingi?</div>
+            <div class="chips" id="effectGroup" data-group="effect">
+              <button class="chip" data-val="fast" type="button">⚡ Entrano subito</button>
+              <button class="chip" data-val="solid" type="button">🧱 Stabile</button>
+              <button class="chip" data-val="risky" type="button">🎲 Rischio</button>
+              <button class="chip" data-val="radical" type="button">🔥 Radicale</button>
+            </div>
+            <div class="small" style="margin-top:10px">“Radicale” ≠ illegale. È solo decisione netta.</div>
+          </div>
+        </div>
+
+        <!-- STEP 3 + 4 -->
+        <div class="grid">
+          <div class="card center" id="channelCard">
+            <div class="label">3) Canale</div>
+            <div class="chips" id="channelGroup" data-group="channel">
+              <button class="chip" data-val="online" type="button">🌐 Online</button>
+              <button class="chip" data-val="people" type="button">👥 Persone</button>
+              <button class="chip" data-val="app" type="button">📱 App / Prodotto</button>
+              <button class="chip" data-val="cut" type="button">✂️ Taglio</button>
+              <button class="chip" data-val="environment" type="button">🏠 Ambiente</button>
+            </div>
+            <div class="small" style="margin-top:10px">Dove la fai succedere, concretamente.</div>
+          </div>
+
+          <div class="card center" id="toneCard">
+            <div class="label">4) Tono</div>
+            <div class="chips" id="toneGroup" data-group="tone">
+              <button class="chip" data-val="kind" type="button">🤍 Gentile</button>
+              <button class="chip" data-val="no_mercy" type="button">🪓 Senza scuse</button>
+              <button class="chip" data-val="zen" type="button">🧘 Zen</button>
+              <button class="chip" data-val="chaos" type="button">🌪 Caos utile</button>
+            </div>
+            <div class="small" style="margin-top:10px">Influenza lo stile della “sentenza”.</div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="card center">
+          <div class="row" style="justify-content:space-between;gap:12px">
+            <div>
+              <div class="label" style="margin-bottom:6px">Pronto?</div>
+              <div class="small">Quando premi, scala 1 credito e ti spara il responso.</div>
+            </div>
+            <button class="btn primary" id="goOracle" type="button" disabled>🔮 Dimmi cosa fare</button>
+          </div>
+        </div>
+
+        <!-- RESULT (same page) -->
+        <div class="card center" id="resultCard" style="display:none;">
+          <div class="row" style="justify-content:space-between;gap:10px">
+            <div class="resultTitle" id="resultTitle">🔮 Responso</div>
+            <button class="btn" id="againBtn" type="button">🔁 Rifai</button>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="label">Cosa fai</div>
+          <div class="box" id="doBox"></div>
+
+          <div class="hr"></div>
+
+          <div class="label">Primo passo (entro 15 minuti)</div>
+          <div class="box" id="firstBox"></div>
+
+          <div class="hr"></div>
+
+          <div class="label">Regole</div>
+          <div class="box" id="rulesBox"></div>
+
+          <div class="hr"></div>
+
+          <div class="box warn small" id="safetyBox"></div>
+
+          <div class="small mono" id="debugMini" style="margin-top:10px;opacity:.75"></div>
         </div>
       </div>
-    </div>
-  </main>
+    </main>
 
-  <script type="module">
-    // ===== Firebase base =====
-    import { auth } from "./firebase.init.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    <script type="module">
+      // Firebase
+      import { auth } from "./firebase.init.js";
+      import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-    // ===== Credits Firestore =====
-    import { bootCredits, getBalance, consumeCredit } from "./store/credits.js";
+      // Credits
+      import { bootCredits, getBalance, consumeCredit } from "./store/credits.js";
 
-    const LS = localStorage;
-    const $ = id => document.getElementById(id);
-    const IS_ADMIN = !!LS.getItem("admin_token");
+      const LS = localStorage;
+      const $ = (id) => document.getElementById(id);
+      const readJSON = (k, def) => { try { return JSON.parse(LS.getItem(k) || JSON.stringify(def)); } catch { return def; } };
 
-    // ---- Theme/voice (riuso stile whatif/wtf)
-    let voice = "whatif";
-    try {
-      const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}") || {};
-      voice = (prefs.stile === "wtf") ? "wtf" : "whatif";
-    } catch {}
-    document.documentElement.setAttribute("data-theme", voice);
-    $("styleBadge").textContent = "🎭 " + (voice === "wtf" ? "What the F" : "What if");
+      const IS_ADMIN = (() => { try { return !!LS.getItem("admin_token"); } catch { return false; } })();
+      let currentBalance = 0;
+      let lang = (LS.getItem("lang") || "it").toLowerCase().slice(0,2);
 
-    $("toggleStyleBtn").onclick = () => {
-      voice = (voice === "wtf") ? "whatif" : "wtf";
-      document.documentElement.setAttribute("data-theme", voice);
-      $("styleBadge").textContent = "🎭 " + (voice === "wtf" ? "What the F" : "What if");
-      try{
-        const prefs = JSON.parse(LS.getItem("whatif_prefs") || "{}") || {};
-        prefs.stile = voice;
-        LS.setItem("whatif_prefs", JSON.stringify(prefs));
-      }catch{}
-    };
+      // Theme from prefs
+      const prefs = readJSON("whatif_prefs", { stile: "whatif" });
+      document.documentElement.setAttribute("data-theme", prefs.stile === "wtf" ? "wtf" : "whatif");
+      $("voiceBadge").textContent = "🎭 " + (prefs.stile === "wtf" ? "What the F" : "What if");
 
-    // ---- NAV
-    $("homeBtn").onclick = () => location.href = "index.html";
-    $("backBtn").onclick = () => (history.length > 1 ? history.back() : location.href = "index.html");
-
-    // ---- Credits (1 consulto = 1 credito)
-    let currentBalance = 0;
-
-    function renderCredits(){
-      const badge = $("creditsBadge");
-      if (!badge) return;
-      if (IS_ADMIN){
-        badge.textContent = "Crediti: ∞ (admin)";
-        return;
-      }
-      badge.textContent = `Crediti: ${currentBalance}`;
-    }
-
-    async function syncCredits(){
-      if (IS_ADMIN){
-        renderCredits();
-        return;
-      }
-      if (!auth.currentUser){
-        currentBalance = 0;
-        renderCredits();
-        return;
-      }
-      try{
-        await bootCredits();
-        currentBalance = await getBalance();
-      }catch(e){
-        console.error("syncCredits error:", e);
-        currentBalance = 0;
-      }
-      renderCredits();
-    }
-
-    async function guardCredits(){
-      if (IS_ADMIN) return true;
-
-      if (!auth.currentUser){
-        alert("Per usare l’Oracolo devi essere loggato.");
-        location.href = "index.html";
-        return false;
-      }
-      if (currentBalance <= 0){
-        alert("Hai finito i crediti. Ricarica per continuare.");
-        const lang = (LS.getItem("lang") || "it");
-        location.href = `store/credit-store.html?lang=${encodeURIComponent(lang)}`;
-        return false;
-      }
-      return true;
-    }
-
-    onAuthStateChanged(auth, async () => {
-      await syncCredits();
-    });
-    window.addEventListener("focus", syncCredits);
-    window.addEventListener("pageshow", syncCredits);
-
-    // ---- Oracle steps
-    const STEPS = [
-      { key:"topic",  title:"1) Cosa vuoi cambiare?", options:[
-        ["money","💰 Soldi"],["work","💼 Lavoro"],["life","🏠 Vita"],
-        ["relationships","❤️ Relazioni"],["mind","🧠 Testa"],["world","🌍 Mondo"]
-      ]},
-      { key:"effect", title:"2) Che tipo di svolta?", options:[
-        ["fast","⚡ Rapida"],["solid","🧱 Solida"],["risky","🎲 Rischiosa"],["radical","🔥 Radicale"]
-      ]},
-      { key:"channel", title:"3) Attraverso cosa?", options:[
-        ["app","📱 App/tech"],["online","🌐 Online"],["people","👥 Persone"],
-        ["environment","🏗️ Ambiente"],["cut","✂️ Taglio"],["conflict","⚔️ Conflitto"]
-      ]},
-      { key:"tone", title:"4) Tono", options:[
-        ["prudent","😐 Prudente"],["direct","😏 Diretto"],
-        ["no_mercy","😈 Senza scrupoli (legale)"],["f_you","🔥 Fanculo tutto (non violento)"]
-      ]}
-    ];
-
-    let idx = 0;
-    const state = { topic:null, effect:null, channel:null, tone:null };
-
-    function renderStep(){
-      const step = STEPS[idx];
-      $("stepTitle").textContent = step.title;
-      const grid = $("optionsGrid");
-      grid.innerHTML = "";
-      step.options.forEach(([v,label]) => {
-        const b = document.createElement("button");
-        b.className = "pick";
-        b.textContent = label;
-        b.onclick = async () => {
-          state[step.key] = v;
-          idx++;
-          if (idx < STEPS.length) renderStep();
-          else await finish();
-        };
-        grid.appendChild(b);
-      });
-    }
-
-    async function finish(){
-      // UI loading
-      $("optionsGrid").innerHTML = `<div class="small">Sto consultando…</div>`;
-
-      // 1) guard
-      const ok = await guardCredits();
-      if (!ok) {
-        // ripristina ultimo step per non lasciare “loading”
-        idx = STEPS.length - 1;
-        renderStep();
-        return;
-      }
-
-      // 2) consume 1 credit
-      if (!IS_ADMIN){
-        try{
-          const ok2 = await consumeCredit();
-          if (!ok2){
-            await syncCredits();
-            alert("Crediti insufficienti.");
-            idx = STEPS.length - 1;
-            renderStep();
-            return;
-          }
-          currentBalance = await getBalance().catch(() => currentBalance);
-          renderCredits();
-        }catch(err){
-          console.error("consumeCredit error:", err);
-          alert("Errore nell'utilizzo dei crediti. Riprova.");
-          idx = STEPS.length - 1;
-          renderStep();
-          return;
+      function renderCredits(){
+        if (IS_ADMIN){
+          $("creditsBadge").textContent = "Crediti: ∞ (admin)";
+        } else {
+          $("creditsBadge").textContent = `Crediti: ${currentBalance}`;
         }
       }
 
-      // 3) call API
-      try{
-        const lang = (LS.getItem("lang") || "it");
-        const res = await fetch("/api/oracle", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ ...state, voice, lang })
-        });
-        if(!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
-        const out = data.styled || data.base;
-
-        $("stepCard").style.display = "none";
-        $("resultCard").style.display = "";
-        $("resultTitle").textContent = out.title || "🔮 Oracolo";
-
-        const text = [
-          `Cosa fare: ${out.do || ""}`,
-          `Primo passo: ${out.first_step || ""}`,
-          ...(Array.isArray(out.rules) && out.rules.length ? ["", "Regole:", ...out.rules.map(r=>`- ${r}`)] : []),
-          ...(out.safety ? ["", out.safety] : [])
-        ].join("\n");
-
-        $("resultText").textContent = text;
-
-        $("copyBtn").onclick = async () => {
-          await navigator.clipboard.writeText(`${$("resultTitle").textContent}\n\n${text}`);
-          $("copyBtn").textContent = "Copiato ✅";
-          setTimeout(()=> $("copyBtn").textContent="Copia", 1200);
-        };
-
-      }catch(e){
-        console.error("oracle api error:", e);
-        alert("Errore nel consultare l'Oracolo. Riprova.");
-        // Nota: in MVP il credito è già consumato (come da regola 1 consulto = 1 credito).
-        idx = 0;
-        Object.keys(state).forEach(k => state[k] = null);
-        $("resultCard").style.display = "none";
-        $("stepCard").style.display = "";
-        renderStep();
+      async function syncCredits(){
+        if (IS_ADMIN){
+          currentBalance = Infinity;
+          renderCredits();
+          return;
+        }
+        if (!auth.currentUser){
+          currentBalance = 0;
+          renderCredits();
+          return;
+        }
+        try{
+          await bootCredits();
+          currentBalance = await getBalance();
+        }catch(e){
+          console.error("syncCredits error:", e);
+          currentBalance = 0;
+        }
+        renderCredits();
       }
-    }
 
-    $("replayBtn").onclick = () => {
-      idx = 0;
-      Object.keys(state).forEach(k => state[k] = null);
-      $("resultCard").style.display = "none";
-      $("stepCard").style.display = "";
-      renderStep();
-    };
+      async function guardCredits(){
+        if (IS_ADMIN) return true;
+        if (!auth.currentUser){
+          alert("Per usare l’Oracolo devi essere loggato.");
+          location.href = "index.html";
+          return false;
+        }
+        if (currentBalance <= 0){
+          alert("Hai finito i crediti. Ricarica per continuare.");
+          location.href = `store/credit-store.html?lang=${encodeURIComponent(lang)}`;
+          return false;
+        }
+        return true;
+      }
 
-    $("goWhatIfBtn").onclick = () => location.href = "fourth.html";
+      // state 4 clicks
+      const state = { topic:null, effect:null, channel:null, tone:null };
 
-    // init
-    renderCredits();
-    renderStep();
-  </script>
-</body>
+      function updateCTA(){
+        const ready = state.topic && state.effect && state.channel && state.tone;
+        $("goOracle").disabled = !ready;
+      }
+
+      function pick(group, value){
+        state[group] = value;
+        document.querySelectorAll(`#${group}Group .chip`).forEach(b=>{
+          b.classList.toggle("sel", b.dataset.val === value);
+        });
+        updateCTA();
+      }
+
+      function wireGroup(group){
+        const el = $(`${group}Group`);
+        if (!el) return;
+        el.addEventListener("click", (e)=>{
+          const btn = e.target.closest(".chip");
+          if(!btn) return;
+          pick(group, btn.dataset.val);
+        });
+      }
+
+      wireGroup("topic");
+      wireGroup("effect");
+      wireGroup("channel");
+      wireGroup("tone");
+
+      // Nav
+      $("homeBtn").onclick = () => (location.href = "index.html");
+      $("backBtn").onclick = () => {
+        if (history.length > 1) history.back();
+        else location.href = "index.html";
+      };
+
+      function showResult(data){
+        const out = (data && (data.styled || data.base)) || null;
+        if(!out) throw new Error("bad_oracle_payload");
+
+        $("resultTitle").textContent = out.title || "🔮 Responso";
+        $("doBox").textContent = out.do || "—";
+        $("firstBox").textContent = out.first_step || "—";
+
+        const rules = Array.isArray(out.rules) ? out.rules : [];
+        $("rulesBox").innerHTML = rules.length
+          ? `<ul style="margin:0;padding-left:18px">${rules.map(r=>`<li>${escapeHTML(r)}</li>`).join("")}</ul>`
+          : "—";
+
+        $("safetyBox").textContent = out.safety || "";
+        $("debugMini").textContent =
+          `topic=${state.topic} · effect=${state.effect} · channel=${state.channel} · tone=${state.tone}`;
+
+        $("resultCard").style.display = "block";
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      }
+
+      function escapeHTML(s){
+        return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      }
+
+      $("againBtn").onclick = () => {
+        $("resultCard").style.display = "none";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+
+      // GO
+      $("goOracle").onclick = async () => {
+        const ok = await guardCredits();
+        if(!ok) return;
+
+        // consume 1 credit
+        if(!IS_ADMIN){
+          const ok2 = await consumeCredit();
+          if(!ok2){
+            await syncCredits();
+            alert("Crediti insufficienti.");
+            return;
+          }
+          currentBalance = await getBalance().catch(()=>currentBalance);
+          renderCredits();
+        }
+
+        const btn = $("goOracle");
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = "⏳...";
+
+        try{
+          const prefsNow = readJSON("whatif_prefs", { stile: "whatif" });
+          const voice = (prefsNow.stile === "wtf") ? "wtf" : "whatif";
+
+          const res = await fetch("/api/suggest", {
+            method:"POST",
+            headers:{ "Content-Type":"application/json" },
+            body: JSON.stringify({
+              mode:"oracle",
+              ...state,
+              voice,
+              lang
+            })
+          });
+          if(!res.ok) throw new Error("HTTP " + res.status);
+          const data = await res.json();
+          showResult(data);
+        }catch(e){
+          console.error(e);
+          alert("Errore nel responso. Riprova.");
+        }finally{
+          btn.disabled = false;
+          btn.textContent = original;
+        }
+      };
+
+      // Boot credits
+      onAuthStateChanged(auth, async ()=>{
+        await syncCredits();
+      });
+      window.addEventListener("focus", syncCredits);
+      window.addEventListener("pageshow", syncCredits);
+
+      renderCredits();
+      updateCTA();
+    </script>
+  </body>
 </html>
