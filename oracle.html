@@ -1,23 +1,23 @@
 <!DOCTYPE html>
-<html lang="it" data-theme="whatif">
+<html lang="it">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <title>What?f — Oracolo</title>
-    <meta name="theme-color" content="#0A0F14" />
+    <meta name="theme-color" content="#0A0F14"/>
+
     <style>
       :root{
         --bg:#0B1018; --bg2:#0E1724; --card:#141C22;
         --fg:#F4F7FB; --muted:#A7B3C2;
         --accent:#1C57A0; --accent2:#FFEC01; --ink:#11110A;
-        --chip:#0F1820; --line:#1B2A34; --shadow:rgba(0,0,0,.45);
-        --danger:#ff4d4d;
+        --chip:#0F1820; --line:#1B2A34; --shadow:rgba(0,0,0,.35);
       }
       html[data-theme="wtf"]{
         --bg:#0B0B0C; --bg2:#101414; --card:#111713;
         --fg:#EEF5F0; --muted:#A6B6AD;
         --accent:#3A6B56; --accent2:#5A8C75; --ink:#06110B;
-        --chip:#0F1714; --line:#21322A;
+        --chip:#0F1714; --line:#21322A; --shadow:rgba(0,0,0,.45);
       }
       *{box-sizing:border-box}
       html,body{
@@ -27,7 +27,7 @@
         font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
         -webkit-font-smoothing:antialiased;
       }
-      main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 14px 26px}
+      main{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:8px 14px 30px}
       .wrap{width:min(100%,980px)}
       .topbar{
         position:sticky;top:0;z-index:10;
@@ -45,15 +45,18 @@
       }
       .btn.primary{
         background:linear-gradient(180deg,var(--accent),var(--accent2));
-        color:var(--ink);border:none;box-shadow:0 10px 26px rgba(0,0,0,.35);
+        color:var(--ink);border:none;box-shadow:0 10px 26px var(--shadow);
       }
-      .btn[disabled]{opacity:.45;cursor:not-allowed}
+      .btn[disabled]{opacity:.4;cursor:not-allowed}
       .badge{
         background:var(--chip);border:1px solid var(--line);
         border-radius:999px;padding:6px 10px;font-size:12px;color:#d7e8ec;white-space:nowrap;
       }
-      h1{margin:10px 0 2px;font-size:clamp(24px,6vw,36px);color:var(--accent)}
-      .lead{margin:0 0 8px;color:var(--muted);line-height:1.45;max-width:760px}
+      select{
+        appearance:none;background:var(--chip);border:1px solid var(--line);
+        color:var(--fg);padding:8px 12px;border-radius:12px;font-weight:800;cursor:pointer;
+      }
+      h1{margin:8px 0 6px;font-size:clamp(24px,5vw,34px);color:var(--accent)}
       .card{
         background:var(--card);
         border:1px solid var(--line);
@@ -61,41 +64,40 @@
         padding:16px;
         margin:10px 0;
         backdrop-filter:blur(12px);
-        box-shadow:0 12px 28px var(--shadow);
+        box-shadow:0 10px 26px var(--shadow);
       }
-      .center{max-width:860px;margin:0 auto}
-      .label{color:var(--accent2);font-weight:900;margin:0 0 10px}
+      .center{max-width:760px;margin:0 auto}
+      .label{color:var(--accent2);font-weight:900;margin:0 0 8px}
       .small{font-size:12px;color:var(--muted)}
       .chips{display:flex;flex-wrap:wrap;gap:8px}
       .chip{
         background:var(--chip);border:1px solid var(--line);
-        color:#eaf3ee;border-radius:999px;padding:9px 12px;
-        font-size:13px;cursor:pointer;font-weight:800;
+        color:#eaf3ee;border-radius:999px;padding:10px 12px;
+        font-size:13px;font-weight:800;cursor:pointer;
         max-width:100%;
         white-space:normal;
         word-break:break-word;
-        line-height:1.25;
+        line-height:1.2;
+        display:inline-flex;align-items:center;gap:8px;
       }
       .chip.sel{
         background:linear-gradient(180deg,var(--accent),var(--accent2));
         color:var(--ink);
       }
-      .grid{display:grid;grid-template-columns:1fr;gap:12px}
-      @media(min-width:820px){ .grid{grid-template-columns:1fr 1fr} }
+
+      .stepHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+      .stepTitle{font-weight:900;font-size:18px;margin:0}
+      .stepSub{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.4}
+
+      .progress{height:10px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+      .bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%}
+
+      .resultTitle{font-weight:950;font-size:18px;margin:0 0 8px}
+      .resultDo{font-size:15px;line-height:1.55;margin:0 0 10px}
+      .resultBlock{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:12px}
+      ul{margin:8px 0 0;padding-left:18px}
+      li{margin:6px 0;color:var(--fg)}
       .hr{height:1px;background:var(--line);margin:12px 0}
-      .resultTitle{font-weight:1000;font-size:16px;margin:0 0 8px}
-      .box{
-        background:rgba(255,255,255,.04);
-        border:1px solid var(--line);
-        border-radius:12px;
-        padding:12px;
-        line-height:1.4;
-      }
-      .warn{
-        border-color:rgba(255,77,77,.45);
-        background:rgba(255,77,77,.08);
-      }
-      .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,"Roboto Mono",monospace}
     </style>
   </head>
 
@@ -105,149 +107,142 @@
         <button class="btn" id="backBtn" type="button">←</button>
         <button class="btn" id="homeBtn" type="button">🏠</button>
       </div>
-
       <div class="row">
-        <span class="badge" id="voiceBadge">🎭 —</span>
-        <span class="badge" id="creditsBadge">Crediti: —</span>
+        <span class="badge" id="styleBadge">🎭 —</span>
+        <span class="badge" id="freeBadge">Crediti: —</span>
+        <select id="langSelect" aria-label="Language">
+          <option value="it">IT</option>
+          <option value="en">EN</option>
+          <option value="es">ES</option>
+          <option value="fr">FR</option>
+          <option value="de">DE</option>
+        </select>
       </div>
     </div>
 
     <main>
       <div class="wrap">
         <h1>🔮 Oracolo</h1>
-        <p class="lead">
-          4 click. Zero scrittura. Ti dà <strong>una mossa concreta</strong> + <strong>primo passo</strong>. Costa <strong>1 credito</strong>.
-        </p>
 
-        <!-- STEP 1 + 2 -->
-        <div class="grid">
-          <div class="card center" id="topicCard">
-            <div class="label">1) Di che parliamo?</div>
-            <div class="chips" id="topicGroup" data-group="topic">
-              <button class="chip" data-val="money" type="button">💰 Soldi</button>
-              <button class="chip" data-val="work" type="button">🏭 Lavoro</button>
-              <button class="chip" data-val="life" type="button">🧬 Vita</button>
-              <button class="chip" data-val="relationships" type="button">🫂 Relazioni</button>
-              <button class="chip" data-val="mind" type="button">🧠 Testa</button>
-              <button class="chip" data-val="world" type="button">🌍 Mondo</button>
-            </div>
-            <div class="small" style="margin-top:10px">Scegli il tema principale. Uno solo.</div>
+        <!-- STATUS -->
+        <div class="card center">
+          <div class="label" id="subLabel">Scegli con click. L'Oracolo risponde sul serio.</div>
+
+          <div class="small" id="hintText">
+            Zero scrittura. 4 scelte → 1 direzione chiara.
           </div>
 
-          <div class="card center" id="effectCard">
-            <div class="label">2) Quanto spingi?</div>
-            <div class="chips" id="effectGroup" data-group="effect">
-              <button class="chip" data-val="fast" type="button">⚡ Entrano subito</button>
-              <button class="chip" data-val="solid" type="button">🧱 Stabile</button>
-              <button class="chip" data-val="risky" type="button">🎲 Rischio</button>
-              <button class="chip" data-val="radical" type="button">🔥 Radicale</button>
-            </div>
-            <div class="small" style="margin-top:10px">“Radicale” ≠ illegale. È solo decisione netta.</div>
+          <div style="margin-top:12px">
+            <div class="progress"><div class="bar" id="bar"></div></div>
+            <div class="small" id="progressText" style="margin-top:8px">0/4</div>
           </div>
         </div>
 
-        <!-- STEP 3 + 4 -->
-        <div class="grid">
-          <div class="card center" id="channelCard">
-            <div class="label">3) Canale</div>
-            <div class="chips" id="channelGroup" data-group="channel">
-              <button class="chip" data-val="online" type="button">🌐 Online</button>
-              <button class="chip" data-val="people" type="button">👥 Persone</button>
-              <button class="chip" data-val="app" type="button">📱 App / Prodotto</button>
-              <button class="chip" data-val="cut" type="button">✂️ Taglio</button>
-              <button class="chip" data-val="environment" type="button">🏠 Ambiente</button>
-            </div>
-            <div class="small" style="margin-top:10px">Dove la fai succedere, concretamente.</div>
-          </div>
-
-          <div class="card center" id="toneCard">
-            <div class="label">4) Tono</div>
-            <div class="chips" id="toneGroup" data-group="tone">
-              <button class="chip" data-val="kind" type="button">🤍 Gentile</button>
-              <button class="chip" data-val="no_mercy" type="button">🪓 Senza scuse</button>
-              <button class="chip" data-val="zen" type="button">🧘 Zen</button>
-              <button class="chip" data-val="chaos" type="button">🌪 Caos utile</button>
-            </div>
-            <div class="small" style="margin-top:10px">Influenza lo stile della “sentenza”.</div>
-          </div>
-        </div>
+        <!-- STEPS (dinamici) -->
+        <div id="stepsWrap" class="center"></div>
 
         <!-- CTA -->
         <div class="card center">
-          <div class="row" style="justify-content:space-between;gap:12px">
-            <div>
-              <div class="label" style="margin-bottom:6px">Pronto?</div>
-              <div class="small">Quando premi, scala 1 credito e ti spara il responso.</div>
-            </div>
-            <button class="btn primary" id="goOracle" type="button" disabled>🔮 Dimmi cosa fare</button>
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div class="small" id="ctaHelp">Completa le 4 scelte per sbloccare il responso.</div>
+            <button class="btn primary" id="revealBtn" type="button" disabled>🔮 Rivela l’Oracolo</button>
           </div>
         </div>
 
-        <!-- RESULT (same page) -->
-        <div class="card center" id="resultCard" style="display:none;">
-          <div class="row" style="justify-content:space-between;gap:10px">
-            <div class="resultTitle" id="resultTitle">🔮 Responso</div>
-            <button class="btn" id="againBtn" type="button">🔁 Rifai</button>
+        <!-- RESULT -->
+        <div class="card center" id="resultCard" style="display:none">
+          <div class="label" id="resultLabel">Risposta</div>
+
+          <div class="resultTitle" id="rTitle">—</div>
+          <p class="resultDo" id="rDo">—</p>
+
+          <div class="resultBlock">
+            <div class="small" style="font-weight:900;margin-bottom:6px" id="firstStepLabel">Primo passo (15 minuti)</div>
+            <div id="rFirst">—</div>
+
+            <div class="hr"></div>
+
+            <div class="small" style="font-weight:900;margin-bottom:6px" id="rulesLabel">Regole</div>
+            <ul id="rRules"></ul>
+
+            <div class="hr"></div>
+
+            <div class="small" id="rSafety">—</div>
           </div>
 
-          <div class="hr"></div>
-
-          <div class="label">Cosa fai</div>
-          <div class="box" id="doBox"></div>
-
-          <div class="hr"></div>
-
-          <div class="label">Primo passo (entro 15 minuti)</div>
-          <div class="box" id="firstBox"></div>
-
-          <div class="hr"></div>
-
-          <div class="label">Regole</div>
-          <div class="box" id="rulesBox"></div>
-
-          <div class="hr"></div>
-
-          <div class="box warn small" id="safetyBox"></div>
-
-          <div class="small mono" id="debugMini" style="margin-top:10px;opacity:.75"></div>
+          <div class="row" style="justify-content:flex-end;margin-top:12px">
+            <button class="btn" id="playAgainBtn" type="button">🔁 Rifai</button>
+          </div>
         </div>
+
       </div>
     </main>
 
     <script type="module">
-      // Firebase
+      // ===== Firebase base =====
       import { auth } from "./firebase.init.js";
       import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-      // Credits
+      // ===== Credits Firestore =====
       import { bootCredits, getBalance, consumeCredit } from "./store/credits.js";
 
       const LS = localStorage;
-      const $ = (id) => document.getElementById(id);
-      const readJSON = (k, def) => { try { return JSON.parse(LS.getItem(k) || JSON.stringify(def)); } catch { return def; } };
+      const $ = id => document.getElementById(id);
 
-      const IS_ADMIN = (() => { try { return !!LS.getItem("admin_token"); } catch { return false; } })();
+      const SUP_LANG = ["it","en","es","fr","de"];
+      const normLang = (l) => {
+        const s = String(l||"it").toLowerCase().slice(0,2);
+        return SUP_LANG.includes(s) ? s : "it";
+      };
+
+      const isAdmin = (() => { try{ return !!LS.getItem("admin_token"); }catch{ return false; } })();
+
+      // prefs stile
+      let prefs = {};
+      try{ prefs = JSON.parse(LS.getItem("whatif_prefs")||"{}")||{}; }catch{ prefs = {}; }
+      const voice = (prefs.stile === "wtf") ? "wtf" : "whatif";
+      document.documentElement.setAttribute("data-theme", voice === "wtf" ? "wtf" : "whatif");
+
+      // lang
+      let lang = normLang(LS.getItem("lang") || "it");
+      $("langSelect").value = lang;
+      document.documentElement.lang = lang;
+
+      // UI badges
+      function renderBadges(){
+        $("styleBadge").textContent = "🎭 " + (voice === "wtf" ? "What the F" : "What if");
+      }
+      renderBadges();
+
+      // nav
+      $("homeBtn").onclick = () => location.href = "index.html";
+      $("backBtn").onclick = () => {
+        if (history.length > 1) history.back();
+        else location.href = "index.html";
+      };
+
+      // language change
+      $("langSelect").onchange = async () => {
+        lang = normLang($("langSelect").value);
+        LS.setItem("lang", lang);
+        document.documentElement.lang = lang;
+        await loadOracleMeta(true); // rigenera cards in base alla lingua
+      };
+
+      // credits
       let currentBalance = 0;
-      let lang = (LS.getItem("lang") || "it").toLowerCase().slice(0,2);
-
-      // Theme from prefs
-      const prefs = readJSON("whatif_prefs", { stile: "whatif" });
-      document.documentElement.setAttribute("data-theme", prefs.stile === "wtf" ? "wtf" : "whatif");
-      $("voiceBadge").textContent = "🎭 " + (prefs.stile === "wtf" ? "What the F" : "What if");
 
       function renderCredits(){
-        if (IS_ADMIN){
-          $("creditsBadge").textContent = "Crediti: ∞ (admin)";
-        } else {
-          $("creditsBadge").textContent = `Crediti: ${currentBalance}`;
+        if (isAdmin){
+          $("freeBadge").textContent = "Crediti: ∞ (admin)";
+          return;
         }
+        $("freeBadge").textContent = "Crediti: " + currentBalance;
       }
 
       async function syncCredits(){
-        if (IS_ADMIN){
-          currentBalance = Infinity;
-          renderCredits();
-          return;
+        if (isAdmin){
+          renderCredits(); return;
         }
         if (!auth.currentUser){
           currentBalance = 0;
@@ -257,153 +252,217 @@
         try{
           await bootCredits();
           currentBalance = await getBalance();
-        }catch(e){
-          console.error("syncCredits error:", e);
+        }catch{
           currentBalance = 0;
         }
         renderCredits();
       }
 
       async function guardCredits(){
-        if (IS_ADMIN) return true;
+        if (isAdmin) return true;
         if (!auth.currentUser){
           alert("Per usare l’Oracolo devi essere loggato.");
           location.href = "index.html";
           return false;
         }
         if (currentBalance <= 0){
-          alert("Hai finito i crediti. Ricarica per continuare.");
-          location.href = `store/credit-store.html?lang=${encodeURIComponent(lang)}`;
+          alert("Hai finito i crediti. Vai allo store per ricaricare.");
+          location.href = "store/credit-store.html?lang=" + encodeURIComponent(lang);
           return false;
         }
         return true;
       }
 
-      // state 4 clicks
-      const state = { topic:null, effect:null, channel:null, tone:null };
+      onAuthStateChanged(auth, async () => {
+        await syncCredits();
+      });
 
-      function updateCTA(){
-        const ready = state.topic && state.effect && state.channel && state.tone;
-        $("goOracle").disabled = !ready;
+      window.addEventListener("focus", syncCredits);
+
+      // oracle state
+      let meta = null;
+      let picks = {}; // { key: {id,label,emoji} }
+      let steps = [];
+
+      function progress(){
+        const total = steps.length || 4;
+        const done = Object.keys(picks).length;
+        const pct = total ? Math.round((done/total)*100) : 0;
+        $("bar").style.width = pct + "%";
+        $("progressText").textContent = `${done}/${total}`;
+        $("revealBtn").disabled = !(done === total);
       }
 
-      function pick(group, value){
-        state[group] = value;
-        document.querySelectorAll(`#${group}Group .chip`).forEach(b=>{
-          b.classList.toggle("sel", b.dataset.val === value);
-        });
-        updateCTA();
-      }
-
-      function wireGroup(group){
-        const el = $(`${group}Group`);
-        if (!el) return;
-        el.addEventListener("click", (e)=>{
-          const btn = e.target.closest(".chip");
-          if(!btn) return;
-          pick(group, btn.dataset.val);
-        });
-      }
-
-      wireGroup("topic");
-      wireGroup("effect");
-      wireGroup("channel");
-      wireGroup("tone");
-
-      // Nav
-      $("homeBtn").onclick = () => (location.href = "index.html");
-      $("backBtn").onclick = () => {
-        if (history.length > 1) history.back();
-        else location.href = "index.html";
-      };
-
-      function showResult(data){
-        const out = (data && (data.styled || data.base)) || null;
-        if(!out) throw new Error("bad_oracle_payload");
-
-        $("resultTitle").textContent = out.title || "🔮 Responso";
-        $("doBox").textContent = out.do || "—";
-        $("firstBox").textContent = out.first_step || "—";
-
-        const rules = Array.isArray(out.rules) ? out.rules : [];
-        $("rulesBox").innerHTML = rules.length
-          ? `<ul style="margin:0;padding-left:18px">${rules.map(r=>`<li>${escapeHTML(r)}</li>`).join("")}</ul>`
-          : "—";
-
-        $("safetyBox").textContent = out.safety || "";
-        $("debugMini").textContent =
-          `topic=${state.topic} · effect=${state.effect} · channel=${state.channel} · tone=${state.tone}`;
-
-        $("resultCard").style.display = "block";
-        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-      }
-
-      function escapeHTML(s){
-        return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-      }
-
-      $("againBtn").onclick = () => {
+      function clearUI(){
+        $("stepsWrap").innerHTML = "";
         $("resultCard").style.display = "none";
+        picks = {};
+        progress();
+      }
+
+      function renderSteps(){
+        const wrap = $("stepsWrap");
+        wrap.innerHTML = "";
+
+        steps.forEach((st, idx) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.dataset.key = st.key;
+
+          const head = document.createElement("div");
+          head.className = "stepHead";
+
+          const left = document.createElement("div");
+          left.innerHTML = `
+            <div class="label">Step ${idx+1}</div>
+            <div class="stepTitle">${escapeHtml(st.title || "—")}</div>
+            <div class="stepSub">${escapeHtml(st.subtitle || "")}</div>
+          `;
+
+          head.appendChild(left);
+          card.appendChild(head);
+
+          const chips = document.createElement("div");
+          chips.className = "chips";
+          (st.options || []).forEach(opt => {
+            const b = document.createElement("button");
+            b.className = "chip";
+            const chosen = picks[st.key] && picks[st.key].id === opt.id;
+            if (chosen) b.classList.add("sel");
+            b.innerHTML = `<span>${escapeHtml(opt.emoji || "•")}</span><span>${escapeHtml(opt.label || opt.id || "—")}</span>`;
+            b.onclick = () => {
+              picks[st.key] = { id: opt.id, label: opt.label, emoji: opt.emoji };
+              // rerender only this step selection visual
+              renderSteps();
+              progress();
+            };
+            chips.appendChild(b);
+          });
+
+          card.appendChild(chips);
+          wrap.appendChild(card);
+        });
+
+        progress();
+      }
+
+      function escapeHtml(s){
+        return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      }
+
+      async function loadOracleMeta(force=false){
+        clearUI();
+
+        const res = await fetch("/api/suggest", {
+          method: "POST",
+          headers: { "Content-Type":"application/json" },
+          body: JSON.stringify({
+            mode: "oracle_meta",
+            lang,
+            voice
+          })
+        });
+
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data || !Array.isArray(data.steps)){
+          alert("Errore nel caricare l’Oracolo. Riprova.");
+          console.error("oracle_meta failed:", res.status, data);
+          return;
+        }
+
+        meta = data;
+        steps = data.steps.slice(0, 4); // sicurezza
+        renderSteps();
+
+        // CTA label dinamica se arriva
+        const cta = data?.ui?.cta;
+        if (cta && typeof cta === "string"){
+          $("revealBtn").textContent = cta.includes("🔮") ? cta : ("🔮 " + cta);
+        } else {
+          $("revealBtn").textContent = "🔮 Rivela l’Oracolo";
+        }
+      }
+
+      async function revealOracle(){
+        const ok = await guardCredits();
+        if (!ok) return;
+
+        // consuma 1 credito SOLO ORA
+        if (!isAdmin){
+          const ok2 = await consumeCredit();
+          if (!ok2){
+            await syncCredits();
+            alert("Hai finito i crediti.");
+            return;
+          }
+          await syncCredits();
+        }
+
+        $("revealBtn").disabled = true;
+        $("revealBtn").textContent = "⏳...";
+
+        try{
+          const picksPayload = {};
+          for (const k of Object.keys(picks)){
+            // mando sia id che label, così la AI capisce bene
+            picksPayload[k] = picks[k];
+          }
+
+          const res = await fetch("/api/suggest", {
+            method: "POST",
+            headers: { "Content-Type":"application/json" },
+            body: JSON.stringify({
+              mode: "oracle_answer",
+              lang,
+              voice,
+              picks: picksPayload
+            })
+          });
+
+          const data = await res.json().catch(() => null);
+          if (!res.ok || !data || !data.do){
+            alert("Errore nel generare la risposta. Riprova.");
+            console.error("oracle_answer failed:", res.status, data);
+            return;
+          }
+
+          // render result
+          $("rTitle").textContent = data.title || "🔮";
+          $("rDo").textContent = data.do || "";
+          $("rFirst").textContent = data.first_step || "";
+          $("rSafety").textContent = data.safety || "";
+
+          const rules = Array.isArray(data.rules) ? data.rules : [];
+          const ul = $("rRules");
+          ul.innerHTML = "";
+          rules.slice(0, 6).forEach(r => {
+            const li = document.createElement("li");
+            li.textContent = String(r||"").trim();
+            ul.appendChild(li);
+          });
+
+          $("resultCard").style.display = "block";
+          window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+
+        } finally {
+          $("revealBtn").disabled = false;
+          $("revealBtn").textContent = meta?.ui?.cta
+            ? (meta.ui.cta.includes("🔮") ? meta.ui.cta : ("🔮 " + meta.ui.cta))
+            : "🔮 Rivela l’Oracolo";
+          progress(); // riabilita/disabilita in base a scelte
+        }
+      }
+
+      $("revealBtn").onclick = revealOracle;
+
+      $("playAgainBtn").onclick = async () => {
+        await loadOracleMeta(true);
         window.scrollTo({ top: 0, behavior: "smooth" });
       };
 
-      // GO
-      $("goOracle").onclick = async () => {
-        const ok = await guardCredits();
-        if(!ok) return;
-
-        // consume 1 credit
-        if(!IS_ADMIN){
-          const ok2 = await consumeCredit();
-          if(!ok2){
-            await syncCredits();
-            alert("Crediti insufficienti.");
-            return;
-          }
-          currentBalance = await getBalance().catch(()=>currentBalance);
-          renderCredits();
-        }
-
-        const btn = $("goOracle");
-        const original = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = "⏳...";
-
-        try{
-          const prefsNow = readJSON("whatif_prefs", { stile: "whatif" });
-          const voice = (prefsNow.stile === "wtf") ? "wtf" : "whatif";
-
-          const res = await fetch("/api/suggest", {
-            method:"POST",
-            headers:{ "Content-Type":"application/json" },
-            body: JSON.stringify({
-              mode:"oracle",
-              ...state,
-              voice,
-              lang
-            })
-          });
-          if(!res.ok) throw new Error("HTTP " + res.status);
-          const data = await res.json();
-          showResult(data);
-        }catch(e){
-          console.error(e);
-          alert("Errore nel responso. Riprova.");
-        }finally{
-          btn.disabled = false;
-          btn.textContent = original;
-        }
-      };
-
-      // Boot credits
-      onAuthStateChanged(auth, async ()=>{
-        await syncCredits();
-      });
-      window.addEventListener("focus", syncCredits);
-      window.addEventListener("pageshow", syncCredits);
-
-      renderCredits();
-      updateCTA();
+      // load initial
+      await loadOracleMeta(false);
+      await syncCredits();
     </script>
   </body>
 </html>
