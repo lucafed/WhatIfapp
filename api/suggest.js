@@ -1,4 +1,4 @@
-// /api/suggest.js — Generatore spunti (personalizzate/generiche/assurde) + Oracolo (meta/next/answer)
+// /api/suggest.js — Generatore spunti (personalizzate/generiche/assurde) + Oracolo (cards/answer/meta/next)
 // Stessa impostazione di /api/ask.js: OpenAI + Upstash Rate + CORS.
 
 import OpenAI from "openai";
@@ -56,16 +56,24 @@ function clampStr(x, n) {
 }
 
 function compactPicks(picks = {}) {
-  // picks: { key: {id,label,emoji} } -> string compatta per prompt
+  // picks: { key: {id,label,emoji, freeText?} } -> string compatta per prompt
   const out = [];
   for (const k of Object.keys(picks || {})) {
     const v = picks[k] || {};
     const id = clampStr(v.id || "", 60);
     const label = clampStr(v.label || "", 120);
-    if (!id && !label) continue;
-    out.push(`${k}: ${label || id}`);
+    const ft = clampStr(v.freeText || "", 140);
+    const base = (label || id) ? `${k}: ${label || id}` : "";
+    const extra = ft ? ` (+ "${ft}")` : "";
+    if (!base && !extra) continue;
+    out.push(`${base}${extra}`);
   }
   return out.join(" | ");
+}
+
+function safeGoal(goal) {
+  const g = String(goal || "").trim();
+  return clampStr(g, 220);
 }
 
 /* ========= Fallback (spunti classici) ========= */
@@ -175,74 +183,172 @@ function buildSuggestPrompt({ lang, periodo, boost }) {
   ];
 }
 
-/* ========= Prompt: ORACOLO META (4 step) ========= */
-/**
- * ✅ MODIFICA SOLO ORACLE:
- * - prende goal (obiettivo) e lo usa per generare step PERTINENTI
- * - step 4 NON chiede strategia: fa scegliere “che tipo di supporto/approccio vuoi ricevere”
- * - obbliga a cambiare carte se cambia goal
- */
-function buildOracleMetaPrompt({ lang, voice, goal }) {
+/* ========= SAFETY SYSTEM (Oracolo) =========
+   - non “consigli” per atti illegali, autolesionismo, armi, ecc.
+   - se tema ad alto rischio: rifiuta e propone alternative sicure/risorse.
+*/
+function oracleSafetySystem(lang) {
+  const L = normLang(lang);
+  if (L === "en") {
+    return `Safety policy:
+- If the user goal asks for self-harm, violence, wrongdoing, weapons, drugs, or illegal activity: refuse and provide safe alternatives.
+- If medical/legal/financial advice is requested: provide general information only, encourage professional help.
+- Keep responses non-judgmental.`;
+  }
+  if (L === "es") {
+    return `Política de seguridad:
+- Si el objetivo pide autolesión, violencia, ilegalidad, armas, drogas o actos ilícitos: rechaza y ofrece alternativas seguras.
+- Si pide consejos médicos/legales/financieros: solo información general y recomendar un profesional.
+- Tono sin juicio.`;
+  }
+  if (L === "fr") {
+    return `Politique de sécurité :
+- Si l’objectif concerne l’automutilation, violence, illégalité, armes, drogues: refuser et proposer des alternatives sûres.
+- Si demande médicale/juridique/financière: infos générales + conseiller un pro.
+- Ton non jugeant.`;
+  }
+  if (L === "de") {
+    return `Sicherheitsrichtlinie:
+- Bei Selbstverletzung, Gewalt, Illegalität, Waffen, Drogen: ablehnen und sichere Alternativen anbieten.
+- Bei Medizin/Recht/Finanzen: nur allgemeine Infos + Fachperson empfehlen.
+- Wertfrei bleiben.`;
+  }
+  return `Policy di sicurezza:
+- Se l’obiettivo riguarda autolesionismo, violenza, illegalità, armi, droghe o atti illeciti: rifiuta e proponi alternative sicure.
+- Se chiede consigli medici/legali/finanziari: solo info generali e invita a un professionista.
+- Tono non giudicante.`;
+}
+
+/* ========= Prompt: ORACOLO CARDS (4 step contestuali alla domanda) ========= */
+function buildOracleCardsPrompt({ lang, voice, goal }) {
   const L = normLang(lang);
   const v = voice === "wtf" ? "wtf" : "whatif";
-  const g = clampStr(goal || "", 220);
+  const g = safeGoal(goal);
 
   const tone =
     v === "wtf"
       ? (L === "en"
-          ? "Tone: sharp, ironic, bartender-energy, but still useful and concrete."
-          : "Tono: ironico/tagliente, energia da barista, ma comunque utile e concreto.")
+          ? "Tone: witty, blunt, bartender-energy, but still helpful."
+          : "Tono: ironico, diretto, da barista affettuoso, ma utile.")
+      : (L === "en"
+          ? "Tone: empathic, pragmatic, grounded."
+          : "Tono: empatico, pragmatico, concreto.");
+
+  // IMPORTANTISSIMO: le carte NON devono chiedere “come agisci / strategia / canale”.
+  // Devono raccogliere contesto per permettere alla risposta finale di dire “come fare”.
+  const spec =
+    L === "en"
+      ? `Create exactly 4 steps (cards). Each step is a short clarifying QUESTION about the user's GOAL.
+Rules:
+- Do NOT ask the user to choose a strategy, channel, or "how to act". The FINAL answer will do that.
+- Focus on: desired outcome, why it matters, constraints/risks, context/timeframe/resources, definition of "done".
+- Each step has 4-6 options with id,label,emoji. Options should be distinct and practical.
+Return ONLY strict JSON:
+{
+ "ui":{
+   "cta":"Generate answer",
+   "disclaimer_short":"...",
+   "disclaimer_full":"..."
+ },
+ "steps":[
+   {"key":"...","title":"...","subtitle":"...","options":[{"id":"...","label":"...","emoji":"..."}]}
+ ]
+}`
+      : `Crea esattamente 4 step (carte). Ogni step è una DOMANDA breve per chiarire l’OBIETTIVO dell’utente.
+Regole:
+- NON chiedere all’utente “che strategia/canale/come agire”. Quello lo dirà la RISPOSTA FINALE.
+- Focalizzati su: risultato desiderato, perché conta, vincoli/rischi, contesto/tempi/risorse, definizione di “fatto”.
+- Ogni step ha 4-6 opzioni con id,label,emoji. Opzioni distinte e pratiche.
+Restituisci SOLO JSON STRETTO:
+{
+ "ui":{
+   "cta":"Rivela l’Oracolo",
+   "disclaimer_short":"...",
+   "disclaimer_full":"..."
+ },
+ "steps":[
+   {"key":"...","title":"...","subtitle":"...","options":[{"id":"...","label":"...","emoji":"..."}]}
+ ]
+}`;
+
+  // Disclaimer: vogliamo “pararci il culo” ma leggibile.
+  const disclaimerShort =
+    L === "en"
+      ? "AI-generated guidance. Not professional advice."
+      : L === "es"
+      ? "Guía generada por IA. No es asesoramiento profesional."
+      : L === "fr"
+      ? "Conseils générés par IA. Pas un avis professionnel."
+      : L === "de"
+      ? "KI-generierte Hinweise. Keine Fachberatung."
+      : "Suggerimenti generati da AI. Non è consulenza professionale.";
+
+  const disclaimerFull =
+    L === "en"
+      ? "This feature provides ideas and planning prompts. It is not medical, legal, financial, or professional advice. Use your judgment and consult qualified professionals for high-stakes decisions. Do not use it for harmful or illegal activities."
+      : L === "es"
+      ? "Esta función ofrece ideas y preguntas guía. No es asesoramiento médico, legal, financiero ni profesional. Usa tu criterio y consulta a profesionales en decisiones importantes. No la uses para actividades dañinas o ilegales."
+      : L === "fr"
+      ? "Cette fonction propose des idées et des questions de cadrage. Ce n’est pas un avis médical, juridique, financier ou professionnel. Utilise ton jugement et consulte un professionnel pour les décisions à enjeux. Ne l’utilise pas pour des activités illégales ou nuisibles."
+      : L === "de"
+      ? "Diese Funktion liefert Ideen und Leitfragen. Keine medizinische, rechtliche, finanzielle oder sonstige Fachberatung. Nutze dein Urteilsvermögen und konsultiere Fachpersonen bei wichtigen Entscheidungen. Nicht für schädliche oder illegale Zwecke nutzen."
+      : "Questa funzione offre idee e domande guida. Non è consulenza medica, legale, finanziaria o professionale. Usa il tuo giudizio e confrontati con professionisti per decisioni importanti. Non usarla per attività dannose o illegali.";
+
+  return [
+    { role: "system", content: `${oracleSafetySystem(L)}\nYou generate Oracle cards. ${tone}\nReturn JSON only.` },
+    {
+      role: "user",
+      content: `Language: ${L}\nVoice: ${v}\nUser goal: ${g || "(empty)"}\n\n${spec}\n\nInclude ui.disclaimer_short="${disclaimerShort}" and ui.disclaimer_full="${disclaimerFull}".`,
+    },
+  ];
+}
+
+/* ========= Prompt: ORACOLO META (vecchia: 4 step generici) ========= */
+function buildOracleMetaPrompt({ lang, voice }) {
+  const L = normLang(lang);
+  const v = voice === "wtf" ? "wtf" : "whatif";
+
+  const tone =
+    v === "wtf"
+      ? (L === "en"
+          ? "Tone: sharp, ironic, but still helpful and concrete."
+          : "Tono: ironico/tagliente ma comunque utile e concreto.")
       : (L === "en"
           ? "Tone: serious, pragmatic, emotionally intelligent."
           : "Tono: serio, pragmatico, emotivamente intelligente.");
 
   const spec =
     L === "en"
-      ? `Create EXACTLY 4 steps. Each step has key,title,subtitle and 4-6 options. Options have id,label,emoji.`
-      : `Crea ESATTAMENTE 4 step. Ogni step ha key,title,subtitle e 4-6 opzioni. Le opzioni hanno id,label,emoji.`;
+      ? `Create 4 steps. Each step has a key, title, subtitle, and 4-6 options. Options have id,label,emoji.`
+      : `Crea 4 step. Ogni step ha key, title, subtitle e 4-6 opzioni. Le opzioni hanno id,label,emoji.`;
 
   const rules =
     L === "en"
-      ? `Steps must be aligned to the user's goal. If the goal changes, steps MUST change. No generic filler. No repetition. Options must be mutually distinct.`
-      : `Gli step DEVONO essere allineati all’obiettivo dell’utente. Se il goal cambia, gli step DEVONO cambiare. Niente riempitivi generici. Niente ripetizioni. Opzioni ben diverse tra loro.`;
-
-  const stepBlueprint =
-    L === "en"
-      ? `Step 1: "What outcome exactly?" (scope/target)
-Step 2: "Why does it matter?" (motivation/meaning)
-Step 3: "What constraints?" (time/money/energy/risk)
-Step 4: "How should the Oracle help?" (style of plan: quick wins vs deep plan vs low-risk vs accountability) — DO NOT ask the user for the strategy itself.`
-      : `Step 1: "Che risultato preciso?" (ambito/target)
-Step 2: "Perché ti serve davvero?" (motivazione/significato)
-Step 3: "Quali vincoli hai?" (tempo/soldi/energia/rischio)
-Step 4: "Come vuoi che l’Oracolo ti aiuti?" (tipo di piano: quick wins vs piano profondo vs basso rischio vs accountability) — NON chiedere la strategia all’utente.`;
+      ? `Make choices broad but not generic. No repetition. Make options mutually distinct.`
+      : `Scelte ampie ma non generiche. Niente ripetizioni. Opzioni ben diverse tra loro.`;
 
   return [
     {
       role: "system",
       content:
-        `You generate a compact multi-step picker UI for an "Oracle" feature. ${tone}\n` +
-        `Return ONLY strict JSON with this shape:\n` +
-        `{"ui":{"cta":"..."}, "steps":[{"key":"...","title":"...","subtitle":"...","options":[{"id":"...","label":"...","emoji":"..."}]}]}\n` +
-        `${spec}\n${rules}\n${stepBlueprint}\n` +
-        `IMPORTANT: Each step title/subtitle/options must clearly reference the goal theme. Avoid abstract/meaningless labels.`,
+        `You generate a compact multi-step picker UI for an "Oracle" feature. ${tone} ` +
+        `Return ONLY strict JSON with this shape: ` +
+        `{"ui":{"cta":"..."}, "steps":[{"key":"...","title":"...","subtitle":"...","options":[{"id":"...","label":"...","emoji":"..."}]}]}` +
+        ` ${spec} ${rules}`,
     },
     {
       role: "user",
-      content:
-        `Language: ${L}\nVoice: ${v}\nGoal (user objective): ${g || "(none provided)"}\n` +
-        `Generate the initial 4 steps now. JSON only.`,
+      content: `Language: ${L}\nVoice: ${v}\nGenerate the initial 4 steps now.`,
     },
   ];
 }
 
 /* ========= Prompt: ORACOLO NEXT (adattivo) ========= */
-function buildOracleNextPrompt({ lang, voice, picks, startIndex, goal }) {
+function buildOracleNextPrompt({ lang, voice, picks, startIndex }) {
   const L = normLang(lang);
   const v = voice === "wtf" ? "wtf" : "whatif";
   const ctx = compactPicks(picks || {});
   const idx = Number.isFinite(+startIndex) ? Math.max(0, Math.min(3, +startIndex)) : 0;
-  const g = clampStr(goal || "", 220);
 
   const tone =
     v === "wtf"
@@ -255,34 +361,33 @@ function buildOracleNextPrompt({ lang, voice, picks, startIndex, goal }) {
 
   const spec =
     L === "en"
-      ? `Regenerate steps from index ${idx} to 3, adapting to previous picks AND the goal. Keep steps consistent and non-repetitive.`
-      : `Rigenera gli step da indice ${idx} a 3, adattandoli ai pick precedenti E al goal. Mantieni coerenza e niente ripetizioni.`;
+      ? `Regenerate steps from index ${idx} to 3, adapting to previous picks. Keep steps consistent and non-repetitive.`
+      : `Rigenera gli step da indice ${idx} a 3, adattandoli ai pick precedenti. Mantieni coerenza e niente ripetizioni.`;
 
   return [
     {
       role: "system",
       content:
-        `You generate the remaining steps of an Oracle picker UI. ${tone}\n` +
-        `Return ONLY strict JSON with shape: {"steps":[...]} where steps are the FULL remaining steps (index ${idx}..3).\n` +
-        `Each step: {"key","title","subtitle","options":[{"id","label","emoji"}]}\n` +
-        `Options must be mutually distinct and specific. No duplicates across options.\n` +
-        `Do NOT ask the user to choose a "strategy" — step 4 must be "how you want help" not "which strategy to adopt".`,
+        `You generate the remaining steps of an Oracle picker UI. ${tone} ` +
+        `Return ONLY strict JSON with shape: {"steps":[...]} where steps are the FULL remaining steps (index ${idx}..3). ` +
+        `Each step: {"key","title","subtitle","options":[{"id","label","emoji"}]} ` +
+        `Options must be mutually distinct and specific. No duplicates across options.`,
     },
     {
       role: "user",
       content:
-        `Language: ${L}\nVoice: ${v}\nGoal: ${g || "(none)"}\nAlready picked: ${ctx || "(none)"}\n` +
+        `Language: ${L}\nVoice: ${v}\nAlready picked: ${ctx || "(none)"}\n` +
         `${spec}\nReturn JSON only.`,
     },
   ];
 }
 
-/* ========= Prompt: ORACOLO ANSWER ========= */
+/* ========= Prompt: ORACOLO ANSWER (con GOAL) ========= */
 function buildOracleAnswerPrompt({ lang, voice, picks, goal }) {
   const L = normLang(lang);
   const v = voice === "wtf" ? "wtf" : "whatif";
   const ctx = compactPicks(picks || {});
-  const g = clampStr(goal || "", 220);
+  const g = safeGoal(goal);
 
   const tone =
     v === "wtf"
@@ -296,22 +401,21 @@ function buildOracleAnswerPrompt({ lang, voice, picks, goal }) {
   const spec =
     L === "en"
       ? `Return ONLY JSON: {"title":"...","do":"...","first_step":"...","rules":[...],"safety":"..."}.
-do = 2-4 sentences. first_step = 1 concrete action in 15 minutes. rules = 4-6 short rules. safety = one gentle warning.
-The answer must be a practical mini-plan to reach the goal.`
+do = 3-6 sentences and MUST include: "what to do", "where to start", and a clear next direction.
+first_step = 1 concrete action in 15 minutes.
+rules = 4-6 short rules.
+safety = one gentle warning (not professional advice + avoid illegal/harmful).`
       : `Restituisci SOLO JSON: {"title":"...","do":"...","first_step":"...","rules":[...],"safety":"..."}.
-do = 2-4 frasi. first_step = 1 azione concreta in 15 minuti. rules = 4-6 regole brevi. safety = un’avvertenza gentile.
-La risposta deve essere un mini-piano pratico per raggiungere il goal.`;
-
-  const goalLine =
-    L === "en"
-      ? `Goal (objective): ${g || "(none provided)"}`
-      : `Goal (obiettivo): ${g || "(non specificato)"}`;
+do = 3-6 frasi e DEVE includere: "cosa fare", "da dove partire" e una direzione chiara.
+first_step = 1 azione concreta in 15 minuti.
+rules = 4-6 regole brevi.
+safety = un’avvertenza gentile (no consulenza + evita illegale/dannoso).`;
 
   return [
-    { role: "system", content: `You are the Oracle. ${tone}\n${spec}` },
+    { role: "system", content: `${oracleSafetySystem(L)}\nYou are the Oracle. ${tone} ${spec}` },
     {
       role: "user",
-      content: `Language: ${L}\nVoice: ${v}\n${goalLine}\nUser picks: ${ctx || "(none)"}\nReturn JSON only.`,
+      content: `Language: ${L}\nVoice: ${v}\nUser goal: ${g || "(none)"}\nUser picks: ${ctx || "(none)"}\nReturn JSON only.`,
     },
   ];
 }
@@ -326,7 +430,10 @@ export default async function handler(req, res) {
     if (!process.env.OPENAI_API_KEY) return res.status(500).json({ error: "missing_api_key" });
 
     // Rate limit per IP
-    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").toString().split(",")[0].trim();
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+      .toString()
+      .split(",")[0]
+      .trim();
     const { success } = await rl.limit(`suggest:${ip}`);
     if (!success) return res.status(429).json({ error: "rate_limited_minute" });
 
@@ -340,15 +447,57 @@ export default async function handler(req, res) {
 
     const mode = String(body.mode || "suggest");
 
-    // ===== ORACOLO: meta iniziale =====
-    if (mode === "oracle_meta") {
+    // ===== ORACOLO: cards contestuali alla domanda (NUOVO) =====
+    if (mode === "oracle_cards") {
       const voice = String(body.voice || "whatif");
-      const goal = clampStr(body.goal || "", 220); // ✅ goal arriva dal client
-      const messages = buildOracleMetaPrompt({ lang, voice, goal });
+      const goal = safeGoal(body.goal || "");
+
+      const messages = buildOracleCardsPrompt({ lang, voice, goal });
 
       const completion = await client.chat.completions.create({
         model: MODEL,
-        temperature: 0.95, // ✅ più variazione, meno “template”
+        temperature: 0.75,
+        top_p: 0.9,
+        max_tokens: 950,
+        messages,
+      });
+
+      const raw = completion?.choices?.[0]?.message?.content || "";
+      const data = safeJSONPick(raw);
+      if (!data || !Array.isArray(data.steps)) throw new Error("bad_oracle_cards_json");
+
+      const steps = data.steps.slice(0, 4).map((s, i) => ({
+        key: clampStr(s.key || `step${i + 1}`, 30),
+        title: clampStr(s.title || "—", 140),
+        subtitle: clampStr(s.subtitle || "", 200),
+        options: Array.isArray(s.options)
+          ? s.options.slice(0, 6).map((o) => ({
+              id: clampStr(o.id || o.label || "x", 50),
+              label: clampStr(o.label || o.id || "—", 140),
+              emoji: clampStr(o.emoji || "•", 6),
+            }))
+          : [],
+      }));
+
+      return res.status(200).json({
+        ui: {
+          cta: clampStr(data?.ui?.cta || (lang === "en" ? "Reveal the Oracle" : "🔮 Rivela l’Oracolo"), 44),
+          disclaimer_short: clampStr(data?.ui?.disclaimer_short || "", 120),
+          disclaimer_full: clampStr(data?.ui?.disclaimer_full || "", 420),
+        },
+        steps,
+        used: "ai",
+      });
+    }
+
+    // ===== ORACOLO: meta iniziale (vecchia) =====
+    if (mode === "oracle_meta") {
+      const voice = String(body.voice || "whatif");
+      const messages = buildOracleMetaPrompt({ lang, voice });
+
+      const completion = await client.chat.completions.create({
+        model: MODEL,
+        temperature: 0.75,
         top_p: 0.9,
         max_tokens: 900,
         messages,
@@ -359,7 +508,6 @@ export default async function handler(req, res) {
 
       if (!data || !Array.isArray(data.steps)) throw new Error("bad_oracle_meta_json");
 
-      // micro-normalize
       const steps = data.steps.slice(0, 4).map((s, i) => ({
         key: clampStr(s.key || `step${i + 1}`, 30),
         title: clampStr(s.title || "—", 120),
@@ -383,15 +531,14 @@ export default async function handler(req, res) {
     // ===== ORACOLO: next adattivo =====
     if (mode === "oracle_next") {
       const voice = String(body.voice || "whatif");
-      const picks = body.picks && typeof body.picks === "object" ? body.picks : {};
+      const picks = (body.picks && typeof body.picks === "object") ? body.picks : {};
       const startIndex = Number.isFinite(+body.startIndex) ? +body.startIndex : 0;
-      const goal = clampStr(body.goal || "", 220); // ✅ (compatibile se lo userai)
 
-      const messages = buildOracleNextPrompt({ lang, voice, picks, startIndex, goal });
+      const messages = buildOracleNextPrompt({ lang, voice, picks, startIndex });
 
       const completion = await client.chat.completions.create({
         model: MODEL,
-        temperature: 0.9,
+        temperature: 0.85,
         top_p: 0.9,
         max_tokens: 900,
         messages,
@@ -418,11 +565,11 @@ export default async function handler(req, res) {
       return res.status(200).json({ steps, used: "ai" });
     }
 
-    // ===== ORACOLO: answer finale =====
+    // ===== ORACOLO: answer finale (con goal + picks + freeText) =====
     if (mode === "oracle_answer") {
       const voice = String(body.voice || "whatif");
-      const picks = body.picks && typeof body.picks === "object" ? body.picks : {};
-      const goal = clampStr(body.goal || "", 220); // ✅ goal entra nella risposta
+      const picks = (body.picks && typeof body.picks === "object") ? body.picks : {};
+      const goal = safeGoal(body.goal || "");
 
       const messages = buildOracleAnswerPrompt({ lang, voice, picks, goal });
 
@@ -430,7 +577,7 @@ export default async function handler(req, res) {
         model: MODEL,
         temperature: 0.85,
         top_p: 0.9,
-        max_tokens: 700,
+        max_tokens: 750,
         messages,
       });
 
@@ -441,10 +588,10 @@ export default async function handler(req, res) {
 
       return res.status(200).json({
         title: clampStr(data.title || "🔮", 80),
-        do: clampStr(data.do || "", 600),
+        do: clampStr(data.do || "", 800),
         first_step: clampStr(data.first_step || "", 260),
         rules: Array.isArray(data.rules) ? data.rules.map((x) => clampStr(x, 120)).slice(0, 6) : [],
-        safety: clampStr(data.safety || "", 240),
+        safety: clampStr(data.safety || "", 260),
         used: "ai",
       });
     }
@@ -467,7 +614,10 @@ export default async function handler(req, res) {
     const data = safeJSONPick(raw);
     if (!data || typeof data !== "object") throw new Error("bad_json");
 
-    const personalized = (data.personalized || data.personalizzate || []).map((x) => finalQ(x, lang)).filter(Boolean).slice(0, 12);
+    const personalized = (data.personalized || data.personalizzate || [])
+      .map((x) => finalQ(x, lang))
+      .filter(Boolean)
+      .slice(0, 12);
     const generic = (data.generic || data.generiche || []).map((x) => finalQ(x, lang)).filter(Boolean).slice(0, 8);
     const absurd = (data.absurd || data.assurde || []).map((x) => finalQ(x, lang)).filter(Boolean).slice(0, 4);
 
