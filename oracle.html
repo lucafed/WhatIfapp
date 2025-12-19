@@ -98,6 +98,16 @@
       ul{margin:8px 0 0;padding-left:18px}
       li{margin:6px 0;color:var(--fg)}
       .hr{height:1px;background:var(--line);margin:12px 0}
+
+      /* piccolo feedback non invasivo */
+      .pulse{
+        animation:pulse 1.1s ease-in-out infinite;
+      }
+      @keyframes pulse{
+        0%{opacity:.65}
+        50%{opacity:1}
+        100%{opacity:.65}
+      }
     </style>
   </head>
 
@@ -208,61 +218,6 @@
       $("langSelect").value = lang;
       document.documentElement.lang = lang;
 
-      // ===== FALLBACK STEPS (MOSTRATI SUBITO) =====
-      const FALLBACK_STEPS = {
-        it: [
-          { key:"intent", title:"Qual è il tuo obiettivo?", subtitle:"Scegli un percorso.", options:[
-            {id:"money", label:"Migliorare le finanze", emoji:"💰"},
-            {id:"work", label:"Crescita professionale", emoji:"📈"},
-            {id:"life", label:"Cambiare vita", emoji:"🔁"},
-            {id:"relations", label:"Rafforzare le relazioni", emoji:"❤️"},
-          ]},
-          { key:"tempo", title:"Che velocità vuoi?", subtitle:"Quanto vuoi che accada in fretta?", options:[
-            {id:"now", label:"Entrano subito", emoji:"⏱️"},
-            {id:"steady", label:"Costante", emoji:"📅"},
-            {id:"slow", label:"Lungo termine", emoji:"🏗️"},
-          ]},
-          { key:"channel", title:"Dove vuoi muoverti?", subtitle:"Il canale principale.", options:[
-            {id:"online", label:"Online", emoji:"🌐"},
-            {id:"offline", label:"Offline", emoji:"🏙️"},
-            {id:"both", label:"Entrambi", emoji:"🔀"},
-          ]},
-          { key:"risk", title:"Quanto rischi?", subtitle:"Sii onesto.", options:[
-            {id:"low", label:"Prudente", emoji:"🛟"},
-            {id:"mid", label:"Bilanciato", emoji:"⚖️"},
-            {id:"high", label:"Radicale", emoji:"🔥"},
-          ]},
-        ],
-        en: [
-          { key:"intent", title:"What’s your goal?", subtitle:"Pick a direction.", options:[
-            {id:"money", label:"Improve finances", emoji:"💰"},
-            {id:"work", label:"Career growth", emoji:"📈"},
-            {id:"life", label:"Change life", emoji:"🔁"},
-            {id:"relations", label:"Strengthen relationships", emoji:"❤️"},
-          ]},
-          { key:"tempo", title:"How fast?", subtitle:"How quickly do you want results?", options:[
-            {id:"now", label:"Right now", emoji:"⏱️"},
-            {id:"steady", label:"Steady", emoji:"📅"},
-            {id:"slow", label:"Long-term", emoji:"🏗️"},
-          ]},
-          { key:"channel", title:"Where?", subtitle:"Main channel.", options:[
-            {id:"online", label:"Online", emoji:"🌐"},
-            {id:"offline", label:"Offline", emoji:"🏙️"},
-            {id:"both", label:"Both", emoji:"🔀"},
-          ]},
-          { key:"risk", title:"Risk level?", subtitle:"Be honest.", options:[
-            {id:"low", label:"Low", emoji:"🛟"},
-            {id:"mid", label:"Balanced", emoji:"⚖️"},
-            {id:"high", label:"Radical", emoji:"🔥"},
-          ]},
-        ]
-      };
-
-      function getFallbackSteps(L){
-        const k = normLang(L);
-        return (FALLBACK_STEPS[k] || FALLBACK_STEPS.it).slice(0,4);
-      }
-
       // UI badges
       function renderBadges(){
         $("styleBadge").textContent = "🎭 " + (voice === "wtf" ? "What the F" : "What if");
@@ -281,15 +236,7 @@
         lang = normLang($("langSelect").value);
         LS.setItem("lang", lang);
         document.documentElement.lang = lang;
-
-        // 1) mostra subito fallback nella nuova lingua
-        steps = getFallbackSteps(lang);
-        picks = {};
-        renderSteps();
-        progress();
-
-        // 2) prova a rimpiazzare con AI meta (senza svuotare lo schermo)
-        loadOracleMetaInBackground(true);
+        await loadOracleMeta(true); // rigenera cards in base alla lingua
       };
 
       // credits
@@ -345,7 +292,7 @@
       // oracle state
       let meta = null;
       let picks = {}; // { key: {id,label,emoji} }
-      let steps = []; // 4 steps
+      let steps = [];
 
       function progress(){
         const total = steps.length || 4;
@@ -356,8 +303,71 @@
         $("revealBtn").disabled = !(done === total);
       }
 
+      function clearUI(){
+        $("stepsWrap").innerHTML = "";
+        $("resultCard").style.display = "none";
+        picks = {};
+        progress();
+      }
+
       function escapeHtml(s){
         return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      }
+
+      // ===== ADATTIVO: rigenera step successivi =====
+      let adaptReqId = 0;
+      async function adaptNextSteps(startIndex){
+        if (startIndex >= 4) return;
+
+        const myId = ++adaptReqId;
+
+        // UX: feedback
+        const cta = $("ctaHelp");
+        cta.classList.add("pulse");
+        cta.textContent = (lang === "en") ? "Adapting next steps…" : "Sto adattando i prossimi step…";
+
+        try{
+          const res = await fetch("/api/suggest", {
+            method: "POST",
+            headers: { "Content-Type":"application/json" },
+            body: JSON.stringify({
+              mode: "oracle_next",
+              lang,
+              voice,
+              picks,
+              startIndex
+            })
+          });
+
+          const data = await res.json().catch(() => null);
+          if (!res.ok || !data || !Array.isArray(data.steps) || !data.steps.length) return;
+
+          // se nel frattempo è partita un'altra richiesta, ignoro questa
+          if (myId !== adaptReqId) return;
+
+          // sostituisco SOLO gli step successivi (startIndex..3)
+          for (let i = 0; i < data.steps.length; i++){
+            const target = startIndex + i;
+            if (target <= 3) steps[target] = data.steps[i];
+          }
+
+          // drop pick degli step rigenerati (per evitare incoerenze)
+          for (let i = startIndex; i <= 3; i++){
+            const k = steps[i]?.key;
+            if (k && picks[k]) delete picks[k];
+          }
+
+          renderSteps();
+          progress();
+        }catch(e){
+          console.warn("oracle_next error:", e);
+        }finally{
+          const cta2 = $("ctaHelp");
+          cta2.classList.remove("pulse");
+          cta2.textContent = (lang === "en")
+            ? "Complete the 4 picks to unlock the answer."
+            : "Completa le 4 scelte per sbloccare il responso.";
+        }
       }
 
       function renderSteps(){
@@ -384,17 +394,29 @@
 
           const chips = document.createElement("div");
           chips.className = "chips";
+
           (st.options || []).forEach(opt => {
             const b = document.createElement("button");
             b.className = "chip";
+
             const chosen = picks[st.key] && picks[st.key].id === opt.id;
             if (chosen) b.classList.add("sel");
+
             b.innerHTML = `<span>${escapeHtml(opt.emoji || "•")}</span><span>${escapeHtml(opt.label || opt.id || "—")}</span>`;
-            b.onclick = () => {
+
+            // ✅ CLICK ADATTIVO: rigenera step successivi con AI
+            b.onclick = async () => {
               picks[st.key] = { id: opt.id, label: opt.label, emoji: opt.emoji };
+
+              // rerender + progress
               renderSteps();
               progress();
+
+              // rigenera step da quello successivo
+              const startIndex = idx + 1;
+              await adaptNextSteps(startIndex);
             };
+
             chips.appendChild(b);
           });
 
@@ -405,70 +427,37 @@
         progress();
       }
 
-      // ====== AI META BACKGROUND (con timeout) ======
-      async function fetchWithTimeout(url, opts={}, ms=8000){
-        const ctrl = new AbortController();
-        const t = setTimeout(()=>ctrl.abort(), ms);
-        try{
-          const res = await fetch(url, { ...opts, signal: ctrl.signal });
-          return res;
-        } finally {
-          clearTimeout(t);
+      async function loadOracleMeta(force=false){
+        clearUI();
+
+        const res = await fetch("/api/suggest", {
+          method: "POST",
+          headers: { "Content-Type":"application/json" },
+          body: JSON.stringify({
+            mode: "oracle_meta",
+            lang,
+            voice
+          })
+        });
+
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data || !Array.isArray(data.steps)){
+          alert("Errore nel caricare l’Oracolo. Riprova.");
+          console.error("oracle_meta failed:", res.status, data);
+          return;
         }
-      }
 
-      let metaLoadNonce = 0;
+        meta = data;
+        steps = data.steps.slice(0, 4); // sicurezza
+        picks = {}; // reset picks
+        renderSteps();
 
-      async function loadOracleMetaInBackground(force=false){
-        const myNonce = ++metaLoadNonce;
-
-        // piccolo feedback UX (non blocca)
-        const old = $("hintText").textContent;
-        $("hintText").textContent = (lang === "en")
-          ? "Loading smart cards… (you can already play)"
-          : "Carico carte intelligenti… (intanto puoi giocare)";
-
-        try{
-          const res = await fetchWithTimeout("/api/suggest", {
-            method: "POST",
-            headers: { "Content-Type":"application/json" },
-            body: JSON.stringify({
-              mode: "oracle_meta",
-              lang,
-              voice
-            })
-          }, 9000);
-
-          const data = await res.json().catch(() => null);
-
-          // se nel frattempo è partita un’altra richiesta (cambio lingua), ignora
-          if (myNonce !== metaLoadNonce) return;
-
-          if (!res.ok || !data || !Array.isArray(data.steps)){
-            // lascia fallback
-            return;
-          }
-
-          meta = data;
-          steps = data.steps.slice(0,4);
-
-          // reset scelte perché le opzioni sono cambiate
-          picks = {};
-          renderSteps();
-          progress();
-
-          const cta = data?.ui?.cta;
-          if (cta && typeof cta === "string"){
-            $("revealBtn").textContent = cta.includes("🔮") ? cta : ("🔮 " + cta);
-          } else {
-            $("revealBtn").textContent = "🔮 Rivela l’Oracolo";
-          }
-        } catch (e){
-          // timeout/cold start -> fallback resta
-          console.warn("oracle_meta timeout/fail:", e?.message || e);
-        } finally {
-          // ripristina testo guida
-          $("hintText").textContent = old || "Zero scrittura. 4 scelte → 1 direzione chiara.";
+        // CTA label dinamica se arriva
+        const cta = data?.ui?.cta;
+        if (cta && typeof cta === "string"){
+          $("revealBtn").textContent = cta.includes("🔮") ? cta : ("🔮 " + cta);
+        } else {
+          $("revealBtn").textContent = "🔮 Rivela l’Oracolo";
         }
       }
 
@@ -488,13 +477,13 @@
         }
 
         $("revealBtn").disabled = true;
-        const oldLabel = $("revealBtn").textContent;
+        const originalBtn = $("revealBtn").textContent;
         $("revealBtn").textContent = "⏳...";
 
         try{
           const picksPayload = {};
           for (const k of Object.keys(picks)){
-            picksPayload[k] = picks[k];
+            picksPayload[k] = picks[k]; // id+label+emoji
           }
 
           const res = await fetch("/api/suggest", {
@@ -535,38 +524,20 @@
 
         } finally {
           $("revealBtn").disabled = false;
-          $("revealBtn").textContent = meta?.ui?.cta
-            ? (meta.ui.cta.includes("🔮") ? meta.ui.cta : ("🔮 " + meta.ui.cta))
-            : oldLabel || "🔮 Rivela l’Oracolo";
-          progress();
+          $("revealBtn").textContent = originalBtn || (meta?.ui?.cta ? meta.ui.cta : "🔮 Rivela l’Oracolo");
+          progress(); // riabilita/disabilita in base a scelte
         }
       }
 
       $("revealBtn").onclick = revealOracle;
 
       $("playAgainBtn").onclick = async () => {
-        // reset a fallback immediato
-        steps = getFallbackSteps(lang);
-        picks = {};
-        meta = null;
-        renderSteps();
-        progress();
+        await loadOracleMeta(true);
         window.scrollTo({ top: 0, behavior: "smooth" });
-
-        // ricarica AI meta in background
-        loadOracleMetaInBackground(true);
       };
 
-      // ===== INIT =====
-      // 1) mostra fallback SUBITO (zero attese)
-      steps = getFallbackSteps(lang);
-      renderSteps();
-      progress();
-
-      // 2) poi prova a sostituire con AI meta in background
-      loadOracleMetaInBackground(false);
-
-      // credits async
+      // load initial
+      await loadOracleMeta(false);
       await syncCredits();
     </script>
   </body>
