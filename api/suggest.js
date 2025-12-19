@@ -39,6 +39,7 @@ const normLang = (l="it") => {
   const s = String(l||"it").toLowerCase().slice(0,2);
   return SUP_LANGS.includes(s) ? s : "it";
 };
+
 const fallbackPools = {
   it:{
     generic: [
@@ -74,6 +75,7 @@ const fallbackPools = {
     ]
   }
 };
+
 const finalQ = (q="", L="it") => {
   let t = String(q).replace(/[?？]+$/,"").trim();
   if(!t) return "";
@@ -82,12 +84,75 @@ const finalQ = (q="", L="it") => {
   if(!t.endsWith("?")) t+="?";
   return t;
 };
+
 function safeJSONPick(text){
   if(typeof text!=="string") return null;
-  // prova a trovare il primo blocco JSON
   const m = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
   if(!m) return null;
   try{ return JSON.parse(m[0]); }catch{ return null; }
+}
+
+/* ========= ORACOLO (AGGIUNTA) ========= */
+function buildOracleResponse(body){
+  const {
+    topic = "life",
+    effect = "solid",
+    channel = "people",
+    tone = "kind",
+    voice = "whatif",
+    lang = "it"
+  } = body || {};
+
+  const L = normLang(lang);
+  const V = voice === "wtf" ? "wtf" : "whatif";
+
+  const TXT = {
+    it:{
+      title_wi:"🔮 Oracolo (What if)",
+      title_wtf:"🔮 Oracolo (What the F)",
+      safety:"Nota: niente cose illegali o dannose. Solo mosse reali e pulite."
+    },
+    en:{
+      title_wi:"🔮 Oracle (What if)",
+      title_wtf:"🔮 Oracle (What the F)",
+      safety:"Note: nothing illegal or harmful. Only clean, real moves."
+    }
+  };
+  const T = TXT[L] || TXT.it;
+
+  const GENERIC = {
+    money:"Crea un’offerta semplice, valida velocemente e misura i numeri.",
+    work:"Risolvi un problema visibile e rendilo misurabile.",
+    life:"Taglia attrito e crea una routine minima.",
+    relationships:"Metti un confine chiaro e una richiesta esplicita.",
+    mind:"Riduci rumore e proteggi energia.",
+    world:"Agisci localmente con costanza."
+  };
+
+  const doText = GENERIC[topic] || GENERIC.life;
+
+  const rules = [
+    "Una sola priorità per 7 giorni.",
+    "Se non è misurabile, non esiste.",
+    "Riduci stress o aumenta entrate: scegli."
+  ];
+
+  return {
+    base:{
+      title: V==="wtf"?T.title_wtf:T.title_wi,
+      do: doText,
+      first_step:"Fai il primo passo oggi, in meno di 15 minuti.",
+      rules,
+      safety:T.safety
+    },
+    styled:{
+      title: V==="wtf"?T.title_wtf:T.title_wi,
+      do: V==="wtf" ? `Ok. ${doText} E smettila di rimandare.` : doText,
+      first_step:"Scrivi il primo micro-step e fallo subito.",
+      rules,
+      safety:T.safety
+    }
+  };
 }
 
 /* ========= Prompt ========= */
@@ -138,17 +203,25 @@ export default async function handler(req, res){
   try{
     if(!process.env.OPENAI_API_KEY) return res.status(500).json({ error:"missing_api_key" });
 
-    // Rate limit per IP
-    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").toString().split(",")[0].trim();
+    const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown")
+      .toString().split(",")[0].trim();
     const { success } = await rl.limit(`suggest:${ip}`);
     if(!success) return res.status(429).json({ error:"rate_limited_minute" });
 
-    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+    const body = typeof req.body === "string"
+      ? JSON.parse(req.body || "{}")
+      : (req.body || {});
+
+    /* ===== ORACOLO: USCITA IMMEDIATA ===== */
+    if(body.mode === "oracle"){
+      const out = buildOracleResponse(body);
+      return res.status(200).json(out);
+    }
+
     const lang = normLang(body.lang || "it");
     const periodo = String(body.periodo || "future");
     const boost = String(body.boost || "").slice(0, 400);
 
-    // Ping veloce (per tasto "Test AI")
     if (body.ping === true) {
       return res.status(200).json({ ok:true, ping:true, model: MODEL, ts: Date.now() });
     }
@@ -167,14 +240,16 @@ export default async function handler(req, res){
     let data = safeJSONPick(raw);
     if(!data || typeof data!=="object") throw new Error("bad_json");
 
-    // Accetta sia chiavi EN sia eventuali localizzate
-    const personalized = (data.personalized || data.personalizzate || []).map(x=>finalQ(x, lang)).filter(Boolean).slice(0,12);
-    const generic      = (data.generic      || data.generiche      || []).map(x=>finalQ(x, lang)).filter(Boolean).slice(0,8);
-    const absurd       = (data.absurd       || data.assurde        || []).map(x=>finalQ(x, lang)).filter(Boolean).slice(0,4);
+    const personalized = (data.personalized || data.personalizzate || [])
+      .map(x=>finalQ(x, lang)).filter(Boolean).slice(0,12);
+    const generic = (data.generic || data.generiche || [])
+      .map(x=>finalQ(x, lang)).filter(Boolean).slice(0,8);
+    const absurd = (data.absurd || data.assurde || [])
+      .map(x=>finalQ(x, lang)).filter(Boolean).slice(0,4);
 
-    // Fallback se una categoria è vuota
     const pools = fallbackPools[lang] || fallbackPools.it;
     const ensure = (arr, need, from)=> (arr.length>=need) ? arr : [...arr, ...from].slice(0,need);
+
     const out = {
       personalized,
       generic: ensure(generic, 8, (pools.generic||[]).map(s=>finalQ(s, lang))),
@@ -185,11 +260,10 @@ export default async function handler(req, res){
     return res.status(200).json(out);
   }catch(err){
     console.error("❌ [/api/suggest] error:", err);
-    // Fallback totale
     const lang = normLang((req.body && req.body.lang) || "it");
     const pools = fallbackPools[lang] || fallbackPools.it;
     return res.status(200).json({
-      personalized: [],                 // senza boost, lasciamo vuoto
+      personalized: [],
       generic: (pools.generic||[]).map(s=>finalQ(s, lang)).slice(0,8),
       absurd: (pools.absurd||[]).map(s=>finalQ(s, lang)).slice(0,4),
       used: "fallback",
