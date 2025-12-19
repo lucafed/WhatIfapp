@@ -175,64 +175,74 @@ function buildSuggestPrompt({ lang, periodo, boost }) {
   ];
 }
 
-/* ========= Prompt: ORACOLO META (4 step sensati per raggiungere un obiettivo) ========= */
-function buildOracleMetaPrompt({ lang, voice }) {
+/* ========= Prompt: ORACOLO META (4 step) ========= */
+/**
+ * ✅ MODIFICA SOLO ORACLE:
+ * - prende goal (obiettivo) e lo usa per generare step PERTINENTI
+ * - step 4 NON chiede strategia: fa scegliere “che tipo di supporto/approccio vuoi ricevere”
+ * - obbliga a cambiare carte se cambia goal
+ */
+function buildOracleMetaPrompt({ lang, voice, goal }) {
   const L = normLang(lang);
   const v = voice === "wtf" ? "wtf" : "whatif";
+  const g = clampStr(goal || "", 220);
 
   const tone =
     v === "wtf"
       ? (L === "en"
-          ? "Tone: sharp, ironic, bartender-energy, but still concrete and helpful."
-          : "Tono: ironico/tagliente (barista affettuoso) ma comunque concreto e utile.")
+          ? "Tone: sharp, ironic, bartender-energy, but still useful and concrete."
+          : "Tono: ironico/tagliente, energia da barista, ma comunque utile e concreto.")
       : (L === "en"
           ? "Tone: serious, pragmatic, emotionally intelligent."
           : "Tono: serio, pragmatico, emotivamente intelligente.");
 
-  // ✅ IMPORTANTISSIMO: i 4 step devono servire a costruire la strategia che POI l’Oracolo dirà.
-  // NIENTE "scegli la strategia": quello lo decide l’Oracolo.
   const spec =
     L === "en"
-      ? `Create EXACTLY 4 steps for achieving a goal. Each step has: key,title,subtitle, and 4-6 options. Options: id,label,emoji. Keep it simple and instantly understandable.`
-      : `Crea ESATTAMENTE 4 step per raggiungere un obiettivo. Ogni step ha: key,title,subtitle e 4-6 opzioni. Opzioni: id,label,emoji. Deve capirsi al volo.`;
+      ? `Create EXACTLY 4 steps. Each step has key,title,subtitle and 4-6 options. Options have id,label,emoji.`
+      : `Crea ESATTAMENTE 4 step. Ogni step ha key,title,subtitle e 4-6 opzioni. Le opzioni hanno id,label,emoji.`;
 
-  const stepDesign =
+  const rules =
     L === "en"
-      ? `Steps must be:
-1) Goal outcome (what they want to get)
-2) Why (motivation/meaning)
-3) Constraints/resources (time, money, support, energy)
-4) Main obstacle/block (fear, confusion, lack of time, lack of plan, pressure, etc.)
-Do NOT ask the user to pick a strategy. The Oracle will produce the strategy later.`
-      : `Gli step devono essere:
-1) Risultato concreto (cosa vuoi ottenere)
-2) Perché (motivazione/senso)
-3) Vincoli/risorse (tempo, soldi, supporto, energia)
-4) Ostacolo principale/blocco (paura, confusione, mancanza di tempo, pressione, ecc.)
-NON chiedere mai di scegliere una strategia: la strategia la dirà l’Oracolo dopo.`;
+      ? `Steps must be aligned to the user's goal. If the goal changes, steps MUST change. No generic filler. No repetition. Options must be mutually distinct.`
+      : `Gli step DEVONO essere allineati all’obiettivo dell’utente. Se il goal cambia, gli step DEVONO cambiare. Niente riempitivi generici. Niente ripetizioni. Opzioni ben diverse tra loro.`;
+
+  const stepBlueprint =
+    L === "en"
+      ? `Step 1: "What outcome exactly?" (scope/target)
+Step 2: "Why does it matter?" (motivation/meaning)
+Step 3: "What constraints?" (time/money/energy/risk)
+Step 4: "How should the Oracle help?" (style of plan: quick wins vs deep plan vs low-risk vs accountability) — DO NOT ask the user for the strategy itself.`
+      : `Step 1: "Che risultato preciso?" (ambito/target)
+Step 2: "Perché ti serve davvero?" (motivazione/significato)
+Step 3: "Quali vincoli hai?" (tempo/soldi/energia/rischio)
+Step 4: "Come vuoi che l’Oracolo ti aiuti?" (tipo di piano: quick wins vs piano profondo vs basso rischio vs accountability) — NON chiedere la strategia all’utente.`;
 
   return [
     {
       role: "system",
       content:
-        `You generate a compact multi-step picker UI for an "Oracle" feature. ${tone} ` +
-        `Return ONLY strict JSON with this shape: ` +
-        `{"ui":{"cta":"..."}, "steps":[{"key":"...","title":"...","subtitle":"...","options":[{"id":"...","label":"...","emoji":"..."}]}]}. ` +
-        `${spec} ${stepDesign} No duplicates. Options must be mutually distinct. Keep titles short.`,
+        `You generate a compact multi-step picker UI for an "Oracle" feature. ${tone}\n` +
+        `Return ONLY strict JSON with this shape:\n` +
+        `{"ui":{"cta":"..."}, "steps":[{"key":"...","title":"...","subtitle":"...","options":[{"id":"...","label":"...","emoji":"..."}]}]}\n` +
+        `${spec}\n${rules}\n${stepBlueprint}\n` +
+        `IMPORTANT: Each step title/subtitle/options must clearly reference the goal theme. Avoid abstract/meaningless labels.`,
     },
     {
       role: "user",
-      content: `Language: ${L}\nVoice: ${v}\nGenerate the 4 steps now.`,
+      content:
+        `Language: ${L}\nVoice: ${v}\nGoal (user objective): ${g || "(none provided)"}\n` +
+        `Generate the initial 4 steps now. JSON only.`,
     },
   ];
 }
 
 /* ========= Prompt: ORACOLO NEXT (adattivo) ========= */
-function buildOracleNextPrompt({ lang, voice, picks, startIndex }) {
+function buildOracleNextPrompt({ lang, voice, picks, startIndex, goal }) {
   const L = normLang(lang);
   const v = voice === "wtf" ? "wtf" : "whatif";
   const ctx = compactPicks(picks || {});
   const idx = Number.isFinite(+startIndex) ? Math.max(0, Math.min(3, +startIndex)) : 0;
+  const g = clampStr(goal || "", 220);
 
   const tone =
     v === "wtf"
@@ -245,28 +255,29 @@ function buildOracleNextPrompt({ lang, voice, picks, startIndex }) {
 
   const spec =
     L === "en"
-      ? `Regenerate steps from index ${idx} to 3, adapting to previous picks AND the goal. Steps must remain aligned to achieving the goal: outcome, why, constraints, obstacle. Do NOT ask user to choose a strategy.`
-      : `Rigenera gli step da indice ${idx} a 3, adattandoli ai pick precedenti E all’obiettivo. Gli step restano allineati: risultato, perché, vincoli, ostacolo. NON chiedere la strategia.`;
+      ? `Regenerate steps from index ${idx} to 3, adapting to previous picks AND the goal. Keep steps consistent and non-repetitive.`
+      : `Rigenera gli step da indice ${idx} a 3, adattandoli ai pick precedenti E al goal. Mantieni coerenza e niente ripetizioni.`;
 
   return [
     {
       role: "system",
       content:
-        `You generate the remaining steps of an Oracle picker UI. ${tone} ` +
-        `Return ONLY strict JSON with shape: {"steps":[...]} where steps are the FULL remaining steps (index ${idx}..3). ` +
-        `Each step: {"key","title","subtitle","options":[{"id","label","emoji"}]}. ` +
-        `Options must be mutually distinct and specific. No duplicates.`,
+        `You generate the remaining steps of an Oracle picker UI. ${tone}\n` +
+        `Return ONLY strict JSON with shape: {"steps":[...]} where steps are the FULL remaining steps (index ${idx}..3).\n` +
+        `Each step: {"key","title","subtitle","options":[{"id","label","emoji"}]}\n` +
+        `Options must be mutually distinct and specific. No duplicates across options.\n` +
+        `Do NOT ask the user to choose a "strategy" — step 4 must be "how you want help" not "which strategy to adopt".`,
     },
     {
       role: "user",
       content:
-        `Language: ${L}\nVoice: ${v}\nAlready picked: ${ctx || "(none)"}\n` +
+        `Language: ${L}\nVoice: ${v}\nGoal: ${g || "(none)"}\nAlready picked: ${ctx || "(none)"}\n` +
         `${spec}\nReturn JSON only.`,
     },
   ];
 }
 
-/* ========= Prompt: ORACOLO ANSWER (include goal) ========= */
+/* ========= Prompt: ORACOLO ANSWER ========= */
 function buildOracleAnswerPrompt({ lang, voice, picks, goal }) {
   const L = normLang(lang);
   const v = voice === "wtf" ? "wtf" : "whatif";
@@ -282,31 +293,25 @@ function buildOracleAnswerPrompt({ lang, voice, picks, goal }) {
           ? "Voice: empathic, pragmatic, grounded."
           : "Voce: empatica, pragmatica, concreta.");
 
-  // ✅ qui gli diciamo chiaramente cosa deve fare: dare la STRATEGIA + primo passo.
   const spec =
     L === "en"
       ? `Return ONLY JSON: {"title":"...","do":"...","first_step":"...","rules":[...],"safety":"..."}.
-do = a clear mini-strategy in 3-5 sentences: what to do, in what order, and why.
-first_step = ONE concrete action doable in 15 minutes.
-rules = 4-6 short rules that keep the plan on track.
-safety = one gentle warning about limits/expectations.
-Use the goal (if provided) and the picks to tailor the plan.`
+do = 2-4 sentences. first_step = 1 concrete action in 15 minutes. rules = 4-6 short rules. safety = one gentle warning.
+The answer must be a practical mini-plan to reach the goal.`
       : `Restituisci SOLO JSON: {"title":"...","do":"...","first_step":"...","rules":[...],"safety":"..."}.
-do = una mini-strategia chiara in 3-5 frasi: cosa fare, in che ordine, e perché.
-first_step = UNA azione concreta fattibile in 15 minuti.
-rules = 4-6 regole brevi per restare in rotta.
-safety = un’avvertenza gentile su limiti/aspettative.
-Usa l’obiettivo (se c’è) e i pick per cucire il piano addosso all’utente.`;
+do = 2-4 frasi. first_step = 1 azione concreta in 15 minuti. rules = 4-6 regole brevi. safety = un’avvertenza gentile.
+La risposta deve essere un mini-piano pratico per raggiungere il goal.`;
+
+  const goalLine =
+    L === "en"
+      ? `Goal (objective): ${g || "(none provided)"}`
+      : `Goal (obiettivo): ${g || "(non specificato)"}`;
 
   return [
-    { role: "system", content: `You are the Oracle. ${tone} ${spec}` },
+    { role: "system", content: `You are the Oracle. ${tone}\n${spec}` },
     {
       role: "user",
-      content:
-        `Language: ${L}\nVoice: ${v}\n` +
-        `Goal (optional): ${g || "(none)"}\n` +
-        `User picks: ${ctx || "(none)"}\n` +
-        `Return JSON only.`,
+      content: `Language: ${L}\nVoice: ${v}\n${goalLine}\nUser picks: ${ctx || "(none)"}\nReturn JSON only.`,
     },
   ];
 }
@@ -335,28 +340,17 @@ export default async function handler(req, res) {
 
     const mode = String(body.mode || "suggest");
 
-    // ===== ORACOLO: meta iniziale (con CACHE Redis per velocità) =====
+    // ===== ORACOLO: meta iniziale =====
     if (mode === "oracle_meta") {
       const voice = String(body.voice || "whatif");
-
-      // ✅ CACHE: 1 ora (riduce drasticamente i tempi)
-      const cacheKey = `oracle_meta:${MODEL}:${lang}:${voice}`;
-      try {
-        const cached = await redis.get(cacheKey);
-        if (cached && typeof cached === "object" && Array.isArray(cached.steps)) {
-          return res.status(200).json({ ...cached, cached: true });
-        }
-      } catch (e) {
-        // non bloccare
-      }
-
-      const messages = buildOracleMetaPrompt({ lang, voice });
+      const goal = clampStr(body.goal || "", 220); // ✅ goal arriva dal client
+      const messages = buildOracleMetaPrompt({ lang, voice, goal });
 
       const completion = await client.chat.completions.create({
         model: MODEL,
-        temperature: 0.55,
+        temperature: 0.95, // ✅ più variazione, meno “template”
         top_p: 0.9,
-        max_tokens: 520, // ✅ prima era 900: più veloce
+        max_tokens: 900,
         messages,
       });
 
@@ -379,32 +373,27 @@ export default async function handler(req, res) {
           : [],
       }));
 
-      const payload = {
+      return res.status(200).json({
         ui: { cta: clampStr(data?.ui?.cta || (lang === "en" ? "Reveal the Oracle" : "Rivela l’Oracolo"), 40) },
         steps,
         used: "ai",
-      };
-
-      try {
-        await redis.set(cacheKey, payload, { ex: 3600 });
-      } catch (e) {}
-
-      return res.status(200).json(payload);
+      });
     }
 
-    // ===== ORACOLO: next adattivo (resta uguale, se lo usi) =====
+    // ===== ORACOLO: next adattivo =====
     if (mode === "oracle_next") {
       const voice = String(body.voice || "whatif");
-      const picks = (body.picks && typeof body.picks === "object") ? body.picks : {};
+      const picks = body.picks && typeof body.picks === "object" ? body.picks : {};
       const startIndex = Number.isFinite(+body.startIndex) ? +body.startIndex : 0;
+      const goal = clampStr(body.goal || "", 220); // ✅ (compatibile se lo userai)
 
-      const messages = buildOracleNextPrompt({ lang, voice, picks, startIndex });
+      const messages = buildOracleNextPrompt({ lang, voice, picks, startIndex, goal });
 
       const completion = await client.chat.completions.create({
         model: MODEL,
-        temperature: 0.75,
+        temperature: 0.9,
         top_p: 0.9,
-        max_tokens: 700,
+        max_tokens: 900,
         messages,
       });
 
@@ -429,19 +418,19 @@ export default async function handler(req, res) {
       return res.status(200).json({ steps, used: "ai" });
     }
 
-    // ===== ORACOLO: answer finale (include goal opzionale) =====
+    // ===== ORACOLO: answer finale =====
     if (mode === "oracle_answer") {
       const voice = String(body.voice || "whatif");
-      const picks = (body.picks && typeof body.picks === "object") ? body.picks : {};
-      const goal = clampStr(body.goal || "", 220);
+      const picks = body.picks && typeof body.picks === "object" ? body.picks : {};
+      const goal = clampStr(body.goal || "", 220); // ✅ goal entra nella risposta
 
       const messages = buildOracleAnswerPrompt({ lang, voice, picks, goal });
 
       const completion = await client.chat.completions.create({
         model: MODEL,
-        temperature: 0.8,
+        temperature: 0.85,
         top_p: 0.9,
-        max_tokens: 650,
+        max_tokens: 700,
         messages,
       });
 
@@ -452,7 +441,7 @@ export default async function handler(req, res) {
 
       return res.status(200).json({
         title: clampStr(data.title || "🔮", 80),
-        do: clampStr(data.do || "", 700),
+        do: clampStr(data.do || "", 600),
         first_step: clampStr(data.first_step || "", 260),
         rules: Array.isArray(data.rules) ? data.rules.map((x) => clampStr(x, 120)).slice(0, 6) : [],
         safety: clampStr(data.safety || "", 240),
@@ -506,4 +495,4 @@ export default async function handler(req, res) {
       error: String(err?.message || err),
     });
   }
-          }
+}
