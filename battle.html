@@ -525,7 +525,7 @@
     $("buyBtn").onclick = goStore;
     $("storeLink").onclick = (e)=>{ e.preventDefault(); goStore(); };
 
-    // categorie (API-friendly)
+    // categorie (UI-friendly)
     let category = "people";
     $("catChips").addEventListener("click",(e)=>{
       const b = e.target.closest(".chip");
@@ -534,6 +534,13 @@
       b.classList.add("sel");
       category = b.dataset.cat || "people";
     });
+
+    // ✅ FIX: mappa per API (che vuole persone/cose/scelte)
+    const categoryMap = {
+      people: "persone",
+      things: "cose",
+      choices: "scelte",
+    };
 
     // credits state
     let currentBalance = 0;
@@ -679,11 +686,7 @@
       const ink = isWtf ? "#06110B" : "#11110A";
 
       const L = getLang();
-      const titleBattle = (L==="en") ? "⚔️ Battle" :
-                          (L==="es") ? "⚔️ Battle" :
-                          (L==="fr") ? "⚔️ Battle" :
-                          (L==="de") ? "⚔️ Battle" :
-                          "⚔️ Battle";
+      const titleBattle = "⚔️ Battle";
 
       const labelWin = (L==="en") ? "🏆 Winner" :
                        (L==="es") ? "🏆 Gana" :
@@ -968,14 +971,16 @@
 
       try{
         const lang = getLang();
+        const apiCategory = categoryMap[category] || "cose";
+
         const res = await fetch("/api/battle",{
           method:"POST",
           headers:{ "Content-Type":"application/json" },
           body: JSON.stringify({
             a, b,
-            category,
-            lang,          // ✅ PASSO LANG
-            voice          // ✅ PASSO VOICE
+            category: apiCategory, // ✅ FIX: manda persone/cose/scelte
+            lang,                  // ✅ PASSO LANG
+            voice                  // ✅ PASSO VOICE
           })
         });
 
@@ -986,7 +991,6 @@
           return;
         }
 
-        // fallback: se API risponde in lingua sbagliata, almeno UI resta corretta
         last = { ...data, a, b };
         lastCard = null;
 
