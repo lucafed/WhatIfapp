@@ -1,4 +1,4 @@
-// /api/battle.js — Battle Engine (A vs B) per WhatIfapp (multilingua + voice whatif/wtf)
+// /api/battle.js — Battle Engine (A vs B) per WhatIfapp (multilingua + voice whatif/wtf + più wow)
 import OpenAI from "openai";
 import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
@@ -116,36 +116,36 @@ function extractJson(text = "") {
 /* ========= Localized fallbacks ========= */
 const FALLBACKS = {
   it: {
-    reason: "Vince perché oggi suona più convincente. Domani magari cambia.",
-    tagline: "Discussione aperta.",
+    reason: "Vince perché oggi ha l’aura da protagonista. L’altro? NPC con speranze.",
+    tagline: "Litigate pure nei commenti.",
     needLogin: "Per usare i crediti devi essere loggato.",
     noCredits: "Hai finito i crediti. Ricarica per continuare.",
     bad: "Errore Battle. Riprova.",
   },
   en: {
-    reason: "It wins because today it just hits harder. Tomorrow? Who knows.",
+    reason: "It wins today. Main character energy. The other one? Side quest vibes.",
     tagline: "Fight me in the comments.",
     needLogin: "You must be logged in to use credits.",
     noCredits: "You’re out of credits. Recharge to continue.",
     bad: "Battle error. Try again.",
   },
   es: {
-    reason: "Gana porque hoy suena más convincente. Mañana ya veremos.",
-    tagline: "A pelear en comentarios.",
+    reason: "Gana hoy. Energía de protagonista. Lo otro… misión secundaria.",
+    tagline: "Nos vemos en comentarios.",
     needLogin: "Debes iniciar sesión para usar créditos.",
-    noCredits: "No tienes créditos. Recarga para continuar.",
+    noCredits: "No te quedan créditos. Recarga para continuar.",
     bad: "Error Battle. Inténtalo de nuevo.",
   },
   fr: {
-    reason: "Ça gagne parce qu’aujourd’hui, ça frappe plus fort. Demain, on verra.",
-    tagline: "On se dispute en commentaires.",
+    reason: "Ça gagne aujourd’hui. Énergie de héros. L’autre ? NPC avec de l’espoir.",
+    tagline: "On se règle ça en com’.",
     needLogin: "Tu dois être connecté pour utiliser des crédits.",
     noCredits: "Tu n’as plus de crédits. Recharge pour continuer.",
     bad: "Erreur Battle. Réessaie.",
   },
   de: {
-    reason: "Es gewinnt, weil es heute einfach mehr sitzt. Morgen? Mal sehen.",
-    tagline: "Diskussion in den Kommentaren.",
+    reason: "Es gewinnt heute. Main-Character-Vibes. Das andere? Nebenquest-Energie.",
+    tagline: "Diskutiert in den Kommentaren.",
     needLogin: "Du musst eingeloggt sein, um Credits zu nutzen.",
     noCredits: "Keine Credits mehr. Bitte aufladen.",
     bad: "Battle-Fehler. Versuch’s nochmal.",
@@ -154,19 +154,19 @@ const FALLBACKS = {
 
 /* ========= Prompt builder ========= */
 function buildPrompt({ a, b, category, voice, style, lang }) {
-  // Compatibilità: se arriva style esplicito, lo rispettiamo; altrimenti lo deriviamo dalla voice
   const effectiveStyle = style
     ? safeStyle(style)
     : voice === "wtf"
     ? "cattivello"
     : "ironico";
 
+  // “wow” boost: più ritmo, punchline, immagini
   const tone =
     effectiveStyle === "serio"
-      ? "clear, practical, decisive, zero sarcasm"
+      ? "decisive, clear, practical, no sarcasm"
       : effectiveStyle === "cattivello"
-      ? "sharp, sarcastic, punchy, like a witty bartender; roast the dilemma, not the person"
-      : "ironic, dry, memorable, short";
+      ? "extra sarcastic, punchy, a witty bartender vibe; roast the CHOICE, never the person"
+      : "ironic, sharp, short, meme-worthy";
 
   const catHint =
     category === "persone"
@@ -175,12 +175,22 @@ function buildPrompt({ a, b, category, voice, style, lang }) {
       ? "Focus on trade-offs: risk, energy, consequences, opportunity cost."
       : "Use everyday + pop culture vibes, quick rationale.";
 
-  // Hard constraints per avere output consistente
+  // micro-variations: evita risposte tutte uguali
+  const spice = [
+    "Use one vivid metaphor if possible.",
+    "End the reason with a tiny twist.",
+    "Give the tagline a punchline vibe.",
+    "Make it quotable, like a screenshot people share.",
+  ];
+
+  const spicePick = spice[Math.floor(Math.random() * spice.length)];
+
   return `
 You are "The Judge" of a fast A-vs-B game inside What?f.
 Language must be: ${lang}. Output ONLY in ${lang}.
 Tone: ${tone}.
 Category: ${category}. ${catHint}
+Extra: ${spicePick}
 
 Safety rules:
 - No hate, harassment, slurs, discrimination.
@@ -191,6 +201,7 @@ Safety rules:
 Rules:
 - Always pick ONE winner. No ties. No "it depends".
 - Keep it SHORT. No lists. No lectures.
+- Be FUNNY but safe: roast the dilemma, not protected traits.
 
 Output constraints:
 - reason: 1–2 sentences, max 22 words.
@@ -238,7 +249,6 @@ export default async function handler(req, res) {
     const b = stripQuotes(body.b || "");
     const category = safeCategory(body.category || "cose");
 
-    // ✅ nuove: voice + lang (compatibili con vecchio style)
     const lang = safeLang(body.lang || req.query?.lang || "it");
     const voice = safeVoice(body.voice || "whatif");
     const style = body.style ? safeStyle(body.style) : null;
@@ -248,8 +258,9 @@ export default async function handler(req, res) {
 
     const prompt = buildPrompt({ a, b, category, voice, style, lang });
 
-    const temperature =
-      (style || (voice === "wtf" ? "cattivello" : "ironico")) === "serio" ? 0.55 : 0.95;
+    // più creatività quando wtf/cattivello
+    const effective = style || (voice === "wtf" ? "cattivello" : "ironico");
+    const temperature = effective === "serio" ? 0.55 : (effective === "cattivello" ? 1.0 : 0.92);
 
     const completion = await client.chat.completions.create({
       model: MODEL,
@@ -281,9 +292,8 @@ export default async function handler(req, res) {
         category,
         lang,
         voice,
-        style: style || (voice === "wtf" ? "cattivello" : "ironico"),
+        style: effective,
         winner_side,
-        // ✅ compat: "winner" come testo (come prima)
         winner: winner_side === "A" ? a : b,
         reason: FB.reason,
         tagline: FB.tagline,
@@ -306,9 +316,8 @@ export default async function handler(req, res) {
       category,
       lang,
       voice,
-      style: style || (voice === "wtf" ? "cattivello" : "ironico"),
+      style: effective,
       winner_side: wSide,
-      // ✅ compat: il client usa winner testuale
       winner: wSide === "A" ? a : b,
       reason,
       tagline,
