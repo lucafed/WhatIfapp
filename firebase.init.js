@@ -27,6 +27,13 @@ import {
   isSupported as isMessagingSupported,
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging.js";
 
+// ✅ Analytics (aggiunto)
+import {
+  getAnalytics,
+  logEvent,
+  isSupported as isAnalyticsSupported,
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
+
 
 // ⚡ CONFIG (la tua, identica)
 const firebaseConfig = {
@@ -73,6 +80,29 @@ try {
   console.warn("[firebase.init] Messaging init error:", err);
 }
 
+// ✅ ANALYTICS (protetto: solo se supportato)
+let analytics = null;
+
+try {
+  // isAnalyticsSupported è async in v12
+  const aSupportedPromise = isAnalyticsSupported();
+  aSupportedPromise
+    .then((supported) => {
+      if (!supported) {
+        console.warn("[firebase.init] Analytics non supportato in questo ambiente.");
+        return null;
+      }
+      analytics = getAnalytics(app);
+      console.log("[firebase.init] Analytics inizializzato.");
+      return null;
+    })
+    .catch((err) => {
+      console.warn("[firebase.init] Errore supporto Analytics:", err);
+    });
+} catch (err) {
+  console.warn("[firebase.init] Analytics init error:", err);
+}
+
 // 👉 EXPORT per tutto il resto del sito
 export {
   app,
@@ -89,4 +119,7 @@ export {
   messaging,
   getToken,
   onMessage,
+  // analytics (attenzione: può essere null finché non è pronto)
+  analytics,
+  logEvent,
 };
