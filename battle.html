@@ -228,9 +228,16 @@
   </div>
 
   <script type="module">
-    import { auth } from "./firebase.init.js";
+    import { auth, app } from "./firebase.init.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
     import { bootCredits, getBalance, consumeCredit } from "./store/credits.js";
+
+    // ✅ GA4 (Firebase Analytics) — no UI changes, only events
+    import {
+      getAnalytics,
+      logEvent,
+      isSupported as isAnalyticsSupported,
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
 
     const LS = localStorage;
     const $ = (id)=>document.getElementById(id);
@@ -253,6 +260,33 @@
     // tema coerente
     document.documentElement.setAttribute("data-theme", voice === "wtf" ? "wtf" : "whatif");
     document.documentElement.lang = getLang();
+
+    // ✅ GA4 init (safe)
+    let analytics = null;
+    async function gaInit(){
+      try{
+        const ok = await isAnalyticsSupported();
+        if(!ok) return null;
+        analytics = getAnalytics(app);
+        return analytics;
+      }catch{
+        analytics = null;
+        return null;
+      }
+    }
+    function ga(name, params={}){
+      try{
+        // If gtag exists (e.g. you also installed GA script), use it too.
+        if (typeof window !== "undefined" && typeof window.gtag === "function"){
+          window.gtag("event", name, params);
+        }
+      }catch{}
+      try{
+        if(analytics){
+          logEvent(analytics, name, params);
+        }
+      }catch{}
+    }
 
     // ===== I18N =====
     const UI = {
@@ -511,8 +545,12 @@
     $("styleBadge").textContent = "🎭 " + (voice === "wtf" ? "What the F" : "What if");
 
     // nav
-    $("homeBtn").onclick = ()=> location.href = "index.html";
+    $("homeBtn").onclick = ()=> {
+      ga("nav_home", { page:"battle", lang:getLang(), voice });
+      location.href = "index.html";
+    };
     $("backBtn").onclick = ()=>{
+      ga("nav_back", { page:"battle", lang:getLang(), voice });
       if(history.length>1) history.back();
       else location.href = "index.html";
     };
@@ -520,10 +558,11 @@
     // store link con lang
     function goStore(){
       const lang = encodeURIComponent(getLang());
+      ga("open_store", { page:"battle", lang:getLang(), voice, placement:"topbar" });
       location.href = `store/credit-store.html?lang=${lang}`;
     }
     $("buyBtn").onclick = goStore;
-    $("storeLink").onclick = (e)=>{ e.preventDefault(); goStore(); };
+    $("storeLink").onclick = (e)=>{ e.preventDefault(); ga("open_store", { page:"battle", lang:getLang(), voice, placement:"link" }); goStore(); };
 
     // categorie (UI-friendly)
     let category = "people";
@@ -533,6 +572,13 @@
       document.querySelectorAll("#catChips .chip").forEach(x=>x.classList.remove("sel"));
       b.classList.add("sel");
       category = b.dataset.cat || "people";
+
+      ga("battle_category_select", {
+        page:"battle",
+        lang:getLang(),
+        voice,
+        category_ui: category
+      });
     });
 
     // ✅ FIX: mappa per API (che vuole persone/cose/scelte)
@@ -573,10 +619,12 @@
       const t = T();
       if(IS_ADMIN) return true;
       if(!auth.currentUser){
+        ga("credits_blocked_not_logged", { page:"battle", lang:getLang(), voice });
         alert(t.loginNeed);
         return false;
       }
       if(currentBalance <= 0){
+        ga("credits_blocked_no_credits", { page:"battle", lang:getLang(), voice });
         alert(t.noCredits);
         goStore();
         return false;
@@ -941,6 +989,16 @@
       setErr("");
       const a = ($("aInput").value||"").trim();
       const b = ($("bInput").value||"").trim();
+
+      ga("battle_judge_click", {
+        page:"battle",
+        lang:getLang(),
+        voice,
+        category_ui: category,
+        has_a: !!a,
+        has_b: !!b
+      });
+
       if(!a || !b){ setErr(t.needAB); return; }
 
       const ok = await guardCredits();
@@ -960,6 +1018,7 @@
           renderCredits();
         }catch(e){
           console.error("consumeCredit error:", e);
+          ga("battle_credit_consume_error", { page:"battle", lang:getLang(), voice });
           setErr(t.errUseCredits);
           return;
         }
@@ -987,6 +1046,13 @@
         const data = await res.json().catch(()=>({}));
 
         if(!res.ok){
+          ga("battle_api_error", {
+            page:"battle",
+            lang,
+            voice,
+            category_api: apiCategory,
+            http_status: res.status
+          });
           setErr(t.errBattle);
           return;
         }
@@ -998,8 +1064,17 @@
         $("reasonLine").textContent  = (data.reason ? (t.reasonPrefix + data.reason) : "");
         $("tagLine").textContent     = data.tagline ? `“${data.tagline}”` : "";
         $("resultBox").style.display = "block";
+
+        ga("battle_result_view", {
+          page:"battle",
+          lang,
+          voice,
+          category_api: apiCategory,
+          fallback: !!data.fallback
+        });
       }catch(e){
         console.error(e);
+        ga("battle_network_error", { page:"battle", lang:getLang(), voice });
         setErr(t.errNet);
       }finally{
         btn.disabled = false;
@@ -1014,9 +1089,13 @@
       if(!last) return;
       try{
         await navigator.clipboard.writeText(shareText(last));
+        ga("battle_copy_text", { page:"battle", lang:getLang(), voice });
         setErr(t.copied);
         setTimeout(()=>setErr(""),900);
-      }catch{ setErr(t.cannotCopy); }
+      }catch{
+        ga("battle_copy_text_fail", { page:"battle", lang:getLang(), voice });
+        setErr(t.cannotCopy);
+      }
     };
 
     $("shareBtn").onclick = async ()=>{
@@ -1027,8 +1106,10 @@
         const card = await ensureCard();
         $("cardPreview").src = card.dataUrl;
         openModal();
+        ga("battle_share_modal_open", { page:"battle", lang:getLang(), voice });
       }catch(e){
         console.error(e);
+        ga("battle_card_generate_fail", { page:"battle", lang:getLang(), voice });
         setErr(t.cardFail);
       }
     };
@@ -1039,6 +1120,7 @@
       const card = await ensureCard();
       const safe = (String(last.winner||"battle").slice(0,18) || "battle").replace(/[^\w\-]+/g, "_");
       downloadBlob(card.blob, `battle_${safe}.png`);
+      ga("battle_card_download", { page:"battle", lang:getLang(), voice });
       setErr(t.saved);
       setTimeout(()=>setErr(""),900);
     };
@@ -1053,20 +1135,27 @@
         const file = new File([card.blob], "battle.png", { type: "image/png" });
         if (navigator.canShare && navigator.canShare({ files:[file] }) && navigator.share){
           await navigator.share({ files:[file], text, title:"What?f — Battle" });
+          ga("battle_native_share_success", { page:"battle", lang:getLang(), voice, mode:"files" });
           return;
         }
       }catch{}
 
       if (navigator.share){
-        try{ await navigator.share({ text, title:"What?f — Battle" }); return; }catch{}
+        try{
+          await navigator.share({ text, title:"What?f — Battle" });
+          ga("battle_native_share_success", { page:"battle", lang:getLang(), voice, mode:"text" });
+          return;
+        }catch{}
       }
 
       try{
         await navigator.clipboard.writeText(text);
+        ga("battle_share_fallback_copy_caption", { page:"battle", lang:getLang(), voice });
         setErr(t.captionCopied2);
         const safe = (String(last.winner||"battle").slice(0,18) || "battle").replace(/[^\w\-]+/g, "_");
         downloadBlob(card.blob, `battle_${safe}.png`);
       }catch{
+        ga("battle_native_share_fail", { page:"battle", lang:getLang(), voice });
         setErr(t.shareNotSupported);
       }
     };
@@ -1076,9 +1165,11 @@
       if(!last) return;
       try{
         await navigator.clipboard.writeText(shareCaption(last));
+        ga("battle_copy_caption", { page:"battle", lang:getLang(), voice });
         setErr(t.captionCopied);
         setTimeout(()=>setErr(""),900);
       }catch{
+        ga("battle_copy_caption_fail", { page:"battle", lang:getLang(), voice });
         setErr(t.captionFail);
       }
     };
@@ -1087,6 +1178,7 @@
       const t = T();
       if(!last) return;
       await ensureCard();
+      ga("battle_open_instagram", { page:"battle", lang:getLang(), voice });
       setErr(t.igHint);
       location.href = "instagram://app";
       setTimeout(()=>{ window.open("https://www.instagram.com/", "_blank"); }, 500);
@@ -1096,12 +1188,14 @@
       const t = T();
       if(!last) return;
       await ensureCard();
+      ga("battle_open_tiktok", { page:"battle", lang:getLang(), voice });
       setErr(t.ttHint);
       location.href = "tiktok://";
       setTimeout(()=>{ window.open("https://www.tiktok.com/upload", "_blank"); }, 500);
     };
 
     $("againBtn").onclick = ()=>{
+      ga("battle_again", { page:"battle", lang:getLang(), voice });
       $("resultBox").style.display = "none";
       $("aInput").value = "";
       $("bInput").value = "";
@@ -1118,6 +1212,12 @@
 
     // init
     applyI18n();
+    await gaInit();
+
+    // ✅ GA4 page view (Battle)
+    ga("page_view", { page_title:"Battle", page_path:"/battle", page_location: (typeof location!=="undefined"?location.href:""), lang:getLang(), voice });
+    ga("battle_view", { page:"battle", lang:getLang(), voice });
+
     await syncCredits();
   </script>
 </body>
