@@ -1461,8 +1461,17 @@ export default async function handler(req, res) {
       if (stile !== "wtf") clarQ = stripFirstPerson(clarQ, L, stile);
 
       // sicurezza: 1 frase max 22 parole (se il modello sfora)
-      clarQ = clarQ.split(/\s+/).slice(0, 22).join(" ");
-      clarQ = finalPunct(clarQ);
+      // ✅ FIX TRONCAMENTO: UNA sola domanda, corta
+clarQ = clarQ.replace(/\s+/g, " ").trim();
+const qm = clarQ.indexOf("?");
+if (qm !== -1) clarQ = clarQ.slice(0, qm + 1);
+
+const maxW = stile !== "wtf" ? 14 : 16;
+clarQ = clarQ.split(/\s+/).filter(Boolean).slice(0, maxW).join(" ").trim();
+
+clarQ = clarQ.replace(/[.!…]+$/g, "").trim();
+if (!clarQ.endsWith("?")) clarQ += "?";
+
 
       await logRecentAndStats({
         ts: tsNow,
